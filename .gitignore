@@ -1,0 +1,8 @@
+# Local-only AI config — holds a private Azure key. Never commit it.
+# Copy publishing/ai-config.template.js -> publishing/ai-config.js and add your key.
+publishing/ai-config.js
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
