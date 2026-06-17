@@ -9,8 +9,8 @@
   background:
     radial-gradient(820px 320px at 50% -45%, rgba(40,153,245,.18), transparent 70%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
-.metrics__inner { max-width: var(--maxw); margin: 0 auto; padding: 52px 24px 20px;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.metrics__inner { max-width: var(--maxw); margin: 0 auto; padding: 40px 24px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; align-items: center; }
 .stat { position: relative; text-align: center; padding: 4px 12px; }
 .stat + .stat::before { content: ""; position: absolute; left: 0; top: 14%; height: 72%;
   width: 1px; background: var(--border); }
@@ -55,6 +55,22 @@
 .blogcard__body p { font-size: 14px; color: var(--text-2); flex: 1; }
 .blogcard__more { font-size: 13.5px; font-weight: 600; color: var(--link); margin-top: 2px; }
 .blogcard:hover .blogcard__more { text-decoration: underline; }
+
+/* ---------- Apps already on the Store (edge-to-edge logo marquee) ---------- */
+.appbanner { position: relative; overflow: hidden; padding: 44px 0; border-block: 1px solid #14161f;
+  background: linear-gradient(180deg, var(--bg, #0b0d15), var(--bg-2, #0e1119)); }
+.appbanner__head { max-width: var(--maxw); margin: 0 auto 30px; padding: 0 24px; text-align: center; }
+.appbanner__head h2 { font-size: clamp(22px, 3vw, 30px); }
+.appbanner__viewport { overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.appbanner__track { display: flex; width: max-content; animation: appscroll 55s linear infinite; }
+.appbanner__viewport:hover .appbanner__track { animation-play-state: paused; }
+.appbrand { display: inline-flex; align-items: center; gap: 12px; margin-right: 56px; flex: none; }
+.appbrand img { width: 36px; height: 36px; object-fit: contain; border-radius: 9px; }
+.appbrand span { font-size: 15px; font-weight: 600; color: var(--text-2, #c6cad6); white-space: nowrap; }
+@keyframes appscroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .appbanner__track { animation: none; } }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
