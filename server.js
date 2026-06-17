@@ -1,4 +1,4 @@
-/* Trusted Developer Portal — local backend.
+/* Windows Developer Portal — local backend.
    Serves the static site AND a real signature-verification API that shells out
    to PowerShell's Get-AuthenticodeSignature. No external dependencies.
 
@@ -163,5 +163,5 @@ http.createServer(function (req, res) {
   if (req.method === "GET") return serveStatic(req, res);
   res.writeHead(405); res.end("Method not allowed");
 }).listen(PORT, "127.0.0.1", function () {
-  console.log("TDP portal + verification API → http://127.0.0.1:" + PORT + "/portal.html");
+  console.log("WDP portal + verification API → http://127.0.0.1:" + PORT + "/portal.html");
 });

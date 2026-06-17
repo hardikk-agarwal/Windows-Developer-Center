@@ -1,4 +1,4 @@
-/* Trusted Developer Portal — data-driven, persisted to localStorage.
+/* Store developer portal — data-driven, persisted to localStorage.
    The ONLY mock element is the demo MSA sign-in account.
 
    Unified flow: "Add certificate" submits one or more signed binaries. The real

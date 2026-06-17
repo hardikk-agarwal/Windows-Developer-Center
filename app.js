@@ -1,4 +1,4 @@
-/* Trusted Developer Program — marketing page interactions */
+/* Windows Developer Program — marketing page interactions */
 (function () {
   "use strict";
 

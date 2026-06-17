@@ -1,5 +1,5 @@
-/* TDP bridge — reflects a completed publish (the v4 flow) back into the Trusted
-   Developer Portal's app table.
+/* TDP bridge — reflects a completed publish (the v4 flow) back into the developer
+   portal's app table.
 
    The portal seeds localStorage['msstore.apps'] (the shape v4 reads) before it
    navigates here. This script watches for submit completion and writes the result
