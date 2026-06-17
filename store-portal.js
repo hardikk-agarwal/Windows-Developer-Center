@@ -9,7 +9,11 @@
 (function () {
   "use strict";
 
-  var KEY = "tdp.portal.v5";
+  // Store developer portal — a modified duplicate of the TDP portal (portal.js).
+  // Always store mode; keeps its own apps so the two portals stay independent.
+  var MODE = "store";
+  var STORE = true;
+  var KEY = "tdp.portal.store.v1";
   var DEMO_MSA = { name: "Alex Taylor", email: "alex.taylor@outlook.com", initials: "AT" };
 
   var state = load();
@@ -105,7 +109,9 @@
     var a = state.account || { name: "Your organization", initials: "—" };
     $("avatar").textContent = a.initials;
     $("accountName").textContent = a.name;
-    $("accountStatus").innerHTML = !state.verified
+    $("accountStatus").innerHTML = STORE
+      ? '<span class="verified-dot"></span>Store developer'
+      : !state.verified
       ? '<span class="verified-dot verified-dot--off"></span>Not verified'
       : (hasValidCert()
           ? '<span class="verified-dot"></span>Verified Developer'
@@ -114,6 +120,7 @@
 
   function renderStatus() {
     var el = $("statusCard");
+    if (STORE) { renderStoreStatus(el); return; }
     var allowed = distributingCount();
     var inStore = state.apps.filter(function (x) { return x.store; }).length;
     if (!state.verified) {
@@ -138,17 +145,13 @@
       ? "Your identity and code signing certificate are verified. Apps you sign install without SmartScreen interruptions and have crash analytics unlocked."
       : "Your <strong>identity</strong> is verified, but your certificate is self-signed and not chain-trusted by Windows — installs may still show SmartScreen. Use a CA-issued code signing certificate for frictionless installs.";
     el.innerHTML =
-      '<div class="status-card status-card--hero' + (valid ? '' : ' status-card--off') + '">' +
-        '<div class="status-card__top">' +
-          '<img class="status-card__illo" src="assets/' + (valid ? 'shield-person' : 'trust') + '.png" alt="" />' +
-          '<div class="status-card__body">' +
-            pill +
-            '<h2>' + head + '</h2>' +
-            '<p class="muted">' + body + '</p>' +
-          '</div>' +
-          '<div class="status-card__action">' +
-            '<fluent-button appearance="outline" data-openmodal>Add certificate</fluent-button>' +
-          '</div>' +
+      '<div class="status-card' + (valid ? '' : ' status-card--off') + '">' +
+        '<img class="status-card__illo" src="assets/' + (valid ? 'shield-person' : 'trust') + '.png" alt="" />' +
+        '<div class="status-card__body">' +
+          pill +
+          '<h2>' + head + '</h2>' +
+          '<p class="muted">' + body + '</p>' +
+          '<fluent-button appearance="outline" size="small" data-openmodal style="margin-top:14px">Add certificate</fluent-button>' +
         '</div>' +
         '<div class="status-card__metrics">' +
           metric(state.certs.length, "Certificates") + metric(state.apps.length, "Apps") +
@@ -158,9 +161,66 @@
   }
   function metric(n, label) { return '<div class="metric"><strong>' + n + '</strong><span>' + label + '</span></div>'; }
 
+  // Store variant overview: no verification/certificates — a publish-focused welcome.
+  function renderStoreStatus(el) {
+    var inStore = state.apps.filter(function (x) { return x.store; }).length;
+    var inReview = state.apps.filter(function (x) { return x.storeStatus === "in-review"; }).length;
+    var inDraft = state.apps.filter(function (x) { return !x.store && x.storeStatus !== "in-review"; }).length;
+    // Metrics only make sense once there's an app — skip the 0/0/0 strip when empty.
+    var metricsStrip = state.apps.length
+      ? '<div class="status-card__metrics">' +
+          metric(state.apps.length, "Apps") + metric(inStore, "In Store") + metric(inReview, "In review") + metric(inDraft, "In draft") +
+        '</div>'
+      : '';
+    el.innerHTML =
+      '<div class="status-card status-card--hero">' +
+        '<div class="status-card__top">' +
+          '<img class="status-card__illo" src="assets/rocket.png" alt="" />' +
+          '<div class="status-card__body">' +
+            '<span class="pill pill--ok"><span class="verified-dot"></span>Microsoft Store developer</span>' +
+            '<h2>Publish your apps to the Microsoft Store</h2>' +
+            '<p class="muted">Reach more than a billion Windows devices. Track crashes, acquisition, usage, ratings &amp; reviews, and performance — all in one place.</p>' +
+          '</div>' +
+          '<div class="status-card__action">' +
+            '<fluent-button appearance="primary" size="large" data-newapp>' +
+              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Create new app</fluent-button>' +
+          '</div>' +
+        '</div>' +
+        metricsStrip +
+      '</div>';
+  }
+
+  // One numbered onboarding step for the Overview zero state.
+  function gstep(n, title, sub) {
+    return '<div class="gstep"><span class="gstep__n">' + n + '</span>' +
+      '<div class="gstep__t"><strong>' + title + '</strong><span class="muted">' + sub + '</span></div></div>';
+  }
+
   function renderSummary() {
     var el = $("overviewSummary");
     if (!el) return;
+    if (STORE) {
+      if (!state.apps.length) {                          // fresh portal: guide to the first app, not links to empty views
+        el.innerHTML =
+          '<div class="block__head block__head--sub"><div><h2>Get started</h2></div></div>' +
+          '<div class="gsteps">' +
+            gstep(1, "Create your app", "Reserve a name and default language — it takes a minute.") +
+            gstep(2, "Add packages &amp; listing", "Upload your build and write your Store listing with screenshots.") +
+            gstep(3, "Submit &amp; go live", "Pass certification and reach customers across Windows.") +
+          '</div>' +
+          '<div class="gstart"><fluent-button appearance="primary" size="large" data-newapp>' +
+            '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Create your first app</fluent-button></div>';
+        return;
+      }
+      var sn = state.apps.length, sInStore = state.apps.filter(function (a) { return a.store; }).length;
+      el.innerHTML =
+        '<div class="block__head block__head--sub"><div><h2>Quick links</h2></div></div>' +
+        '<div class="ov-grid">' +
+          '<a class="ov-card" href="#apps" data-jump="apps"><strong>Apps</strong><span class="muted">' + sn + ' app' + (sn === 1 ? "" : "s") + ' · ' + sInStore + ' in the Store</span><span class="ov-card__cta">View →</span></a>' +
+          '<a class="ov-card" href="#analytics" data-jump="analytics"><strong>Analytics</strong><span class="muted">Crashes, installs, usage &amp; ratings</span><span class="ov-card__cta">Open →</span></a>' +
+        '</div>';
+      return;
+    }
     if (!state.verified) {
       el.innerHTML =
         '<div class="verify-card">' +
@@ -329,6 +389,7 @@
 
   function renderCerts() {
     var body = $("certBody");
+    if (!body) return;                                    // store portal has no Certificates section
     if (!state.certs.length) {
       body.innerHTML = '<tr><td colspan="6" class="cellspan">No certificates yet — ' +
         '<a class="linkbtn" data-openmodal>add a certificate</a> by submitting a signed binary.</td></tr>';
@@ -357,6 +418,13 @@
   }
   // Once any app is published, the header's primary CTA becomes "Create new app".
   function updateAppsHeader() {
+    if (STORE) {                                          // Store variant: always offer "Create new app"
+      var cb = $("createAppBtn"), ac = $("addCertBtn"), rs = document.querySelector("#apps [data-rescan]");
+      if (cb) { cb.hidden = false; cb.setAttribute("appearance", "primary"); }
+      if (ac) ac.hidden = true;
+      if (rs) rs.hidden = true;
+      return;
+    }
     var published = state.apps.some(function (a) { return a.store; });
     var createBtn = $("createAppBtn"), addCert = $("addCertBtn");
     if (createBtn) createBtn.hidden = !published;
@@ -365,6 +433,23 @@
   function renderApps() {
     updateAppsHeader();
     var wrap = $("appsList");
+    if (STORE) {                                          // Store variant: created apps, one flat table
+      if (!state.apps.length) {
+        wrap.innerHTML = '<div class="empty">' +
+          '<img src="assets/rocket.png" alt="" />' +
+          '<strong>Publish your first app</strong>' +
+          '<p class="muted">Create an app to reserve its name, add your packages and store listing, ' +
+            'and publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
+          '<fluent-button appearance="primary" data-newapp>' +
+            '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create new app</fluent-button>' +
+        '</div>';
+        return;
+      }
+      wrap.innerHTML = '<div class="table-wrap"><table class="table apptable">' +
+        '<thead><tr><th>App</th><th>Status</th><th>Default language</th><th>Last updated</th><th class="col-store"></th></tr></thead>' +
+        '<tbody>' + state.apps.map(storeAppRowHTML).join("") + '</tbody></table></div>';
+      return;
+    }
     var banner = scanning
       ? '<div class="scan-banner"><span class="spinner"></span>Scanning installed apps signed by your certificate…</div>'
       : "";
@@ -424,6 +509,34 @@
     '</section>';
   }
 
+  // Store-developer app row: status, default language, last updated — no TDP crash/sources columns.
+  var LANG_LABELS = { "en-US": "English (United States)", "en-GB": "English (United Kingdom)", "es-ES": "Spanish (Spain)",
+    "fr-FR": "French (France)", "de-DE": "German (Germany)", "pt-BR": "Portuguese (Brazil)", "it-IT": "Italian (Italy)",
+    "ja-JP": "Japanese", "zh-CN": "Chinese (Simplified)", "hi-IN": "Hindi (India)" };
+  function langLabel(code) { return LANG_LABELS[code] || code || "English (United States)"; }
+  function storeAppRowHTML(a) {
+    var iconHTML = a.icon
+      ? '<span class="app-ico app-ico--img"><img src="data:image/png;base64,' + a.icon + '" alt="" /></span>'
+      : '<span class="app-ico" style="background:linear-gradient(135deg,' + colorFor(a.name) + ',#0b2a4a)">' + esc(initials(a.name)) + '</span>';
+    var published = a.store || a.storeStatus === "published";
+    var inReview = a.storeStatus === "in-review";
+    var pill = published
+      ? '<span class="pill pill--ok pill--sm">✓ In the Store</span>'
+      : inReview
+        ? '<span class="pill pill--info pill--sm">In review</span>'
+        : '<span class="pill pill--ghost pill--sm">Draft</span>';
+    return '<tr class="approw--open" data-openapp="' + a.id + '" title="Open publishing flow">' +
+      '<td><div class="cell-main">' + iconHTML + '<div><strong>' + esc(a.name) + '</strong></div></div></td>' +
+      '<td>' + pill + '</td>' +
+      '<td>' + esc(langLabel(a.storeLang)) + '</td>' +
+      '<td class="muted">' + esc(a.storeCreated || a.added || "—") + '</td>' +
+      '<td class="col-store"><span class="rowactions">' +
+        '<button class="iconbtn iconbtn--danger" data-delapp="' + a.id + '" title="Delete app" aria-label="Delete app">' +
+          '<iconify-icon icon="fluent:delete-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
+        '<iconify-icon class="row-chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span></td>' +
+    '</tr>';
+  }
+
   function appRowHTML(a) {
     var iconHTML = a.icon
       ? '<span class="app-ico app-ico--img"><img src="data:image/png;base64,' + a.icon + '" alt="" /></span>'
@@ -467,9 +580,11 @@
 
   function emptyAnalyticsHTML() {
     return '<div class="empty"><img src="assets/data-trending.png" alt="" />' +
-      '<strong>Analytics unlocked</strong>' +
-      '<p class="muted">Add a certificate so your apps appear here, then explore crashes, ' +
-      'acquisition, usage, ratings and performance.</p></div>';
+      '<strong>No analytics yet</strong>' +
+      '<p class="muted">' + (STORE
+        ? 'Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings and performance.'
+        : 'Add a certificate so your apps appear here, then explore crashes, acquisition, usage, ratings and performance.') +
+      '</p></div>';
   }
 
   /* ---- seeded dummy data (stable + distinct per app) ---- */
@@ -648,21 +763,7 @@
   };
   function storeTab(app, key) {
     var def = STORE_TABDEF[key];
-    if (!app.store) {
-      var cta = app.storeStatus === "in-progress"
-        ? '<fluent-button appearance="primary" data-continue="' + app.id + '">Continue setup</fluent-button>'
-        : '<fluent-button appearance="primary" data-store="' + app.id + '">Publish to Store</fluent-button>';
-      var lockCards = '<div class="sumrow">' + def.cards.map(function (c) {
-        return '<div class="sumcard is-locked"><div class="sumcard__blur"><span class="sumcard__label">' + esc(c[0]) + '</span>' +
-          '<strong class="sumcard__big">' + esc(c[1]) + '</strong><span class="sumcard__sub muted">' + esc(c[2]) + '</span></div>' +
-          '<div class="sa-card__lock"><iconify-icon icon="fluent:lock-closed-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Unlocks with Store</div></div>';
-      }).join("") + '</div>';
-      return '<div class="unlock-hero"><img class="unlock-hero__illo" src="assets/data-trending.png" alt="" />' +
-        '<div class="unlock-hero__body"><span class="pill pill--warn pill--sm">Locked</span>' +
-        '<h3>' + esc(def.title) + ' unlocks with the Store</h3>' +
-        '<p class="muted">Publish ' + esc(app.name) + ' to the Microsoft Store to see ' + def.title.toLowerCase() + ' across all your users.</p>' + cta +
-        '</div></div>' + lockCards;
-    }
+    // Store portal: all analytics are available — nothing is gated behind publishing.
     var rnd = anaRng(Math.abs(hashStr(app.id + key)) || 1), labels = [];
     for (var i = 0; i < 28; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
     var series = [{ name: def.line, color: "var(--brand)", values: wave(rnd, 28, 1000, 700).map(Math.round) }];
@@ -670,17 +771,8 @@
     return cards + apanel(def.line, chartLine({ series: series, labels: labels, area: true }) + chartLegend(series), "Preview — representative sample data");
   }
 
-  // Once at least one app is on the Store, nudge the developer to publish the rest.
-  function analyticsUpsell() {
-    var total = state.apps.length, live = state.apps.filter(function (a) { return a.store; }).length, rest = total - live;
-    if (live < 1 || rest < 1) return "";
-    return '<div class="ana-upsell">' +
-      '<iconify-icon class="ana-upsell__ico" icon="fluent:rocket-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon>' +
-      '<div class="ana-upsell__text"><strong>' + live + ' of ' + total + ' apps are on the Microsoft Store.</strong>' +
-        '<span class="muted">Bring the other ' + rest + ' to unlock acquisition, usage, ratings &amp; reviews, and performance for them too.</span></div>' +
-      '<a class="ana-upsell__cta" href="#apps" data-jump="apps">Bring apps to the Store →</a>' +
-    '</div>';
-  }
+  // Store portal: every app's full analytics are available, so there's no "bring to Store" upsell.
+  function analyticsUpsell() { return ""; }
   function renderAnalyticsPanel() {
     var panelEl = $("analyticsPanel");
     var app = appById(analyticsAppId) || state.apps[0];
@@ -700,10 +792,12 @@
   }
   function renderAnalytics() {
     var sel = $("analyticsApp"), panelEl = $("analyticsPanel");
-    if (!state.apps.length) { sel.innerHTML = ""; sel.style.display = "none"; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
+    // Store portal: analytics only exist for apps that are live in the Store.
+    var liveApps = STORE ? state.apps.filter(function (a) { return a.store; }) : state.apps;
+    if (!liveApps.length) { sel.innerHTML = ""; sel.style.display = "none"; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
     sel.style.display = "";
-    if (!analyticsAppId || !appById(analyticsAppId)) analyticsAppId = state.apps[0].id;
-    sel.innerHTML = state.apps.map(function (a) {
+    if (!analyticsAppId || !liveApps.some(function (a) { return a.id === analyticsAppId; })) analyticsAppId = liveApps[0].id;
+    sel.innerHTML = liveApps.map(function (a) {
       return '<option value="' + a.id + '"' + (a.id === analyticsAppId ? " selected" : "") + '>' + esc(a.name) + '</option>';
     }).join("");
     renderAnalyticsPanel();
@@ -908,6 +1002,32 @@
       if (e.key === "Enter" && !$("pubCreate").hasAttribute("disabled")) { e.preventDefault(); doCreateApp(); }
     });
   }
+  // Delete an app (with confirmation) from the Store portal + shared publish state.
+  var pendingDelId = null;
+  function confirmDeleteApp(id) {
+    var a = appById(id); if (!a) return;
+    pendingDelId = id;
+    if ($("delAppName")) $("delAppName").textContent = a.name;
+    $("delModal").hidden = false;
+    document.addEventListener("keydown", escDel);
+  }
+  function closeDel() { $("delModal").hidden = true; document.removeEventListener("keydown", escDel); pendingDelId = null; }
+  function escDel(e) { if (e.key === "Escape") closeDel(); }
+  function doDeleteApp(id) {
+    state.apps = state.apps.filter(function (a) { return a.id !== id; });
+    try {
+      var ms = JSON.parse(localStorage.getItem("msstore.apps"));
+      if (Array.isArray(ms)) localStorage.setItem("msstore.apps", JSON.stringify(ms.filter(function (x) { return x.id !== id; })));
+    } catch (e) {}
+    if (analyticsAppId === id) { analyticsAppId = null; anaFailure = null; }
+    save(); renderAll(); toast("App deleted", true);
+  }
+  function wireDel() {
+    var m = $("delModal"); if (!m) return;
+    m.addEventListener("click", function (e) { if (e.target.closest("[data-delclose]")) closeDel(); });
+    $("delConfirm").addEventListener("click", function () { var id = pendingDelId; closeDel(); if (id) doDeleteApp(id); });
+  }
+
   // Map the app into v4's localStorage shape and navigate to the full flow.
   function openPublishFlow(id) {
     var a = appById(id); if (!a) return;
@@ -937,6 +1057,7 @@
     $("certModal").addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
     wireSources();
     wirePublish();
+    wireDel();
 
     document.querySelector(".main").addEventListener("click", function (e) {
       if (e.target.closest("[data-openmodal]")) { e.preventDefault();
@@ -957,6 +1078,8 @@
         state.apps.forEach(function (a) { if (a.certId === cid) a.certId = null; });
         if (!state.certs.length) state.verified = false;
         save(); renderAll(); toast("Certificate removed", true); return; }
+      var del = e.target.closest("[data-delapp]");
+      if (del) { confirmDeleteApp(del.getAttribute("data-delapp")); return; }
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
       var atab = e.target.closest("[data-anatab]");
@@ -985,7 +1108,7 @@
   }
 
   /* ---------------- Sidebar view router ---------------- */
-  var VIEWS = ["overview", "certificates", "apps", "analytics"];
+  var VIEWS = STORE ? ["overview", "apps", "analytics"] : ["overview", "certificates", "apps", "analytics"];
   function showView(id) {
     if (VIEWS.indexOf(id) === -1) id = "overview";
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });

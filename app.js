@@ -3,7 +3,7 @@
   "use strict";
 
   /* ----- Destination URLs ----- */
-  var ROUTES = {
+  var ROUTES = window.MKT_ROUTES || {
     create: "portal.html#signin",
     portal: "portal.html#signin"
   };

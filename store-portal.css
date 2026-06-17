@@ -1,0 +1,33 @@
+/* =====================================================================
+   Store developer portal — store-only additions.
+   portal.css stays the shared, untouched stylesheet; this layers on top
+   (loaded only by store-portal.html) and reuses the same tokens.
+   ===================================================================== */
+
+/* Overview zero state — "Get started" numbered steps */
+.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.gstep { display: flex; gap: 14px; align-items: flex-start; padding: 20px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.gstep__n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 14px; background: rgba(40,153,245,.16); color: var(--brand-soft);
+  border: 1px solid rgba(40,153,245,.4); }
+.gstep__t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.gstep__t strong { font-size: 15px; color: var(--text); }
+.gstep__t .muted { font-size: 13px; color: var(--text-2); }
+.gstart { margin-top: 18px; }
+
+/* Apps table row actions + delete confirmation */
+.rowactions { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.row-chev { color: var(--text-3); flex: none; }
+.apptable tr.approw--open:hover .row-chev { color: var(--text); }
+.iconbtn--danger:hover { color: var(--danger, #e0697f); }
+.btn-danger { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 16px;
+  border-radius: var(--r-md, 6px); border: 1px solid transparent; background: var(--danger, #c4314b); color: #fff;
+  font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
+.btn-danger:hover { filter: brightness(1.1); }
+.btn-danger:active { filter: brightness(.92); }
+
+/* "In review" status pill — brand-tinted info (portal.css only ships ok/warn/danger/ghost) */
+.pill--info { background: rgba(40,153,245,.16); color: var(--brand-soft); }
+
+@media (max-width: 760px) { .gsteps { grid-template-columns: 1fr; } }

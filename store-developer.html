@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Publish your app to the Microsoft Store — reach more than a billion active Windows devices, keep up to 100% of your revenue, and grow with built-in analytics." />
+  <meta name="color-scheme" content="dark" />
+  <title>Microsoft Store Developer | Publish your app to a billion devices</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="store.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar" id="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="#" aria-label="Microsoft Store Developer home">
+        <svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">
+          <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+          <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
+          <rect x="1" y="12" width="10" height="10" fill="#00A4EF" />
+          <rect x="12" y="12" width="10" height="10" fill="#FFB900" />
+        </svg>
+        <span class="brand__name">Microsoft</span>
+        <span class="brand__divider" aria-hidden="true"></span>
+        <span class="brand__sub">Store Developer</span>
+      </a>
+
+      <div class="topbar__spacer"></div>
+
+      <div class="topbar__actions">
+        <fluent-button appearance="subtle" data-action="portal">Sign in</fluent-button>
+        <fluent-button appearance="primary" size="small" data-action="create">Create account</fluent-button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero__inner">
+        <div class="hero__copy">
+          <p class="hero__kicker">Microsoft Store</p>
+          <h1 class="hero__title">Bring your app to the<br />Microsoft Store.</h1>
+          <p class="hero__lede">
+            Publish once and reach more than <strong>a billion active Windows devices</strong>. Bring
+            any app — Win32, MSIX, PWA, or any framework — keep up to 100% of your revenue, and grow
+            with built-in analytics.
+          </p>
+          <div class="hero__cta">
+            <fluent-button appearance="primary" size="large" data-action="create">Create a developer account</fluent-button>
+            <fluent-button appearance="outline" size="large" data-action="portal">Go to the Store developer portal &rsaquo;</fluent-button>
+          </div>
+        </div>
+        <div class="hero__art" aria-hidden="true">
+          <img class="hero__illo" src="assets/rocket.png" alt="" width="256" height="256" loading="eager" />
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METRICS ============ -->
+    <section class="metrics" aria-label="Microsoft Store by the numbers">
+      <div class="metrics__inner">
+        <div class="stat"><div class="stat__num">1B+</div><div class="stat__label">Active Windows devices</div></div>
+        <div class="stat"><div class="stat__num">190+</div><div class="stat__label">Markets, one submission</div></div>
+        <div class="stat"><div class="stat__num">100%</div><div class="stat__label">Revenue you can keep</div></div>
+        <div class="stat"><div class="stat__num">24/7</div><div class="stat__label">Global distribution &amp; updates</div></div>
+      </div>
+    </section>
+
+    <!-- ============ TAB STRIP ============ -->
+    <nav class="tabstrip" aria-label="Section navigation">
+      <div class="tabstrip__inner">
+        <a href="#why" class="is-active">Why the Store</a>
+        <a href="#how">How it works</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#developers">Developers</a>
+        <a href="#blog">Blog</a>
+      </div>
+    </nav>
+
+    <!-- ============ WHY THE STORE ============ -->
+    <section class="section" id="why">
+      <span class="label">Why the Store</span>
+      <div class="section__bar">
+        <h2>One submission. A billion-device audience.</h2>
+      </div>
+      <p class="section__sub">
+        The Microsoft Store is the trusted front door to Windows — <strong>discovery, distribution,
+        updates, and commerce</strong>, handled for you across Windows 10 and 11.
+      </p>
+
+      <div class="cardrow">
+        <article class="card">
+          <div class="card__thumb thumb--a"><img class="thumb__illo" src="assets/share.png" alt="" loading="lazy" /></div>
+          <div class="card__body">
+            <span class="card__cat">Reach</span>
+            <h3>Hundreds of millions of customers</h3>
+            <p>Your app is discoverable across the Store on every Windows 10 and 11 device, worldwide — no per-market setup.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card__thumb thumb--b"><img class="thumb__illo" src="assets/rewards.png" alt="" loading="lazy" /></div>
+          <div class="card__body">
+            <span class="card__cat">Revenue</span>
+            <h3>Keep what you earn</h3>
+            <p>Bring your own commerce and keep up to 100% of your app revenue — Microsoft takes nothing.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card__thumb thumb--c"><img class="thumb__illo" src="assets/data-trending.png" alt="" loading="lazy" /></div>
+          <div class="card__body">
+            <span class="card__cat">Growth</span>
+            <h3>Grow with insight</h3>
+            <p>Acquisitions, usage, health, ratings and reviews — understand your audience from day one.</p>
+          </div>
+        </article>
+      </div>
+      <div class="carousel-ctrl" aria-hidden="true"><button class="round">&lsaquo;</button><button class="round">&rsaquo;</button></div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="section section--alt" id="how">
+      <span class="label">How it works</span>
+      <div class="section__bar"><h2>Three steps to published</h2></div>
+
+      <ol class="steps">
+        <li class="step">
+          <div class="step__num">1</div>
+          <h3>Create a developer account</h3>
+          <p>Register once in the developer portal to unlock publishing across the Microsoft Store.</p>
+        </li>
+        <li class="step">
+          <div class="step__num">2</div>
+          <h3>Package &amp; list your app</h3>
+          <p>Reserve your app name, upload your package, and build a rich listing with screenshots and details.</p>
+        </li>
+        <li class="step">
+          <div class="step__num">3</div>
+          <h3>Submit &amp; go live</h3>
+          <p>Pass certification and publish. Microsoft handles global distribution, hosting, and automatic updates.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============ BENEFITS ============ -->
+    <section class="section" id="benefits">
+      <span class="label">Key value</span>
+      <div class="section__bar"><h2>Everything you need to ship and grow</h2></div>
+      <p class="section__sub">From your first upload to millions of installs, the Store handles the hard parts so you can focus on building.</p>
+
+      <div class="bgrid">
+        <article class="bcard bcard--feature">
+          <img class="bcard__illo" src="assets/share.png" alt="" loading="lazy" />
+          <h3>Reach a billion-device audience</h3>
+          <p>One submission puts your app in front of customers on every Windows 10 and 11 device, worldwide.</p>
+        </article>
+        <article class="bcard">
+          <img class="bcard__illo" src="assets/rewards.png" alt="" loading="lazy" />
+          <h3>Keep up to 100% of revenue</h3>
+          <p>Bring your own commerce and Microsoft takes nothing — or use Microsoft's and keep 85% (88% for PC games).</p>
+        </article>
+        <article class="bcard">
+          <img class="bcard__illo" src="assets/arrow-download.png" alt="" loading="lazy" />
+          <h3>Effortless distribution &amp; updates</h3>
+          <p>Microsoft hosts your packages on a global CDN and delivers automatic updates to every user.</p>
+        </article>
+        <article class="bcard">
+          <img class="bcard__illo" src="assets/data-trending.png" alt="" loading="lazy" />
+          <h3>Built-in analytics</h3>
+          <p>Track acquisitions, usage, health, and ratings &amp; reviews right from the developer portal.</p>
+        </article>
+        <article class="bcard">
+          <img class="bcard__illo" src="assets/shield-checkmark.png" alt="" loading="lazy" />
+          <h3>Trusted &amp; secure by default</h3>
+          <p>Every app is certified and malware-scanned, so customers install with confidence.</p>
+        </article>
+        <article class="bcard">
+          <img class="bcard__illo" src="assets/badge.png" alt="" loading="lazy" />
+          <h3>One identity, any app</h3>
+          <p>A single developer account ships Win32, MSIX, .NET, PWA, or Electron — any framework that runs on Windows.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ DEVELOPER QUOTES ============ -->
+    <section class="section section--alt" id="developers">
+      <span class="label">Loved by developers</span>
+      <div class="section__bar"><h2>Built for the people who ship</h2></div>
+      <p class="section__sub">Teams of every size publish to the Store to reach more customers with less overhead.</p>
+
+      <div class="quotes">
+        <article class="qcard">
+          <div class="qcard__stars" aria-label="Rated 5 out of 5">★★★★★</div>
+          <p class="qcard__text">“Publishing to the Store took us from a few thousand downloads to hundreds of thousands in a month. Distribution and updates just work.”</p>
+          <div class="qcard__who">
+            <div class="qcard__avatar" style="background:linear-gradient(135deg,#2899f5,#5ad1cd)">MC</div>
+            <div>
+              <div class="qcard__name">Maya Chen</div>
+              <div class="qcard__role">Founder · Northwind Apps</div>
+            </div>
+          </div>
+        </article>
+        <article class="qcard">
+          <div class="qcard__stars" aria-label="Rated 5 out of 5">★★★★★</div>
+          <p class="qcard__text">“We brought our existing Win32 app to the Store with no rewrite — and kept our own commerce, so we kept our margins too.”</p>
+          <div class="qcard__who">
+            <div class="qcard__avatar" style="background:linear-gradient(135deg,#E3008C,#8661C5)">DR</div>
+            <div>
+              <div class="qcard__name">Diego Ramirez</div>
+              <div class="qcard__role">Lead Engineer · Contoso Studio</div>
+            </div>
+          </div>
+        </article>
+        <article class="qcard">
+          <div class="qcard__stars" aria-label="Rated 5 out of 5">★★★★★</div>
+          <p class="qcard__text">“The built-in analytics replaced three tools we used to stitch together. Acquisition, health, and ratings finally live in one place.”</p>
+          <div class="qcard__who">
+            <div class="qcard__avatar" style="background:linear-gradient(135deg,#F25022,#FFB900)">PN</div>
+            <div>
+              <div class="qcard__name">Priya Nair</div>
+              <div class="qcard__role">Product Lead · Fabrikam Games</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ BLOG ============ -->
+    <section class="section" id="blog">
+      <span class="label">From the blog</span>
+      <div class="section__bar"><h2>Latest from the Store</h2></div>
+      <p class="section__sub">Product news, monetization tips, and growth playbooks from the Microsoft Store team.</p>
+
+      <div class="blogrow">
+        <a class="blogcard" href="#">
+          <div class="blogcard__cover thumb--a"><span class="blogcard__tag">Product</span></div>
+          <div class="blogcard__body">
+            <div class="blogcard__date">June 2026</div>
+            <h3>Bring any app: Win32, PWA, and MSIX in one catalog</h3>
+            <p>How the modern Store accepts the app you already have — no rewrite required.</p>
+            <span class="blogcard__more">Read article &rsaquo;</span>
+          </div>
+        </a>
+        <a class="blogcard" href="#">
+          <div class="blogcard__cover thumb--b"><span class="blogcard__tag">Monetization</span></div>
+          <div class="blogcard__body">
+            <div class="blogcard__date">May 2026</div>
+            <h3>Keep more of what you earn with your own commerce</h3>
+            <p>A practical guide to revenue share and bringing your billing engine to the Store.</p>
+            <span class="blogcard__more">Read article &rsaquo;</span>
+          </div>
+        </a>
+        <a class="blogcard" href="#">
+          <div class="blogcard__cover thumb--c"><span class="blogcard__tag">Growth</span></div>
+          <div class="blogcard__body">
+            <div class="blogcard__date">April 2026</div>
+            <h3>Read your launch: acquisition, health, and ratings</h3>
+            <p>Use the developer portal's analytics to find what's working — and double down.</p>
+            <span class="blogcard__more">Read article &rsaquo;</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__cols">
+        <div class="footer__col">
+          <h4>Store Developer</h4>
+          <a href="#why">Why the Store</a>
+          <a href="#how">How it works</a>
+          <a href="#benefits">Benefits</a>
+          <a href="#portal" data-action="portal">Developer portal</a>
+        </div>
+        <div class="footer__col">
+          <h4>Resources</h4>
+          <a href="#">Documentation</a>
+          <a href="#">Publishing guide</a>
+          <a href="#">Store policies</a>
+          <a href="#">Support</a>
+        </div>
+        <div class="footer__col">
+          <h4>Developer</h4>
+          <a href="#">Partner Center</a>
+          <a href="#">Windows apps</a>
+          <a href="#">Microsoft Store</a>
+          <a href="#">Changelog</a>
+        </div>
+        <div class="footer__col footer__col--cta">
+          <h4>Get started</h4>
+          <fluent-button appearance="primary" size="small" data-action="create">Create account</fluent-button>
+          <fluent-button appearance="outline" size="small" data-action="portal">Open portal</fluent-button>
+        </div>
+      </div>
+      <div class="footer__legal">
+        <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true">
+          <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+          <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
+          <rect x="1" y="12" width="10" height="10" fill="#00A4EF" />
+          <rect x="12" y="12" width="10" height="10" fill="#FFB900" />
+        </svg>
+        <span>© Microsoft 2026</span>
+        <a href="#">Privacy</a>
+        <a href="#">Terms of use</a>
+        <a href="#">Trademarks</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Fluent 2 web components (real components + dark theme tokens) -->
+  <script type="module">
+    import { setTheme, FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
+    import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
+    setTheme(webDarkTheme);
+    ButtonDefinition.define(FluentDesignSystem.registry);
+  </script>
+  <script>window.MKT_ROUTES = { create: "store-portal.html#signin", portal: "store-portal.html#signin" };</script>
+  <script src="app.js"></script>
+</body>
+</html>

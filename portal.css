@@ -157,6 +157,16 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .metric strong { font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
 .metric span { font-size: 12.5px; color: #9fb0c8; margin-top: 4px; }
 
+/* Hero status card — CTA on the right, metrics as a centered strip below (shared by both portals) */
+.status-card--hero { display: block; }
+.status-card--hero .status-card__top { display: grid; grid-template-columns: auto 1fr auto; gap: 28px; align-items: center; }
+.status-card--hero .status-card__action { flex: none; }
+.status-card--hero .status-card__metrics { display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+.status-card--hero .status-card__metrics .metric { align-items: center; padding: 0 30px; }
+.status-card--hero .status-card__metrics .metric + .metric { border-left: 1px solid var(--border); }
+@media (max-width: 760px) { .status-card--hero .status-card__top { grid-template-columns: 1fr; } }
+
 /* ---------- Verification flow ---------- */
 .flow { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
 .flow__step { display: grid; grid-template-columns: auto 1fr; gap: 16px;
@@ -475,7 +485,7 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 /* ---------- Empty states ---------- */
 .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
   padding: 44px 24px; background: var(--surface); border: 1px dashed var(--border-2); border-radius: var(--r-lg); color: var(--text-3); }
-.empty img { width: 72px; height: 72px; object-fit: contain; opacity: .9; margin-bottom: 4px; }
+.empty img { width: 112px; height: 112px; object-fit: contain; opacity: .9; margin-bottom: 8px; }
 .empty strong { color: var(--text); font-size: 16px; }
 .empty .muted { max-width: 420px; }
 .empty .btn { margin-top: 8px; }
@@ -614,4 +624,11 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .msa-tile--ghost { color: var(--text-2); }
 .signin__note { margin-top: 22px; font-size: 12px; color: var(--text-4); text-align: center; }
 
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto; animation: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto; animation: none !important; }
+  /* Loading indicators are informational feedback ("something is happening"),
+     not decorative motion — keep them animating even when motion is reduced. */
+  .spinner { animation: spin .7s linear infinite !important; }
+  .sk { animation: sk 1.4s ease infinite !important; }
+  .dropzone__bar { animation: barslide 1s linear infinite !important; }
+}

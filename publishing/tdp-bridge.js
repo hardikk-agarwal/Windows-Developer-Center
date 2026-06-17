@@ -7,10 +7,20 @@
    served from the same origin, so localStorage is shared. */
 (function () {
   "use strict";
-  var TDP_KEY = "tdp.portal.v5";
   var MS_KEY = "msstore.apps";
   var id = new URLSearchParams(location.search).get("id");
   if (!id) return;
+
+  // Which portal launched this flow? Find the app in either variant's state and sync
+  // back to that one (TDP portal is the default). No portal files are modified.
+  var TDP_KEY = (function () {
+    try {
+      var s = JSON.parse(localStorage.getItem("tdp.portal.store.v1"));
+      if (s && Array.isArray(s.apps) && s.apps.some(function (a) { return a.id === id; })) return "tdp.portal.store.v1";
+    } catch (e) {}
+    return "tdp.portal.v5";
+  })();
+  var PORTAL_FILE = TDP_KEY === "tdp.portal.store.v1" ? "store-portal.html" : "portal.html";
 
   function readJSON(k, d) {
     try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }
@@ -61,7 +71,7 @@
       ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#"]
     ] },
     { title: "Insights & growth", cards: [
-      ["fluent:data-histogram-20-regular", "View analytics", "Installs, usage, ratings and health.", "../portal.html#analytics"],
+      ["fluent:data-histogram-20-regular", "View analytics", "Installs, usage, ratings and health.", "../" + PORTAL_FILE + "#analytics"],
       ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#"]
     ] },
     { title: "Listing & monetization", cards: [
@@ -119,6 +129,15 @@
         stat = document.getElementById("accountStatus");
     if (av) av.textContent = acct.initials || "—";
     if (nm) nm.textContent = acct.name || "Your organization";
+    if (PORTAL_FILE === "store-portal.html") {            // match the Store developer portal chrome
+      var bsub = document.querySelector(".brand__sub"); if (bsub) bsub.textContent = "Store Developer";
+      document.querySelectorAll('a[href^="../portal.html"]').forEach(function (a) {
+        a.setAttribute("href", a.getAttribute("href").replace("../portal.html", "../store-portal.html"));
+      });
+      var cnav = document.querySelector('a[href*="store-portal.html#certificates"]'); if (cnav) cnav.style.display = "none";
+      if (stat) stat.innerHTML = '<span class="verified-dot"></span>Store developer';
+      return;
+    }
     if (stat) {
       var verified = st && st.verified;
       var hasValid = st && Array.isArray(st.certs) && st.certs.some(function (c) { return c.trust === "Valid"; });
