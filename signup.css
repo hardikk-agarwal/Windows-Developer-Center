@@ -55,6 +55,7 @@
 .wiz-nav .muted { font-size: 13px; color: var(--text-3, #8b909e); }
 .wiz-nav:empty { display: none; }   /* hide the footer (divider + buttons) when a step has no nav actions */
 .wiz-verify { max-width: 720px; margin: 0 auto; }
+.wiz-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }   /* stacked hero buttons */
 .wiz-certcard { margin: 22px 0 0; }   /* full-width to match the hero banner above */
 .wiz-certcard .mono { font-variant-numeric: tabular-nums; font-size: 13px; letter-spacing: .01em; }
 .wiz-next { margin-top: 28px; }

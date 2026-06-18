@@ -1132,6 +1132,23 @@
   renderAll();
   // Arriving from the marketing page (#signin) always shows the MSA sign-in first.
   if (location.hash === "#signin") { state.signedIn = false; save(); showSignin(); }
-  else if (state.signedIn && state.account) showApp();
+  else if (state.signedIn && state.account) {
+    showApp();
+    // Arriving from the Store signup with a reserved app name → create it + open the
+    // publishing flow (Back there lands on the Apps page, per the portal's own flow).
+    var cm = /[?&]create=([^&#]+)/.exec(location.search);
+    if (cm) {
+      var rsvName = decodeURIComponent(cm[1]);
+      var lm = /[?&]lang=([^&#]+)/.exec(location.search);
+      var rsvLang = lm ? decodeURIComponent(lm[1]) : "en-US";
+      if (history.replaceState) history.replaceState(null, "", location.pathname + "#apps");
+      setTimeout(function () {
+        publishId = null;
+        if ($("pubName")) $("pubName").value = rsvName;
+        if ($("pubLang")) $("pubLang").value = rsvLang;
+        doCreateApp();
+      }, 60);
+    }
+  }
   else showSignin();
 })();
