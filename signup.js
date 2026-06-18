@@ -73,7 +73,7 @@
     { key: "profile",  phase: 0, title: "Profile details" },
     { key: "setup",    phase: 0, title: "Account setup" },
     { key: "verify",   phase: 1, title: "Upload & submit binary",
-      head: "Your developer account is created", headSub: "One last step — download your binary, sign it, and upload it to become a trusted developer." }
+      head: "Your developer account is created", headSub: "Download your binary, sign it with your certificate, and submit it to become a trusted developer." }
   ];
   var VERIFY = STEPS.length - 1;
 
@@ -178,7 +178,14 @@
         '<p class="muted">Drop it below to become a trusted developer.</p>' +
         dropzoneHTML() + errorHTML() +
         '<div class="submit-row"><fluent-button appearance="primary" id="binSubmit"' + (pendingFile ? "" : " disabled") + '>Become a trusted developer</fluent-button></div>' +
-      '</div></div>';
+      '</div>' +
+      '<div class="wiz-laterbar">' +
+        '<iconify-icon icon="fluent:clock-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+        '<div class="wiz-laterbar__text"><strong>Prefer to sign on your own time?</strong>' +
+          '<span>Download your binary now, then upload your signed file anytime from your WDP portal — your account stays ready to verify.</span></div>' +
+        '<fluent-button appearance="outline" id="goLater">Go to portal</fluent-button>' +
+      '</div>' +
+    '</div>';
   }
 
   function certDetail(c) {
@@ -337,6 +344,9 @@
     var dis = $("binErrDismiss");
     if (dis) dis.addEventListener("click", function () { verifyError = null; render(); });
     var sb = $("binSubmit"); if (sb) sb.addEventListener("click", verifyFile);
+    // "Verify later" — go to the portal account-created but not yet verified; the same
+    // download→sign→upload flow waits there (seedPortal with no cert keeps verified=false).
+    var later = $("goLater"); if (later) later.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
   }
   function wireDone() {
     var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
