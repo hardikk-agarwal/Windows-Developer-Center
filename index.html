@@ -3,239 +3,302 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="The Windows Developer Program (WDP) lets developers become verified and trusted on Windows — frictionless installs, crash analytics, and persistent reputation, even outside the Microsoft Store." />
   <meta name="color-scheme" content="dark" />
-  <title>Windows Developer Program | Microsoft Developer</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>windows store developer - Bing</title>
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+  <style>
+    /* Dummy Microsoft Bing results page (dark mode) — the demo's entry point.
+       The top two organic results open the real marketing pages; the rest are dead. */
+    :root {
+      --bg: #1b1a19; --surface: #2b2a29; --surface-2: #343332; --line: #3a3938;
+      --text: #f3f2f1; --text-2: #c8c6c4; --muted: #a19f9d; --site: #d8d6d4;
+      --link: #82C7FF; --visited: #c9a3e6; --accent: #4db8c4;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: var(--text);
+      background: var(--bg); -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; }
+
+    /* ---------- header ---------- */
+    .b-header { display: flex; align-items: center; gap: 0; padding: 16px 22px 0; }
+    .b-logo { width: 150px; flex: none; display: flex; align-items: center; }
+    .b-logo img { height: 22px; width: auto; }
+    .b-searchwrap { flex: 1; max-width: 530px; }
+    .b-search { display: flex; align-items: center; height: 44px; padding: 0 6px 0 19px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
+    .b-search:focus-within { border-color: #5a5957; background: #302f2e; }
+    .b-search input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 16px; color: var(--text); background: transparent; }
+    .b-search input::placeholder { color: var(--muted); }
+    .b-ico { flex: none; width: 34px; height: 34px; border: 0; border-radius: 50%; cursor: pointer;
+      background: transparent; color: var(--text-2); display: grid; place-items: center; }
+    .b-ico:hover { background: var(--surface-2); color: var(--text); }
+    .b-search .b-divider { width: 1px; height: 22px; background: var(--line); margin: 0 4px; flex: none; }
+    .b-search .b-ico--go { color: var(--accent); }
+    .b-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; padding-bottom: 0; }
+    .b-actions .b-ico { width: 38px; height: 38px; color: var(--text-2); }
+    .b-avatar { width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
+      background: linear-gradient(135deg, #6b46c1, #2563eb); color: #fff; font-size: 12px; font-weight: 700; margin-left: 6px; }
+
+    /* ---------- tabs (offset to align under the search box) ---------- */
+    .b-tabs { display: flex; gap: 22px; padding: 8px 22px 0 172px; border-bottom: 1px solid var(--line); }
+    .b-tabs a { display: flex; align-items: center; gap: 6px; padding: 10px 1px 12px; font-size: 14px; color: var(--muted);
+      border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+    .b-tabs a:hover { color: var(--text); }
+    .b-tabs a.is-active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+    .b-tabs a iconify-icon { font-size: 16px; }
+
+    /* ---------- results ---------- */
+    .b-main { display: flex; gap: 44px; align-items: flex-start; padding: 18px 22px 70px 172px; }
+    .b-count { max-width: 600px; font-size: 13px; color: var(--muted); margin: 0 0 22px; }
+    .b-result { max-width: 600px; margin-bottom: 26px; }
+    .b-result__head { display: flex; align-items: center; gap: 11px; margin-bottom: 5px; }
+    .b-result__fav { width: 28px; height: 28px; border-radius: 50%; flex: none; background: #fff; padding: 5px;
+      box-shadow: 0 0 0 1px var(--line); }
+    .b-result__meta { min-width: 0; line-height: 1.3; }
+    .b-result__site { font-size: 13px; color: var(--site); }
+    .b-result__url { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .b-result__title { font-size: 20px; line-height: 1.3; color: var(--link); margin: 0; font-weight: 400; }
+    .b-result__title:hover { text-decoration: underline; }
+    .b-result__desc { font-size: 14px; color: var(--text-2); line-height: 1.58; margin: 5px 0 0; }
+    .b-result__desc .b-date { color: var(--muted); }
+
+    /* right rail — "Deep dive" related searches */
+    .b-col { flex: 1 1 0; min-width: 0; max-width: 600px; }
+    .b-rail { width: 332px; flex: none; }
+    .b-dd__title { font-size: 21px; font-weight: 400; color: var(--text); margin: 2px 0 16px; line-height: 1.3; }
+    .b-dd__title b { font-weight: 700; }
+    .b-dd__item { display: flex; align-items: center; gap: 13px; padding: 12px 18px; margin-bottom: 11px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 26px; font-size: 14.5px;
+      color: var(--muted); transition: background .12s ease, border-color .12s ease; }
+    .b-dd__item:hover { background: var(--surface-2); border-color: #4d4c4a; }
+    .b-dd__item iconify-icon { flex: none; color: var(--muted); font-size: 17px; }
+    .b-dd__item b { color: var(--text); font-weight: 600; }
+
+    /* pagination */
+    .b-pager { display: flex; align-items: center; gap: 4px; max-width: 600px; margin: 22px 0 0; padding-top: 10px; }
+    .b-pager a, .b-pager span { min-width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px; font-size: 14px; color: var(--link); }
+    .b-pager span.b-pager__cur { background: var(--surface-2); color: var(--text); font-weight: 600; }
+    .b-pager a:hover { background: var(--surface); text-decoration: underline; }
+    .b-pager__next { gap: 5px; padding: 0 14px; font-weight: 600; }
+    @media (max-width: 1040px) { .b-rail { display: none; } }
+
+    @media (max-width: 840px) {
+      .b-logo { width: auto; }
+      .b-tabs { padding-left: 22px; overflow-x: auto; }
+      .b-main { padding-left: 22px; }
+      .b-actions .b-ico:not(.b-ico--keep) { display: none; }
+    }
+  </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to main content</a>
-
-  <!-- ============ TOP NAV ============ -->
-  <header class="topbar" id="topbar">
-    <div class="topbar__inner">
-      <a class="brand" href="#" aria-label="Microsoft Developer home">
-        <svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">
-          <rect x="1" y="1" width="10" height="10" fill="#F25022" />
-          <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
-          <rect x="1" y="12" width="10" height="10" fill="#00A4EF" />
-          <rect x="12" y="12" width="10" height="10" fill="#FFB900" />
-        </svg>
-        <span class="brand__name">Microsoft</span>
-        <span class="brand__divider" aria-hidden="true"></span>
-        <span class="brand__sub">Windows Developer Program</span>
-      </a>
-
-      <div class="topbar__spacer"></div>
-
-      <div class="topbar__actions">
-        <fluent-button appearance="subtle" data-action="portal">Sign in</fluent-button>
-        <fluent-button appearance="primary" size="small" data-action="create">Create account</fluent-button>
-      </div>
+  <!-- ===== header ===== -->
+  <header class="b-header">
+    <a class="b-logo" href="#" aria-label="Microsoft Bing">
+      <img src="assets/bing-logo.png" alt="Microsoft Bing" />
+    </a>
+    <div class="b-searchwrap">
+      <form class="b-search" onsubmit="return false">
+        <input type="text" value="windows store developer" aria-label="Search the web" />
+        <button class="b-ico" type="button" aria-label="Search using voice"><iconify-icon icon="fluent:mic-20-regular" width="20" height="20"></iconify-icon></button>
+        <button class="b-ico" type="button" aria-label="Search using an image"><iconify-icon icon="fluent:camera-20-regular" width="20" height="20"></iconify-icon></button>
+        <span class="b-divider"></span>
+        <button class="b-ico b-ico--go" type="submit" aria-label="Search"><iconify-icon icon="fluent:search-20-filled" width="20" height="20"></iconify-icon></button>
+      </form>
+    </div>
+    <div class="b-actions">
+      <button class="b-ico" aria-label="Copilot"><iconify-icon icon="fluent:chat-sparkle-20-regular" width="20" height="20"></iconify-icon></button>
+      <button class="b-ico" aria-label="Rewards"><iconify-icon icon="fluent:trophy-20-regular" width="20" height="20"></iconify-icon></button>
+      <button class="b-ico" aria-label="Notifications"><iconify-icon icon="fluent:alert-20-regular" width="20" height="20"></iconify-icon></button>
+      <button class="b-ico b-ico--keep" aria-label="App menu"><iconify-icon icon="fluent:grid-dots-20-regular" width="20" height="20"></iconify-icon></button>
+      <span class="b-avatar b-ico--keep">AT</span>
     </div>
   </header>
 
-  <main id="main">
-    <!-- ============ HERO ============ -->
-    <section class="hero">
-      <div class="hero__inner">
-        <div class="hero__copy">
-          <h1 class="hero__title">Become a verified developer<br />Trusted on Windows</h1>
-          <p class="hero__lede">
-            Verify your identity and code authenticity to earn a <strong>Blue Badge</strong> — so your apps
-            install without friction and build lasting trust with users, wherever you distribute.
-          </p>
-          <div class="hero__cta">
-            <fluent-button appearance="primary" size="large" data-action="create">Create a developer account</fluent-button>
-            <fluent-button appearance="outline" size="large" data-action="portal">Go to Windows Developer Portal &rsaquo;</fluent-button>
-          </div>
-        </div>
-        <div class="hero__art" aria-hidden="true">
-          <img class="hero__illo" src="assets/trust.png" alt="" width="256" height="256" loading="eager" />
-        </div>
-      </div>
-    </section>
+  <!-- ===== category tabs ===== -->
+  <nav class="b-tabs" aria-label="Result types">
+    <a class="is-active">All</a>
+    <a href="#"><iconify-icon icon="fluent:chat-sparkle-16-regular"></iconify-icon>Copilot</a>
+    <a href="#">Images</a>
+    <a href="#">Videos</a>
+    <a href="#">Maps</a>
+    <a href="#">News</a>
+    <a href="#">More</a>
+  </nav>
 
-    <!-- ============ TAB STRIP ============ -->
-    <nav class="tabstrip" aria-label="Section navigation">
-      <div class="tabstrip__inner">
-        <a href="#what" class="is-active">What is WDP</a>
-        <a href="#how">How it works</a>
-        <a href="#benefits">Benefits</a>
+  <!-- ===== results ===== -->
+  <main class="b-main">
+    <div class="b-col">
+    <p class="b-count">About 25,900 results</p>
+
+    <!-- 1 — Store Developer marketing (real link) -->
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/developer.microsoft.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Microsoft Store</div>
+          <div class="b-result__url">https://developer.microsoft.com › store</div>
+        </div>
       </div>
+      <a class="b-result__title" href="store-developer.html">Microsoft Store Developer – Publish your app to the Store</a>
+      <p class="b-result__desc">Bring your app to the Microsoft Store and reach over a billion Windows devices. One submission, global distribution across 190+ markets, ratings, and built-in analytics — create a developer account in minutes.</p>
+    </article>
+
+    <!-- 2 — Windows Developer Program marketing (real link) -->
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/developer.microsoft.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Microsoft</div>
+          <div class="b-result__url">https://developer.microsoft.com › windows</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="wdp-marketing.html">Windows Developer Program – Become a Verified Developer</a>
+      <p class="b-result__desc">Verify your identity and code authenticity to earn a Blue Badge — frictionless installs, crash analytics, and persistent trust across Windows, even when you distribute outside the Store.</p>
+    </article>
+
+    <!-- dummy results -->
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/learn.microsoft.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Microsoft Learn</div>
+          <div class="b-result__url">https://learn.microsoft.com › windows › apps</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">Develop apps for Windows | Microsoft Learn</a>
+      <p class="b-result__desc"><span class="b-date">Mar 18, 2025</span> · Documentation, tutorials, and the Windows App SDK to start building Windows apps with WinUI, packaging (MSIX), and publishing guidance.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/support.microsoft.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Microsoft Support</div>
+          <div class="b-result__url">https://support.microsoft.com › account-billing</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">Open a developer account for the Microsoft Store</a>
+      <p class="b-result__desc">Step-by-step help on creating a developer account, choosing an account type, and what you need to start submitting apps to the Microsoft Store.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/stackoverflow.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Stack Overflow</div>
+          <div class="b-result__url">https://stackoverflow.com › questions › tagged</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">Newest 'windows-store' Questions - Stack Overflow</a>
+      <p class="b-result__desc">Q&amp;A for developers publishing to the Microsoft Store — packaging, certification, MSIX, code signing, and developer account setup.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/en.wikipedia.org.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Wikipedia</div>
+          <div class="b-result__url">https://en.wikipedia.org › wiki › Microsoft_Store</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">Microsoft Store - Wikipedia</a>
+      <p class="b-result__desc">The Microsoft Store is a digital distribution platform operated by Microsoft for Windows apps, games, films, and other content.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/github.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">GitHub</div>
+          <div class="b-result__url">https://github.com › MicrosoftDocs › windows-dev-docs</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">MicrosoftDocs/windows-dev-docs: Windows app development</a>
+      <p class="b-result__desc">The official Windows developer documentation source. Build Windows apps with the Windows App SDK, WinUI, packaging, and Store publishing.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/learn.microsoft.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Microsoft Q&amp;A</div>
+          <div class="b-result__url">https://learn.microsoft.com › answers › windows</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">How do I register as a Microsoft Store developer? - Q&amp;A</a>
+      <p class="b-result__desc">Community answers on creating and verifying a developer account, account types, the registration fee, and submitting your first app.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/reddit.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Reddit · r/windowsdev</div>
+          <div class="b-result__url">https://reddit.com › r › windowsdev</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">Getting started publishing to the Microsoft Store</a>
+      <p class="b-result__desc"><span class="b-date">12 comments</span> · Tips from developers on the submission process, account setup, certification timelines, and what to expect.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/youtube.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">YouTube</div>
+          <div class="b-result__url">https://youtube.com › watch</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">How to Publish Your First App to the Microsoft Store</a>
+      <p class="b-result__desc">A step-by-step video walkthrough — creating a developer account, packaging your app as MSIX, and submitting it for certification.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/apps.microsoft.com.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">Microsoft Store</div>
+          <div class="b-result__url">https://apps.microsoft.com › store › apps</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">Apps - Microsoft Store</a>
+      <p class="b-result__desc">Browse and download apps, games, and more from the Microsoft Store for Windows devices.</p>
+    </article>
+
+    <article class="b-result">
+      <div class="b-result__head">
+        <img class="b-result__fav" src="https://icons.duckduckgo.com/ip3/dev.to.ico" alt="" />
+        <div class="b-result__meta">
+          <div class="b-result__site">DEV Community</div>
+          <div class="b-result__url">https://dev.to › microsoft</div>
+        </div>
+      </div>
+      <a class="b-result__title" href="#">A complete guide to the Microsoft Store developer account</a>
+      <p class="b-result__desc">Everything you need to register, verify, and publish — from account types and fees to the full publishing flow and analytics.</p>
+    </article>
+
+    <nav class="b-pager" aria-label="Pagination">
+      <span class="b-pager__cur" aria-current="page">1</span>
+      <a href="#">2</a><a href="#">3</a><a href="#">4</a><a href="#">5</a>
+      <a href="#">6</a><a href="#">7</a><a href="#">8</a><a href="#">9</a>
+      <a class="b-pager__next" href="#">Next <iconify-icon icon="fluent:chevron-right-16-filled" width="14" height="14"></iconify-icon></a>
     </nav>
-
-    <!-- ============ WHAT IS WDP ============ -->
-    <section class="section" id="what">
-      <span class="label">What is WDP</span>
-      <div class="section__bar">
-        <h2>Trusted status on Windows — without requiring the Store</h2>
-      </div>
-      <p class="section__sub">
-        WDP is a Microsoft initiative that lets developers become <strong>verified and trusted</strong> by proving
-        their identity and code authenticity. The result: faster publishing, fewer restrictions, and a smoother
-        install experience that improves user trust in high-quality apps.
-      </p>
-
-      <div class="cardrow">
-        <article class="card">
-          <div class="card__thumb thumb--a"><img class="thumb__illo" src="assets/shield-checkmark.png" alt="" loading="lazy" /></div>
-          <div class="card__body">
-            <span class="card__cat">Step one</span>
-            <h3>Verify identity &amp; code</h3>
-            <p>Confirm who you are and that your binaries are authentically yours through code signing.</p>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card__thumb thumb--b"><img class="thumb__illo" src="assets/badge.png" alt="" loading="lazy" /></div>
-          <div class="card__body">
-            <span class="card__cat">The outcome</span>
-            <h3>Earn trusted status</h3>
-            <p>Become a Verified Developer with a Blue Badge that signals authenticity across Windows.</p>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card__thumb thumb--c"><img class="thumb__illo" src="assets/rocket.png" alt="" loading="lazy" /></div>
-          <div class="card__body">
-            <span class="card__cat">The payoff</span>
-            <h3>Ship faster, freer</h3>
-            <p>Faster publishing and fewer restrictions — distribute inside or outside the Store.</p>
-          </div>
-        </article>
-      </div>
-      <div class="carousel-ctrl" aria-hidden="true"><button class="round">&lsaquo;</button><button class="round">&rsaquo;</button></div>
-    </section>
-
-    <!-- ============ HOW IT WORKS ============ -->
-    <section class="section section--alt" id="how">
-      <span class="label">How it works</span>
-      <div class="section__bar"><h2>Three steps to Verified Developer</h2></div>
-
-      <ol class="steps">
-        <li class="step">
-          <div class="step__num">1</div>
-          <h3>Create a developer account</h3>
-          <p>Set up your Microsoft developer identity to get started — it takes just a few minutes.</p>
-        </li>
-        <li class="step">
-          <div class="step__num">2</div>
-          <h3>Submit your certificate</h3>
-          <p>Provide your code signing certificate so we can confirm your releases are authentically yours.</p>
-        </li>
-        <li class="step">
-          <div class="step__num">3</div>
-          <h3>You're verified</h3>
-          <p>Earn trusted status and your Blue Badge — unlocking frictionless installs and analytics.</p>
-        </li>
-      </ol>
-    </section>
-
-    <!-- ============ BENEFITS ============ -->
-    <section class="section" id="benefits">
-      <span class="label">Key value</span>
-      <div class="section__bar"><h2>What you get as a trusted developer</h2></div>
-      <p class="section__sub">Six benefits that compound — trust you build once follows every app, release, and certificate.</p>
-
-      <div class="bgrid">
-        <article class="bcard bcard--feature">
-          <img class="bcard__illo" src="assets/shield-person.png" alt="" loading="lazy" />
-          <h3>Verified Identity — the Blue Badge</h3>
-          <p>Your developer identity is visible across Windows, and trust persists across every app and release.</p>
-        </article>
-        <article class="bcard">
-          <img class="bcard__illo" src="assets/arrow-download.png" alt="" loading="lazy" />
-          <h3>Frictionless install experience</h3>
-          <p>No SmartScreen or SAC warnings for verified developers — users install without interruption.</p>
-        </article>
-        <article class="bcard">
-          <img class="bcard__illo" src="assets/data-trending.png" alt="" loading="lazy" />
-          <h3>Analytics for non-Store apps</h3>
-          <p>Crash analytics and app health signals — previously missing for Win32 developers.</p>
-        </article>
-        <article class="bcard">
-          <img class="bcard__illo" src="assets/share.png" alt="" loading="lazy" />
-          <h3>Distribution control</h3>
-          <p>Declare authorized download sources to support anti-piracy and trust attribution.</p>
-        </article>
-        <article class="bcard">
-          <img class="bcard__illo" src="assets/rewards.png" alt="" loading="lazy" />
-          <h3>Reputation system</h3>
-          <p>Reputation persists across apps and certificates — no need to rebuild trust per app.</p>
-        </article>
-        <article class="bcard">
-          <img class="bcard__illo" src="assets/tickets.png" alt="" loading="lazy" />
-          <h3>Developer value layer</h3>
-          <p>Crash analytics, source attribution, and early access &amp; support <em>(proposed)</em>.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- ============ QUOTE / STORY BAND ============ -->
-    <section class="story">
-      <div class="story__inner">
-        <span class="label label--light">Why it matters</span>
-        <p class="story__quote">“Trust shouldn't have to be rebuilt with every release. With a Blue Badge,
-          users install with confidence — and that confidence follows you across every app you ship.”</p>
-        <p class="story__by">Windows Developer Program · Microsoft</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- ============ FOOTER ============ -->
-  <footer class="footer">
-    <div class="footer__inner">
-      <div class="footer__cols">
-        <div class="footer__col">
-          <h4>Windows Developer Program</h4>
-          <a href="#what">What is WDP</a>
-          <a href="#how">How it works</a>
-          <a href="#benefits">Benefits</a>
-          <a href="#portal" data-action="portal">Developer Portal</a>
-        </div>
-        <div class="footer__col">
-          <h4>Resources</h4>
-          <a href="#">Documentation</a>
-          <a href="#">Code signing guide</a>
-          <a href="#">Crash analytics</a>
-          <a href="#">Support</a>
-        </div>
-        <div class="footer__col">
-          <h4>Developer</h4>
-          <a href="store-developer.html">Microsoft Store Developer</a>
-          <a href="#">Microsoft Store</a>
-          <a href="#">Windows apps</a>
-          <a href="#">Changelog</a>
-          <a href="#">Community</a>
-        </div>
-        <div class="footer__col footer__col--cta">
-          <h4>Get started</h4>
-          <fluent-button appearance="primary" size="small" data-action="create">Create account</fluent-button>
-          <fluent-button appearance="outline" size="small" data-action="portal">Open portal</fluent-button>
-        </div>
-      </div>
-      <div class="footer__legal">
-        <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true">
-          <rect x="1" y="1" width="10" height="10" fill="#F25022" />
-          <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
-          <rect x="1" y="12" width="10" height="10" fill="#00A4EF" />
-          <rect x="12" y="12" width="10" height="10" fill="#FFB900" />
-        </svg>
-        <span>© Microsoft 2026</span>
-        <a href="#">Privacy</a>
-        <a href="#">Terms of use</a>
-        <a href="#">Trademarks</a>
-      </div>
     </div>
-  </footer>
 
-  <!-- Fluent 2 web components (real components + dark theme tokens) -->
-  <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
-    import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
-    setTheme(webDarkTheme);
-    ButtonDefinition.define(FluentDesignSystem.registry);
-  </script>
-  <script>window.MKT_ROUTES = { create: "signup.html", portal: "portal.html#signin" };</script>
-  <script src="app.js"></script>
+    <aside class="b-rail" aria-label="Related searches">
+      <h2 class="b-dd__title">Deep dive into <b>windows store developer</b></h2>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span><b>microsoft</b> store developer <b>login</b></span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span>developer.<b>microsoft.com</b> sign in</span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span>Windows Store developer <b>account</b></span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span><b>microsoft</b> developer <b>sign in</b></span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span><b>microsoft</b> Windows Store developer</span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span>Windows developer <b>portal</b></span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span>store developer <b>microsoft onboarding</b></span></a>
+      <a class="b-dd__item" href="#"><iconify-icon icon="fluent:search-16-regular" width="16" height="16"></iconify-icon><span><b>create a microsoft</b> developer <b>account</b></span></a>
+    </aside>
+  </main>
 </body>
 </html>
