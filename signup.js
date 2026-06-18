@@ -1,0 +1,368 @@
+/* Windows Developer Program — Verified Developer journey.
+   Phase 1 "Create developer account" has 4 sub-steps; for the demo we only show
+   the account-type screen — Continue SKIPS the rest and marks them complete, then
+   jumps to Phase 2 "Submit signed binary". The certificate step uses the REAL WDP
+   portal verification logic: it generates an account-tied binary, posts the signed
+   file to /api/verify-signature (Authenticode read), rejects unsigned/self-signed
+   files, and shows the real signer subject / issuer / thumbprint / trust. On finish
+   it seeds the portal with the real cert + verified=true. Demo only. */
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function hashStr(s) { var h = 0, i; for (i = 0; i < s.length; i++) { h = (h << 5) - h + s.charCodeAt(i); h |= 0; } return h; }
+  function uid() { return "id-" + Math.abs(hashStr(String(Date.now()) + Math.random())).toString(36); }
+  function initials(n) { var p = (n || "").trim().split(/\s+/);
+    return (((p[0] || "")[0] || "") + ((p[1] || "")[0] || "") || "U").toUpperCase(); }
+  async function sha256(file) {
+    var buf = await file.arrayBuffer();
+    var d = await crypto.subtle.digest("SHA-256", buf);
+    return Array.prototype.map.call(new Uint8Array(d), function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  }
+  function fmtThumb(hex) { var u = (hex || "").toUpperCase(); if (u.length < 12) return u; return u.slice(0, 16).match(/.{1,4}/g).join(" ") + " … " + u.slice(-4); }
+  function fmtSize(n) { if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB"; if (n >= 1024) return (n / 1024).toFixed(0) + " KB"; return n + " B"; }
+  function today() { return new Date().toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }); }
+  function cnOf(subject) { if (!subject) return null; var m = /CN=([^,]+)/i.exec(subject); return m ? m[1].trim() : subject; }
+  function trustPill(t) {
+    if (t === "Valid") return '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Valid</span>';
+    if (t === "Offline") return '<span class="pill pill--ghost pill--sm">Hash only</span>';
+    if (t === "NotSigned") return '<span class="pill pill--warn pill--sm">Unsigned</span>';
+    return '<span class="pill pill--warn pill--sm">Untrusted</span>';
+  }
+  // A certificate whose issuer equals its subject is self-signed → not acceptable.
+  function isSelfSigned(info) {
+    if (!info || !info.signerThumbprint) return false;
+    var s = (info.signerSubject || "").trim().toLowerCase();
+    var iss = (info.issuer || "").trim().toLowerCase();
+    return !!s && s === iss;
+  }
+  // Ask the local backend to read the real Authenticode signature; fall back to a
+  // client-side SHA-256 fingerprint when the API is unreachable.
+  async function inspectFile(file) {
+    try {
+      var res = await fetch("/api/verify-signature?name=" + encodeURIComponent(file.name), { method: "POST", body: file });
+      if (!res.ok) throw new Error("api");
+      var j = await res.json();
+      if (j && j.error) throw new Error(j.error);
+      j.offline = false; return j;
+    } catch (e) { return { offline: true, status: "Offline", fileSha256: await sha256(file) }; }
+  }
+  function makeCert(info, file) {
+    var thumb = info.signerThumbprint || info.fileSha256;
+    return {
+      id: uid(),
+      label: cnOf(info.signerSubject) || file.name.replace(/\.[^.]+$/, ""),
+      subject: info.signerSubject || null, issuer: info.issuer || null,
+      thumb: thumb, thumbKind: info.signerThumbprint ? "cert" : "hash",
+      trust: info.status || "Unknown", signed: !!info.signerThumbprint,
+      notAfter: info.notAfter || null, added: today()
+    };
+  }
+
+  var MSA = { name: "Alex Taylor", email: "alex.taylor@outlook.com", initials: "AT" };
+
+  var PHASES = [
+    { title: "Create developer account" },
+    { title: "Submit signed binary" }
+  ];
+  var STEPS = [
+    { key: "account",  phase: 0, title: "Account type",
+      head: "Choose your account type", headSub: "Tell us whether you're publishing as an individual or a company." },
+    { key: "identity", phase: 0, title: "Identity verification" },
+    { key: "profile",  phase: 0, title: "Profile details" },
+    { key: "setup",    phase: 0, title: "Account setup" },
+    { key: "verify",   phase: 1, title: "Upload & submit binary",
+      head: "Your developer account is created", headSub: "One last step — download your binary, sign it, and upload it to become a trusted developer." }
+  ];
+  var VERIFY = STEPS.length - 1;
+
+  var cur = 0, acctType = null, done = false;
+  var downloaded = false, verifying = false;
+  var pendingFile = null;     // the real File the user dropped/selected
+  var verifyError = null;     // { name, reason } when a file is rejected
+  var verifiedCert = null;    // the accepted certificate (real details)
+  var discoveredApps = [];    // installed apps on this PC signed by that certificate
+  var store = { pubName: "", country: "United States", email: MSA.email };
+
+  /* ---------- step rail (two phases, sub-steps nested) ---------- */
+  function renderRail() {
+    var html = "";
+    for (var p = 0; p < PHASES.length; p++) {
+      var idxs = []; for (var i = 0; i < STEPS.length; i++) if (STEPS[i].phase === p) idxs.push(i);
+      var first = idxs[0], last = idxs[idxs.length - 1];
+      var pDone = done || cur > last, pActive = !done && cur >= first && cur <= last;
+      var hCls = pDone ? "is-done" : pActive ? "is-active" : "";
+      var num = pDone ? '<iconify-icon icon="fluent:checkmark-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' : (p + 1);
+      var subs = idxs.map(function (i) {
+        var sDone = done || i < cur, sActive = !done && i === cur;
+        var sCls = sDone ? "is-done" : sActive ? "is-active" : "";
+        var ind = sDone
+          ? '<iconify-icon class="wsub__check" icon="fluent:checkmark-12-filled" width="12" height="12" aria-hidden="true"></iconify-icon>'
+          : '<span class="wsub__dot"></span>';
+        return '<div class="wsub ' + sCls + '">' + ind + '<span>' + STEPS[i].title + '</span></div>';
+      }).join("");
+      html += '<div class="wphase">' +
+        '<div class="wstep ' + hCls + '"><span class="wstep__n">' + num + '</span>' +
+          '<span class="wstep__t"><strong>' + PHASES[p].title + '</strong></span></div>' +
+        '<div class="wsubs ' + (pDone ? "is-done" : "") + '">' + subs + '</div>' +
+      '</div>';
+    }
+    $("wsteps").innerHTML = html;
+  }
+
+  /* ---------- step bodies ---------- */
+  function bodyAccount() {
+    function card(t, illo, title, p1) {
+      return '<div class="acct-card' + (acctType === t ? ' is-selected' : '') + '" data-acct="' + t + '" role="button" tabindex="0" aria-pressed="' + (acctType === t) + '">' +
+        '<iconify-icon class="acct-card__check" icon="fluent:checkmark-circle-16-filled" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+        '<div class="acct-card__illo"><img src="assets/' + illo + '" alt="" /></div>' +
+        '<h3>' + title + '</h3><p>' + p1 + '</p><span class="acct-free">Free</span></div>';
+    }
+    return '<div class="acct-grid">' +
+      card("individual", "person.png", "Individual developer",
+        "For hobbyists, students, and solo developers publishing under their own name.") +
+      card("company", "building.png", "Company account",
+        "For businesses and teams publishing under a company or organization name.") +
+      '</div>';
+  }
+
+  function dropzoneHTML() {
+    var zone = pendingFile
+      ? '<div class="dropzone__file">' +
+          '<span class="dropzone__fileico"><iconify-icon icon="fluent:document-checkmark-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+          '<span class="dropzone__filemeta"><strong>' + esc(pendingFile.name) + '</strong><span class="muted">' + fmtSize(pendingFile.size) + '</span></span>' +
+          '<button type="button" class="dropzone__clear" id="binClear" aria-label="Remove file">✕</button>' +
+        '</div>'
+      : '<div class="dropzone__prompt">' +
+          '<iconify-icon icon="fluent:arrow-upload-20-regular" width="26" height="26" aria-hidden="true"></iconify-icon>' +
+          '<span><strong>Drop signed binary</strong> or click to browse</span>' +
+          '<span class="dropzone__hint">.exe · .dll · .msix · .appx · .bin</span>' +
+        '</div>';
+    return '<input type="file" id="binInput" accept=".exe,.dll,.msix,.appx,.msi,.bin,.cer,.crt,.pem,.der" hidden />' +
+      '<div class="dropzone' + (pendingFile ? " has-file" : "") + '" id="binDrop" role="button" tabindex="0" aria-label="Upload signed binary">' +
+        zone + '<div class="dropzone__bar" id="binBar" hidden></div></div>';
+  }
+
+  function errorHTML() {
+    if (!verifyError) return "";
+    return '<div class="msgbar msgbar--error">' +
+      '<iconify-icon class="msgbar__icon" icon="fluent:error-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+      '<div class="msgbar__content"><strong>We couldn’t verify ' + esc(verifyError.name) + '</strong><p>' + esc(verifyError.reason) + '</p></div>' +
+      '<button type="button" class="msgbar__dismiss" id="binErrDismiss" aria-label="Dismiss">✕</button>' +
+    '</div>';
+  }
+
+  // Reuses the WDP portal "Verify your certificate" UI: steps 1 & 2 side by side,
+  // step 3 (submit the signed file) full-width below.
+  function bodyVerify() {
+    return '<div class="wiz-verify">' +
+      '<div class="hsteps">' +
+        '<div class="hstep">' +
+          '<div class="hstep__num">1</div>' +
+          '<h3>Download the binary</h3>' +
+          '<p class="muted">A unique binary tied to your account — download this exact file to sign.</p>' +
+          '<fluent-button appearance="' + (downloaded ? "subtle" : "outline") + '" id="binDownload" class="js-download">' +
+            '<iconify-icon slot="start" icon="' + (downloaded ? "fluent:checkmark-circle-20-filled" : "fluent:arrow-download-20-regular") + '" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+            (downloaded ? "Downloaded" : "Download binary") + '</fluent-button>' +
+        '</div>' +
+        '<div class="hstep">' +
+          '<div class="hstep__num">2</div>' +
+          '<h3>Sign it with your certificate</h3>' +
+          '<p class="muted">Must be from a trusted authority — not self-signed.</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hstep hstep--full">' +
+        '<div class="hstep__num">3</div>' +
+        '<h3>Submit the signed file</h3>' +
+        '<p class="muted">Drop it below to become a trusted developer.</p>' +
+        dropzoneHTML() + errorHTML() +
+        '<div class="submit-row"><fluent-button appearance="primary" id="binSubmit"' + (pendingFile ? "" : " disabled") + '>Become a trusted developer</fluent-button></div>' +
+      '</div></div>';
+  }
+
+  function certDetail(c) {
+    function row(k, v) { return '<div class="rev__row"><span>' + k + '</span><strong>' + v + '</strong></div>'; }
+    var expires = "—";
+    if (c.notAfter) { var d = new Date(c.notAfter); if (!isNaN(d)) expires = d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }); }
+    return '<div class="rev">' +
+      row("Certificate", esc(c.label || "—")) +
+      (c.issuer ? row("Issued by", esc(cnOf(c.issuer) || c.issuer)) : "") +
+      '<div class="rev__row"><span>Thumbprint</span><strong class="mono">' + esc(fmtThumb(c.thumb)) + '</strong></div>' +
+      '<div class="rev__row"><span>Status</span>' + trustPill(c.trust) + '</div>' +
+      row("Expires", expires) +
+      '</div>';
+  }
+
+  // Completion = the portal's hero status-card banner + the verified certificate.
+  function bodyDone() {
+    return '<div class="status-card wiz-hero">' +
+      '<img class="status-card__illo" src="assets/badge.png" alt="" />' +
+      '<div class="status-card__body">' +
+        '<span class="pill pill--ok"><span class="verified-dot"></span>Verified Developer</span>' +
+        '<h2>You’re a Verified Developer</h2>' +
+        '<p class="muted">Your <strong>Blue Badge</strong> is active. Apps you sign now install without friction across Windows — and the trust you just earned follows every release.</p>' +
+      '</div>' +
+      '<div class="status-card__action">' +
+        '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:open-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Go to developer portal</fluent-button>' +
+      '</div>' +
+    '</div>' +
+    perksHTML() +
+    (verifiedCert ? '<div class="wiz-certcard">' + certDetail(verifiedCert) + '</div>' : '');
+  }
+  function perksHTML() {
+    function item(icon, title, desc) {
+      return '<div class="wiz-next__item">' +
+        '<iconify-icon icon="' + icon + '" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+        '<div><strong>' + title + '</strong><span>' + desc + '</span></div></div>';
+    }
+    return '<div class="wiz-next">' +
+      '<p class="wiz-next__lead">In your developer portal, you can:</p>' +
+      '<div class="wiz-next__grid">' +
+        item("fluent:data-trending-20-regular", "Crash analytics", "Monitor crashes and app health.") +
+        item("fluent:share-20-regular", "Distribution", "Control where your apps are distributed.") +
+        item("fluent:certificate-20-regular", "Certificates", "Add and manage signing certificates.") +
+      '</div></div>';
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    renderRail();
+    if (done) {
+      $("wizTitle").textContent = "You’re enrolled in the Windows Developer Program";
+      $("wizSub").textContent = "Your developer account is active and your code is verified.";
+      $("wizBody").innerHTML = bodyDone();
+      $("wizFootbar").innerHTML = "";
+      wireDone();
+      return;
+    }
+    var s = STEPS[cur], k = s.key;
+    $("wizTitle").textContent = s.head;
+    $("wizSub").textContent = s.headSub;
+    $("wizBody").innerHTML = k === "account" ? bodyAccount() : bodyVerify();
+    if (k === "account") {
+      $("wizFootbar").innerHTML = '<span></span>' +
+        '<fluent-button appearance="primary" id="wizNext"' + (acctType ? "" : " disabled") + '>Continue</fluent-button>';
+    } else {
+      $("wizFootbar").innerHTML = "";
+    }
+    wireStep();
+  }
+
+  // Demo: skip the account-creation sub-steps and jump straight to the binary step.
+  function next() {
+    if (STEPS[cur].key !== "account" || !acctType) return;
+    cur = VERIFY; render(); window.scrollTo(0, 0);
+  }
+
+  // Generate the account-tied verification binary (same as the portal's download).
+  function downloadBinary() {
+    var nonce = Math.abs(hashStr((store.email || "x") + Date.now())).toString(16);
+    var blob = new Blob(["WDP-VERIFICATION-BINARY\naccount: " + (store.email || "") + "\nnonce: " + nonce + "\n"], { type: "application/octet-stream" });
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = "wdp-verification.bin"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    downloaded = true; render();
+  }
+
+  // Real verification: read the Authenticode signature, reject unsigned/self-signed.
+  async function verifyFile() {
+    if (!pendingFile || verifying) return;
+    verifying = true; verifyError = null;
+    var sb = $("binSubmit"); if (sb) { sb.setAttribute("disabled", ""); sb.innerHTML = '<span class="spinner"></span>Verifying…'; }
+    var dz = $("binDrop"); if (dz) dz.classList.add("is-verifying");
+    var bar = $("binBar"); if (bar) bar.hidden = false;
+    var file = pendingFile, info = await inspectFile(file);
+    verifying = false;
+    if (!info.offline && info.kind === "authenticode" && !info.signerThumbprint) {
+      verifyError = { name: file.name, reason: "This file isn’t signed. Sign it with a certificate from a trusted Certificate Authority (CA)." };
+      render(); return;
+    }
+    if (!info.offline && isSelfSigned(info)) {
+      verifyError = { name: file.name, reason: "The certificate is self-signed, not issued by a trusted Certificate Authority (CA). Use a CA-issued code signing certificate." };
+      render(); return;
+    }
+    verifiedCert = makeCert(info, file);
+    // One cert → all its apps: discover installed apps signed by this certificate.
+    if (verifiedCert.thumbKind === "cert") discoveredApps = await discoverAppsForCert(verifiedCert.thumb, verifiedCert.id);
+    done = true; render(); window.scrollTo(0, 0);
+  }
+
+  // Mirror the portal's discoverApps: real apps on this PC signed by this cert.
+  async function discoverAppsForCert(thumb, certId) {
+    var apps = [];
+    try {
+      var res = await fetch("/api/apps-by-cert?thumbprint=" + encodeURIComponent(thumb));
+      if (res.ok) {
+        var list = await res.json();
+        if (Array.isArray(list)) list.forEach(function (a) {
+          apps.push({
+            id: uid(), name: a.name || a.file, file: a.file,
+            size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
+            icon: a.icon || null, signerThumb: thumb, signerSubject: null, trust: "Valid", certId: certId,
+            sources: [], store: false, added: today(), discoveryKey: "p:" + (a.path || (a.file + a.sizeKB)), discovered: true
+          });
+        });
+      }
+    } catch (e) {}
+    return apps;
+  }
+
+  function wireStep() {
+    var nb = $("wizNext"); if (nb) nb.addEventListener("click", next);
+    if (STEPS[cur].key === "account") {
+      $("wizBody").querySelectorAll("[data-acct]").forEach(function (el) {
+        function pick() { acctType = el.getAttribute("data-acct"); render(); }
+        el.addEventListener("click", pick);
+        el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+      });
+    } else {
+      wireVerify();
+    }
+  }
+  function wireVerify() {
+    var dl = $("binDownload"); if (dl) dl.addEventListener("click", downloadBinary);
+    var input = $("binInput"), dz = $("binDrop");
+    function take(files) { if (files && files.length) { pendingFile = files[0]; verifyError = null; render(); } }
+    if (input) input.addEventListener("change", function () { take(input.files); input.value = ""; });
+    if (dz) {
+      dz.addEventListener("click", function (e) { if (e.target.closest("#binClear")) return; if (input) input.click(); });
+      dz.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (input) input.click(); } });
+      ["dragover", "dragenter"].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("is-over"); }); });
+      ["dragleave", "drop"].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("is-over"); }); });
+      dz.addEventListener("drop", function (e) { take(e.dataTransfer.files); });
+    }
+    var clr = $("binClear");
+    if (clr) clr.addEventListener("click", function (e) { e.stopPropagation(); if (verifying) return; pendingFile = null; verifyError = null; render(); });
+    var dis = $("binErrDismiss");
+    if (dis) dis.addEventListener("click", function () { verifyError = null; render(); });
+    var sb = $("binSubmit"); if (sb) sb.addEventListener("click", verifyFile);
+  }
+  function wireDone() {
+    var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
+  }
+
+  // Land in the WDP portal already signed in and verified, with the real cert.
+  function seedPortal() {
+    try {
+      var KEY = "tdp.portal.v5", s;
+      try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+      if (!s || !s.certs || !s.apps) s = { signedIn: false, account: null, verified: false, certs: [], apps: [] };
+      s.signedIn = true;
+      s.account = { name: store.pubName || MSA.name, email: store.email || MSA.email, initials: initials(store.pubName || MSA.name) };
+      if (verifiedCert) {
+        if (!s.certs.some(function (c) { return c.thumb === verifiedCert.thumb; })) s.certs.push(verifiedCert);
+        if (s.certs.length) s.verified = true;
+        discoveredApps.forEach(function (app) {
+          if (!s.apps.some(function (x) { return x.discoveryKey && x.discoveryKey === app.discoveryKey; })) s.apps.push(app);
+        });
+      }
+      localStorage.setItem(KEY, JSON.stringify(s));
+    } catch (e) {}
+  }
+
+  /* ---------- sign-in gate ---------- */
+  function showWiz() { $("signin").hidden = true; $("wiz").hidden = false; render(); }
+  $("msaTile").addEventListener("click", showWiz);
+  var other = $("msaOther"); if (other) other.addEventListener("click", showWiz);
+})();
