@@ -171,8 +171,19 @@
   .ez-package-list { display: flex; flex-direction: column; gap: var(--sp-8); }
   .ez-package-list:not(:empty) { margin-bottom: var(--sp-16); }   /* breathing room before the add form / add-another button */
   /* Submission-level restricted-capabilities notice (one per submission, shared justifications) */
-  #pkg-caps-notice[hidden] { display: none; }
+  /* Submission-level restricted-capabilities banner: lives above the package card (outside it)
+     and shows only while the Package step/section is on screen (mirrors the identity banner). */
+  #pkg-caps-notice { display: none; }
   #pkg-caps-notice:not([hidden]) { margin-bottom: var(--sp-16); }
+  #flow-wrap.is-wizard #pkg-caps-notice.is-wz-show:not([hidden]) { display: block; }
+  #flow-wrap[data-mode="advanced"] #editor[data-active-section="step-package"] #pkg-caps-notice:not([hidden]) { display: block; }
+  /* Device-family distribution — compact one-line control; only when packages span >1 family */
+  #pkg-family-dist[hidden] { display: none; }
+  #pkg-family-dist:not([hidden]) { margin-bottom: var(--sp-16); }
+  .ez-famdist { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-8) var(--sp-20); padding: var(--sp-10) var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas-tint); }
+  .ez-famdist__label { font-size: 13px; font-weight: 600; color: var(--fg-1); margin-right: var(--sp-4); }
+  .ez-famdist__opt { display: inline-flex; align-items: center; gap: var(--sp-8); }
+  .ez-famdist__opt label { font-size: 13px; color: var(--fg-2); cursor: pointer; }
   .ez-caps-notice { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); border: 1px solid color-mix(in srgb, var(--status-warning) 55%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--status-warning) 8%, var(--canvas-tint)); }
   .ez-caps-notice--ok { border-color: color-mix(in srgb, var(--status-success) 50%, transparent); background: color-mix(in srgb, var(--status-success) 8%, var(--canvas-tint)); }
   .ez-caps-notice > iconify-icon { color: var(--status-warning); flex: 0 0 auto; }
@@ -1605,6 +1616,10 @@
         <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
       </p>
 
+      <!-- Restricted-capabilities notice: a submission-level banner that sits ABOVE the
+           package card (outside it), shown only while the Package step/section is on screen. -->
+      <div id="pkg-caps-notice" hidden></div>
+
       <!-- Step 1: package -->
       <section class="ez-step is-wz-active" id="step-package">
         <div class="ez-step__head">
@@ -1617,8 +1632,8 @@
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </div>
         <input type="file" id="pkg-file" accept=".msix,.msixbundle,.appx,.appxbundle,.exe,.msi" hidden multiple />
+        <div id="pkg-family-dist" hidden></div>
         <div class="ez-package-list" id="package-list"></div>
-        <div id="pkg-caps-notice" hidden></div>
         <div id="pkg-type-msg" class="ez-type-msg" hidden></div>
         <div id="pkg-input">
           <div class="ez-pkg-add" id="pkg-add-surface">
@@ -3422,6 +3437,9 @@
     // Identity-values banner: only on the Package step (above the card).
     const idBanner = $('ez-pkg-identity-banner');
     if (idBanner) idBanner.classList.toggle('is-wz-show', cur === 'step-package');
+    // Restricted-capabilities banner: also above the card, Package step only.
+    const capsBanner = $('pkg-caps-notice');
+    if (capsBanner) capsBanner.classList.toggle('is-wz-show', cur === 'step-package');
     easyOpen = cur; // keep the easy-stepper state coherent (summaries)
     updateWzChrome();
     if (typeof ezRenderPreview === 'function') ezRenderPreview(); // keep the listing price preview in sync with Reach & price
@@ -3921,6 +3939,71 @@
     if (method === 'url') { const u = $('pkg-url-input'); if (u) setTimeout(() => { try { u.focus(); } catch (e) {} }, 0); }
   }
 
+  // ---- Device-family distribution -------------------------------------------------
+  // When the uploaded packages span more than one device family (e.g. Desktop + Xbox),
+  // let the developer choose which families to publish to. Session-only; defaults to on.
+  const familyDistribution = {};
+  const FAMILY_DIST_ORDER = ['Desktop', 'Xbox', 'Surface Hub', 'HoloLens', 'IoT', 'Web'];
+  function familiesOfPkg(pkg) {
+    if (pkg.devices && pkg.devices.length) return pkg.devices.slice();
+    if (pkg.win32) return ['Desktop'];
+    if (pkg.kind === 'pwa') return ['Web'];
+    return [];
+  }
+  function collectDeviceFamilies() {
+    const set = new Set();
+    packages.forEach(p => familiesOfPkg(p).forEach(f => { if (f && f !== '—') set.add(f); }));
+    return Array.from(set).sort((a, b) => {
+      const ia = FAMILY_DIST_ORDER.indexOf(a), ib = FAMILY_DIST_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+  }
+  const isFamilyEnabled = (fam) => familyDistribution[fam] !== false;
+  const enabledFamilyCount = (fams) => fams.filter(isFamilyEnabled).length;
+
+  function renderFamilyDistribution() {
+    const host = $('pkg-family-dist');
+    if (!host) return;
+    const fams = collectDeviceFamilies();
+    // Drop choices for families that are no longer present.
+    Object.keys(familyDistribution).forEach(f => { if (fams.indexOf(f) < 0) delete familyDistribution[f]; });
+    // The choice only exists when the packages span more than one family.
+    if (fams.length < 2) {
+      // A single family always ships — clear any stale off-state so it can't be silently hidden.
+      Object.keys(familyDistribution).forEach(f => delete familyDistribution[f]);
+      host.hidden = true; host.innerHTML = '';
+      return;
+    }
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+    const opts = fams.map(fam => {
+      const id = 'famdist-' + fam.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      return '<span class="ez-famdist__opt">' +
+          '<label for="' + id + '">' + esc(fam) + '</label>' +
+          '<fluent-switch id="' + id + '" ' + (isFamilyEnabled(fam) ? 'checked' : '') + ' data-fam="' + esc(fam) + '" aria-label="Distribute to ' + esc(fam) + '"></fluent-switch>' +
+        '</span>';
+    }).join('');
+    host.hidden = false;
+    host.innerHTML =
+      '<div class="ez-famdist">' +
+        '<span class="ez-famdist__label">Distribute app to</span>' +
+        opts +
+      '</div>';
+    host.querySelectorAll('[data-fam]').forEach(sw => {
+      sw.addEventListener('change', () => {
+        const fam = sw.getAttribute('data-fam');
+        const want = !!sw.checked;
+        // Never let the last family go dark — revert and explain (screen-reader only; the toggle visibly snaps back).
+        if (!want && isFamilyEnabled(fam) && enabledFamilyCount(fams) <= 1) {
+          sw.checked = true;
+          announce('Keep at least one device family on to distribute your app.');
+          return;
+        }
+        familyDistribution[fam] = want;
+        announce('Distribution to ' + fam + (want ? ' turned on' : ' turned off') + '.');
+      });
+    });
+  }
+
   function renderPackages() {
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
     // Display newest version first. (The packages array itself keeps insertion order — packageMethod relies on packages[0].)
@@ -3999,7 +4082,7 @@
           '</div>';
       }
     }
-    document.querySelectorAll('#step-package [data-open-caps]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); openRestrictedCapsDialog(); }));
+    document.querySelectorAll('#pkg-caps-notice [data-open-caps]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); openRestrictedCapsDialog(); }));
     // Whole row toggles its detail row (clicks on the controls/remove pass through).
     packageList.querySelectorAll('.ez-pkg-trow[data-expand]').forEach(rowEl => {
       const toggle = () => {
@@ -4074,6 +4157,7 @@
     const addMore = $('add-more-pkg');   // both methods produce a package, so the label is uniform
     if (addMore) addMore.hidden = packages.length === 0;
     updateUploadConstraints();   // drop-zone hint + accepted file types reflect the locked package type
+    renderFamilyDistribution();  // per-family distribution toggles (only when packages span >1 family)
     state.pkg = packages.length > 0;
     updateGate();
   }
