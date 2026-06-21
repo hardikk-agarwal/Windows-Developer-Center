@@ -30,7 +30,7 @@
   --brand-strong: var(--colorBrandBackground, #0F6CBD);
   --brand-soft: var(--colorBrandForegroundLink, #4aa6ff);
   --teal: var(--colorPaletteTealForeground2, #5ad1cd);
-  --link: var(--colorBrandForegroundLink, #4cc2ff);
+  --link: var(--colorBrandForegroundLink, #60CDFF);
 
   /* Build pixel palette */
   --px-pink: #E3008C;

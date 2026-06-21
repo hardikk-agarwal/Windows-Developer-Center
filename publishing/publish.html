@@ -299,7 +299,13 @@
   .ez-extra-tag--req { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, transparent); background: color-mix(in srgb, var(--brand) 10%, transparent); }
   .ez-extra-tag--meta { display: inline-flex; align-items: center; gap: 4px; border-style: dashed; }
   .ez-extra-field__hint { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-12); line-height: 1.45; }
-  .ez-extra-input { width: 100%; display: block; }
+  /* Standard full-width Fluent field. The visible box lives in the component's shadow DOM (::part),
+     so sizing the host alone leaves the inner box at its intrinsic width (the "field narrower than the
+     dialog" mismatch). Size the host AND the parts here, once, so any .ez-extra-input field fills its
+     container — no per-dialog ::part rules required. */
+  .ez-extra-input { width: 100%; display: block; box-sizing: border-box; }
+  .ez-extra-input::part(root),
+  .ez-extra-input::part(control) { width: 100%; box-sizing: border-box; }
   .ez-kw-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); }
   .ez-kw-suggest__label { font-size: 11.5px; color: var(--fg-3); }
   .ez-kw-chips { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
@@ -318,16 +324,46 @@
   .ez-kw-easy__note iconify-icon { color: var(--brand); flex: 0 0 auto; }
   .ez-kw-easy__note strong { font-weight: var(--font-weight-semibold); color: var(--fg-2); }
   .ez-kw-easy__empty { font-size: 12px; color: var(--fg-3); }
-  /* Show the simple view by default; swap to the editor only when the listing's Advanced options are on
-     (the keywords card is a sibling of #step-listing, so :has() reaches the toggled state). */
-  #listing-extras-card .ez-kw-adv { display: none; }
-  #flow-wrap.is-wizard:has(#step-listing.is-more) #listing-extras-card .ez-kw-easy,
-  #flow-wrap[data-mode="advanced"] #listing-extras-card .ez-kw-easy { display: none; }
-  #flow-wrap.is-wizard:has(#step-listing.is-more) #listing-extras-card .ez-kw-adv,
-  #flow-wrap[data-mode="advanced"] #listing-extras-card .ez-kw-adv { display: block; }
+  /* Search keywords: the full editor shows in both simple and advanced mode (keywords still
+     auto-seed from the description; the user can add/remove from either mode). */
+  #listing-extras-card .ez-kw-easy { display: none; }
+  #listing-extras-card .ez-kw-adv { display: block; }
   /* Privacy policy: Link/Text mode toggle + AI-generate */
   .privacy-mode-toggle { align-self: flex-start; margin-bottom: var(--sp-10); }
   .privacy-field__input[hidden] { display: none; }
+  /* Privacy editor dialog: full-width inputs (controls moved here keep their original classes). */
+  #privacy-edit-dialog .privacy-field__input,
+  #privacy-edit-dialog .ez-extra-input,
+  #privacy-edit-dialog fluent-text-input,
+  #privacy-edit-dialog fluent-textarea { width: 100%; }
+  /* Own the dialog's vertical rhythm in one flex column (the dialog-body's default slot spacing was
+     the source of the big gaps). Uniform 12px between hint, toggle, field, and the Generate link. */
+  #privacy-edit-dialog .privacy-dialog__content { display: flex; flex-direction: column; gap: var(--sp-12); }
+  #privacy-edit-dialog .privacy-dialog__content > * { margin: 0; }
+  /* Text mode is a single-line field so it matches the Link (URL) field exactly — same height, no
+     resize when switching. Both render at the Fluent field's natural single-line height. */
+  #privacy-edit-dialog #privacy-text-inline::part(control) { resize: none; min-height: 0; height: auto; }
+  /* Compact close button, matching every other dialog. */
+  #privacy-edit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  /* License terms editor dialog — same chrome; a roomy full-width textarea for long terms. */
+  #license-edit-dialog, #license-edit-dialog::part(control), #license-edit-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  #license-edit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  #license-edit-dialog .privacy-dialog__content { display: flex; flex-direction: column; gap: var(--sp-12); }
+  #license-edit-dialog .privacy-dialog__content > * { margin: 0; }
+  #license-edit-dialog fluent-textarea,
+  #license-edit-dialog fluent-textarea::part(root),
+  #license-edit-dialog fluent-textarea::part(control) { width: 100%; box-sizing: border-box; }
+  /* Generic single-field editor dialog (Developed by, Copyright). */
+  #field-edit-dialog, #field-edit-dialog::part(control), #field-edit-dialog::part(dialog) { width: min(480px, 92vw); max-width: min(480px, 92vw); }
+  #field-edit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  #field-edit-dialog .privacy-dialog__content { display: flex; flex-direction: column; gap: var(--sp-12); }
+  #field-edit-dialog .privacy-dialog__content > * { margin: 0; }
+  #field-edit-dialog .ez-extra-field__hint[hidden] { display: none; }
+  #field-edit-dialog fluent-text-input,
+  #field-edit-dialog fluent-text-input::part(root),
+  #field-edit-dialog fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
+  /* Additional-information section visibility is JS-controlled (renderInfo). */
+  #ez-info-section[hidden] { display: none !important; }
   #gen-privacy { align-self: flex-start; margin-top: var(--sp-10); }
   #privacy-dialog::part(control), #privacy-dialog::part(dialog) { width: min(720px, 92vw); }
   #privacy-dialog .privacy-dialog__lede { font-size: 12.5px; color: var(--fg-3); line-height: 1.5; margin: 0 0 var(--sp-12); }
@@ -386,8 +422,19 @@
   .ez-info-item__label, .ez-info-item__value { grid-column: 2; }
   .ez-info-item__label { color: var(--fg-3); font-weight: 600; }
   .ez-info-item__value { color: var(--fg-2); }
-  .ez-info-item__value--link { color: var(--brand); text-decoration: none; cursor: pointer; }
+  /* Store-style links use the app's --link token = Fluent 2's --colorBrandForegroundLink (with a
+     #60CDFF dark fallback). Theme-aware: Fluent swaps to the darker link blue in light mode. */
+  .ez-info-item__value--link { color: var(--link); text-decoration: none; cursor: pointer; font-weight: 600; width: fit-content; }
   .ez-info-item__value--link:hover { text-decoration: underline; }
+  .ez-info-item__value--link:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 3px; }
+  .ez-info-item__value--link iconify-icon { color: var(--link); }
+  /* Values can stack multiple lines/links (Published by + Copyright; Additional terms = privacy + license). */
+  .ez-info-item__value { display: flex; flex-direction: column; gap: 3px; }
+  .ez-info-item__sub { color: var(--fg-3); }
+  /* Inline editors inside the info grid get a visible box (the live-PDP inline edits are borderless). */
+  .ez-live .ez-info-item .live-edit-input--info { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-4); padding: 4px 6px; color: var(--fg-1); width: 100%; box-sizing: border-box; outline: none; font: inherit; }
+  .ez-live .ez-info-item textarea.live-edit-input--info { resize: vertical; min-height: 76px; line-height: 1.45; }
+  .ez-live .ez-info-item .live-edit-input--info:focus { border-color: var(--brand); }
   /* Trailer tiles inside the screenshots strip. */
   .ez-pv-shot--trailer { position: relative; }
   .ez-pv-shot--trailer video { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); display: block; background: var(--canvas-tint); }
@@ -716,9 +763,9 @@
   .ez-store-hero__icon { width: 72px; height: 72px; flex: 0 0 auto; border-radius: var(--r-12); background: linear-gradient(135deg, hsl(var(--ez-hue, 320), 80%, 60%), hsl(var(--ez-hue, 320), 70%, 40%)); background-size: cover; background-position: center; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
   .ez-store-hero__heading { min-width: 0; padding-top: 2px; }
   .ez-store-hero__name { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 600; color: #fff; margin: 0; letter-spacing: -.2px; word-break: break-word; }
-  .ez-store-hero__publisher { display: inline-block; font-size: 13px; color: #62D4FF; margin: var(--sp-2) 0 0; }
+  .ez-store-hero__publisher { display: inline-block; font-size: 13px; color: var(--link); margin: var(--sp-2) 0 0; }
   .ez-store-hero__meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-6); margin: var(--sp-8) 0 0; font-size: 12px; color: rgba(255,255,255,.92); }
-  .ez-store-hero__cat { color: #62D4FF; }
+  .ez-store-hero__cat { color: var(--link); }
   .ez-store-hero__sep { opacity: .5; }
   .ez-store-hero__desc { font-size: 13px; line-height: 19px; color: rgba(255,255,255,.92); margin: var(--sp-16) 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .ez-store-hero__cta { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-16); }
@@ -2004,7 +2051,9 @@
             </section>
 
             <!-- Additional information (Advanced) -->
-            <section class="ez-card-section adv-only">
+            <!-- Visibility is JS-controlled (renderInfo): full grid in Advanced; in simple mode it
+                 shows only when a privacy policy is required, with just that one row. -->
+            <section class="ez-card-section" id="ez-info-section" hidden>
               <div class="ez-card-section__head">
                 <h4 class="ez-card-section__title">Additional information</h4>
               </div>
@@ -2028,29 +2077,8 @@
            preview so the listing reads shorter: privacy policy + search keywords. -->
       <div class="ez-extras-card" id="listing-extras-card" hidden>
         <div class="ez-listing-extras">
-          <div class="ez-extra-field" id="privacy-field">
-            <div class="ez-extra-field__head">
-              <strong>Privacy policy</strong>
-              <span class="ez-extra-tag" id="privacy-req-tag">Optional</span>
-            </div>
-            <p class="ez-extra-field__hint" id="privacy-hint">A link to your privacy policy. Shown on your Store listing.</p>
-            <div class="seg privacy-mode-toggle" role="tablist" aria-label="Privacy policy format">
-              <button type="button" class="seg__opt seg__opt--active" data-privacy-mode="url" role="tab" aria-selected="true">Link</button>
-              <button type="button" class="seg__opt" data-privacy-mode="text" role="tab" aria-selected="false">Text</button>
-            </div>
-            <div class="privacy-field__input" data-privacy-input="url">
-              <fluent-text-input id="listing-privacy-input" type="url" class="ez-extra-input" placeholder="https://yourapp.com/privacy">
-                <iconify-icon slot="start" icon="fluent:shield-lock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              </fluent-text-input>
-            </div>
-            <div class="privacy-field__input" data-privacy-input="text" hidden>
-              <fluent-textarea id="privacy-text-inline" class="ez-extra-input" rows="5" placeholder="Paste your privacy policy text, or generate a starter below."></fluent-textarea>
-            </div>
-            <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="gen-privacy">
-              <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="13" height="13" aria-hidden="true"></iconify-icon>
-              Generate a basic privacy policy
-            </fluent-button>
-          </div>
+          <!-- Privacy policy now lives under the listing's Additional information row, edited via
+               #privacy-edit-dialog (matches the real Store). The old inline card was removed. -->
           <div class="ez-extra-field" id="keywords-field">
             <div class="ez-extra-field__head">
               <strong>Search keywords</strong>
@@ -2067,7 +2095,7 @@
             <!-- Advanced view: full editor (input + suggestions + removable chips). -->
             <div class="ez-kw-adv" id="kw-adv">
               <p class="ez-extra-field__hint">Words people might search to find your app in the Store.</p>
-              <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword and press Enter" aria-label="Add a search keyword">
+              <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword">
                 <iconify-icon slot="start" icon="fluent:search-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
               </fluent-text-input>
               <div class="ez-kw-suggest" id="kw-suggest" hidden>
@@ -3042,6 +3070,75 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
+<!-- Privacy policy editor — opened from the listing's Additional information row. Link or Text,
+     with an optional AI-drafted starter. Holds the privacy controls that used to be an inline card. -->
+<fluent-dialog id="privacy-edit-dialog" modal-type="modal" aria-labelledby="privacy-edit-title">
+  <fluent-dialog-body>
+    <span slot="title" id="privacy-edit-title">
+      <iconify-icon icon="fluent:shield-lock-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      Privacy policy
+      <span class="ez-extra-tag" id="privacy-req-tag" style="margin-left: 6px;">Optional</span>
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-privacy-edit-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div class="privacy-dialog__content">
+      <p class="ez-extra-field__hint" id="privacy-hint">A link to your privacy policy. Shown on your Store listing.</p>
+      <div class="seg privacy-mode-toggle" role="tablist" aria-label="Privacy policy format">
+        <button type="button" class="seg__opt seg__opt--active" data-privacy-mode="url" role="tab" aria-selected="true">Link</button>
+        <button type="button" class="seg__opt" data-privacy-mode="text" role="tab" aria-selected="false">Text</button>
+      </div>
+      <div class="privacy-field__input" data-privacy-input="url">
+        <fluent-text-input id="listing-privacy-input" type="url" class="ez-extra-input" placeholder="https://yourapp.com/privacy">
+          <iconify-icon slot="start" icon="fluent:shield-lock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+        </fluent-text-input>
+      </div>
+      <div class="privacy-field__input" data-privacy-input="text" hidden>
+        <fluent-textarea id="privacy-text-inline" class="ez-extra-input" rows="1" placeholder="Paste your privacy policy text, or generate a starter below."></fluent-textarea>
+      </div>
+      <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="gen-privacy">
+        <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="13" height="13" aria-hidden="true"></iconify-icon>
+        Generate a basic privacy policy
+      </fluent-button>
+    </div>
+    <fluent-button slot="action" appearance="primary" data-privacy-edit-close>Done</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Applicable license terms editor — opened from the Additional information "License terms" link. -->
+<fluent-dialog id="license-edit-dialog" modal-type="modal" aria-labelledby="license-edit-title">
+  <fluent-dialog-body>
+    <span slot="title" id="license-edit-title">
+      <iconify-icon icon="fluent:document-bullet-list-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      Applicable license terms
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-license-edit-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div class="privacy-dialog__content">
+      <p class="ez-extra-field__hint">Enter license terms for your application to be licensed to customers.</p>
+      <fluent-textarea id="license-terms-input" class="ez-extra-input" rows="8" placeholder="Paste or type your license terms…"></fluent-textarea>
+    </div>
+    <fluent-button slot="action" appearance="primary" data-license-edit-close>Done</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Generic single-field editor — used for the short Additional-information fields (Developed by,
+     Copyright) so every editable cell opens a dialog, like Privacy/License. -->
+<fluent-dialog id="field-edit-dialog" modal-type="modal" aria-labelledby="field-edit-title">
+  <fluent-dialog-body>
+    <span slot="title" id="field-edit-title">Edit</span>
+    <fluent-button slot="title-action" appearance="subtle" data-field-edit-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div class="privacy-dialog__content">
+      <p class="ez-extra-field__hint" id="field-edit-hint" hidden></p>
+      <fluent-text-input id="field-edit-input" class="ez-extra-input"></fluent-text-input>
+    </div>
+    <fluent-button slot="action" appearance="primary" id="field-edit-save">Done</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
 <!-- Submit-for-review dialog: disclosures for both modes; Advanced adds publishing + cert notes. -->
 <fluent-dialog id="submit-dialog" modal-type="modal" aria-labelledby="submit-dialog-title">
   <fluent-dialog-body>
@@ -3619,7 +3716,7 @@
     schedule: { release: { mode: 'now', date: '' }, end: { mode: 'never', date: '' } },
     declarations: { genAi: false, externalCommerce: false, accessibility: false },
     iarcId: '',
-    listing: { shortDesc: '', features: '', keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', hero: null, trailers: [],
+    listing: { shortDesc: '', features: '', keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
       // Multi-language: per-locale buckets for the translated fields (description,
       // shortDesc, features). 'en-US' is the default and lives in the live buffers
       // (fDesc / shortDesc / features); other locales store {description,shortDesc,features}.
@@ -3971,6 +4068,7 @@
   function updateGate() {
     markStep('step-package', state.pkg);
     updatePrivacyChrome();
+    if (typeof window.__refreshInfo === 'function') window.__refreshInfo();  // privacy-required → toggles the simple-mode row
     const listingDone = state.name && state.desc && state.category && state.shots.length > 0 && privacyOk();
     markStep('step-listing', listingDone);
     markStep('step-rating', state.rating);
@@ -5796,9 +5894,9 @@
     const finish = (changed) => {
       if (done) return; done = true;
       el.classList.remove('live-edit--active');
-      // No save-flash here: the dropdown commit already re-renders the new label, and the absolute
-      // tick would overlap a short content-width value (e.g. the category/subcategory text).
-      if (changed) onCommit(dd.value || '');
+      // No save-flash here: the commit re-renders the new label. Remove the inline dropdown FIRST so a
+      // renderInfo() inside onCommit isn't blocked by the "don't clobber an open editor" guard.
+      if (changed) { const val = dd.value || ''; el.innerHTML = ''; onCommit(val); }
       else el.innerHTML = originalHTML;
     };
     // Fluent dropdown fires `change` on pick (same as the package arch/param dropdowns). A focus-out
@@ -7214,22 +7312,44 @@ function openPriceScheduleDialog() {
     const infoGrid = $('ez-pv-info');
     function renderInfo() {
       if (!infoGrid) return;
-      const size = (typeof packages !== 'undefined' && packages[0] && packages[0].sizeBytes) ? ('~' + Math.max(1, Math.round(packages[0].sizeBytes / 1048576)) + ' MB') : '~25 MB';
+      // Don't clobber an open inline editor (dropdown / text field).
+      if (infoGrid.querySelector('fluent-dropdown, select, input, textarea')) return;
+      const fw = document.getElementById('flow-wrap');
+      const advanced = !!(($('step-listing') && $('step-listing').classList.contains('is-more')) || (fw && fw.getAttribute('data-mode') === 'advanced'));
       const locked = localeLocked();
-      const subText = L.subcategory ? esc(L.subcategory) : '<em style="color:var(--fg-3);">Add</em>';
-      const privText = L.privacyUrl ? 'Privacy policy' : '<em style="color:var(--fg-3);">—</em>';
-      // Default-only fields read as plain text (no edit link) on non-default locales.
-      const subVal = locked ? subText : '<a class="ez-info-item__value--link" id="ez-info-subcat">' + subText + '</a>';
-      const privVal = privText;   // display-only here; edited via the dedicated field below the listing
+      const section = $('ez-info-section');
+      const DASH = '<span style="color:var(--fg-3);">—</span>';
+      const ADD = (label) => '<iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true" style="vertical-align:-1px;margin-right:3px;"></iconify-icon>' + label;
+      const link = (id, inner) => '<a class="ez-info-item__value--link" id="' + id + '">' + inner + '</a>';
+      // ---- Additional terms (Privacy policy + Applicable license terms) — shown in both modes ----
+      const privSet = (L.privacyMode === 'text') ? !!(L.privacyText || '').trim() : !!(L.privacyUrl || '').trim();
+      const licSet = !!(L.licenseTerms || '').trim();
+      const privCell = locked ? (privSet ? 'Privacy policy' : DASH) : link('ez-info-privacy', privSet ? 'Privacy policy' : ADD('Add privacy policy'));
+      const licCell  = locked ? (licSet ? 'License terms' : DASH)  : link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms'));
+      const termsVal = '<span class="ez-info-item__line">' + privCell + '</span><span class="ez-info-item__line">' + licCell + '</span>';
+      const termsRow = infoItem('fluent:document-bullet-list-20-regular', 'Additional terms', termsVal);
+      // Simple mode: just the Additional terms (privacy + license) — the developer-actionable items.
+      if (!advanced) {
+        if (section) section.hidden = false;
+        infoGrid.innerHTML = termsRow;
+        return;
+      }
+      if (section) section.hidden = false;
+      // ---- Full developer grid (advanced) — mirrors the real Store's Additional information ----
+      const devVal   = locked ? ((L.developedBy || '').trim() ? esc(L.developedBy) : DASH) : link('ez-info-developed', (L.developedBy || '').trim() ? esc(L.developedBy) : ADD('Add'));
+      const copyCell = locked ? ((L.copyright || '').trim() ? esc(L.copyright) : '') : link('ez-info-copyright', (L.copyright || '').trim() ? esc(L.copyright) : ADD('Add copyright'));
+      const pubVal   = '<span class="ez-info-item__line">' + esc('Hardik Agarwal') + '</span>' + (copyCell ? '<span class="ez-info-item__line ez-info-item__sub">' + copyCell + '</span>' : '');
+      const subVal   = locked ? (L.subcategory ? esc(L.subcategory) : DASH) : link('ez-info-subcat', L.subcategory ? esc(L.subcategory) : ADD('Add'));
       const langsVal = esc(addedLocales().map(localeShortNameOf).join(', '));
       infoGrid.innerHTML =
-        infoItem('fluent:building-20-regular', 'Published by', esc('Hardik Agarwal')) +
-        infoItem('fluent:tag-20-regular', 'Category', esc(catLabel())) +
+        infoItem('fluent:box-20-regular', 'Developed by', devVal) +
+        infoItem('fluent:building-20-regular', 'Published by', pubVal) +
+        infoItem('fluent:bookmark-20-regular', 'Category', esc(catLabel())) +
         infoItem('fluent:tag-multiple-20-regular', 'Subcategory', subVal) +
-        infoItem('fluent:database-20-regular', 'Approximate size', esc(size)) +
         infoItem('fluent:globe-20-regular', 'Supported languages', langsVal) +
-        infoItem('fluent:document-20-regular', 'Privacy policy', privVal);
+        termsRow;
     }
+    window.__refreshInfo = renderInfo;
     function editSubcat() {
       if (localeLocked()) { announce('Switch to the default language to change the subcategory.'); return; }
       const target = $('ez-info-subcat'); if (!target) return;
@@ -7248,20 +7368,72 @@ function openPriceScheduleDialog() {
         renderInfo();
       });
     }
-    function editPrivacy() {
+    function openPrivacyDialog() {
       if (localeLocked()) { announce('Switch to the default language to edit the privacy policy.'); return; }
-      const target = $('ez-info-privacy'); if (!target) return;
-      const inp = document.createElement('input');
-      inp.type = 'url'; inp.className = 'live-edit-input'; inp.value = L.privacyUrl || ''; inp.placeholder = 'https://yourapp.com/privacy';
-      inp.style.cssText = 'width:100%;background:transparent;border:0;outline:none;color:inherit;font:inherit;';
-      target.replaceWith(inp); inp.focus();
-      const done = () => { L.privacyUrl = (inp.value || '').trim(); persistAdvanced(); renderInfo(); updateGate(); };
-      inp.addEventListener('blur', done);
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = L.privacyUrl || ''; inp.blur(); } });
+      const dlg = $('privacy-edit-dialog'); if (!dlg) return;
+      // Sync the dialog's controls from the current state, then show it.
+      if (typeof setPrivacyMode === 'function') setPrivacyMode(getPrivacyMode(), false);
+      if (privacyUrlInput) privacyUrlInput.value = L.privacyUrl || '';
+      if (privacyTextInline) privacyTextInline.value = L.privacyText || '';
+      if (typeof updatePrivacyChrome === 'function') updatePrivacyChrome();
+      try { dlg.show(); } catch (e) {}
     }
+    // The inputs commit live (on input/change), so closing just refreshes the row + gate.
+    (function wirePrivacyEditClose() {
+      const dlg = $('privacy-edit-dialog'); if (!dlg) return;
+      dlg.querySelectorAll('[data-privacy-edit-close]').forEach(el => el.addEventListener('click', () => {
+        try { dlg.hide(); } catch (e) {}
+        renderInfo(); if (typeof updateGate === 'function') updateGate();
+      }));
+    })();
+    function openLicenseDialog() {
+      if (localeLocked()) { announce('Switch to the default language to edit license terms.'); return; }
+      const dlg = $('license-edit-dialog'); if (!dlg) return;
+      const ta = $('license-terms-input'); if (ta) ta.value = L.licenseTerms || '';
+      try { dlg.show(); } catch (e) {}
+    }
+    // Commit the terms when the dialog closes (Done or X), then refresh the row.
+    (function wireLicenseEditClose() {
+      const dlg = $('license-edit-dialog'); if (!dlg) return;
+      dlg.querySelectorAll('[data-license-edit-close]').forEach(el => el.addEventListener('click', () => {
+        const ta = $('license-terms-input');
+        if (ta && !localeLocked()) L.licenseTerms = (ta.value || '').trim();
+        try { dlg.hide(); } catch (e) {}
+        renderInfo();
+      }));
+    })();
+    // Generic single-field editor (Developed by, Copyright) — every editable cell opens a dialog.
+    let fieldEditCommit = null;
+    function openFieldDialog(opts) {
+      if (localeLocked()) { announce('Switch to the default language to edit this field.'); return; }
+      const dlg = $('field-edit-dialog'); if (!dlg) return;
+      const titleEl = $('field-edit-title'), hintEl = $('field-edit-hint'), inp = $('field-edit-input');
+      if (titleEl) titleEl.textContent = opts.title || 'Edit';
+      if (hintEl) { if (opts.hint) { hintEl.textContent = opts.hint; hintEl.hidden = false; } else { hintEl.hidden = true; } }
+      if (inp) { inp.value = opts.value || ''; if (opts.placeholder) inp.setAttribute('placeholder', opts.placeholder); else inp.removeAttribute('placeholder'); }
+      fieldEditCommit = opts.onCommit || null;
+      try { dlg.show(); } catch (e) {}
+      setTimeout(() => { try { inp && inp.focus(); } catch (_) {} }, 30);
+    }
+    (function wireFieldEdit() {
+      const dlg = $('field-edit-dialog'); if (!dlg) return;
+      const inp = $('field-edit-input'), saveBtn = $('field-edit-save');
+      const save = () => {
+        if (fieldEditCommit && !localeLocked()) fieldEditCommit((inp && inp.value || '').trim());
+        fieldEditCommit = null;
+        try { dlg.hide(); } catch (e) {}
+        renderInfo();
+      };
+      if (saveBtn) saveBtn.addEventListener('click', save);
+      if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+      dlg.querySelectorAll('[data-field-edit-close]').forEach(el => el.addEventListener('click', () => { fieldEditCommit = null; try { dlg.hide(); } catch (e) {} }));  // X cancels
+    })();
     if (infoGrid) infoGrid.addEventListener('click', (e) => {
       if (e.target.closest('#ez-info-subcat')) { e.preventDefault(); editSubcat(); }
-      else if (e.target.closest('#ez-info-privacy')) { e.preventDefault(); editPrivacy(); }
+      else if (e.target.closest('#ez-info-privacy')) { e.preventDefault(); openPrivacyDialog(); }
+      else if (e.target.closest('#ez-info-developed')) { e.preventDefault(); openFieldDialog({ title: 'Developed by', hint: 'An individual or a company name — whoever developed the app.', value: L.developedBy || '', placeholder: 'e.g. Jane Doe or Acme Inc.', onCommit: (v) => { L.developedBy = v; } }); }
+      else if (e.target.closest('#ez-info-copyright')) { e.preventDefault(); openFieldDialog({ title: 'Copyright and trademark info', hint: 'Shown under your publisher name on the listing.', value: L.copyright || '', placeholder: '© 2026 Your Company', onCommit: (v) => { L.copyright = v; } }); }
+      else if (e.target.closest('#ez-info-license')) { e.preventDefault(); openLicenseDialog(); }
     });
     if (fCat) fCat.addEventListener('change', () => {
       const list = SUBCATS[(fCat.value || '')] || [];
@@ -7339,7 +7511,7 @@ function openPriceScheduleDialog() {
       const live = $('ez-live');
       if (live) live.classList.toggle('is-locale-locked', locked);
       if (kwInput) {
-        if (kwInput.dataset.ph == null) kwInput.dataset.ph = kwInput.placeholder || '';
+        if (kwInput.dataset.ph == null) kwInput.dataset.ph = kwInput.getAttribute('placeholder') || 'Type a keyword, then press Enter';
         kwInput.disabled = locked;
         kwInput.placeholder = locked ? 'Switch to the default language to edit keywords' : kwInput.dataset.ph;
       }
