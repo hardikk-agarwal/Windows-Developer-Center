@@ -152,7 +152,7 @@
   .ez-pkg-namewrap { display: inline-flex; align-items: center; gap: var(--sp-8); min-width: 0; max-width: 260px; }
   .ez-pkg-namewrap iconify-icon { color: var(--brand); flex: 0 0 auto; }
   .ez-pkg-logo { width: 20px; height: 20px; border-radius: var(--r-4); flex: 0 0 auto; object-fit: cover; display: block; }
-  .ez-pkg-name { font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ez-pkg-name { font-weight: 600; color: var(--fg-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ez-pkg-td--act { text-align: right; white-space: nowrap; }
   .ez-pkg-chev { color: var(--fg-3); vertical-align: middle; transition: transform var(--dur-2) var(--ease-out); margin-left: var(--sp-6); }
   .ez-pkg-trow.is-open .ez-pkg-chev { transform: rotate(180deg); }
@@ -289,7 +289,7 @@
   .ez-listing-extras { display: flex; flex-direction: column; }
   /* Detached "extras" card below the listing step (privacy + search keywords). */
   .ez-extras-card { margin-top: var(--sp-16); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-24); }
-  #flow-wrap.is-wizard .ez-extras-card { padding: var(--sp-32); border-color: var(--stroke-3); box-shadow: var(--shadow-8), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent); }
+  #flow-wrap.is-wizard .ez-extras-card { padding: var(--sp-32); border-color: var(--stroke-3); box-shadow: none; }
   .ez-extras-card[hidden] { display: none !important; }
   .ez-extra-field { display: flex; flex-direction: column; }
   .ez-extra-field + .ez-extra-field { margin-top: var(--sp-20); padding-top: var(--sp-20); border-top: 1px solid var(--stroke-2); }
@@ -311,6 +311,20 @@
   .ez-kw-chips__chip--suggest { cursor: pointer; border-style: dashed; background: transparent; color: var(--fg-2); }
   .ez-kw-chips__chip--suggest:hover { border-color: var(--brand); color: var(--brand); }
   .ez-kw-chips__chip--suggest iconify-icon { color: var(--brand); }
+  /* Simple (easy) keyword view — read-only chips + a subtle "auto-added" note. */
+  .ez-kw-chips--ro .ez-kw-chips__chip { color: var(--fg-2); }
+  .ez-kw-easy__note { display: flex; align-items: center; gap: var(--sp-6); margin: 0 0 var(--sp-12); font-size: 12px; color: var(--fg-3); line-height: 1.45; }
+  .ez-kw-easy__note[hidden] { display: none; }
+  .ez-kw-easy__note iconify-icon { color: var(--brand); flex: 0 0 auto; }
+  .ez-kw-easy__note strong { font-weight: var(--font-weight-semibold); color: var(--fg-2); }
+  .ez-kw-easy__empty { font-size: 12px; color: var(--fg-3); }
+  /* Show the simple view by default; swap to the editor only when the listing's Advanced options are on
+     (the keywords card is a sibling of #step-listing, so :has() reaches the toggled state). */
+  #listing-extras-card .ez-kw-adv { display: none; }
+  #flow-wrap.is-wizard:has(#step-listing.is-more) #listing-extras-card .ez-kw-easy,
+  #flow-wrap[data-mode="advanced"] #listing-extras-card .ez-kw-easy { display: none; }
+  #flow-wrap.is-wizard:has(#step-listing.is-more) #listing-extras-card .ez-kw-adv,
+  #flow-wrap[data-mode="advanced"] #listing-extras-card .ez-kw-adv { display: block; }
   /* Privacy policy: Link/Text mode toggle + AI-generate */
   .privacy-mode-toggle { align-self: flex-start; margin-bottom: var(--sp-10); }
   .privacy-field__input[hidden] { display: none; }
@@ -431,6 +445,8 @@
   .manifest-identity-prompt { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; margin: 0 0 var(--sp-16); padding: var(--sp-8) var(--sp-12); background: color-mix(in srgb, var(--brand) 5%, transparent); border: 1px solid color-mix(in srgb, var(--brand) 16%, transparent); border-radius: var(--r-4); font-size: var(--font-size-base-200); color: var(--fg-2); }
   /* The identity banner is Package-tab-only in Advanced (hidden on other tabs). */
   #flow-wrap[data-mode="advanced"] #ez-pkg-identity-banner { display: none; }
+  /* It's MSIX-only (AppxManifest.xml) — never show it once a Win32 installer is in the submission. */
+  #flow-wrap.has-win32-pkg #ez-pkg-identity-banner { display: none !important; }
   #flow-wrap[data-mode="advanced"] #editor[data-active-section="step-package"] #ez-pkg-identity-banner { display: flex; }
   /* Variant D (wizard): show the identity banner on the Package step, above the card. */
   #flow-wrap.is-wizard #ez-pkg-identity-banner.is-wz-show { display: flex !important; }
@@ -468,6 +484,143 @@
   /* Package notice: justified vs needs-justification. */
   .ez-package__caps--ok { color: var(--status-success); }
   .ez-package__caps a { color: var(--brand); cursor: pointer; }
+
+  /* ===== Expanded Win32 package detail — settings-list layout ===== */
+  .ez-setrows { display: flex; flex-direction: column; }
+  .ez-setrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-16); align-items: center; padding: var(--sp-12) 0; }
+  .ez-setrow:first-child { padding-top: 0; }
+  .ez-setrow + .ez-setrow { border-top: 1px solid var(--stroke-3); }
+  .ez-setrow__main { min-width: 0; }
+  .ez-setrow__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  .ez-setrow__desc { display: block; font-size: var(--font-size-base-200); color: var(--fg-3); margin-top: 2px; line-height: 1.4; }
+  /* Controls start at the row's midpoint and run left-to-right (not pushed to the right edge). */
+  .ez-setrow__control { justify-self: stretch; min-width: 0; display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; justify-content: flex-start; }
+  .ez-setrow__control fluent-dropdown { width: 100%; max-width: 280px; }
+  .ez-setrow__control fluent-dropdown::part(control) { width: 100%; box-sizing: border-box; }
+  .ez-setrow .ez-langfield { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--sp-6); }
+  /* URL-sourced installer: the link gets its own full-width row. */
+  .ez-setrow--stack { display: block; }
+  .ez-setrow--stack .ez-setrow__control { max-width: 100%; justify-content: flex-start; margin-top: var(--sp-8); }
+  .ez-setrow--stack .ez-setrow__url { width: 100%; }
+  .ez-setrow--stack .ez-setrow__url::part(control) { width: 100%; box-sizing: border-box; }
+  @media (max-width: 620px) {
+    .ez-setrow { grid-template-columns: 1fr; gap: var(--sp-8); }
+    .ez-setrow__control { margin-top: var(--sp-8); }
+    .ez-setrow__control fluent-dropdown { max-width: none; }
+  }
+  /* Dialog */
+  #exit-codes-dialog, #exit-codes-dialog::part(control), #exit-codes-dialog::part(dialog) { width: min(600px, 94vw); max-width: min(600px, 94vw); }
+  #exit-codes-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  .exit-codes__intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-4); line-height: 1.5; }
+  .exit-codes__intro span { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .exit-codes__hint { font-size: var(--font-size-base-200); color: var(--fg-4); margin: 0 0 var(--sp-8); }
+  .exit-codes__list { max-height: 56vh; overflow-y: auto; scrollbar-gutter: stable; padding-right: var(--sp-4); }
+  .exit-grp { padding: 0; }
+  .exit-grp + .exit-grp { margin-top: var(--sp-12); border-top: 1px solid var(--stroke-3); padding-top: var(--sp-12); }
+  .exit-grp__title { display: flex; align-items: baseline; gap: var(--sp-6); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-6); }
+  .exit-grp__opt { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--fg-4); }
+  .exit-scn { display: grid; grid-template-columns: 1fr 150px; gap: var(--sp-12); align-items: center; padding: var(--sp-10) 0; }
+  .exit-scn + .exit-scn { border-top: 1px solid var(--stroke-3); }
+  .exit-scn__head { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .exit-scn__label { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .exit-scn__desc { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .exit-scn__code { width: 100%; }
+  .exit-scn__code::part(root), .exit-scn__code::part(control) { width: 100%; box-sizing: border-box; }
+  .exit-doc { display: flex; flex-direction: column; gap: var(--sp-4); }
+  .exit-doc__input { width: 100%; }
+  .exit-doc__input::part(root), .exit-doc__input::part(control) { width: 100%; box-sizing: border-box; }
+  .exit-doc__hint { font-size: var(--font-size-base-200); color: var(--fg-4); }
+
+  /* ===== Win32 package validation ===== */
+  .ez-pkg-langcell { white-space: nowrap; }
+  .ez-pkg-langmore { color: var(--fg-3); }
+  .ez-pkg-muted { color: var(--fg-4); }
+  .ez-val { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-200); white-space: nowrap; }
+  .ez-val--idle { color: var(--fg-4); }
+  .ez-val--running { color: var(--fg-2); }
+  .ez-val--running fluent-spinner { --spinner-size: 14px; }
+  .ez-val--pass, .ez-val--fail { background: transparent; border: 0; padding: 2px 0; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  .ez-val--pass { color: var(--status-success); }
+  .ez-val--fail { color: var(--status-danger); }
+  .ez-val--pass:hover, .ez-val--fail:hover { text-decoration: underline; }
+  .ez-val__chev { color: var(--fg-4); }
+  /* Confirm-and-validate action bar: full-bleed footer below the settings list. */
+  .ez-pkg-validate { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; margin: var(--sp-4) calc(var(--sp-12) * -1) calc(var(--sp-20) * -1); padding: var(--sp-16); border-top: 1px solid var(--stroke-2); background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .ez-pkg-validate__icon { flex: 0 0 auto; color: var(--brand); }
+  .ez-pkg-validate--passed .ez-pkg-validate__icon { color: var(--status-success); }
+  .ez-pkg-validate--failed .ez-pkg-validate__icon { color: var(--status-danger); }
+  .ez-pkg-validate__text { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .ez-pkg-validate__text strong { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .ez-pkg-validate__text span { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .ez-pkg-validate__btn { flex: 0 0 auto; }
+  /* Report dialog */
+  #validation-dialog, #validation-dialog::part(control), #validation-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  #validation-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  .val-hero { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); border: 1px solid transparent; border-radius: var(--r-8); margin: 0 0 var(--sp-16); }
+  .val-hero--ok { background: color-mix(in srgb, var(--status-success) 9%, var(--canvas-tint)); border-color: color-mix(in srgb, var(--status-success) 32%, transparent); }
+  .val-hero--fail { background: color-mix(in srgb, var(--status-danger) 9%, var(--canvas-tint)); border-color: color-mix(in srgb, var(--status-danger) 32%, transparent); }
+  .val-hero__icon { flex: 0 0 auto; }
+  .val-hero--ok .val-hero__icon { color: var(--status-success); }
+  .val-hero--fail .val-hero__icon { color: var(--status-danger); }
+  .val-hero__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .val-hero__text strong { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .val-hero__text span { font-size: var(--font-size-base-200); color: var(--fg-3); }
+  .val-meta { margin: 0 0 var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-4); }
+  .val-meta__row { display: grid; grid-template-columns: 150px 1fr; gap: var(--sp-12); font-size: var(--font-size-base-200); }
+  .val-meta__row dt { color: var(--fg-3); }
+  .val-meta__row dd { margin: 0; color: var(--fg-1); min-width: 0; word-break: break-word; }
+  .val-checks { display: flex; flex-direction: column; gap: var(--sp-8); max-height: 50vh; overflow-y: auto; }
+  .val-check { border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas-tint); }
+  .val-check__head { display: flex; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); }
+  .val-check__head[role="button"] { cursor: pointer; }
+  .val-check__icon { flex: 0 0 auto; margin-top: 1px; }
+  .val-check--pass .val-check__icon { color: var(--status-success); }
+  .val-check--recommendation .val-check__icon { color: var(--status-warning); }
+  .val-check--fail .val-check__icon { color: var(--status-danger); }
+  .val-check__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .val-check__text strong { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .val-check__text span { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
+  .val-check__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  .val-check.is-open .val-check__chev { transform: rotate(180deg); }
+  .val-check__detail { padding: 0 var(--sp-16) var(--sp-12) calc(var(--sp-16) + 20px + var(--sp-12)); font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.5; }
+
+  /* ===== Package details dialog (Win32) ===== */
+  #pkg-details-dialog, #pkg-details-dialog::part(control), #pkg-details-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  #pkg-details-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  .pkgd-file { display: flex; align-items: center; gap: var(--sp-8); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas-tint); margin: 0 0 var(--sp-12); }
+  .pkgd-file iconify-icon { color: var(--brand); flex: 0 0 auto; }
+  .pkgd-file__name { font-weight: 600; color: var(--fg-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pkgd-intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-16); line-height: 1.5; }
+  .pkgd-fields { display: flex; flex-direction: column; gap: var(--sp-16); }
+  .pkgd-fields .ez-field { margin: 0; display: flex; flex-direction: column; }
+  .pkgd-fields .ez-field__label { margin-bottom: 0; }
+  .pkgd-fields .ez-field__hint { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 2px 0 var(--sp-6); }
+  .pkgd-fields fluent-dropdown, .pkgd-fields .pkgd-url { display: block; width: 100%; max-width: none; }
+  .pkgd-fields .pkgd-url::part(root) { width: 100%; max-width: none; box-sizing: border-box; }
+  .pkgd-fields fluent-dropdown::part(control), .pkgd-fields .pkgd-url::part(control) { width: 100%; box-sizing: border-box; }
+  .pkgd-adv-toggle { display: inline-flex; align-items: center; gap: var(--sp-6); background: transparent; border: 0; padding: var(--sp-8) 0; margin: var(--sp-16) 0 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  .pkgd-adv-toggle iconify-icon { transition: transform var(--dur-2) var(--ease-out); }
+  .pkgd-adv-toggle[aria-expanded="true"] iconify-icon { transform: rotate(90deg); }
+  .pkgd-adv { padding-top: var(--sp-4); }
+  #pkgd-exit { max-height: 40vh; overflow-y: auto; scrollbar-gutter: stable; }
+  .pkgd-adv__intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-12); line-height: 1.5; }
+  .pkgd-adv__intro strong { color: var(--fg-1); }
+  .pkgd-mono { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .pkgd-hint { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-12) 0 0; font-size: var(--font-size-base-200); color: var(--status-warning); }
+  .pkgd-hint iconify-icon { flex: 0 0 auto; }
+
+  /* ===== Add-another-package chooser ===== */
+  #add-method-dialog, #add-method-dialog::part(control), #add-method-dialog::part(dialog) { width: min(440px, 92vw); max-width: min(440px, 92vw); }
+  #add-method-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  .addm-intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-16); }
+  .addm-options { display: flex; flex-direction: column; gap: var(--sp-8); }
+  .addm-opt { display: flex; align-items: center; gap: var(--sp-12); text-align: left; width: 100%; padding: var(--sp-12) var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas-tint); color: var(--fg-1); font: inherit; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .addm-opt:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--canvas-tint)); }
+  .addm-opt > iconify-icon:first-child { color: var(--brand); flex: 0 0 auto; }
+  .addm-opt__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .addm-opt__text strong { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); }
+  .addm-opt__text span { font-size: var(--font-size-base-200); color: var(--fg-3); }
+  .addm-opt__chev { color: var(--fg-3); flex: 0 0 auto; }
 
   /* ===== Multi-language listing ===== */
   .listing-langs-control { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8); margin: 0 0 var(--sp-16); flex-wrap: wrap; }
@@ -556,7 +709,9 @@
   .ez-store-card { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); overflow: hidden; }
   /* Hero fades from the brand tint to transparent so it blends into the
      content below (the card's canvas), like the full flow's live preview. */
-  .ez-store-hero { position: relative; padding: var(--sp-32) var(--sp-24) var(--sp-48); color: #fff; background-color: transparent; background-image: linear-gradient(180deg, hsl(var(--ez-hue, 210), 70%, 30%) 0%, hsl(var(--ez-hue, 210), 58%, 22%) 42%, var(--layer) 92%); }
+  /* Subtle, real-Store-style tint: the logo's hue at a muted (--ez-sat) saturation, kept dark so it
+     reads as a gentle wash that fades into the page rather than a vivid colour block. */
+  .ez-store-hero { position: relative; padding: var(--sp-32) var(--sp-24) var(--sp-48); color: #fff; background-color: transparent; background-image: linear-gradient(180deg, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 21%) 0%, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 14%) 50%, var(--layer) 88%); }
   .ez-store-hero__top { display: flex; align-items: flex-start; gap: var(--sp-16); }
   .ez-store-hero__icon { width: 72px; height: 72px; flex: 0 0 auto; border-radius: var(--r-12); background: linear-gradient(135deg, hsl(var(--ez-hue, 320), 80%, 60%), hsl(var(--ez-hue, 320), 70%, 40%)); background-size: cover; background-position: center; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
   .ez-store-hero__heading { min-width: 0; padding-top: 2px; }
@@ -649,11 +804,15 @@
   .ez-live .live-edit-target.live-edit--active::after { content: none; }
   .ez-live .live-edit-empty { font-style: italic; opacity: .85; }
   .ez-live .live-edit-input { font: inherit; color: inherit; background: transparent; border: 0; outline: none; padding: 0; margin: 0; width: 100%; box-sizing: border-box; resize: none; min-height: 1em; line-height: inherit; }
+  /* Inline Fluent dropdown used by the category / subcategory live-editors. */
+  .live-edit-dropdown { min-width: 180px; max-width: 100%; vertical-align: middle; }
   .ez-live .live-edit-target[data-required="true"][data-empty-required="true"]::before { content: '*'; position: absolute; top: -4px; left: -10px; color: var(--status-danger); font-weight: 700; font-size: 14px; line-height: 1; z-index: 1; }
   @keyframes live-save-flash { 0% { opacity: 0; transform: translateY(-50%) scale(.6); } 20% { opacity: 1; transform: translateY(-50%) scale(1); } 80% { opacity: 1; transform: translateY(-50%) scale(1); } 100% { opacity: 0; transform: translateY(-50%) scale(.9); } }
   .live-save-flash { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--status-success); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); pointer-events: none; animation: live-save-flash 1200ms ease forwards; z-index: 5; }
   #ez-pv-icon { border: 0; cursor: pointer; padding: 0; }
   #ez-pv-icon[data-empty-required="true"] { background: color-mix(in srgb, #fff 12%, transparent) !important; border: 2px dashed rgba(255,255,255,.5); }
+  /* Real logo shows directly — drop the placeholder tile's shadow/rounding box behind it. */
+  #ez-pv-icon.has-img { box-shadow: none; border-radius: 0; }
   /* Screenshots in edit mode: thumbnails + add tile + hover-reveal delete */
   .ez-store-shots--edit .ez-pv-shot { position: relative; }
   .ez-store-shots--edit .ez-pv-shot img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); display: block; background: var(--canvas-tint); }
@@ -1160,9 +1319,13 @@
   #flow-wrap.is-wizard #step-listing.is-more .ez-card-section.adv-only { display: block !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only { display: inline-flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-hero-add-btn.adv-only:not([hidden]) { display: inline-flex !important; }
+  /* Hero image + trailer are MSIX-only listing features. When the submission has a Win32 (exe/msi/url)
+     package, suppress both "add" affordances even in Advanced. MSIX submissions keep showing them. */
+  #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only,
+  #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-hero-add-btn.adv-only { display: none !important; }
   #flow-wrap.is-wizard #editor > .ez-step:not(.is-wz-active) { display: none !important; }
   #flow-wrap.is-wizard .ez-step__expand, #flow-wrap.is-wizard .ez-step__summary { display: none !important; }
-  #flow-wrap.is-wizard .ez-step { cursor: default; margin-bottom: 0; padding: var(--sp-32); border-color: var(--stroke-3); box-shadow: var(--shadow-8), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent); }
+  #flow-wrap.is-wizard .ez-step { cursor: default; margin-bottom: 0; padding: var(--sp-32); border-color: var(--stroke-3); box-shadow: none; }
   /* Progress stepper */
   /* Section tabs (variant D): freely switchable after the Package gate. Flat tab bar —
      leading icon + label, an underline marks the active tab, the icon becomes a green
@@ -1195,11 +1358,13 @@
   .ez-pkg-or { display: flex; align-items: center; gap: var(--sp-12); margin: var(--sp-16) 0; color: var(--fg-3); font-size: 12px; }
   .ez-pkg-or::before, .ez-pkg-or::after { content: ''; flex: 1; height: 1px; background: var(--stroke-2); }
   /* URL method: link field, then any contextual fields, then the Add action last */
-  .ez-pkg-url { display: flex; flex-direction: column; gap: var(--sp-16); }
-  .ez-pkg-url fluent-text-input { display: block; width: 100%; max-width: none; }
-  .ez-pkg-url fluent-text-input::part(root) { width: 100%; max-width: none; }
-  .ez-pkg-url fluent-text-input::part(control) { width: 100%; }
-  .ez-pkg-url__foot { display: flex; justify-content: flex-end; }
+  .ez-pkg-url { display: flex; flex-direction: column; gap: var(--sp-8); }
+  .ez-pkg-url__hint { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .ez-pkg-url__row { display: flex; align-items: center; gap: var(--sp-12); }
+  .ez-pkg-url__row fluent-text-input { flex: 1 1 auto; width: 100%; min-width: 0; max-width: none; }
+  .ez-pkg-url__row fluent-text-input::part(root) { width: 100%; min-width: 100%; max-width: none; box-sizing: border-box; }
+  .ez-pkg-url__row fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
+  .ez-pkg-url__row #pkg-url-add { flex: 0 0 auto; }
   .ez-field { margin-bottom: var(--sp-16); }
   .ez-field:last-child { margin-bottom: 0; }
   .ez-field__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin-bottom: var(--sp-6); }
@@ -1221,15 +1386,29 @@
   .ez-langfield { display: flex; flex-direction: column; gap: var(--sp-10); align-items: flex-start; }
   .ez-langlist { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
   .ez-langlist:empty { display: none; }
+  /* Compact, height-stable language summary: first language + "+N more" (hover for the full list). */
+  .ez-langsummary { display: inline-flex; align-items: center; gap: var(--sp-6); min-width: 0; }
+  .ez-langsummary__first { display: inline-flex; align-items: center; padding: 2px var(--sp-8); border-radius: 999px; background: var(--subtle); border: 1px solid var(--stroke-2); font-size: 12px; color: var(--fg-1); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+  .ez-langsummary__more { font-size: 12px; color: var(--fg-3); white-space: nowrap; cursor: default; text-decoration: underline dotted; text-underline-offset: 2px; }
   #pkg-lang-dialog, #pkg-lang-dialog::part(control), #pkg-lang-dialog::part(dialog) { width: min(480px, 92vw); }
   #pkg-lang-dialog .markets-dialog__search { margin: 0 0 var(--sp-12); display: block; width: 100%; box-sizing: border-box; }
   #pkg-lang-dialog .markets-dialog__search::part(root), #pkg-lang-dialog .markets-dialog__search::part(control) { width: 100%; box-sizing: border-box; }
+  #pkg-lang-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  #pkg-lang-dialog .markets-dialog__search { display: block; width: 100%; min-width: 100%; box-sizing: border-box; margin: 0 0 var(--sp-8); }
+  #pkg-lang-dialog .markets-dialog__search::part(root), #pkg-lang-dialog .markets-dialog__search::part(control) { width: 100%; min-width: 100%; box-sizing: border-box; }
+  #pkg-lang-dialog .pkg-lang-dialog__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: 0 0 var(--sp-8); font-size: var(--font-size-base-200); }
+  #pkg-lang-dialog .pkg-lang-bar__count { color: var(--fg-3); }
+  #pkg-lang-dialog .pkg-lang-bar__actions { display: inline-flex; gap: var(--sp-12); }
+  #pkg-lang-dialog .pkg-lang-bar__actions button { background: transparent; border: 0; padding: 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  #pkg-lang-dialog .pkg-lang-bar__actions button:hover { text-decoration: underline; }
   #pkg-lang-dialog .pkg-lang-dialog__list { max-height: 340px; overflow-y: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-4); padding: var(--sp-4) 0; }
-  #pkg-lang-dialog .pkg-lang-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-8) var(--sp-12); cursor: pointer; }
+  #pkg-lang-dialog .pkg-lang-row { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-8) var(--sp-12); cursor: pointer; }
   #pkg-lang-dialog .pkg-lang-row:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
-  #pkg-lang-dialog .pkg-lang-row:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-  #pkg-lang-dialog .pkg-lang-row__name { font-size: var(--font-size-base-300); color: var(--fg-1); }
-  #pkg-lang-dialog .pkg-lang-row__code { font-size: var(--font-size-base-200); color: var(--fg-3); }
+  #pkg-lang-dialog .pkg-lang-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; margin: 0; flex: 0 0 auto; }
+  #pkg-lang-dialog .pkg-lang-row__name { font-size: var(--font-size-base-300); color: var(--fg-1); flex: 1; min-width: 0; }
+  #pkg-lang-dialog .pkg-lang-row__code { font-size: var(--font-size-base-200); color: var(--fg-3); flex: 0 0 auto; }
+  #pkg-lang-dialog .pkg-lang-row--disabled { cursor: not-allowed; opacity: .5; }
+  #pkg-lang-dialog .pkg-lang-row--disabled input[type="checkbox"] { cursor: not-allowed; }
   #pkg-lang-dialog .pkg-lang-dialog__empty { padding: var(--sp-16); text-align: center; color: var(--fg-3); font-size: var(--font-size-base-200); }
   .ez-win32-url { grid-column: 1 / -1; font-size: 12px; color: var(--fg-3); word-break: break-all; }
   .ez-win32-url strong { color: var(--fg-2); font-weight: 600; }
@@ -1291,7 +1470,9 @@
   /* 3. THE BANNER BAND — app identity + tabs on one elevated Mica surface (no bottom pad so
         the tabs seat flush on its lower edge as the commanding layer). */
   #flow-wrap.is-wizard .wz-banner {
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 30;
     /* Hero band: a brand→purple mesh (brand top-left, accent bottom-right, opposite corners so
        the centre stays clean --layer) so the header reads as the hero, distinct from the neutral cards. */
     background:
@@ -1301,7 +1482,7 @@
     border: 1px solid var(--stroke-3);
     border-radius: var(--r-16);
     padding: var(--sp-20) var(--sp-32) 0;
-    box-shadow: var(--shadow-8), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    box-shadow: none;
     margin-bottom: var(--sp-24);
   }
   #flow-wrap.is-wizard .wz-banner .ez-head { margin-bottom: 0; }
@@ -1310,7 +1491,7 @@
       radial-gradient(120% 145% at 0% 0%, color-mix(in srgb, var(--brand) 12%, transparent) 0%, transparent 52%),
       radial-gradient(115% 140% at 100% 100%, color-mix(in srgb, var(--accent-purple) 7%, transparent) 0%, transparent 48%),
       var(--layer);
-    box-shadow: var(--shadow-4), inset 0 1px 0 rgba(255,255,255,.7);
+    box-shadow: none;
     border-color: var(--stroke-2);
   }
   @media (max-width: 600px) { #flow-wrap.is-wizard .wz-banner { padding: var(--sp-16) var(--sp-16) 0; } }
@@ -1370,7 +1551,7 @@
   }
   [data-theme="light"] #flow-wrap.is-wizard .ez-step,
   [data-theme="light"] #flow-wrap.is-wizard .ez-extras-card {
-    box-shadow: var(--shadow-4), inset 0 1px 0 rgba(255,255,255,.7);
+    box-shadow: none;
     border-color: var(--stroke-2);
   }
   #flow-wrap.is-wizard .ez-extras-card { border-radius: var(--r-16); }
@@ -1644,28 +1825,10 @@
             </label>
             <div class="ez-pkg-or" id="pkg-or"><span>or</span></div>
             <div class="ez-pkg-url" id="pkg-url-part">
-              <fluent-text-input id="pkg-url-input" placeholder="Paste a link to your .exe / .msi installer or website" aria-label="App or installer URL"></fluent-text-input>
-              <!-- Contextual: only when the link is a Win32 installer. Sits between the link
-                   field and the Add button so the action always comes last. -->
-              <div class="ez-url-win32" id="pkg-url-win32" hidden>
-                <p class="ez-url-win32__note"><iconify-icon icon="fluent:window-apps-20-filled" width="14" height="14" aria-hidden="true"></iconify-icon> Looks like a Win32 installer. Set its architecture, install parameters, and language(s).</p>
-                <div class="ez-win32-fields">
-                  <div class="ez-field">
-                    <label class="ez-field__label" for="pkg-url-arch">Architecture</label>
-                    <div id="pkg-url-arch-wrap"></div>
-                  </div>
-                  <div class="ez-field">
-                    <label class="ez-field__label" for="pkg-url-params">Install parameters</label>
-                    <div id="pkg-url-params-wrap"></div>
-                  </div>
-                  <div class="ez-field ez-field--wide">
-                    <label class="ez-field__label">Language</label>
-                    <div id="pkg-url-lang-wrap"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="ez-pkg-url__foot" id="pkg-url-foot" hidden>
-                <fluent-button id="pkg-url-add" appearance="secondary">Add package</fluent-button>
+              <span class="ez-pkg-url__hint">Have a hosted installer or website? Add it by link instead of uploading.</span>
+              <div class="ez-pkg-url__row">
+                <fluent-text-input id="pkg-url-input" placeholder="Paste a link to your .exe / .msi installer or website" aria-label="App or installer URL"></fluent-text-input>
+                <fluent-button id="pkg-url-add" appearance="primary" disabled>Add package</fluent-button>
               </div>
             </div>
           </div>
@@ -1888,20 +2051,31 @@
               Generate a basic privacy policy
             </fluent-button>
           </div>
-          <div class="ez-extra-field">
+          <div class="ez-extra-field" id="keywords-field">
             <div class="ez-extra-field__head">
               <strong>Search keywords</strong>
               <span class="ez-extra-tag ez-extra-tag--meta"><iconify-icon icon="fluent:eye-off-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon> Not shown on your listing</span>
             </div>
-            <p class="ez-extra-field__hint">Words people might search to find your app in the Store.</p>
-            <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword and press Enter" aria-label="Add a search keyword">
-              <iconify-icon slot="start" icon="fluent:search-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            </fluent-text-input>
-            <div class="ez-kw-suggest" id="kw-suggest" hidden>
-              <span class="ez-kw-suggest__label">Suggested from your description</span>
-              <div class="ez-kw-chips" id="kw-suggest-chips"></div>
+            <!-- Simple view: one caption, then the read-only keywords derived from the description. -->
+            <div class="ez-kw-easy" id="kw-easy">
+              <p class="ez-extra-field__hint ez-kw-easy__note">
+                <iconify-icon icon="fluent:sparkle-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+                <span>Added from your description. Turn on <strong>Advanced options</strong> to edit.</span>
+              </p>
+              <div class="ez-kw-chips ez-kw-chips--ro" id="kw-easy-chips"></div>
             </div>
-            <div class="ez-kw-chips ez-kw-chips--added" id="adv-keywords"></div>
+            <!-- Advanced view: full editor (input + suggestions + removable chips). -->
+            <div class="ez-kw-adv" id="kw-adv">
+              <p class="ez-extra-field__hint">Words people might search to find your app in the Store.</p>
+              <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword and press Enter" aria-label="Add a search keyword">
+                <iconify-icon slot="start" icon="fluent:search-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              </fluent-text-input>
+              <div class="ez-kw-suggest" id="kw-suggest" hidden>
+                <span class="ez-kw-suggest__label">Suggested from your description</span>
+                <div class="ez-kw-chips" id="kw-suggest-chips"></div>
+              </div>
+              <div class="ez-kw-chips ez-kw-chips--added" id="adv-keywords"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2116,11 +2290,11 @@
            for the right tab. Advances to the next section (gated on the package step); hidden on
            the last step (Reach & price), where Submit in the header is the action. -->
       <div class="wz-forward" id="wz-forward">
-        <fluent-button id="wz-back-btn" appearance="subtle" size="large" hidden>
+        <fluent-button id="wz-back-btn" appearance="subtle" size="medium" hidden>
           <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
           Back
         </fluent-button>
-        <fluent-button id="wz-continue" appearance="secondary" size="large">
+        <fluent-button id="wz-continue" appearance="secondary" size="medium">
           <span id="wz-continue-label">Continue</span>
           <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
         </fluent-button>
@@ -2723,9 +2897,123 @@
     <fluent-text-input id="pkg-lang-search" class="markets-dialog__search" placeholder="Search languages…">
       <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
     </fluent-text-input>
-    <div class="pkg-lang-dialog__list" id="pkg-lang-list" role="list"></div>
+    <div class="pkg-lang-dialog__bar" id="pkg-lang-bar"></div>
+    <div class="pkg-lang-dialog__list" id="pkg-lang-list" role="group" aria-label="Available languages"></div>
 
-    <fluent-button slot="action" appearance="primary" data-pkg-lang-close>Done</fluent-button>
+    <fluent-button slot="action" appearance="secondary" data-pkg-lang-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="pkg-lang-done">Done</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Installer exit codes: per-Win32-package mapping of process exit codes to install results. -->
+<fluent-dialog id="exit-codes-dialog" modal-type="modal" aria-labelledby="exit-codes-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="exit-codes-dialog-title">
+      <iconify-icon icon="fluent:code-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      Installer exit codes
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-exit-codes-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <p class="exit-codes__intro">Map the exit codes your installer returns so the Store can respond correctly. Optional — by default <span>0</span> means success and anything else is a failure.</p>
+    <p class="exit-codes__hint">Separate multiple codes with commas.</p>
+
+    <div class="exit-codes__list" id="exit-codes-list"></div>
+
+    <fluent-button slot="action" appearance="secondary" data-exit-codes-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="exit-codes-save">Save</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Package validation report (Win32): results of the automated install/safety checks. -->
+<fluent-dialog id="validation-dialog" modal-type="modal" aria-labelledby="validation-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="validation-dialog-title">Package validation</span>
+    <fluent-button slot="title-action" appearance="subtle" data-validation-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <div class="val-hero" id="val-hero">
+      <iconify-icon class="val-hero__icon" id="val-hero-icon" width="28" height="28" aria-hidden="true"></iconify-icon>
+      <div class="val-hero__text"><strong id="val-hero-title"></strong><span id="val-hero-sub"></span></div>
+    </div>
+    <dl class="val-meta" id="val-meta"></dl>
+    <div class="val-checks" id="val-checks"></div>
+
+    <fluent-button slot="action" appearance="secondary" data-validation-close>Close</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Package details (Win32): the additional info collected before a package is confirmed + validated. -->
+<fluent-dialog id="pkg-details-dialog" modal-type="modal" aria-labelledby="pkgd-title">
+  <fluent-dialog-body>
+    <span slot="title" id="pkgd-title">Package details</span>
+    <fluent-button slot="title-action" appearance="subtle" data-pkgd-cancel aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <div class="pkgd-file" id="pkgd-file"></div>
+    <p class="pkgd-intro" id="pkgd-intro">We read these from your installer's file name — review them and confirm. We'll validate the package in the background.</p>
+
+    <div class="pkgd-fields">
+      <div class="ez-field" id="pkgd-url-field" hidden>
+        <label class="ez-field__label" for="pkgd-url">Installer URL</label>
+        <span class="ez-field__hint">Where the installer is downloaded from.</span>
+        <fluent-text-input id="pkgd-url" class="pkgd-url"></fluent-text-input>
+      </div>
+      <div class="ez-field">
+        <label class="ez-field__label" for="pkgd-arch">Architecture</label>
+        <span class="ez-field__hint">The CPU this installer targets.</span>
+        <div id="pkgd-arch-wrap"></div>
+      </div>
+      <div class="ez-field">
+        <label class="ez-field__label" for="pkgd-params">Install parameters</label>
+        <span class="ez-field__hint">The silent-install flags we run.</span>
+        <div id="pkgd-params-wrap"></div>
+      </div>
+      <div class="ez-field">
+        <label class="ez-field__label">Language</label>
+        <span class="ez-field__hint">Locales bundled in this installer.</span>
+        <div id="pkgd-lang-wrap"></div>
+      </div>
+    </div>
+
+    <button type="button" class="pkgd-adv-toggle" id="pkgd-adv-toggle" aria-expanded="false">
+      <iconify-icon icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+      <span id="pkgd-adv-label">Show advanced options</span>
+    </button>
+    <div class="pkgd-adv" id="pkgd-adv" hidden>
+      <p class="pkgd-adv__intro"><strong>Installer exit codes</strong> — your EXE/MSI returns a code when it finishes, and the Store reads it to know what happened (a reboot is needed, the app is already installed, and so on). This is optional: by default we treat <span class="pkgd-mono">0</span> as success and anything else as a failure. Map specific codes below only if your installer uses them.</p>
+      <div id="pkgd-exit"></div>
+    </div>
+
+    <p class="pkgd-hint" id="pkgd-hint" hidden></p>
+    <fluent-button slot="action" appearance="secondary" data-pkgd-cancel>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="pkgd-confirm">Confirm</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Add-another-package chooser (Win32 only): upload a file or paste a link. -->
+<fluent-dialog id="add-method-dialog" modal-type="modal" aria-labelledby="add-method-title">
+  <fluent-dialog-body>
+    <span slot="title" id="add-method-title">Add another package</span>
+    <fluent-button slot="title-action" appearance="subtle" data-add-method-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="addm-intro">Win32 apps support both — how do you want to add this installer?</p>
+    <div class="addm-options">
+      <button type="button" class="addm-opt" data-add-method="upload">
+        <iconify-icon icon="fluent:arrow-upload-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
+        <span class="addm-opt__text"><strong>Upload a file</strong><span>Choose an .exe or .msi from your computer.</span></span>
+        <iconify-icon class="addm-opt__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+      </button>
+      <button type="button" class="addm-opt" data-add-method="url">
+        <iconify-icon icon="fluent:link-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
+        <span class="addm-opt__text"><strong>Paste a link</strong><span>Point to a hosted .exe or .msi installer.</span></span>
+        <iconify-icon class="addm-opt__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+      </button>
+    </div>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -2889,7 +3177,59 @@
     return langLabelOf(code).toLowerCase().indexOf(q) >= 0 || code.toLowerCase().indexOf(q) >= 0 || (LANG_SEARCH[code] || '').indexOf(q) >= 0;
   }
   function win32ArchOf(p)  { return (p.arches && p.arches[0]) || 'x64'; }
-  function win32LangsOf(p) { return (p.langs && p.langs.length) ? p.langs : [defaultPkgLang()]; }
+  function win32LangsOf(p) { return (p.langs && p.langs.length) ? p.langs : []; }
+  // The first Win32 installer in a submission gets the default language; later installers start
+  // blank so the developer assigns a unique architecture + language instead of colliding with it.
+  function firstWin32Langs() { return packages.some(p => p.win32) ? [] : [defaultPkgLang()]; }
+
+  // ---- Win32 package validation -----------------------------------------------------
+  // Once a Win32 installer's details are set, an automated backend check runs (malware, silent
+  // install, Add/Remove Programs entry, bundleware). Simulated here with a short delay; it re-runs
+  // whenever the architecture or install parameters change. The result lives on pkg.validation.
+  const validationTimers = {};
+  function buildValidationChecks(pkg) {
+    const paramsOk = (pkg.installParams || '').trim().length > 0;
+    return [
+      { key: 'malware', label: 'Malware check', kind: 'pass',
+        desc: 'The package is found to be clean.' },
+      { key: 'silent', label: 'Silent install check', kind: paramsOk ? 'pass' : 'fail',
+        desc: paramsOk
+          ? 'Your app installs silently, as per the Microsoft Store Policy.'
+          : 'Your installer didn’t finish a silent install with the parameters provided. Set the correct silent-install flags, then re-validate.' },
+      { key: 'arp', label: 'Entry in Add or remove programs', kind: 'recommendation',
+        desc: 'There is a recommendation for an app entry in Add or remove programs.',
+        detail: 'Customers expect to uninstall your app from Settings → Apps. Registering an Add or remove programs entry is a Microsoft Store recommendation, not a blocker.' },
+      { key: 'bundleware', label: 'Bundleware check', kind: 'recommendation',
+        desc: 'There is a recommendation for bundleware.',
+        detail: 'Bundleware — extra software installed alongside your app without clear consent — is against Store policy. None was detected; keep your installer free of bundled offers.' },
+    ];
+  }
+  function runValidation(pkg) {
+    if (!pkg || !pkg.win32) return;
+    pkg.validation = { status: 'running', startedAt: Date.now() };
+    if (validationTimers[pkg.id]) clearTimeout(validationTimers[pkg.id]);
+    validationTimers[pkg.id] = setTimeout(() => {
+      delete validationTimers[pkg.id];
+      const cur = packages.find(p => p.id === pkg.id);   // bail if the package was removed mid-run
+      if (!cur || !cur.win32) return;
+      const checks = buildValidationChecks(cur);
+      const failed = checks.some(c => c.kind === 'fail');
+      cur.validation = {
+        status: failed ? 'failed' : 'passed',
+        runAt: (cur.validation && cur.validation.startedAt) || Date.now(),
+        arch: win32ArchOf(cur), params: cur.installParams || '', target: cur.url || cur.filename,
+        checks,
+      };
+      renderPackages();
+    }, 1400);
+  }
+  // Editing a detail (architecture / parameters / language) makes any prior result stale, so the
+  // developer confirms again. Does not auto-run — validation only starts on the explicit action.
+  function invalidateValidation(pkg) {
+    if (!pkg || !pkg.win32) return;
+    if (validationTimers[pkg.id]) { clearTimeout(validationTimers[pkg.id]); delete validationTimers[pkg.id]; }
+    pkg.validation = { status: 'pending' };
+  }
   function langTakenByOther(arch, code, exceptId) {
     return packages.some(p => p.win32 && p.id !== exceptId && win32ArchOf(p) === arch && win32LangsOf(p).includes(code));
   }
@@ -2917,19 +3257,54 @@
       '</fluent-listbox></fluent-dropdown>';
   }
 
+  // ---- Installer exit codes (per Win32 package) -------------------------------------
+  // A Win32 installer (EXE/MSI, uploaded or via URL) returns a process exit code; this maps
+  // those codes to install results so the Store can react. Optional — default is 0 = success.
+  // The mapping lives on the package object (pkg.exitCodes), like arch / params / language.
+  // Ordered most-important first: the codes a developer is most likely to map come first.
+  const EXIT_SCENARIOS = [
+    { key: 'reboot',     label: 'Reboot required',                 desc: 'A restart is needed to finish.' },
+    { key: 'already',    label: 'Already installed',               desc: 'The app is already on the device.' },
+    { key: 'cancelled',  label: 'Cancelled by the user',           desc: 'The user stopped the install.' },
+    { key: 'inProgress', label: 'Installation already in progress', desc: 'Another install is running.' },
+    { key: 'diskFull',   label: 'Disk space is full',              desc: 'Not enough room to install.' },
+    { key: 'network',    label: 'Network failure',                 desc: 'A network problem stopped it.' },
+    { key: 'rejected',   label: 'Rejected by device policy',       desc: 'A security policy blocked it.' },
+  ];
+  const EXIT_ALL_KEYS = ['success'].concat(EXIT_SCENARIOS.map(s => s.key));
+  function exitCodeVal(ec, key) { return ec && ec[key] != null ? String(ec[key]) : (key === 'success' ? '0' : ''); }
+  function exitCodesIsDefault(ec) {
+    if (!ec) return true;
+    if ((ec.docUrl || '').trim()) return false;
+    if (exitCodeVal(ec, 'success').trim() !== '0') return false;
+    return EXIT_SCENARIOS.every(s => !(ec[s.key] || '').trim());
+  }
+  function exitCodesMappedCount(ec) { return EXIT_ALL_KEYS.filter(k => exitCodeVal(ec, k).trim()).length; }
+  function exitCodesSummary(ec) {
+    if (exitCodesIsDefault(ec)) return 'Optional · we treat 0 as success, anything else as failure';
+    const n = exitCodesMappedCount(ec);
+    return 'Custom · ' + n + ' result' + (n === 1 ? '' : 's') + ' mapped' + ((ec && (ec.docUrl || '').trim()) ? ' · docs linked' : '');
+  }
+
   // Language field: an "Add language" button (opens a search dialog) with the selected
   // languages shown as removable chips below it. `langs` are the selected languages.
   function langFieldHtml(dataKey, id, langs) {
-    const chips = langs.map(code =>
-      '<span class="ez-chips__chip">' + langLabelOf(code) +
-      (langs.length > 1 ? '<button type="button" data-remove-lang="' + code + '" aria-label="Remove ' + langLabelOf(code) + '"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button>' : '') +
-      '</span>'
-    ).join('');
+    // Height-stable summary: first language as a chip + "+N more" (full list on hover). Editing
+    // (add/remove) happens in the multi-select dialog, so the row never grows with the count.
+    let summary = '';
+    if (langs.length) {
+      const more = langs.length - 1;
+      const all = langs.map(langLabelOf).join(', ');
+      summary = '<span class="ez-langsummary"' + (more > 0 ? ' title="' + all + '"' : '') + '>' +
+          '<span class="ez-langsummary__first">' + langLabelOf(langs[0]) + '</span>' +
+          (more > 0 ? '<span class="ez-langsummary__more">+' + more + ' more</span>' : '') +
+        '</span>';
+    }
     return '<div class="ez-langfield" ' + dataKey + '="' + id + '">' +
       '<fluent-button appearance="secondary" class="ez-langadd-btn" data-open-langdlg="' + id + '">' +
         '<iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add language' +
       '</fluent-button>' +
-      '<div class="ez-langlist">' + chips + '</div>' +
+      summary +
     '</div>';
   }
   (function renderAppHead() {
@@ -2961,11 +3336,13 @@
       icon.style.backgroundSize = 'cover';
       icon.style.backgroundPosition = 'center';
       icon.textContent = '';
+      icon.classList.add('tdp-has-icon');   // real logo shows directly — no placeholder box
     } else {
       icon.style.backgroundImage = '';
       icon.style.backgroundSize = '';
       icon.style.backgroundPosition = '';
       icon.textContent = (app.name || 'A').charAt(0).toUpperCase();
+      icon.classList.remove('tdp-has-icon');
     }
   }
 
@@ -3436,7 +3813,7 @@
     if (extrasCard) extrasCard.hidden = (cur !== 'step-listing');
     // Identity-values banner: only on the Package step (above the card).
     const idBanner = $('ez-pkg-identity-banner');
-    if (idBanner) idBanner.classList.toggle('is-wz-show', cur === 'step-package');
+    if (idBanner) idBanner.classList.toggle('is-wz-show', cur === 'step-package' && !packages.some(p => p.win32 && !p._pending));
     // Restricted-capabilities banner: also above the card, Package step only.
     const capsBanner = $('pkg-caps-notice');
     if (capsBanner) capsBanner.classList.toggle('is-wz-show', cur === 'step-package');
@@ -3932,9 +4309,8 @@
     const drop = $('upload-zone'); if (drop) drop.hidden = !showUpload;
     const orDiv = $('pkg-or'); if (orDiv) orDiv.hidden = (method !== 'both');
     const urlPart = $('pkg-url-part'); if (urlPart) urlPart.hidden = !showUrl;
-    // A freshly revealed link field is empty, so the Add button and contextual fields stay hidden.
-    const foot = $('pkg-url-foot'); if (foot) foot.hidden = true;
-    const w32 = $('pkg-url-win32'); if (w32) w32.hidden = true;
+    // A freshly revealed link field is empty, so the Add button starts disabled.
+    const addBtn = $('pkg-url-add'); if (addBtn) addBtn.disabled = true;
     const urlIn = $('pkg-url-input'); if (urlIn) urlIn.value = '';
     if (method === 'url') { const u = $('pkg-url-input'); if (u) setTimeout(() => { try { u.focus(); } catch (e) {} }, 0); }
   }
@@ -4008,23 +4384,89 @@
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
     // Display newest version first. (The packages array itself keeps insertion order — packageMethod relies on packages[0].)
     const verKey = v => String(v || '0').split('.').map(n => parseInt(n, 10) || 0);
-    const ordered = packages.slice().sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
+    const ordered = packages.filter(p => !p._pending).sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
     const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : (pkg.kind === 'pwa' ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
     const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—');
     const verOf  = pkg => pkg.version ? 'v' + pkg.version : '—';
     const deviceOf = pkg => (pkg.devices && pkg.devices.length) ? pkg.devices.join(', ') : (pkg.win32 ? 'Desktop' : (pkg.kind === 'pwa' ? 'Web' : '—'));
+    // Win32 table cells: a compact language summary, and the validation status (clickable when done).
+    const langCellOf = pkg => {
+      const ls = win32LangsOf(pkg);
+      if (!ls.length) return '<span class="ez-pkg-muted">—</span>';
+      const more = ls.length - 1;
+      return '<span class="ez-pkg-langcell" title="' + ls.map(langLabelOf).join(', ') + '">' + esc(langLabelOf(ls[0])) + (more > 0 ? ' <span class="ez-pkg-langmore">+' + more + '</span>' : '') + '</span>';
+    };
+    function validationCell(pkg) {
+      const v = pkg.validation;
+      if (!v || v.status === 'pending') return '<span class="ez-val ez-val--idle">Not validated</span>';
+      if (v.status === 'running') return '<span class="ez-val ez-val--running"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Validating…</span>';
+      const passed = v.status === 'passed';
+      return '<button type="button" class="ez-val ez-val--' + (passed ? 'pass' : 'fail') + '" data-open-validation="' + pkg.id + '">' +
+          '<iconify-icon icon="' + (passed ? 'fluent:checkmark-circle-16-filled' : 'fluent:error-circle-16-filled') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+          (passed ? 'Validated' : 'Action needed') +
+          '<iconify-icon class="ez-val__chev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+        '</button>';
+    }
     // The collapsed row shows name/version/arch/device family; expanding reveals the rest
     // (size, min-OS, languages, restricted capabilities) — and, for Win32/URL, the editors.
+    // A settings row: label (+ optional one-line description) on the left, control on the right.
+    function setRow(label, desc, control, stack) {
+      return '<div class="ez-setrow' + (stack ? ' ez-setrow--stack' : '') + '">' +
+          '<div class="ez-setrow__main"><span class="ez-setrow__label">' + esc(label) + '</span>' + (desc ? '<span class="ez-setrow__desc">' + esc(desc) + '</span>' : '') + '</div>' +
+          '<div class="ez-setrow__control">' + control + '</div>' +
+        '</div>';
+    }
+    // The confirm-and-validate action BAR — sits below the settings list (not a setting row);
+    // it confirms everything chosen above and runs the automated checks.
+    function validationFooterHtml(pkg) {
+      const vstat = (pkg.validation && pkg.validation.status) || 'pending';
+      const canValidate = win32LangsOf(pkg).length > 0;
+      let icon, headline, sub, btn;
+      if (vstat === 'running') {
+        icon = '<fluent-spinner size="tiny" class="ez-pkg-validate__icon" aria-hidden="true"></fluent-spinner>';
+        headline = 'Validating…'; sub = 'Running the automated checks in the background.';
+        btn = '<fluent-button class="ez-pkg-validate__btn" appearance="primary" disabled>Validating…</fluent-button>';
+      } else if (vstat === 'passed') {
+        icon = '<iconify-icon class="ez-pkg-validate__icon" icon="fluent:checkmark-circle-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>';
+        headline = 'Validation passed'; sub = 'Edit any detail to re-validate, or open the report from the table.';
+        btn = '<fluent-button class="ez-pkg-validate__btn" appearance="secondary" data-run-validation="' + pkg.id + '">Re-validate</fluent-button>';
+      } else if (vstat === 'failed') {
+        icon = '<iconify-icon class="ez-pkg-validate__icon" icon="fluent:error-circle-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>';
+        headline = 'Action needed'; sub = 'Open the report from the table to see what to fix.';
+        btn = '<fluent-button class="ez-pkg-validate__btn" appearance="secondary" data-run-validation="' + pkg.id + '">Re-validate</fluent-button>';
+      } else {
+        icon = '<iconify-icon class="ez-pkg-validate__icon" icon="fluent:shield-checkmark-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
+        headline = canValidate ? 'Confirm package details' : 'Add a language to continue';
+        sub = canValidate ? 'We’ll validate the package in the background once you confirm.' : 'Each installer needs at least one language.';
+        btn = '<fluent-button class="ez-pkg-validate__btn" appearance="primary"' + (canValidate ? '' : ' disabled') + ' data-run-validation="' + pkg.id + '">Confirm</fluent-button>';
+      }
+      return '<div class="ez-pkg-validate ez-pkg-validate--' + vstat + '">' +
+          icon +
+          '<div class="ez-pkg-validate__text"><strong>' + headline + '</strong><span>' + sub + '</span></div>' +
+          btn +
+        '</div>';
+    }
     function pkgDetailHtml(pkg) {
-      if (pkg.win32 || pkg.kind === 'pwa') {
-        let fields = '';
-        if (pkg.source === 'url') fields += '<div class="ez-field"><label class="ez-field__label" for="url-' + pkg.id + '">' + (pkg.win32 ? 'Installer URL' : 'Website URL') + '</label><fluent-text-input id="url-' + pkg.id + '" data-pkg-url="' + pkg.id + '" value="' + esc(pkg.url || '') + '"></fluent-text-input></div>';
-        if (pkg.win32) fields += '<div class="ez-win32-fields">' +
-            '<div class="ez-field"><label class="ez-field__label" for="arch-' + pkg.id + '">Architecture</label>' + archDropdownHtml('arch-' + pkg.id, 'data-pkg-arch="' + pkg.id + '"', win32ArchOf(pkg)) + '</div>' +
-            '<div class="ez-field"><label class="ez-field__label" for="prm-' + pkg.id + '">Install parameters</label>' + installParamsDropdownHtml('prm-' + pkg.id, 'data-pkg-params="' + pkg.id + '"', pkg.installParams, pkg.type) + '</div>' +
-            '<div class="ez-field ez-field--wide"><label class="ez-field__label">Language</label>' + langFieldHtml('data-pkg-langs', pkg.id, win32LangsOf(pkg)) + '</div>' +
-          '</div>';
-        return fields;
+      // Website (PWA): just the URL field.
+      if (pkg.kind === 'pwa') {
+        return pkg.source === 'url'
+          ? '<div class="ez-field"><label class="ez-field__label" for="url-' + pkg.id + '">Website URL</label><fluent-text-input id="url-' + pkg.id + '" data-pkg-url="' + pkg.id + '" value="' + esc(pkg.url || '') + '"></fluent-text-input></div>'
+          : '';
+      }
+      // Win32 installer (EXE/MSI, uploaded or via URL): a clean settings list.
+      if (pkg.win32) {
+        let rows = '';
+        if (pkg.source === 'url') rows += setRow('Installer URL', 'Where the installer is downloaded from',
+          '<fluent-text-input class="ez-setrow__url" id="url-' + pkg.id + '" data-pkg-url="' + pkg.id + '" value="' + esc(pkg.url || '') + '"></fluent-text-input>', true);
+        rows += setRow('Architecture', 'The CPU this installer targets',
+          archDropdownHtml('arch-' + pkg.id, 'data-pkg-arch="' + pkg.id + '"', win32ArchOf(pkg)));
+        rows += setRow('Install parameters', 'Silent-install flags we run',
+          installParamsDropdownHtml('prm-' + pkg.id, 'data-pkg-params="' + pkg.id + '"', pkg.installParams, pkg.type));
+        rows += setRow('Language', 'Locales bundled in this installer',
+          langFieldHtml('data-pkg-langs', pkg.id, win32LangsOf(pkg)));
+        rows += setRow('Installer exit codes', exitCodesSummary(pkg.exitCodes),
+          '<fluent-button appearance="secondary" data-open-exitcodes="' + pkg.id + '">' + (exitCodesIsDefault(pkg.exitCodes) ? 'Customize' : 'Edit') + '</fluent-button>');
+        return '<div class="ez-setrows">' + rows + '</div>' + validationFooterHtml(pkg);
       }
       const dl = [];
       const langs = (pkg.langs && pkg.langs.length) ? pkg.langs.map(langLabelOf).join(', ') : '';
@@ -4039,14 +4481,35 @@
     if (!ordered.length) {
       packageList.innerHTML = '';
     } else {
-      let html = '<table class="ez-pkg-table"><thead><tr><th class="ez-pkg-th--name">Package</th><th>Version</th><th>Architecture</th><th>Device family</th><th class="ez-pkg-th--act" aria-label="Actions"></th></tr></thead><tbody>';
+      // Win32 installers don't carry a device family; they get their own columns (and a
+      // validation status). MSIX keeps version + device family. A submission is all one type.
+      const win32Mode = ordered.every(p => p.win32);
+      const headCols = win32Mode
+        ? '<th class="ez-pkg-th--name">Package</th><th>Architecture</th><th>Languages</th><th>Package validation</th><th class="ez-pkg-th--act" aria-label="Actions"></th>'
+        : '<th class="ez-pkg-th--name">Package</th><th>Version</th><th>Architecture</th><th>Device family</th><th class="ez-pkg-th--act" aria-label="Actions"></th>';
+      let html = '<table class="ez-pkg-table"><thead><tr>' + headCols + '</tr></thead><tbody>';
       ordered.forEach(pkg => {
-        html += '<tr class="ez-pkg-trow' + (pkg._open ? ' is-open' : '') + '" data-expand="' + pkg.id + '" role="button" tabindex="0" aria-expanded="' + (pkg._open ? 'true' : 'false') + '">' +
-            '<td class="ez-pkg-td--name"><span class="ez-pkg-namewrap">' + (appBrandLogo ? '<img class="ez-pkg-logo" src="' + appBrandLogo + '" alt="" width="20" height="20" />' : '<iconify-icon icon="' + iconOf(pkg) + '" width="20" height="20" aria-hidden="true"></iconify-icon>') + '<span class="ez-pkg-name" title="' + esc(pkg.filename) + '">' + esc(pkg.filename) + '</span></span></td>' +
-            '<td>' + esc(verOf(pkg)) + '</td><td>' + esc(archOf(pkg)) + '</td><td>' + esc(deviceOf(pkg)) + '</td>' +
-            '<td class="ez-pkg-td--act"><fluent-button class="ez-pkg-remove" appearance="transparent" size="small" data-remove="' + pkg.id + '" aria-label="Remove ' + esc(pkg.filename) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button><iconify-icon class="ez-pkg-chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></td>' +
-          '</tr>' +
-          '<tr class="ez-pkg-detailrow"' + (pkg._open ? '' : ' hidden') + ' data-detail="' + pkg.id + '"><td colspan="5"><div class="ez-pkg-detail">' + pkgDetailHtml(pkg) + '</div></td></tr>';
+        const midCols = win32Mode
+          ? '<td>' + esc(archOf(pkg)) + '</td><td>' + langCellOf(pkg) + '</td><td class="ez-pkg-td--val">' + validationCell(pkg) + '</td>'
+          : '<td>' + esc(verOf(pkg)) + '</td><td>' + esc(archOf(pkg)) + '</td><td>' + esc(deviceOf(pkg)) + '</td>';
+        const nameCell = '<td class="ez-pkg-td--name"><span class="ez-pkg-namewrap">' + (appBrandLogo ? '<img class="ez-pkg-logo" src="' + appBrandLogo + '" alt="" width="20" height="20" />' : '<iconify-icon icon="' + iconOf(pkg) + '" width="20" height="20" aria-hidden="true"></iconify-icon>') + '<span class="ez-pkg-name" title="' + esc(pkg.filename) + '">' + esc(pkg.filename) + '</span></span></td>';
+        const removeBtn = '<fluent-button class="ez-pkg-remove" appearance="transparent" size="small" data-remove="' + pkg.id + '" aria-label="Remove ' + esc(pkg.filename) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>';
+        if (win32Mode) {
+          // Win32 rows are compact + click-to-edit; the details live in the dialog, not inline.
+          html += '<tr class="ez-pkg-trow ez-pkg-trow--clickable" data-edit="' + pkg.id + '" role="button" tabindex="0">' +
+              nameCell + midCols +
+              '<td class="ez-pkg-td--act">' +
+                '<fluent-button class="ez-pkg-edit" appearance="transparent" size="small" data-edit="' + pkg.id + '" aria-label="Edit details for ' + esc(pkg.filename) + '"><iconify-icon icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>' +
+                removeBtn +
+              '</td>' +
+            '</tr>';
+        } else {
+          html += '<tr class="ez-pkg-trow' + (pkg._open ? ' is-open' : '') + '" data-expand="' + pkg.id + '" role="button" tabindex="0" aria-expanded="' + (pkg._open ? 'true' : 'false') + '">' +
+              nameCell + midCols +
+              '<td class="ez-pkg-td--act">' + removeBtn + '<iconify-icon class="ez-pkg-chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></td>' +
+            '</tr>' +
+            '<tr class="ez-pkg-detailrow"' + (pkg._open ? '' : ' hidden') + ' data-detail="' + pkg.id + '"><td colspan="5"><div class="ez-pkg-detail">' + pkgDetailHtml(pkg) + '</div></td></tr>';
+        }
       });
       html += '</tbody></table>';
       packageList.innerHTML = html;
@@ -4102,6 +4565,15 @@
         if ((e.key === 'Enter' || e.key === ' ') && e.target === rowEl) { e.preventDefault(); toggle(); }
       });
     });
+    // Win32 rows open the package-details dialog (click the row body or the edit pencil).
+    packageList.querySelectorAll('.ez-pkg-trow[data-edit]').forEach(rowEl => {
+      rowEl.addEventListener('click', (e) => {
+        if (e.target.closest('button, a, fluent-button, fluent-dropdown')) return;   // controls handle themselves
+        openPkgDetailsDialog(rowEl.dataset.edit, false);
+      });
+      rowEl.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === rowEl) { e.preventDefault(); openPkgDetailsDialog(rowEl.dataset.edit, false); } });
+    });
+    packageList.querySelectorAll('.ez-pkg-edit[data-edit]').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); openPkgDetailsDialog(btn.dataset.edit, false); }));
     // Live edits write straight back to the package and refresh the collapsed summary.
     packageList.querySelectorAll('[data-pkg-url]').forEach(el => {
       const p0 = packages.find(p => p.id === el.dataset.pkgUrl);
@@ -4126,27 +4598,38 @@
           announce('Another ' + newArch + ' installer already uses one of these languages. Pick a different architecture.');
           renderPackages(); return;   // re-render reverts the dropdown to the package's current arch
         }
-        p.arches = [newArch]; renderPackages();
+        p.arches = [newArch]; invalidateValidation(p); renderPackages();   // a new architecture needs re-validation
       });
     });
-    // Install parameters (mandatory preset dropdown).
+    // Install parameters (mandatory preset dropdown) — changing them invalidates the last result.
     packageList.querySelectorAll('[data-pkg-params]').forEach(el => el.addEventListener('change', () => {
-      const p = packages.find(p => p.id === el.dataset.pkgParams); if (p) p.installParams = el.value;
+      const p = packages.find(p => p.id === el.dataset.pkgParams); if (!p) return;
+      p.installParams = el.value; invalidateValidation(p); renderPackages();
     }));
-    // Language chips: add via the picker, remove via the chip's × (re-render to refresh
-    // the summary and the picker's available languages).
+    // Installer exit codes: opens the per-package mapping dialog.
+    packageList.querySelectorAll('[data-open-exitcodes]').forEach(btn => btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openExitCodesDialog(btn.getAttribute('data-open-exitcodes'));
+    }));
+    // Package validation: opens the report for a finished run.
+    packageList.querySelectorAll('[data-open-validation]').forEach(btn => btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openValidationDialog(btn.getAttribute('data-open-validation'));
+    }));
+    // Confirm details & run (or re-run) validation.
+    packageList.querySelectorAll('[data-run-validation]').forEach(btn => btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const p = packages.find(pp => pp.id === btn.getAttribute('data-run-validation')); if (!p) return;
+      runValidation(p); renderPackages();
+    }));
+    // Language: the picker opens the multi-select dialog; the row shows a compact summary.
     packageList.querySelectorAll('[data-pkg-langs]').forEach(box => {
       const p = packages.find(p => p.id === box.dataset.pkgLangs); if (!p) return;
       const openBtn = box.querySelector('[data-open-langdlg]');
       if (openBtn) openBtn.addEventListener('click', () => openPkgLangDialog({
         arch: win32ArchOf(p), exceptId: p.id,
         getLangs: () => win32LangsOf(p),
-        addLang: code => { const langs = win32LangsOf(p).slice(); if (langs.indexOf(code) < 0) { langs.push(code); p.langs = langs; renderPackages(); } },
-      }));
-      box.querySelectorAll('[data-remove-lang]').forEach(btn => btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const langs = win32LangsOf(p).filter(c => c !== btn.dataset.removeLang);
-        if (langs.length) { p.langs = langs; renderPackages(); }
+        commit: langs => { p.langs = langs.slice(); invalidateValidation(p); renderPackages(); },
       }));
     });
     if (packages.length === 0) {
@@ -4158,7 +4641,14 @@
     if (addMore) addMore.hidden = packages.length === 0;
     updateUploadConstraints();   // drop-zone hint + accepted file types reflect the locked package type
     renderFamilyDistribution();  // per-family distribution toggles (only when packages span >1 family)
-    state.pkg = packages.length > 0;
+    // The "Building a package?" identity banner is MSIX-only (AppxManifest.xml). Re-derived every render:
+    // show it on the Package step only while there's no confirmed Win32 installer — so removing them brings it back.
+    const idBannerPkg = $('ez-pkg-identity-banner'), flowWrapPkg = document.getElementById('flow-wrap');
+    const hasWin32Pkg = packages.some(p => p.win32 && !p._pending);
+    const onPkgStep = !!($('step-package') && $('step-package').classList.contains('is-wz-active'));
+    if (idBannerPkg) idBannerPkg.classList.toggle('is-wz-show', onPkgStep && !hasWin32Pkg);
+    if (flowWrapPkg) flowWrapPkg.classList.toggle('has-win32-pkg', hasWin32Pkg);
+    state.pkg = packages.some(p => !p._pending);
     updateGate();
   }
 
@@ -4259,44 +4749,328 @@
   }
   if (restrictedCapsDialog) restrictedCapsDialog.querySelectorAll('[data-restricted-caps-close]').forEach(b => b.addEventListener('click', closeRestrictedCapsDialog));
 
-  // ---- Package language picker dialog (search + select; shared by per-package cards
-  // and the contextual URL add). The opener passes a context with the current language
-  // list, the architecture (for the per-arch uniqueness filter), and an addLang callback.
+  // ---- Package language picker dialog (multi-select checkboxes; shared by per-package cards
+  // and the contextual URL add). The opener passes a context with the current language list
+  // (getLangs), the architecture (for the per-arch uniqueness filter), and a commit(langs) callback.
   const pkgLangDialog = $('pkg-lang-dialog'), pkgLangSearch = $('pkg-lang-search'), pkgLangListEl = $('pkg-lang-list');
   let pkgLangCtx = null;
+  let pkgLangPending = [];   // languages checked in the dialog; committed to the package on Done
   function renderPkgLangList() {
     if (!pkgLangListEl || !pkgLangCtx) return;
     const q = ((pkgLangSearch && pkgLangSearch.value) || '').trim().toLowerCase();
-    const selected = pkgLangCtx.getLangs();
-    const avail = Object.keys(LANG_LABEL).filter(code =>
-      selected.indexOf(code) < 0 &&
-      !langTakenByOther(pkgLangCtx.arch, code, pkgLangCtx.exceptId) &&
-      langMatches(code, q)
-    );
-    if (!avail.length) {
-      pkgLangListEl.innerHTML = '<div class="pkg-lang-dialog__empty">' + (q ? 'No languages match your search.' : 'All available languages are added.') + '</div>';
+    const matches = Object.keys(LANG_LABEL).filter(code => langMatches(code, q));
+    if (!matches.length) {
+      pkgLangListEl.innerHTML = '<div class="pkg-lang-dialog__empty">No languages match your search.</div>';
+      updatePkgLangBar();
       return;
     }
-    pkgLangListEl.innerHTML = avail.map(code =>
-      '<div class="pkg-lang-row" role="listitem" tabindex="0" data-lang="' + code + '">' +
-        '<span class="pkg-lang-row__name">' + LANG_LABEL[code] + '</span>' +
-        '<span class="pkg-lang-row__code">' + code + '</span>' +
-      '</div>'
-    ).join('');
-    pkgLangListEl.querySelectorAll('[data-lang]').forEach(row => {
-      const add = () => { pkgLangCtx.addLang(row.dataset.lang); renderPkgLangList(); };
-      row.addEventListener('click', add);
-      row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); add(); } });
+    // Every language is a checkbox: checked = in the pending set, disabled = already used by
+    // another installer on the same architecture (the (architecture, language) pair must be unique).
+    pkgLangListEl.innerHTML = matches.map(code => {
+      const taken = langTakenByOther(pkgLangCtx.arch, code, pkgLangCtx.exceptId);
+      const checked = pkgLangPending.indexOf(code) >= 0;
+      return '<label class="pkg-lang-row' + (taken ? ' pkg-lang-row--disabled' : '') + '">' +
+          '<input type="checkbox" data-lang="' + code + '"' + (checked ? ' checked' : '') + (taken ? ' disabled' : '') + ' />' +
+          '<span class="pkg-lang-row__name">' + LANG_LABEL[code] + '</span>' +
+          '<span class="pkg-lang-row__code">' + (taken ? 'In use' : code) + '</span>' +
+        '</label>';
+    }).join('');
+    pkgLangListEl.querySelectorAll('input[data-lang]').forEach(cb => cb.addEventListener('change', () => {
+      const code = cb.getAttribute('data-lang'), i = pkgLangPending.indexOf(code);
+      if (cb.checked) { if (i < 0) pkgLangPending.push(code); }
+      else if (i >= 0) pkgLangPending.splice(i, 1);
+      updatePkgLangBar();
+    }));
+    updatePkgLangBar();
+  }
+  function updatePkgLangBar() {
+    const bar = $('pkg-lang-bar'); if (!bar || !pkgLangCtx) return;
+    bar.innerHTML = '<span class="pkg-lang-bar__count">' + pkgLangPending.length + ' selected</span>' +
+      '<span class="pkg-lang-bar__actions"><button type="button" data-lang-all>Select all</button><button type="button" data-lang-clear>Clear</button></span>';
+    const allBtn = bar.querySelector('[data-lang-all]'), clearBtn = bar.querySelector('[data-lang-clear]');
+    if (allBtn) allBtn.addEventListener('click', () => {
+      // Select every language that currently matches the search and isn't used elsewhere.
+      const q = ((pkgLangSearch && pkgLangSearch.value) || '').trim().toLowerCase();
+      Object.keys(LANG_LABEL).forEach(code => {
+        if (langMatches(code, q) && !langTakenByOther(pkgLangCtx.arch, code, pkgLangCtx.exceptId) && pkgLangPending.indexOf(code) < 0) pkgLangPending.push(code);
+      });
+      renderPkgLangList();
     });
+    if (clearBtn) clearBtn.addEventListener('click', () => { pkgLangPending.length = 0; renderPkgLangList(); });
   }
   function openPkgLangDialog(ctx) {
     pkgLangCtx = ctx;
+    pkgLangPending = ((ctx.getLangs && ctx.getLangs()) || []).slice();   // start from the current selection
     if (pkgLangSearch) pkgLangSearch.value = '';
     renderPkgLangList();
     try { pkgLangDialog.show(); } catch (e) {}
   }
+  function commitPkgLang() {
+    if (pkgLangCtx && typeof pkgLangCtx.commit === 'function') pkgLangCtx.commit(pkgLangPending.slice());
+    try { pkgLangDialog.hide(); } catch (e) {}
+  }
   if (pkgLangSearch) pkgLangSearch.addEventListener('input', renderPkgLangList);
   if (pkgLangDialog) pkgLangDialog.querySelectorAll('[data-pkg-lang-close]').forEach(b => b.addEventListener('click', () => { try { pkgLangDialog.hide(); } catch (e) {} }));
+  if ($('pkg-lang-done')) $('pkg-lang-done').addEventListener('click', commitPkgLang);
+
+  // ---- Installer exit codes dialog (per Win32 package) ----
+  // Progressive disclosure: Success (pre-filled 0) → common results → "More results" → docs URL.
+  // Transactional: edits read on Save, so Cancel discards. The mapping lives on pkg.exitCodes.
+  const exitCodesDialog = $('exit-codes-dialog');
+  const exitCodesListEl = $('exit-codes-list');
+  let exitCodesPkgId = null;
+  function exitScnRowHtml(scn, value) {
+    const escAttr = s => String(s == null ? '' : s).replace(/"/g, '&quot;');
+    return '<div class="exit-scn">' +
+        '<div class="exit-scn__head"><span class="exit-scn__label">' + scn.label + '</span><span class="exit-scn__desc">' + scn.desc + '</span></div>' +
+        '<fluent-text-input class="exit-scn__code" data-scn="' + scn.key + '" value="' + escAttr(value) + '" placeholder="Code" aria-label="Exit code for ' + scn.label + '"></fluent-text-input>' +
+      '</div>';
+  }
+  function renderExitCodesDialog() {
+    const pkg = packages.find(p => p.id === exitCodesPkgId);
+    if (!pkg || !exitCodesListEl) return;
+    const ec = pkg.exitCodes || {};
+    const escAttr = s => String(s == null ? '' : s).replace(/"/g, '&quot;');
+    const successScn = { key: 'success', label: 'Success', desc: 'Returned when the install works.' };
+    exitCodesListEl.innerHTML =
+      '<div class="exit-grp">' + exitScnRowHtml(successScn, exitCodeVal(ec, 'success')) + '</div>' +
+      '<div class="exit-grp"><div class="exit-grp__title">Failure codes <span class="exit-grp__opt">optional</span></div>' +
+        EXIT_SCENARIOS.map(s => exitScnRowHtml(s, ec[s.key] || '')).join('') +
+      '</div>' +
+      '<div class="exit-grp"><div class="exit-grp__title">Documentation <span class="exit-grp__opt">optional</span></div>' +
+        '<div class="exit-doc"><fluent-text-input id="exit-doc-url" class="exit-doc__input" value="' + escAttr(ec.docUrl || '') + '" placeholder="https://…" aria-label="Documentation URL"></fluent-text-input><span class="exit-doc__hint">Link a page that documents codes not listed here.</span></div>' +
+      '</div>';
+  }
+  function openExitCodesDialog(pkgId) {
+    exitCodesPkgId = pkgId;
+    renderExitCodesDialog();
+    try { exitCodesDialog.show(); } catch (e) {}
+  }
+  function closeExitCodesDialog() { try { exitCodesDialog.hide(); } catch (e) {} }
+  function commitExitCodes() {
+    const pkg = packages.find(p => p.id === exitCodesPkgId);
+    if (pkg && exitCodesListEl) {
+      const ec = {};
+      exitCodesListEl.querySelectorAll('[data-scn]').forEach(inp => { ec[inp.getAttribute('data-scn')] = (inp.value || '').trim(); });
+      if (!ec.success) ec.success = '0';   // a successful install always needs a code; default it
+      const docEl = $('exit-doc-url'); ec.docUrl = docEl ? (docEl.value || '').trim() : '';
+      pkg.exitCodes = ec;
+      announce('Installer exit codes saved.');
+    }
+    closeExitCodesDialog();
+    renderPackages();
+  }
+  if (exitCodesDialog) exitCodesDialog.querySelectorAll('[data-exit-codes-close]').forEach(b => b.addEventListener('click', closeExitCodesDialog));
+  if ($('exit-codes-save')) $('exit-codes-save').addEventListener('click', commitExitCodes);
+
+  // ---- Package validation report dialog (Win32) ----
+  const validationDialog = $('validation-dialog');
+  function fmtRunAt(ts) {
+    try {
+      const d = new Date(ts);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const mons = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      let h = d.getHours(); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
+      const pad = n => String(n).padStart(2, '0');
+      return days[d.getDay()] + ', ' + pad(h) + ':' + pad(d.getMinutes()) + ' ' + ap + ', ' + d.getDate() + ' ' + mons[d.getMonth()] + ' ' + d.getFullYear();
+    } catch (e) { return ''; }
+  }
+  function openValidationDialog(pkgId) {
+    const pkg = packages.find(p => p.id === pkgId);
+    if (!pkg || !pkg.validation || (pkg.validation.status !== 'passed' && pkg.validation.status !== 'failed')) return;
+    const v = pkg.validation;
+    const escv = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+    const checks = v.checks || [];
+    const fails = checks.filter(c => c.kind === 'fail').length;
+    const recs = checks.filter(c => c.kind === 'recommendation').length;
+    const ok = fails === 0;
+    const hero = $('val-hero'), hicon = $('val-hero-icon'), htitle = $('val-hero-title'), hsub = $('val-hero-sub');
+    if (hero) hero.className = 'val-hero val-hero--' + (ok ? 'ok' : 'fail');
+    if (hicon) hicon.setAttribute('icon', ok ? 'fluent:checkmark-circle-24-filled' : 'fluent:error-circle-24-filled');
+    if (htitle) htitle.textContent = ok ? 'Validation passed' : 'Action needed';
+    if (hsub) hsub.textContent = ok
+      ? ('All ' + checks.length + ' checks completed' + (recs ? ' · ' + recs + ' recommendation' + (recs > 1 ? 's' : '') + ' to review' : '.'))
+      : (fails + ' check' + (fails > 1 ? 's' : '') + ' need' + (fails > 1 ? '' : 's') + ' your attention before you submit.');
+    const meta = $('val-meta');
+    if (meta) {
+      const rows = [
+        ['Package', v.target || pkg.filename],
+        ['Architecture', v.arch || win32ArchOf(pkg)],
+        ['Install parameters', v.params || '—'],
+        ['Run initiated on', fmtRunAt(v.runAt)],
+      ];
+      meta.innerHTML = rows.map(r => '<div class="val-meta__row"><dt>' + escv(r[0]) + '</dt><dd>' + escv(r[1]) + '</dd></div>').join('');
+    }
+    const list = $('val-checks');
+    if (list) {
+      const ICONS = { pass: 'fluent:checkmark-circle-20-filled', recommendation: 'fluent:info-20-filled', fail: 'fluent:error-circle-20-filled' };
+      list.innerHTML = checks.map(c => {
+        const kind = c.kind || 'pass';
+        const hasDetail = !!c.detail;
+        return '<div class="val-check val-check--' + kind + '">' +
+          '<div class="val-check__head"' + (hasDetail ? ' role="button" tabindex="0" data-val-toggle aria-expanded="false"' : '') + '>' +
+            '<iconify-icon class="val-check__icon" icon="' + (ICONS[kind] || ICONS.pass) + '" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+            '<div class="val-check__text"><strong>' + escv(c.label) + '</strong><span>' + escv(c.desc) + '</span></div>' +
+            (hasDetail ? '<iconify-icon class="val-check__chev" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' : '') +
+          '</div>' +
+          (hasDetail ? '<div class="val-check__detail" hidden>' + escv(c.detail) + '</div>' : '') +
+        '</div>';
+      }).join('');
+      list.querySelectorAll('[data-val-toggle]').forEach(head => {
+        const toggle = () => {
+          const cell = head.closest('.val-check'); const det = cell && cell.querySelector('.val-check__detail'); if (!det) return;
+          det.hidden = !det.hidden;
+          head.setAttribute('aria-expanded', det.hidden ? 'false' : 'true');
+          cell.classList.toggle('is-open', !det.hidden);
+        };
+        head.addEventListener('click', toggle);
+        head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      });
+    }
+    try { validationDialog.show(); } catch (e) {}
+  }
+  if (validationDialog) validationDialog.querySelectorAll('[data-validation-close]').forEach(b => b.addEventListener('click', () => { try { validationDialog.hide(); } catch (e) {} }));
+
+  // ---- Package details dialog (Win32) ----
+  // Collects architecture / install parameters / language / exit codes for one installer. Opens on
+  // every Win32 add (and on row click to edit). Confirm commits + validates in the background; Cancel
+  // discards (a fresh add is removed; an edit reverts to its snapshot).
+  const pkgDetailsDialog = $('pkg-details-dialog');
+  let pkgdId = null, pkgdIsNew = false, pkgdSnapshot = null;
+  const pkgdEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+  function pkgdPkg() { return packages.find(p => p.id === pkgdId); }
+  function renderPkgdLang() {
+    const pkg = pkgdPkg(), wrap = $('pkgd-lang-wrap'); if (!pkg || !wrap) return;
+    wrap.innerHTML = langFieldHtml('data-pkgd-langs', 'pkgd', win32LangsOf(pkg));
+    const openBtn = wrap.querySelector('[data-open-langdlg]');
+    if (openBtn) openBtn.addEventListener('click', () => openPkgLangDialog({
+      arch: win32ArchOf(pkg), exceptId: pkg.id,
+      getLangs: () => win32LangsOf(pkg),
+      commit: langs => { pkg.langs = langs.slice(); renderPkgdLang(); updatePkgdConfirm(); },
+    }));
+  }
+  function renderPkgdExit() {
+    const host = $('pkgd-exit'); if (!host) return;
+    const pkg = pkgdPkg(), ec = (pkg && pkg.exitCodes) || {};
+    const successScn = { key: 'success', label: 'Success', desc: 'Returned when the install works.' };
+    host.innerHTML =
+      '<div class="exit-grp">' + exitScnRowHtml(successScn, exitCodeVal(ec, 'success')) + '</div>' +
+      '<div class="exit-grp"><div class="exit-grp__title">Failure codes <span class="exit-grp__opt">optional</span></div>' + EXIT_SCENARIOS.map(s => exitScnRowHtml(s, ec[s.key] || '')).join('') + '</div>' +
+      '<div class="exit-grp"><div class="exit-grp__title">Documentation <span class="exit-grp__opt">optional</span></div><div class="exit-doc"><fluent-text-input id="pkgd-exit-doc" class="exit-doc__input" value="' + pkgdEsc(ec.docUrl || '') + '" placeholder="https://…" aria-label="Documentation URL"></fluent-text-input><span class="exit-doc__hint">Link a page that documents codes not listed here.</span></div></div>';
+  }
+  function readPkgdExit() {
+    const host = $('pkgd-exit'), ec = {};
+    if (host) host.querySelectorAll('[data-scn]').forEach(inp => { ec[inp.getAttribute('data-scn')] = (inp.value || '').trim(); });
+    if (!ec.success) ec.success = '0';
+    const doc = $('pkgd-exit-doc'); ec.docUrl = doc ? (doc.value || '').trim() : '';
+    return ec;
+  }
+  function updatePkgdConfirm() {
+    const pkg = pkgdPkg(), btn = $('pkgd-confirm'), hint = $('pkgd-hint'); if (!pkg || !btn) return;
+    const urlEl = $('pkgd-url');
+    const urlOk = pkg.source !== 'url' || !!(urlEl && urlEl.value.trim());
+    const langOk = win32LangsOf(pkg).length > 0;
+    btn.disabled = !(urlOk && langOk);
+    let msg = '';
+    if (!urlOk) msg = 'Paste your installer link to confirm.';
+    else if (!langOk) msg = 'Add at least one language to confirm.';
+    if (hint) { hint.hidden = !msg; if (msg) hint.innerHTML = '<iconify-icon icon="fluent:warning-20-filled" width="14" height="14" aria-hidden="true"></iconify-icon> ' + msg; }
+  }
+  function renderPkgdDialog() {
+    const pkg = pkgdPkg(); if (!pkg) return;
+    const intro = $('pkgd-intro');
+    if (intro) intro.textContent = pkg.source === 'url'
+      ? 'Paste a link to your hosted installer, then review the details and confirm. We’ll validate the package in the background.'
+      : 'We read these from your installer’s file name — review them and confirm. We’ll validate the package in the background.';
+    const file = $('pkgd-file');
+    if (file) {
+      if (pkg.filename) { file.hidden = false; file.innerHTML = '<iconify-icon icon="fluent:window-apps-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon><span class="pkgd-file__name" title="' + pkgdEsc(pkg.filename) + '">' + pkgdEsc(pkg.filename) + '</span>'; }
+      else { file.hidden = true; file.innerHTML = ''; }   // a fresh "Add by link" has no file name yet
+    }
+    const urlField = $('pkgd-url-field'), urlInput = $('pkgd-url');
+    if (urlField) urlField.hidden = pkg.source !== 'url';
+    if (urlInput && pkg.source === 'url') urlInput.value = pkg.url || '';
+    const archWrap = $('pkgd-arch-wrap');
+    if (archWrap) {
+      archWrap.innerHTML = archDropdownHtml('pkgd-arch', 'data-pkgd-arch', win32ArchOf(pkg));
+      const d = $('pkgd-arch');
+      if (d) d.addEventListener('change', () => {
+        const newArch = d.value;
+        if (win32LangsOf(pkg).some(code => langTakenByOther(newArch, code, pkg.id))) {
+          announce('Another ' + newArch + ' installer already uses one of these languages. Pick a different architecture or language.');
+          renderPkgdDialog(); return;   // revert the dropdown
+        }
+        pkg.arches = [newArch];
+      });
+    }
+    const prmWrap = $('pkgd-params-wrap');
+    if (prmWrap) {
+      prmWrap.innerHTML = installParamsDropdownHtml('pkgd-params', 'data-pkgd-params', pkg.installParams, pkg.type);
+      const d = $('pkgd-params'); if (d) d.addEventListener('change', () => { pkg.installParams = d.value; });
+    }
+    renderPkgdLang();
+    renderPkgdExit();
+    updatePkgdConfirm();
+  }
+  function openPkgDetailsDialog(pkgId, isNew) {
+    const pkg = packages.find(p => p.id === pkgId); if (!pkg || !pkg.win32) return;
+    pkgdId = pkgId; pkgdIsNew = !!isNew;
+    pkgdSnapshot = { arches: (pkg.arches || []).slice(), installParams: pkg.installParams, langs: (pkg.langs || []).slice(), url: pkg.url, exitCodes: pkg.exitCodes ? JSON.parse(JSON.stringify(pkg.exitCodes)) : undefined, validation: pkg.validation ? Object.assign({}, pkg.validation) : undefined };
+    const adv = $('pkgd-adv'), advBtn = $('pkgd-adv-toggle'), advLbl = $('pkgd-adv-label');
+    if (adv) adv.hidden = true;
+    if (advBtn) advBtn.setAttribute('aria-expanded', 'false');
+    if (advLbl) advLbl.textContent = 'Show advanced options';
+    renderPkgdDialog();
+    try { pkgDetailsDialog.show(); } catch (e) {}
+    if (pkg.source === 'url' && !pkg.url) setTimeout(() => { const u = $('pkgd-url'); if (u) { try { u.focus(); } catch (e) {} } }, 60);
+  }
+  function openNextPendingPkg() {
+    const next = packages.find(p => p.win32 && p._pending);   // a batch leaves several pending; review them in turn
+    if (next) openPkgDetailsDialog(next.id, true);
+  }
+  function confirmPkgDetails() {
+    const pkg = pkgdPkg();
+    if (pkg) {
+      delete pkg._pending;   // confirmed → now appears in the table
+      const urlInput = $('pkgd-url');
+      if (pkg.source === 'url' && urlInput && urlInput.value.trim()) {
+        pkg.url = urlInput.value.trim();
+        pkg.filename = basenameOf(pkg.url);
+        pkg.type = /\.msi(?:[?#]|$)/i.test(pkg.url) ? 'Win32 MSI' : 'Win32 EXE';
+      }
+      pkg.exitCodes = readPkgdExit();
+      runValidation(pkg);   // validate in the background
+      announce('Package confirmed. Validating in the background.');
+    }
+    try { pkgDetailsDialog.hide(); } catch (e) {}
+    renderPackages();
+    openNextPendingPkg();
+  }
+  function cancelPkgDetails() {
+    const pkg = pkgdPkg();
+    if (pkg) {
+      if (pkgdIsNew) { const i = packages.indexOf(pkg); if (i >= 0) packages.splice(i, 1); }   // discard a fresh add
+      else if (pkgdSnapshot) {
+        pkg.arches = pkgdSnapshot.arches; pkg.installParams = pkgdSnapshot.installParams; pkg.langs = pkgdSnapshot.langs;
+        pkg.url = pkgdSnapshot.url; pkg.exitCodes = pkgdSnapshot.exitCodes; pkg.validation = pkgdSnapshot.validation;
+      }
+    }
+    try { pkgDetailsDialog.hide(); } catch (e) {}
+    renderPackages();
+    openNextPendingPkg();
+  }
+  if (pkgDetailsDialog) {
+    pkgDetailsDialog.querySelectorAll('[data-pkgd-cancel]').forEach(b => b.addEventListener('click', cancelPkgDetails));
+    if ($('pkgd-confirm')) $('pkgd-confirm').addEventListener('click', confirmPkgDetails);
+    if ($('pkgd-url')) $('pkgd-url').addEventListener('input', updatePkgdConfirm);   // enable Confirm once a link is entered
+    const advBtn = $('pkgd-adv-toggle');
+    if (advBtn) advBtn.addEventListener('click', () => {
+      const adv = $('pkgd-adv'), lbl = $('pkgd-adv-label'); if (!adv) return;
+      adv.hidden = !adv.hidden;
+      advBtn.setAttribute('aria-expanded', adv.hidden ? 'false' : 'true');
+      if (lbl) lbl.textContent = adv.hidden ? 'Show advanced options' : 'Hide advanced options';
+    });
+  }
 
   function addPackages(fileList) {
     const files = Array.from(fileList || []).filter(Boolean);
@@ -4318,6 +5092,7 @@
     let dupSkipped = 0;
     accept.forEach(f => {
       const p = extractPackageMetadata(f);
+      if (p.win32) { p.langs = firstWin32Langs(); p._pending = true; }   // pre-fill language; stay hidden until confirmed in the dialog
       if (p.win32 && win32LangsOf(p).some(code => langTakenByOther(win32ArchOf(p), code, p.id))) { dupSkipped++; return; }
       packages.push(p);
       added.push(p);
@@ -4327,9 +5102,14 @@
       announce('Skipped ' + dupSkipped + ' duplicate installer(s): architecture + language must be unique.');
     }
     if (!added.length) { renderPackages(); return; }
-    added.forEach(p => { if (p.win32) p._open = true; }); // uploaded EXE/MSI open so the user can set arch + install params
-    renderPackages();
-    enrichPackagesFromManifest(added);
+    const firstWin32New = added.find(p => p.win32);
+    if (firstWin32New) {
+      // Win32: open the details dialog WITHOUT touching the background; it commits on Confirm.
+      openPkgDetailsDialog(firstWin32New.id, true);
+    } else {
+      renderPackages();                    // MSIX appears immediately
+      enrichPackagesFromManifest(added);   // …and reads its manifest
+    }
     announce(added.length === 1 ? 'Package added.' : added.length + ' packages added.');
   }
 
@@ -4347,9 +5127,20 @@
   }
 
   pkgFile.addEventListener('change', (e) => { runExtraction(e.target.files); e.target.value = ''; });
-  // "Add another package" re-reveals the unified input (upload zone + URL row) so the
-  // next package can be either an upload or a URL. renderPackages() re-hides it once added.
+  // "Add another package": Win32 supports both upload and URL, so ask which; MSIX/PWA go straight to their one method.
+  const addMethodDialog = $('add-method-dialog');
+  function closeAddMethodDialog() { try { addMethodDialog.hide(); } catch (e) {} }
+  if (addMethodDialog) {
+    addMethodDialog.querySelectorAll('[data-add-method-close]').forEach(b => b.addEventListener('click', closeAddMethodDialog));
+    addMethodDialog.querySelectorAll('[data-add-method]').forEach(btn => btn.addEventListener('click', () => {
+      const method = btn.getAttribute('data-add-method');
+      closeAddMethodDialog();
+      if (method === 'upload') { pkgFile.click(); }
+      else { showAddUI('url'); const am = $('add-more-pkg'); if (am) am.hidden = true; }
+    }));
+  }
   if ($('add-more-pkg')) $('add-more-pkg').addEventListener('click', () => {
+    if (packages.some(p => p.win32) && addMethodDialog) { try { addMethodDialog.show(); } catch (e) {} return; }   // Win32 → choose upload or link
     if (packageMethod() === 'upload') { pkgFile.click(); return; }  // upload app: straight to the file picker
     showAddUI('url');             // URL app: reveal the link input
     $('add-more-pkg').hidden = true;
@@ -4370,77 +5161,33 @@
     const id = 'pkg-' + Math.random().toString(36).slice(2, 8);
     if (kind === 'pwa') {
       packages.push({ id, source: 'url', kind: 'pwa', filename: hostnameOf(url), type: 'PWA', win32: false, url, arches: [], installParams: '', capabilities: [], manifestParsed: true, sizeBytes: null });
+      renderPackages();
+      announce('Web app added.');
     } else {
       const isMsi = /\.msi(?:[?#]|$)/i.test(url);
       const type = isMsi ? 'Win32 MSI' : 'Win32 EXE';
-      packages.push({ id, source: 'url', kind: 'win32', filename: basenameOf(url), type, win32: true, url, arches: [arch || 'x64'], langs: (langs && langs.length) ? langs.slice() : [defaultPkgLang()], installParams: (prm || '').trim() || defaultInstallParams(type), capabilities: [], manifestParsed: true, sizeBytes: null });
+      packages.push({ id, source: 'url', kind: 'win32', filename: basenameOf(url), type, win32: true, url, arches: [arch || 'x64'], langs: Array.isArray(langs) ? langs.slice() : firstWin32Langs(), installParams: (prm || '').trim() || defaultInstallParams(type), capabilities: [], manifestParsed: true, sizeBytes: null, _pending: true });
+      announce('Win32 installer added.');   // no render — the details dialog commits it on Confirm
     }
-    renderPackages();
-    announce(kind === 'pwa' ? 'Web app added.' : 'Win32 installer added.');
+    return id;
   }
   (function wireUrlAdd() {
     const input = $('pkg-url-input'), btn = $('pkg-url-add');
     if (!input || !btn) return;
-    const win32Box = $('pkg-url-win32');
-    const archWrap = $('pkg-url-arch-wrap'), prmWrap = $('pkg-url-params-wrap'), langWrap = $('pkg-url-lang-wrap');
-    // Transient compose state for the URL installer being added (languages as chips).
-    const urlAdd = { langs: [defaultPkgLang()] };
-    const archVal = () => { const d = $('pkg-url-arch'); return d ? d.value : 'x64'; };
-    const renderUrlLangs = () => {
-      if (!langWrap) return;
-      langWrap.innerHTML = langFieldHtml('data-urladd-langs', 'urladd', urlAdd.langs);
-      const box = langWrap.querySelector('[data-urladd-langs]');
-      const openBtn = box && box.querySelector('[data-open-langdlg]');
-      if (openBtn) openBtn.addEventListener('click', () => openPkgLangDialog({
-        arch: archVal(), exceptId: null,
-        getLangs: () => urlAdd.langs,
-        addLang: code => { if (urlAdd.langs.indexOf(code) < 0) { urlAdd.langs.push(code); renderUrlLangs(); } },
-      }));
-      if (box) box.querySelectorAll('[data-remove-lang]').forEach(b => b.addEventListener('click', (e) => {
-        e.stopPropagation();
-        urlAdd.langs = urlAdd.langs.filter(c => c !== b.dataset.removeLang);
-        if (!urlAdd.langs.length) urlAdd.langs = [defaultPkgLang()];
-        renderUrlLangs();
-      }));
-    };
-    const buildFields = (arch, type) => {
-      if (archWrap) archWrap.innerHTML = archDropdownHtml('pkg-url-arch', 'data-url-arch', arch || 'x64');
-      if (prmWrap) prmWrap.innerHTML = installParamsDropdownHtml('pkg-url-params', 'data-url-params', '', type || 'Win32 EXE');
-      const archDrop = $('pkg-url-arch'); if (archDrop) archDrop.addEventListener('change', renderUrlLangs);
-      renderUrlLangs();
-    };
-    buildFields('x64', 'Win32 EXE');
     const normalize = (v) => { v = (v || '').trim(); return /^https?:\/\//i.test(v) ? v : (v ? 'https://' + v : ''); };
     const isInstallerUrl = (v) => /\.(exe|msi)(?:[?#]|$)/i.test(normalize(v));
-    // Contextual: reveal the Win32 fields only once the URL looks like an installer.
-    // Website (PWA) URLs and uploaded MSIX packages never show them — MSIX reads those
-    // from its manifest, a PWA has no architecture.
-    const syncUrlType = () => {
-      const has = !!input.value.trim();
-      const foot = $('pkg-url-foot'); if (foot) foot.hidden = !has;
-      btn.disabled = !has;
-      if (win32Box) win32Box.hidden = !(has && isInstallerUrl(input.value));
-    };
+    const syncUrlType = () => { btn.disabled = !input.value.trim(); };
     const submit = () => {
       const url = normalize(input.value);
       if (!url) return;
       try { new URL(url); } catch (e) { announce('Enter a valid URL.'); return; }
       if (isInstallerUrl(url)) {
-        const arch = archVal();
-        const conflict = urlAdd.langs.find(code => langTakenByOther(arch, code, null));
-        if (conflict) {
-          announce('A ' + arch + ' installer for ' + langLabelOf(conflict) + ' is already in this submission. Pick a different architecture or language.');
-          return;
-        }
-        const prmDrop = $('pkg-url-params');
-        addHostedPackage('win32', url, arch, prmDrop ? prmDrop.value : '', urlAdd.langs);
+        const id = addHostedPackage('win32', url);   // no render — the details dialog commits on Confirm
+        if (id) openPkgDetailsDialog(id, true);       // leave the link field untouched until the dialog resolves
       } else {
         addHostedPackage('pwa', url);
+        input.value = ''; syncUrlType();
       }
-      input.value = '';
-      urlAdd.langs = [defaultPkgLang()];
-      buildFields('x64', 'Win32 EXE');
-      syncUrlType();
     };
     input.addEventListener('input', syncUrlType);
     btn.addEventListener('click', submit);
@@ -4841,10 +5588,12 @@
 
   // ----- Hero color auto-derived from the app logo (same approach as variant B) -----
   const DEFAULT_HUE = 210;   // brand blue (--brand ≈ #479EF5)
+  const DEFAULT_SAT = 22;    // muted tint to fall back on when we can't read the logo's colour
   let logoHue = null;        // dominant hue extracted from the logo (null = fall back to name hash)
+  let logoSat = null;        // dominant saturation 0–100 (muted later for the hero backdrop)
   // Average the "interesting" pixels of the logo (skip transparent / near-white / near-black),
-  // then convert that average RGB to an HSL hue for the hero gradient.
-  function extractHueFromLogo(imgSrc) {
+  // then convert that average RGB to an HSL hue + saturation for the hero gradient.
+  function extractLogoColor(imgSrc) {
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
@@ -4855,7 +5604,7 @@
         ctx.drawImage(img, 0, 0, SIZE, SIZE);
         let data;
         try { data = ctx.getImageData(0, 0, SIZE, SIZE).data; }
-        catch (_) { resolve(DEFAULT_HUE); return; }
+        catch (_) { resolve(null); return; }
         let r = 0, g = 0, b = 0, n = 0;
         for (let i = 0; i < data.length; i += 4) {
           const a = data[i + 3];
@@ -4864,27 +5613,30 @@
           if (lum < 25 || lum > 230) continue;
           r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
         }
-        if (!n) { resolve(DEFAULT_HUE); return; }
+        if (!n) { resolve(null); return; }
         r /= n; g /= n; b /= n;
-        const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-        let h = 0;
+        const rr = r / 255, gg = g / 255, bb = b / 255;
+        const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb), d = max - min;
+        const l = (max + min) / 2;
+        let h = 0, s = 0;
         if (d) {
-          if (max === r) h = ((g - b) / d) % 6;
-          else if (max === g) h = (b - r) / d + 2;
-          else h = (r - g) / d + 4;
+          s = d / (1 - Math.abs(2 * l - 1));
+          if (max === rr) h = ((gg - bb) / d) % 6;
+          else if (max === gg) h = (bb - rr) / d + 2;
+          else h = (rr - gg) / d + 4;
           h *= 60; if (h < 0) h += 360;
         }
-        resolve(Math.round(h));
+        resolve({ h: Math.round(h), s: Math.round(s * 100) });
       };
-      img.onerror = () => resolve(DEFAULT_HUE);
+      img.onerror = () => resolve(null);
       img.src = imgSrc;
     });
   }
-  // Recompute the hero hue from the current icon (user upload wins over the package icon), then re-render.
+  // Recompute the hero tint from the current icon (user upload wins over the package icon), then re-render.
   function refreshLogoHue() {
     const iconUrl = userIconDataUrl || pkgIconDataUrl;
-    if (!iconUrl) { logoHue = null; ezRenderPreview(); return; }
-    extractHueFromLogo(iconUrl).then(h => { logoHue = h; ezRenderPreview(); });
+    if (!iconUrl) { logoHue = null; logoSat = null; ezRenderPreview(); return; }
+    extractLogoColor(iconUrl).then(c => { logoHue = c ? c.h : null; logoSat = c ? c.s : null; ezRenderPreview(); });
   }
 
   // Write an editable field's value + empty state, unless it's mid-edit.
@@ -4915,8 +5667,10 @@
     const nameVal = (fName.value || '').trim();
     const name = nameVal || app.name || '';
     const hue = (logoHue != null) ? logoHue : hashHue(name || 'app');
+    // Halve the logo's saturation and clamp it so the hero stays a subtle tint, never a vivid block.
+    const sat = (logoSat != null) ? Math.max(12, Math.min(34, Math.round(logoSat * 0.5))) : DEFAULT_SAT;
     const hero = $('ez-hero');
-    if (hero) hero.style.setProperty('--ez-hue', hue);
+    if (hero) { hero.style.setProperty('--ez-hue', hue); hero.style.setProperty('--ez-sat', sat + '%'); }
 
     setLiveField('ez-pv-name', nameVal, 'Click to name your app', true);
 
@@ -4930,11 +5684,13 @@
         iconEl.style.backgroundPosition = 'center';
         iconEl.textContent = '';
         iconEl.dataset.emptyRequired = 'false';
+        iconEl.classList.add('has-img');   // real logo shows directly — no tile box
       } else {
         iconEl.style.backgroundImage = '';
         iconEl.style.background = 'linear-gradient(135deg, hsl(' + hue + ', 80%, 60%), hsl(' + hue + ', 70%, 40%))';
         iconEl.textContent = (name || 'A').charAt(0).toUpperCase();
         iconEl.dataset.emptyRequired = 'true';
+        iconEl.classList.remove('has-img');
       }
     }
 
@@ -5015,6 +5771,42 @@
     el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !el.classList.contains('live-edit--active')) { e.preventDefault(); open(); } });
   }
 
+  // Inline single-select live-editor built on a Fluent dropdown (replaces the old native <select>,
+  // so the picker matches the rest of the UI). options: [{value,label}]; onCommit(value) runs on pick.
+  function openInlineDropdown(el, options, currentValue, onCommit) {
+    if (!el || el.classList.contains('live-edit--active')) return;
+    const dd = document.createElement('fluent-dropdown');
+    dd.className = 'live-edit-dropdown';
+    const lb = document.createElement('fluent-listbox');
+    options.forEach(o => {
+      const opt = document.createElement('fluent-option');
+      opt.setAttribute('value', o.value);
+      opt.textContent = o.label;
+      if (o.value === (currentValue || '')) opt.setAttribute('selected', '');
+      lb.appendChild(opt);
+    });
+    dd.appendChild(lb);
+    const originalHTML = el.innerHTML;
+    el.classList.add('live-edit--active');
+    el.classList.remove('live-edit-empty');
+    el.innerHTML = '';
+    el.appendChild(dd);
+    setTimeout(() => { try { dd.focus(); } catch (_) {} }, 0);
+    let done = false;
+    const finish = (changed) => {
+      if (done) return; done = true;
+      el.classList.remove('live-edit--active');
+      // No save-flash here: the dropdown commit already re-renders the new label, and the absolute
+      // tick would overlap a short content-width value (e.g. the category/subcategory text).
+      if (changed) onCommit(dd.value || '');
+      else el.innerHTML = originalHTML;
+    };
+    // Fluent dropdown fires `change` on pick (same as the package arch/param dropdowns). A focus-out
+    // without a pick just restores the original text; the guard keeps a pick from being undone.
+    dd.addEventListener('change', () => finish(true));
+    dd.addEventListener('focusout', () => setTimeout(() => finish(false), 180));
+  }
+
   function makeCategoryEditable(sel, dropdown) {
     const el = document.querySelector(sel);
     if (!el || !dropdown) return;
@@ -5029,36 +5821,12 @@
         if (typeof announce === 'function') announce('Switch to the default language to change the category.');
         return;
       }
-      const select = document.createElement('select');
-      select.className = 'live-edit-input';
-      const blank = document.createElement('option');
-      blank.value = ''; blank.textContent = 'Pick a category';
-      select.appendChild(blank);
-      dropdown.querySelectorAll('fluent-option').forEach(opt => {
-        const o = document.createElement('option');
-        o.value = opt.getAttribute('value') || '';
-        o.textContent = opt.textContent.trim();
-        if (dropdown.value === o.value) o.selected = true;
-        select.appendChild(o);
-      });
-      const originalHTML = el.innerHTML;
-      el.classList.add('live-edit--active');
-      el.classList.remove('live-edit-empty');
-      el.innerHTML = '';
-      el.appendChild(select);
-      select.focus();
-      let committed = false;
-      const commit = () => {
-        if (committed) return;
-        committed = true;
-        dropdown.value = select.value;
+      const options = [{ value: '', label: 'Pick a category' }];
+      dropdown.querySelectorAll('fluent-option').forEach(opt => options.push({ value: opt.getAttribute('value') || '', label: opt.textContent.trim() }));
+      openInlineDropdown(el, options, dropdown.value || '', (value) => {
+        dropdown.value = value;
         dropdown.dispatchEvent(new Event('change', { bubbles: true }));
-        el.classList.remove('live-edit--active');
-        ezRenderPreview();
-        flashSave(el);
-      };
-      select.addEventListener('change', commit);
-      select.addEventListener('blur', () => { if (!committed) { el.classList.remove('live-edit--active'); el.innerHTML = originalHTML; } });
+      });
     };
     el.addEventListener('click', open);
     el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !el.classList.contains('live-edit--active')) { e.preventDefault(); open(); } });
@@ -6247,15 +7015,35 @@ function openPriceScheduleDialog() {
     }
 
     // ---- Search terms / keywords (discoverability metadata, not on the PDP) ----
-    const chipsWrap = $('adv-keywords'), kwInput = $('adv-keyword-input');
+    const chipsWrap = $('adv-keywords'), kwInput = $('adv-keyword-input'), kwEasyChips = $('kw-easy-chips');
     const kwSuggestWrap = $('kw-suggest'), kwSuggestChips = $('kw-suggest-chips');
     const KW_STOP = new Set(('the a an and or but for with to of in on at by from as is are be this that these those your you our its it can will would should more most get use used using make makes made into about over under have has had not all any new free best top app apps').split(' '));
+    // Keywords seed automatically from the description and stay read-only in the simple view.
+    // Once the user adds/removes one in Advanced, we stop auto-seeding and respect their list.
+    let kwUserEdited = !!(L.keywords && L.keywords.length);
     // Auto-suggest keywords from the app name + description (top distinct terms not yet added).
     function suggestKeywords(limit) {
       const text = (((fDesc && fDesc.value) || '') + ' ' + ($('f-name') ? ($('f-name').value || '') : '')).toLowerCase();
       const freq = {};
       text.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).forEach(w => { if (w.length < 4 || KW_STOP.has(w)) return; freq[w] = (freq[w] || 0) + 1; });
       return Object.keys(freq).sort((a, b) => freq[b] - freq[a]).filter(w => L.keywords.indexOf(w) < 0).slice(0, limit || 6);
+    }
+    // Fill the keyword list from the description once, while the user hasn't taken manual control.
+    function seedKeywords() {
+      if (kwUserEdited || (typeof localeLocked === 'function' && localeLocked()) || L.keywords.length) return;
+      const seed = suggestKeywords(6);
+      if (seed.length) { L.keywords = seed; persistAdvanced(); }
+    }
+    // Read-only chips for the simple view (no remove buttons). The "auto-added" note only makes
+    // sense once we actually have keywords, so it hides in the empty state.
+    function renderKwEasy() {
+      if (!kwEasyChips) return;
+      const has = L.keywords.length > 0;
+      kwEasyChips.innerHTML = has
+        ? L.keywords.map(kw => '<span class="ez-kw-chips__chip">' + esc(kw) + '</span>').join('')
+        : '<span class="ez-kw-easy__empty">Add a description and we’ll suggest keywords here.</span>';
+      const note = document.querySelector('#kw-easy .ez-kw-easy__note');
+      if (note) note.hidden = !has;
     }
     function renderKwSuggest() {
       if (!kwSuggestWrap || !kwSuggestChips) return;
@@ -6267,20 +7055,22 @@ function openPriceScheduleDialog() {
     }
     window.__refreshKwSuggest = renderKwSuggest;
     function renderKeywords() {
+      seedKeywords();
       if (chipsWrap) chipsWrap.innerHTML = L.keywords.map((kw, i) =>
         '<span class="ez-kw-chips__chip">' + esc(kw) + '<button type="button" data-i="' + i + '" aria-label="Remove ' + esc(kw) + '"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button></span>'
       ).join('');
       renderKwSuggest();
+      renderKwEasy();
     }
-    function addKeyword(v) { if (localeLocked()) return; v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; L.keywords.push(v); persistAdvanced(); renderKeywords(); }
+    function addKeyword(v) { if (localeLocked()) return; v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; kwUserEdited = true; L.keywords.push(v); persistAdvanced(); renderKeywords(); }
     if (kwInput) {
       kwInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKeyword(kwInput.value); kwInput.value = ''; }
-        else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length && !localeLocked()) { L.keywords.pop(); persistAdvanced(); renderKeywords(); }
+        else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length && !localeLocked()) { kwUserEdited = true; L.keywords.pop(); persistAdvanced(); renderKeywords(); }
       });
       kwInput.addEventListener('blur', () => { if (kwInput.value.trim()) { addKeyword(kwInput.value); kwInput.value = ''; } });
     }
-    if (chipsWrap) chipsWrap.addEventListener('click', (e) => { if (localeLocked()) return; const b = e.target.closest('button[data-i]'); if (b) { L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); } });
+    if (chipsWrap) chipsWrap.addEventListener('click', (e) => { if (localeLocked()) return; const b = e.target.closest('button[data-i]'); if (b) { kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); } });
     renderKeywords();
 
     // ---- Privacy policy: Link or Text, with an optional AI-drafted starter ----
@@ -6442,16 +7232,21 @@ function openPriceScheduleDialog() {
     }
     function editSubcat() {
       if (localeLocked()) { announce('Switch to the default language to change the subcategory.'); return; }
-      const list = SUBCATS[(fCat && fCat.value) || ''] || [];
-      if (!list.length) { announce('Pick a category first.'); return; }
-      const cur = list.indexOf(L.subcategory) >= 0 ? L.subcategory : '';
       const target = $('ez-info-subcat'); if (!target) return;
-      const sel = document.createElement('select');
-      sel.className = 'live-edit-input';
-      sel.innerHTML = '<option value="">None</option>' + list.map(s => '<option value="' + esc(s) + '"' + (s === cur ? ' selected' : '') + '>' + esc(s) + '</option>').join('');
-      target.replaceWith(sel); sel.focus();
-      const done = () => { L.subcategory = sel.value || ''; persistAdvanced(); renderInfo(); };
-      sel.addEventListener('change', done); sel.addEventListener('blur', done);
+      const list = SUBCATS[(fCat && fCat.value) || ''] || [];
+      if (!list.length) {
+        // Subcategories depend on the category — show the reason inline instead of failing silently.
+        target.innerHTML = '<em style="font-style:normal;color:var(--status-warning, #e8a33d);">Pick a category first</em>';
+        announce('Pick a category first, then choose a subcategory.');
+        return;
+      }
+      const cur = list.indexOf(L.subcategory) >= 0 ? L.subcategory : '';
+      const options = [{ value: '', label: 'None' }].concat(list.map(s => ({ value: s, label: s })));
+      openInlineDropdown(target, options, cur, (value) => {
+        L.subcategory = value || '';
+        persistAdvanced();
+        renderInfo();
+      });
     }
     function editPrivacy() {
       if (localeLocked()) { announce('Switch to the default language to edit the privacy policy.'); return; }

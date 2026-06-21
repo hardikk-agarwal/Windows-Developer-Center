@@ -6,3 +6,6 @@ publishing/ai-config.js
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local test fixtures (sample installers/packages) — too large for GitHub, demo-only.
+test-packages/
