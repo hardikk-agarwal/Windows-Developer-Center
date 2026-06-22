@@ -309,14 +309,14 @@
   .field-mark { font-size: 11px; font-weight: 600; line-height: 1; letter-spacing: .01em; text-transform: none; color: var(--fg-3); white-space: nowrap; vertical-align: middle; }
   .field-mark--req { color: var(--status-danger); font-weight: 700; font-size: 13px; }
   /* ---- Per-section completion checklist (renders from CHECKLIST_ITEMS) ------- */
-  /* Submit-readiness checklist — expandable, right-aligned in the wizard tab row. */
+  /* Submit-readiness checklist — Fluent button trigger + custom anchored popover,
+     right-aligned in the wizard tab row. */
   .submit-checklist { position: relative; margin-left: auto; align-self: center; }
-  .submit-checklist__toggle { display: flex; align-items: center; gap: var(--sp-6); width: 100%; padding: 4px var(--sp-8); background: none; border: 0; border-radius: var(--r-4); font: inherit; font-size: 12px; font-weight: 600; color: var(--fg-2); cursor: pointer; }
-  .submit-checklist__toggle:hover { background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-1); }
+  .submit-checklist__toggle { --font-weight: 600; }
   .submit-checklist__status { flex: 0 0 auto; color: var(--status-warning); }
   .submit-checklist.is-ready .submit-checklist__status { color: var(--status-success); }
-  .submit-checklist__summary { flex: 1 1 auto; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .submit-checklist__chev { flex: 0 0 auto; transition: transform var(--dur-2) var(--ease-out); }
+  .submit-checklist__summary { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .submit-checklist__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
   .submit-checklist.is-open .submit-checklist__chev { transform: rotate(180deg); }
   .submit-checklist__panel { position: absolute; top: calc(100% + 6px); right: 0; width: 300px; max-width: 84vw; max-height: 64vh; overflow-y: auto; padding: var(--sp-12); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: var(--shadow-3, 0 12px 32px rgba(0,0,0,.4)); z-index: 60; }
   .submit-checklist__panel[hidden] { display: none; }
@@ -908,8 +908,10 @@
   .live-edit-dropdown { min-width: 180px; max-width: 100%; vertical-align: middle; }
   @keyframes live-save-flash { 0% { opacity: 0; transform: translateY(-50%) scale(.6); } 20% { opacity: 1; transform: translateY(-50%) scale(1); } 80% { opacity: 1; transform: translateY(-50%) scale(1); } 100% { opacity: 0; transform: translateY(-50%) scale(.9); } }
   .live-save-flash { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--status-success); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); pointer-events: none; animation: live-save-flash 1200ms ease forwards; z-index: 5; }
-  #ez-pv-icon { border: 0; cursor: pointer; padding: 0; }
+  #ez-pv-icon { border: 0; cursor: pointer; padding: 0; position: relative; }
   #ez-pv-icon[data-empty-required="true"] { background: color-mix(in srgb, #fff 12%, transparent) !important; border: 2px dashed rgba(255,255,255,.5); }
+  /* Logo is mandatory — a red "*" badge until one is supplied (matches the other required fields). */
+  #ez-pv-icon[data-empty-required="true"]::after { content: '*'; position: absolute; top: -5px; right: -5px; color: var(--status-danger); font-weight: 700; font-size: 16px; line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
   /* Real logo shows directly — drop the placeholder tile's shadow/rounding box behind it. */
   #ez-pv-icon.has-img { box-shadow: none; border-radius: 0; }
   /* Screenshots in edit mode: thumbnails + add tile + hover-reveal delete */
@@ -1860,11 +1862,11 @@
       <button type="button" class="wz-stepind is-locked" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
       <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
       <div class="submit-checklist" id="submit-checklist">
-        <button type="button" class="submit-checklist__toggle" id="submit-checklist-toggle" aria-expanded="false" aria-controls="submit-checklist-panel">
-          <iconify-icon class="submit-checklist__status" id="submit-checklist-status" icon="fluent:clipboard-task-list-ltr-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+        <fluent-button appearance="subtle" size="small" class="submit-checklist__toggle" id="submit-checklist-toggle" aria-expanded="false" aria-controls="submit-checklist-panel">
+          <iconify-icon slot="start" class="submit-checklist__status" id="submit-checklist-status" icon="fluent:clipboard-task-list-ltr-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
           <span class="submit-checklist__summary" id="submit-checklist-summary">Checklist</span>
-          <iconify-icon class="submit-checklist__chev" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-        </button>
+          <iconify-icon slot="end" class="submit-checklist__chev" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+        </fluent-button>
         <div class="submit-checklist__panel" id="submit-checklist-panel" role="region" aria-label="What's left to submit for review" hidden></div>
       </div>
     </div>
@@ -2060,7 +2062,7 @@
           <div class="ez-store-content">
             <section class="ez-card-section">
               <div class="ez-card-section__head">
-                <h4 class="ez-card-section__title">Screenshots</h4>
+                <h4 class="ez-card-section__title">Screenshots <span class="field-mark field-mark--req" id="shots-req-star" aria-label="required" hidden>*</span></h4>
                 <fluent-button type="button" class="ez-trailer-add-btn adv-only" id="ez-trailer-add" appearance="secondary" size="small">
                   <iconify-icon slot="start" icon="fluent:video-add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
                   Add trailer
@@ -4161,6 +4163,7 @@
     { section: 'step-listing', label: 'App name', required: true, done: () => !!state.name, focus: '#ez-pv-name' },
     { section: 'step-listing', label: 'Description', required: true, done: () => !!state.desc, focus: '#ez-pv-desc' },
     { section: 'step-listing', label: 'Category', required: true, done: () => !!state.category, focus: '#ez-pv-category' },
+    { section: 'step-listing', label: 'App logo', required: true, done: () => !!(userIconDataUrl || pkgIconDataUrl), focus: '#ez-pv-icon' },
     { section: 'step-listing', label: 'At least one screenshot', required: true, done: () => state.shots.length > 0, focus: '#ez-pv-shots' },
     { section: 'step-listing', label: 'Privacy policy', required: () => privacyRequired(), done: hasPrivacyContent, focus: '#ez-info-privacy' },
     { section: 'step-listing', label: 'License terms', required: true, done: () => (adv.listing.licenseTerms || '').trim().length > 0, focus: '#ez-info-license' },
@@ -4282,6 +4285,8 @@
     const listingDone = state.name && state.desc && state.category && state.shots.length > 0 && privacyOk();
     markStep('step-listing', listingDone);
     markStep('step-rating', state.rating);
+    // Screenshots is mandatory — show the heading's "*" until at least one is added.
+    const ssStar = document.getElementById('shots-req-star'); if (ssStar) ssStar.hidden = state.shots.length > 0;
     refreshDefaultsLine();
     syncRail();
     renderEasySteps();

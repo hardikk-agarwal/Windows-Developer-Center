@@ -136,6 +136,20 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .block__head h2 { font-size: 22px; }
 .block__head .muted { margin-top: 4px; }
 
+/* ---------- Apps value banner (slim, dismissable) ---------- */
+.apps-hero { display: flex; align-items: center; gap: 13px; margin-bottom: 20px; padding: 11px 12px 11px 15px;
+  border: 1px solid var(--brand-tint-stroke); border-radius: var(--r-md);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--brand) 13%, var(--bg-2)) 0%, var(--bg-2) 58%); }
+.apps-hero[hidden] { display: none; }
+.apps-hero__spark { flex: 0 0 auto; color: var(--brand-soft); }
+.apps-hero__text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.apps-hero__text strong { font-size: 13.5px; color: var(--text); }
+.apps-hero__text span { font-size: 12.5px; line-height: 1.4; color: var(--text-3); }
+.apps-hero__close { flex: 0 0 auto; margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; background: transparent; border: 0; border-radius: var(--r-sm); color: var(--text-3); cursor: pointer; }
+.apps-hero__close:hover { background: var(--hover); color: var(--text); }
+@media (max-width: 600px) { .apps-hero__text span { display: none; } }
+
 /* ---------- Pills ---------- */
 .pill { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
   padding: 5px 11px; border-radius: 999px; white-space: nowrap; }

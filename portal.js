@@ -937,12 +937,19 @@
     $("certModal").addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
     wireSources();
     wirePublish();
+    // Apps value banner: show unless the developer dismissed it before.
+    var hero = $("appsHero");
+    if (hero) { try { hero.hidden = localStorage.getItem("wdp.appsHero.dismissed") === "1"; } catch (_) { hero.hidden = false; } }
 
     document.querySelector(".main").addEventListener("click", function (e) {
       if (e.target.closest("[data-openmodal]")) { e.preventDefault();
         if (state.verified) openModal(); else goView("overview"); return; }
       if (e.target.closest("[data-newapp]")) { openNewApp(); return; }
       if (e.target.closest("[data-rescan]")) { rescanApps(); return; }
+      if (e.target.closest("[data-hero-dismiss]")) {
+        try { localStorage.setItem("wdp.appsHero.dismissed", "1"); } catch (_) {}
+        var hb = $("appsHero"); if (hb) hb.hidden = true; return;
+      }
       var ms = e.target.closest("[data-sources]");
       if (ms) { openSources(ms.getAttribute("data-sources")); return; }
       var store = e.target.closest("[data-store]");
