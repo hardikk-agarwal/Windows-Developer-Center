@@ -45,12 +45,12 @@
   function colorFor(seed) { return PALETTE[Math.abs(hashStr(seed)) % PALETTE.length]; }
   function cnOf(subject) { if (!subject) return null; var m = /CN=([^,]+)/i.exec(subject); return m ? m[1].trim() : subject; }
   function certById(id) { return state.certs.filter(function (c) { return c.id === id; })[0] || null; }
-  function trustWord(s) { return s === "Valid" ? "trusted" : s === "NotSigned" ? "unsigned" : "self-signed (not yet trusted)"; }
+  function trustWord(s) { return s === "Valid" ? "verified" : s === "NotSigned" ? "unsigned" : "self-signed (not yet verified)"; }
   function trustPill(t) {
     if (t === "Valid") return '<span class="pill pill--ok pill--sm">Valid</span>';
     if (t === "Offline") return '<span class="pill pill--ghost pill--sm">Hash only</span>';
     if (t === "NotSigned") return '<span class="pill pill--warn pill--sm">Unsigned</span>';
-    return '<span class="pill pill--warn pill--sm">Untrusted</span>';
+    return '<span class="pill pill--warn pill--sm">Unverified</span>';
   }
   // A certificate whose issuer equals its subject is self-signed → not acceptable for TDP.
   function isSelfSigned(info) {
@@ -122,8 +122,8 @@
           '<img class="status-card__illo" src="assets/trust.png" alt="" />' +
           '<div class="status-card__body">' +
             '<span class="pill pill--warn">Not verified</span>' +
-            '<h2>Get verified to get trusted</h2>' +
-            '<p class="muted">Prove you own a code signing certificate to become a trusted developer.</p>' +
+            '<h2>Get verified on Windows</h2>' +
+            '<p class="muted">Prove you own a code signing certificate to become a verified developer.</p>' +
           '</div>' +
         '</div>';
       return;
@@ -131,8 +131,8 @@
     var valid = hasValidCert();
     var pill = valid
       ? '<span class="pill pill--ok"><span class="verified-dot"></span>Verified Developer</span>'
-      : '<span class="pill pill--warn">Identity verified · certificate not trusted</span>';
-    var head = valid ? esc(state.account.name) + " is trusted on Windows"
+      : '<span class="pill pill--warn">Identity verified · certificate not verified</span>';
+    var head = valid ? esc(state.account.name) + " is verified on Windows"
                      : esc(state.account.name) + "’s identity is verified";
     var body = valid
       ? "Your identity and code signing certificate are verified. Apps you sign install without SmartScreen interruptions and have crash analytics unlocked."
@@ -397,8 +397,8 @@
       ico = '<span class="cert-ico' + (cert.signed ? "" : " cert-ico--alt") + '">' + (cert.signed ? "CS" : "#") + '</span>';
       label = esc(cert.label);
       pill = cert.trust === "Valid"
-        ? '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Trusted</span>'
-        : '<span class="pill pill--warn pill--sm">Cert not trusted</span>';
+        ? '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Verified</span>'
+        : '<span class="pill pill--warn pill--sm">Cert not verified</span>';
     } else if (g.subject) {
       ico = '<span class="cert-ico cert-ico--alt">?</span>';
       label = esc(cnOf(g.subject));
