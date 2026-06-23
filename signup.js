@@ -64,7 +64,7 @@
 
   var PHASES = [
     { title: "Create developer account" },
-    { title: "Submit signed binary" }
+    { title: "Get verified" }
   ];
   var STEPS = [
     { key: "account",  phase: 0, title: "Account type",
@@ -72,12 +72,16 @@
     { key: "identity", phase: 0, title: "Identity verification" },
     { key: "profile",  phase: 0, title: "Profile details" },
     { key: "setup",    phase: 0, title: "Account setup" },
-    { key: "verify",   phase: 1, title: "Upload & submit binary",
-      head: "Your developer account is created", headSub: "Download your binary, sign it with your certificate, and submit it to become a trusted developer." }
+    { key: "path",     phase: 1, title: "Choose your path",
+      head: "How do you want to get verified?", headSub: "Both earn your Blue Badge — pick one now, you can do the other anytime from your portal." },
+    { key: "verify",   phase: 1, title: "Submit signed binary",
+      head: "Verify with your certificate", headSub: "Download your binary, sign it with your certificate, and submit it to earn your Blue Badge." },
+    { key: "app",      phase: 1, title: "Create your first app",
+      head: "Your developer account is ready", headSub: "Create your first app and publish it to the Microsoft Store to get verified and reach millions." }
   ];
-  var VERIFY = STEPS.length - 1;
+  function idxOf(key) { for (var i = 0; i < STEPS.length; i++) if (STEPS[i].key === key) return i; return -1; }
 
-  var cur = 0, acctType = null, done = false;
+  var cur = 0, acctType = null, verifyPath = null, done = false;
   var downloaded = false, verifying = false;
   var pendingFile = null;     // the real File the user dropped/selected
   var verifyError = null;     // { name, reason } when a file is rejected
@@ -85,11 +89,19 @@
   var discoveredApps = [];    // installed apps on this PC signed by that certificate
   var store = { pubName: "", country: "United States", email: MSA.email };
 
+  // In phase 2 only the chosen path's sub-step shows; before a choice, only "path".
+  function stepVisible(i) {
+    var k = STEPS[i].key;
+    if (k === "verify") return verifyPath === "cert";
+    if (k === "app") return verifyPath === "store";
+    return true;
+  }
+
   /* ---------- step rail (two phases, sub-steps nested) ---------- */
   function renderRail() {
     var html = "";
     for (var p = 0; p < PHASES.length; p++) {
-      var idxs = []; for (var i = 0; i < STEPS.length; i++) if (STEPS[i].phase === p) idxs.push(i);
+      var idxs = []; for (var i = 0; i < STEPS.length; i++) if (STEPS[i].phase === p && stepVisible(i)) idxs.push(i);
       var first = idxs[0], last = idxs[idxs.length - 1];
       var pDone = done || cur > last, pActive = !done && cur >= first && cur <= last;
       var hCls = pDone ? "is-done" : pActive ? "is-active" : "";
@@ -125,6 +137,71 @@
       card("company", "building.png", "Company account",
         "For businesses and teams publishing under a company or organization name.") +
       '</div>';
+  }
+
+  // Phase 2 fork — selectable comparison (the two columns ARE the choice).
+  function bodyPath() {
+    function th(path, illo, rec, title, desc) {
+      var sel = verifyPath === path;
+      return '<div class="pcmp__th' + (path === "store" ? " pcmp__th--accent" : "") + (sel ? " is-selected" : "") +
+        '" data-path="' + path + '" role="button" tabindex="0" aria-pressed="' + sel + '">' +
+        '<span class="pcmp__badge">' + (rec ? '<span class="pcmp__rec">Recommended</span>' : "") + '</span>' +
+        '<img src="assets/' + illo + '" alt="" />' +
+        '<strong>' + title + '</strong><span class="pcmp__desc">' + desc + '</span>' +
+        '<span class="pcmp__select"><span class="pcmp__radio"></span>' + (sel ? "Selected" : "Select") + '</span></div>';
+    }
+    function mark(on) {
+      return on
+        ? '<iconify-icon class="pcmp-yes" icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon>'
+        : '<span class="pcmp-no" aria-label="Not included">—</span>';
+    }
+    function row(label, s, c) {
+      return '<div class="pcmp__feat">' + label + '</div>' +
+        '<div class="pcmp__val">' + mark(s) + '</div>' +
+        '<div class="pcmp__val">' + mark(c) + '</div>';
+    }
+    return '<div class="pcmp">' +
+      '<div class="pcmp__corner"><strong>Pick a plan</strong><small>Click a column to select it, then Continue.</small></div>' +
+      th("store", "rocket.png", true, "Publish to the Store", "Reach millions — verification built in") +
+      th("cert", "shield-checkmark.png", false, "Verify with a certificate", "Submit a signed binary, your own way") +
+      row("Verified identity &amp; Blue Badge", true, true) +
+      row("Frictionless installs (no SmartScreen)", true, true) +
+      row("Crash analytics", true, true) +
+      row("Distribute on your own", true, true) +
+      row("Reach millions of Store shoppers", true, false) +
+      row("Commerce, payments &amp; payouts", true, false) +
+      row("Ratings, reviews &amp; Store analytics", true, false) +
+      '</div>';
+  }
+
+  // Phase 2 (Store path) — nudge to create the first app; same hand-off as the Store signup.
+  function bodyStoreApp() {
+    return '<div class="status-card wiz-hero">' +
+      '<img class="status-card__illo" src="assets/rocket.png" alt="" />' +
+      '<div class="status-card__body">' +
+        '<span class="pill pill--ok"><span class="verified-dot"></span>Microsoft Store developer</span>' +
+        '<h2>Bring your app to the Store</h2>' +
+        '<p class="muted">Your developer account is active. Create your first app and reach over a billion Windows devices — verification comes built in.</p>' +
+      '</div>' +
+      '<div class="status-card__action wiz-actions">' +
+        '<fluent-button appearance="primary" id="goCreate"><iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Create your first app</fluent-button>' +
+        '<fluent-button appearance="outline" id="goPortal">Go to developer portal</fluent-button>' +
+      '</div>' +
+    '</div>' + storePerksHTML();
+  }
+  function storePerksHTML() {
+    function item(icon, title, desc) {
+      return '<div class="wiz-next__item">' +
+        '<iconify-icon icon="' + icon + '" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+        '<div><strong>' + title + '</strong><span>' + desc + '</span></div></div>';
+    }
+    return '<div class="wiz-next">' +
+      '<p class="wiz-next__lead">In your developer portal, you can:</p>' +
+      '<div class="wiz-next__grid">' +
+        item("fluent:rocket-20-regular", "Publish apps", "Submit and update apps in the Store.") +
+        item("fluent:data-trending-20-regular", "App analytics", "Track installs, ratings, and health.") +
+        item("fluent:globe-20-regular", "Reach everywhere", "Distribute across 190+ markets.") +
+      '</div></div>';
   }
 
   function dropzoneHTML() {
@@ -246,20 +323,25 @@
     var s = STEPS[cur], k = s.key;
     $("wizTitle").textContent = s.head;
     $("wizSub").textContent = s.headSub;
-    $("wizBody").innerHTML = k === "account" ? bodyAccount() : bodyVerify();
-    if (k === "account") {
+    $("wizBody").innerHTML = k === "account" ? bodyAccount()
+      : k === "path" ? bodyPath()
+      : k === "app" ? bodyStoreApp()
+      : bodyVerify();
+    if (k === "account" || k === "path") {
+      var ready = k === "account" ? acctType : verifyPath;
       $("wizFootbar").innerHTML = '<span></span>' +
-        '<fluent-button appearance="primary" id="wizNext"' + (acctType ? "" : " disabled") + '>Continue</fluent-button>';
+        '<fluent-button appearance="primary" id="wizNext"' + (ready ? "" : " disabled") + '>Continue</fluent-button>';
     } else {
       $("wizFootbar").innerHTML = "";
     }
     wireStep();
   }
 
-  // Demo: skip the account-creation sub-steps and jump straight to the binary step.
+  // Demo: skip the account-creation sub-steps; account → path fork → chosen branch.
   function next() {
-    if (STEPS[cur].key !== "account" || !acctType) return;
-    cur = VERIFY; render(); window.scrollTo(0, 0);
+    var k = STEPS[cur].key;
+    if (k === "account") { if (!acctType) return; cur = idxOf("path"); render(); window.scrollTo(0, 0); return; }
+    if (k === "path") { if (!verifyPath) return; cur = idxOf(verifyPath === "store" ? "app" : "verify"); render(); window.scrollTo(0, 0); return; }
   }
 
   // Generate the account-tied verification binary (same as the portal's download).
@@ -317,12 +399,22 @@
 
   function wireStep() {
     var nb = $("wizNext"); if (nb) nb.addEventListener("click", next);
-    if (STEPS[cur].key === "account") {
+    var k = STEPS[cur].key;
+    if (k === "account") {
       $("wizBody").querySelectorAll("[data-acct]").forEach(function (el) {
         function pick() { acctType = el.getAttribute("data-acct"); render(); }
         el.addEventListener("click", pick);
         el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
       });
+    } else if (k === "path") {
+      $("wizBody").querySelectorAll("[data-path]").forEach(function (el) {
+        function pick() { verifyPath = el.getAttribute("data-path"); render(); }
+        el.addEventListener("click", pick);
+        el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+      });
+    } else if (k === "app") {
+      var gc = $("goCreate"); if (gc) gc.addEventListener("click", openReserve);
+      var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedStorePortal(); location.href = "store-portal.html#apps"; });
     } else {
       wireVerify();
     }
@@ -371,8 +463,64 @@
     } catch (e) {}
   }
 
+  // Store path: land in the Store portal already signed in, on the Apps page.
+  function seedStorePortal() {
+    try {
+      var KEY = "tdp.portal.store.v1", s;
+      try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+      if (!s || !s.apps) s = { signedIn: false, account: null, verified: false, certs: [], apps: [] };
+      s.signedIn = true; s.verified = true;
+      s.account = { name: store.pubName || MSA.name, email: store.email || MSA.email, initials: initials(store.pubName || MSA.name) };
+      localStorage.setItem(KEY, JSON.stringify(s));
+    } catch (e) {}
+  }
+
+  /* ---------- reserve-name dialog (Store path; same dialog as the Store portal) ---------- */
+  function openReserve() {
+    if ($("pubName")) $("pubName").value = "";
+    if ($("pubLang")) $("pubLang").value = "en-US";
+    if ($("publishModal")) $("publishModal").hidden = false;
+    document.addEventListener("keydown", escReserve);
+    checkPubName();
+    setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
+  }
+  function closeReserve() { if ($("publishModal")) $("publishModal").hidden = true; document.removeEventListener("keydown", escReserve); }
+  function escReserve(e) { if (e.key === "Escape") closeReserve(); }
+  function checkPubName() {
+    var n = $("pubName"), hint = $("pubNameHint"), btn = $("pubCreate");
+    if (!hint || !btn) return;
+    var v = ((n && n.value) || "").trim();
+    if (v.length < 2) {
+      hint.className = "field__hint"; hint.textContent = "Enter an app name to reserve.";
+      btn.setAttribute("disabled", ""); return;
+    }
+    hint.className = "field__hint field__hint--ok";
+    hint.innerHTML = '<span class="verified-dot"></span>“' + esc(v) + '” is available';
+    btn.removeAttribute("disabled");
+  }
+  // Reserve the name, then hand off to the Store portal, which creates the app and
+  // opens the publishing flow.
+  function createApp() {
+    var n = $("pubName"); var name = ((n && n.value) || "").trim(); if (name.length < 2) return;
+    var lang = ($("pubLang") && $("pubLang").value) || "en-US";
+    seedStorePortal();
+    location.href = "store-portal.html?create=" + encodeURIComponent(name) + "&lang=" + encodeURIComponent(lang) + "#apps";
+  }
+  function wireReserve() {
+    var modal = $("publishModal"); if (!modal) return;
+    modal.addEventListener("click", function (e) { if (e.target.closest("[data-pubclose]")) closeReserve(); });
+    var create = $("pubCreate"); if (create) create.addEventListener("click", createApp);
+    var n = $("pubName");
+    if (n) {
+      n.addEventListener("input", checkPubName);
+      n.addEventListener("keyup", checkPubName);
+      n.addEventListener("keydown", function (e) { if (e.key === "Enter" && $("pubCreate") && !$("pubCreate").hasAttribute("disabled")) { e.preventDefault(); createApp(); } });
+    }
+  }
+
   /* ---------- sign-in gate ---------- */
   function showWiz() { $("signin").hidden = true; $("wiz").hidden = false; render(); }
   $("msaTile").addEventListener("click", showWiz);
   var other = $("msaOther"); if (other) other.addEventListener("click", showWiz);
+  wireReserve();
 })();

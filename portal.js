@@ -926,13 +926,52 @@
     location.href = "publishing/publish.html?id=" + encodeURIComponent(a.id);
   }
 
+  var STORE_MSA = { name: "Priya Nair", email: "priya.nair@outlook.com", initials: "PN" };
+
+  // Demo: sign in as the verified WDP developer. Reads the REAL certificate from the
+  // bundled signed binary (signing-demo/trusted-sample.exe) through the same Authenticode
+  // path as the cert modal, then auto-discovers the apps signed by that certificate.
+  async function seedWdpDemo() {
+    try {
+      var res = await fetch("signing-demo/trusted-sample.exe");
+      if (!res.ok) return;
+      var file = new File([await res.blob()], "trusted-sample.exe", { type: "application/octet-stream" });
+      var info = await inspectFile(file);
+      var gc = getOrCreateCert(info, file);
+      if (gc.created && info.notAfter) gc.cert.notAfter = info.notAfter;
+      if (state.certs.length) state.verified = true;
+      save(); renderAll();
+      if (gc.cert && gc.cert.thumbKind === "cert") discoverApps(gc.cert.thumb, gc.cert.id);
+    } catch (e) {}
+  }
+
+  // Demo: sign in as the Store developer — 1 published app — and open the Store portal.
+  function seedStoreDemo() {
+    try {
+      localStorage.setItem("tdp.portal.store.v1", JSON.stringify({
+        signedIn: true, verified: true, account: STORE_MSA, certs: [],
+        apps: [{
+          id: "app-demo-store", name: "Pixel Paint Studio", icon: null,
+          file: "PixelPaintStudio.exe", size: "", sources: [], created: true,
+          store: true, storeStatus: "published", storeLang: "en-US",
+          storeCreated: today(), added: today()
+        }]
+      }));
+    } catch (e) {}
+  }
+
   /* ---------------- Global wiring ---------------- */
   function wire() {
     $("msaTile").addEventListener("click", function () {
-      state.signedIn = true; state.account = DEMO_MSA; save(); showApp();
+      state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
+      state.certs = []; state.apps = [];   // clean slate, then real cert + apps load in
+      save(); showApp();
       toast("Signed in as " + DEMO_MSA.email, true);
+      seedWdpDemo();
     });
-    $("msaOther").addEventListener("click", function () { toast("Demo build — use the listed account", true); });
+    var t2 = $("msaTile2");
+    if (t2) t2.addEventListener("click", function () { seedStoreDemo(); location.href = "store-portal.html#apps"; });
+    $("msaOther").addEventListener("click", function () { toast("Demo build — use a listed account", true); });
 
     $("certModal").addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
     wireSources();
