@@ -1,0 +1,9 @@
+# Access control for Design Lab imports.
+#
+# Lists the GitHub users and teams granted each repository role. At least one
+# Maintain (or Admin) entry is required to enable Design Lab imports.
+#
+# Roles: read | triage | write | maintain | admin
+
+maintain:
+  - haragrawal_microsoft
