@@ -53,6 +53,10 @@
           <iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           Apps
         </a>
+        <a href="#certificates" data-nav>
+          <iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+          Certificates
+        </a>
         <a href="#analytics" data-nav>
           <iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           Analytics
@@ -102,6 +106,21 @@
         <div class="apps" id="appsList"><!-- rendered by store-portal.js --></div>
       </section>
 
+      <!-- ---------- CERTIFICATES ---------- -->
+      <section class="block" id="certificates">
+        <div class="block__head">
+          <div>
+            <h2>Certificates</h2>
+            <p class="muted">Bring apps that aren't on the Store. Add your code signing certificate to unlock crash analytics and distribution for them.</p>
+          </div>
+          <fluent-button appearance="primary" data-openmodal>
+            <iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Add certificate
+          </fluent-button>
+        </div>
+        <div id="certsList"><!-- rendered by store-portal.js --></div>
+      </section>
+
       <!-- ---------- ANALYTICS ---------- -->
       <section class="block" id="analytics">
         <div class="block__head">
@@ -118,8 +137,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- ============ ADD CERTIFICATE MODAL — retained (hidden) only because the shared
-       portal script wires its close handler at init; it is never opened in this variant. ============ -->
+  <!-- ============ ADD CERTIFICATE MODAL — bring non-Store apps in via a code signing certificate ============ -->
   <div class="modal" id="certModal" hidden>
     <div class="modal__backdrop" data-close></div>
     <div class="modal__card" role="dialog" aria-modal="true" aria-label="Add a certificate">

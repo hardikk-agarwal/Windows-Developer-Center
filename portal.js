@@ -457,12 +457,13 @@
      per-failure drill-down), tabbed by analytics type. ALL figures here are generated
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0;
+  // Crash Health is available for every verified app; the Store analytics (acquisition,
+  // usage, ratings) are LOCKED until the app is published to the Microsoft Store.
   var ANA_TABS = [
-    { key: "crashes",     label: "Crashes",           icon: "fluent:bug-20-regular", free: true },
+    { key: "crashes",     label: "Health",            icon: "fluent:bug-20-regular", free: true },
     { key: "acquisition", label: "Acquisition",       icon: "fluent:arrow-download-20-regular" },
     { key: "usage",       label: "Usage",             icon: "fluent:pulse-20-regular" },
-    { key: "ratings",     label: "Ratings & reviews", icon: "fluent:star-20-regular" },
-    { key: "performance", label: "Performance",       icon: "fluent:heart-pulse-20-regular" }
+    { key: "ratings",     label: "Ratings & reviews", icon: "fluent:star-20-regular" }
   ];
 
   function emptyAnalyticsHTML() {
@@ -533,15 +534,25 @@
   /* ---- inline SVG charts (Fluent-token styled) ---- */
   function niceMax(max) { var step = Math.pow(10, Math.floor(Math.log10(max || 1))); return Math.ceil((max || 1) / step) * step; }
   function chartLine(o) {
-    var W = 840, H = o.h || 260, pl = 46, pr = 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
-    var mx = 1; o.series.forEach(function (s) { s.values.forEach(function (v) { if (v > mx) mx = v; }); }); mx = niceMax(mx);
+    var W = 840, H = o.h || 260, pl = 46, pr = o.right ? 48 : 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
+    var mn = o.yMin || 0, mx = o.yMax;
+    if (mx == null) { mx = 1; o.series.forEach(function (s) { s.values.forEach(function (v) { if (v > mx) mx = v; }); }); mx = niceMax(mx); }
+    var span = (mx - mn) || 1, fmt = o.fmt || fmtCompact;
     var n = o.series[0].values.length;
     function X(i) { return pl + (n <= 1 ? 0 : iw * i / (n - 1)); }
-    function Y(v) { return pt + ih - ih * (v / mx); }
-    var grid = "", ylab = "";
+    function Y(v) { return pt + ih - ih * ((v - mn) / span); }
+    var R = null, rmn, rspan, rfmt;
+    if (o.right) {
+      rmn = o.right.yMin || 0; var rmx = o.right.yMax;
+      if (rmx == null) { rmx = 1; o.right.values.forEach(function (v) { if (v > rmx) rmx = v; }); rmx = niceMax(rmx); }
+      rspan = (rmx - rmn) || 1; rfmt = o.right.fmt || fmtCompact;
+      R = function (v) { return pt + ih - ih * ((v - rmn) / rspan); };
+    }
+    var grid = "", ylab = "", rlab = "";
     for (var g = 0; g <= 4; g++) { var gy = pt + ih * g / 4;
       grid += '<line x1="' + pl + '" y1="' + gy.toFixed(1) + '" x2="' + (W - pr) + '" y2="' + gy.toFixed(1) + '" class="chart-grid"/>';
-      ylab += '<text x="' + (pl - 8) + '" y="' + (gy + 4).toFixed(1) + '" class="chart-axis chart-axis--y">' + fmtCompact(mx * (1 - g / 4)) + '</text>'; }
+      ylab += '<text x="' + (pl - 8) + '" y="' + (gy + 4).toFixed(1) + '" class="chart-axis chart-axis--y">' + fmt(mn + span * (1 - g / 4)) + '</text>';
+      if (o.right) rlab += '<text x="' + (W - pr + 8) + '" y="' + (gy + 4).toFixed(1) + '" class="chart-axis chart-axis--y2">' + rfmt(rmn + rspan * (1 - g / 4)) + '</text>'; }
     var xlab = "", stepX = Math.ceil(n / 8);
     for (var xi = 0; xi < n; xi += stepX) xlab += '<text x="' + X(xi).toFixed(1) + '" y="' + (H - 10) + '" class="chart-axis">' + esc("" + o.labels[xi]) + '</text>';
     var paths = o.series.map(function (s, si) {
@@ -549,7 +560,11 @@
       var area = (o.area && si === 0) ? '<polygon points="' + pl + ',' + (pt + ih) + ' ' + pts + ' ' + (pl + iw) + ',' + (pt + ih) + '" fill="url(#agrad)"/>' : "";
       return area + '<polyline points="' + pts + '" fill="none" stroke="' + s.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
     }).join("");
-    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img"><defs><linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--brand)" stop-opacity=".26"/><stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/></linearGradient></defs>' + grid + ylab + paths + xlab + '</svg>';
+    if (o.right) {
+      var rpts = o.right.values.map(function (v, i) { return X(i).toFixed(1) + "," + R(v).toFixed(1); }).join(" ");
+      paths += '<polyline points="' + rpts + '" fill="none" stroke="' + o.right.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    }
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img"><defs><linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--brand)" stop-opacity=".26"/><stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/></linearGradient></defs>' + grid + ylab + rlab + paths + xlab + '</svg>';
   }
   function chartBars(o) {
     var W = 840, H = o.h || 280, pl = 46, pr = 16, pt = 16, pb = 40, iw = W - pl - pr, ih = H - pt - pb;
@@ -598,17 +613,306 @@
       return '<span class="chart-leg"><span class="chart-leg__dot" style="background:' + s.color + '"></span>' + esc(s.name) + ' (' + fmtCompact(tot) + ')</span>';
     }).join("") + '</div>';
   }
+  function legendDots(items) {
+    return '<div class="chart-legend">' + items.map(function (s) {
+      return '<span class="chart-leg"><span class="chart-leg__dot" style="background:' + s.color + '"></span>' + esc(s.name) + '</span>';
+    }).join("") + '</div>';
+  }
+  function panelStats(items) {
+    return '<div class="pstats">' + items.map(function (s) {
+      return '<div class="pstat"><span class="pstat__label muted">' + esc(s.label) + '</span>' +
+        '<strong class="pstat__val">' + esc(s.val) + '</strong>' + (s.sub ? '<span class="pstat__sub muted">' + esc(s.sub) + '</span>' : "") + '</div>';
+    }).join("") + '</div>';
+  }
+  // 100%-stacked area (app version adoption). series: [{name,color,values(0-100)}].
+  function chartStack(o) {
+    var W = 840, H = o.h || 260, pl = 46, pr = 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
+    var n = o.series[0].values.length;
+    function X(i) { return pl + (n <= 1 ? 0 : iw * i / (n - 1)); }
+    function Y(v) { return pt + ih - ih * (v / 100); }
+    var grid = "", ylab = "";
+    for (var g = 0; g <= 5; g++) { var gy = pt + ih * g / 5;
+      grid += '<line x1="' + pl + '" y1="' + gy.toFixed(1) + '" x2="' + (W - pr) + '" y2="' + gy.toFixed(1) + '" class="chart-grid"/>';
+      ylab += '<text x="' + (pl - 8) + '" y="' + (gy + 4).toFixed(1) + '" class="chart-axis chart-axis--y">' + (100 - g * 20) + '%</text>'; }
+    var cum = []; for (var c = 0; c < n; c++) cum.push(0);
+    var areas = o.series.map(function (s) {
+      var top = [], bot = [];
+      for (var i = 0; i < n; i++) { bot.push(cum[i]); cum[i] += s.values[i]; top.push(cum[i]); }
+      var tp = top.map(function (v, i) { return X(i).toFixed(1) + "," + Y(v).toFixed(1); }).join(" ");
+      var bp = bot.map(function (v, i) { return X(i).toFixed(1) + "," + Y(v).toFixed(1); }).reverse().join(" ");
+      return '<polygon points="' + tp + ' ' + bp + '" fill="' + s.color + '" opacity=".9"/>';
+    }).join("");
+    var xlab = "", stepX = Math.ceil(n / 8);
+    for (var xi = 0; xi < n; xi += stepX) xlab += '<text x="' + X(xi).toFixed(1) + '" y="' + (H - 10) + '" class="chart-axis">' + esc("" + o.labels[xi]) + '</text>';
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img">' + grid + ylab + areas + xlab + '</svg>';
+  }
+
+  /* ---- Acquisition: full dashboard, modelled on Partner Center → Insights → Acquisitions ---- */
+  var acqCache = {};
+  function acqData(app) {
+    if (acqCache[app.id]) return acqCache[app.id];
+    var rnd = anaRng(Math.abs(hashStr(app.id + "|acq|" + app.name)) || 1), days = 28, labels = [], i;
+    for (i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
+    function sum(a) { return a.reduce(function (m, v) { return m + v; }, 0); }
+    var pv = wave(rnd, days, 42000, 20000).map(Math.round);
+    var inst = wave(rnd, days, 2600, 1100).map(Math.round);
+    var succRate = [], abortRate = [], convRate = [];
+    for (i = 0; i < days; i++) {
+      succRate.push(+(99.1 + rnd() * 0.85).toFixed(2));
+      abortRate.push(+(0.45 + rnd() * 0.95).toFixed(2));
+      convRate.push(+(inst[i] / Math.max(1, pv[i]) * 100).toFixed(2));
+    }
+    var failCnt = wave(rnd, days, 11, 14).map(Math.round);
+    var pvTotal = sum(pv), instTotal = sum(inst);
+    var funnel = [
+      { label: "Page views", value: pvTotal },
+      { label: "Install attempts", value: Math.round(instTotal * 1.022) },
+      { label: "Successful installs", value: instTotal },
+      { label: "First time launches from Store", value: Math.round(instTotal * 0.46) }
+    ];
+    var CAMP = ["Photos", "acom", "member_notification_upsell", "Windows", "ffMainEntry", "Holiday2026"], campaigns = [], cbase = instTotal * 0.013;
+    for (i = 0; i < CAMP.length; i++) {
+      var ci = Math.max(4, Math.round(cbase * (0.8 + rnd() * 0.5)));
+      campaigns.push({ name: CAMP[i], installs: ci, trend: wave(rnd, days, ci / days * 5, ci / days * 4).map(Math.round) });
+      cbase *= (0.66 + rnd() * 0.2);
+    }
+    campaigns.sort(function (a, b) { return b.installs - a.installs; });
+    var GEO = ["India", "United States", "Unknown", "United Kingdom", "Indonesia", "Brazil", "France", "Germany"];
+    var GW = [0.31, 0.20, 0.14, 0.034, 0.027, 0.025, 0.019, 0.016], geo = [];
+    for (i = 0; i < GEO.length; i++) geo.push({ country: GEO[i], installs: Math.round(instTotal * GW[i] * (0.9 + rnd() * 0.2)) });
+    var gsum = sum(geo.map(function (g) { return g.installs; }));
+    geo.forEach(function (g) { g.pct = +(g.installs / gsum * 100).toFixed(2); });
+    geo.sort(function (a, b) { return b.installs - a.installs; });
+    return (acqCache[app.id] = {
+      labels: labels, pv: pv, inst: inst, succRate: succRate, abortRate: abortRate, failCnt: failCnt, convRate: convRate,
+      pvTotal: pvTotal, instTotal: instTotal, conv: +(instTotal / pvTotal * 100).toFixed(2), succ: +(sum(succRate) / days).toFixed(2),
+      funnel: funnel, campaigns: campaigns, geo: geo
+    });
+  }
+  function pctFmt(v) { return (+v.toFixed(v < 10 ? 1 : 0)) + "%"; }
+  function acqFunnel(steps) {
+    var mx = steps[0].value || 1;
+    return '<div class="funnel">' + steps.map(function (s) {
+      return '<div class="funnel__row"><span class="funnel__label">' + esc(s.label) + '</span>' +
+        '<span class="funnel__track"><span class="funnel__fill" style="width:' + Math.max(2, s.value / mx * 100).toFixed(1) + '%"></span></span>' +
+        '<span class="funnel__val">' + fmtCompact(s.value) + '</span></div>';
+    }).join("") + '</div>';
+  }
+  function campaignBody(d) {
+    var rows = d.campaigns.map(function (c) { return '<tr><td>' + esc(c.name) + '</td><td class="num">' + fmtComma(c.installs) + '</td></tr>'; }).join("");
+    var table = '<div class="table-wrap"><table class="atable"><thead><tr><th>Campaign name</th><th class="num">Installs</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    var COL = ["var(--brand)", "#C239B3", "#f7b955"];
+    var series = d.campaigns.slice(0, 3).map(function (c, i) { return { name: c.name, color: COL[i], values: c.trend }; });
+    return '<div class="campgrid"><div>' + table + '</div><div>' + chartLine({ series: series, labels: d.labels, h: 230 }) + chartLegend(series) + '</div></div>';
+  }
+  function geoBody(d) {
+    var rows = d.geo.map(function (g) {
+      return '<tr><td>' + esc(g.country) + '</td><td class="num">' + fmtComma(g.installs) + ' <span class="muted">(' + g.pct.toFixed(2) + '%)</span></td></tr>';
+    }).join("");
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Country/region</th><th class="num">Installs</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+  function acquisitionTab(app) {
+    var d = acqData(app), L = d.labels, blue = "var(--brand)";
+    function legendOne(name, color, values) { return chartLegend([{ name: name, color: color, values: values }]); }
+    var cards = '<div class="sumrow sumrow--4">' +
+      sumCard("Page views", fmtCompact(d.pvTotal), "Last 28 days", d.pv, blue) +
+      sumCard("Installs", fmtCompact(d.instTotal), "Last 28 days", d.inst, "#4ad17a") +
+      sumCard("Conversion", d.conv.toFixed(2) + "%", "Installs by page views", d.convRate, "#f7b955") +
+      sumCard("Install success rate", d.succ.toFixed(2) + "%", "Last 28 days", d.succRate, "#5ad1cd") + '</div>';
+    return cards +
+      apanel("Acquisition funnel", acqFunnel(d.funnel), "View by source type") +
+      apanel("Page views", chartLine({ series: [{ name: "All", color: blue, values: d.pv }], labels: L, area: true }) + legendOne("All", blue, d.pv)) +
+      apanel("Installs", chartLine({ series: [{ name: "All", color: blue, values: d.inst }], labels: L, area: true }) + legendOne("All", blue, d.inst)) +
+      apanel("Install success rate", chartLine({ series: [{ name: "Success rate", color: "#4ad17a", values: d.succRate }], labels: L, yMin: 95, yMax: 100, fmt: pctFmt })) +
+      '<div class="apanel-grid">' +
+        apanel("User initiated aborts", chartLine({ series: [{ name: "All", color: blue, values: d.abortRate }], labels: L, fmt: pctFmt })) +
+        apanel("Install failures", chartLine({ series: [{ name: "All", color: "#C239B3", values: d.failCnt }], labels: L }) + legendOne("All", "#C239B3", d.failCnt)) +
+      '</div>' +
+      apanel("Conversion", chartLine({ series: [{ name: "All", color: blue, values: d.convRate }], labels: L, fmt: pctFmt }), "Installs by page views") +
+      apanel("Custom campaign performance", campaignBody(d)) +
+      apanel("Geographical spread", geoBody(d));
+  }
+
+  /* ---- Usage: full dashboard, modelled on Partner Center → Insights → Usage ---- */
+  var usgCache = {};
+  function usageData(app) {
+    if (usgCache[app.id]) return usgCache[app.id];
+    var rnd = anaRng(Math.abs(hashStr(app.id + "|usage")) || 1), days = 28, labels = [], i;
+    for (i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
+    function sum(a) { return a.reduce(function (m, v) { return m + v; }, 0); }
+    function avg(a) { return sum(a) / a.length; }
+    var mad = wave(rnd, days, 110000, 5000).map(Math.round);
+    var newMonthly = wave(rnd, days, 39600, 3000).map(Math.round);
+    var dad = wave(rnd, days, 10500, 4200).map(Math.round);
+    var newDaily = wave(rnd, days, 1280, 420).map(Math.round);
+    var sessions = wave(rnd, days, 15600, 5200).map(Math.round);
+    var avgMin = [], stickiness = [];
+    for (i = 0; i < days; i++) { avgMin.push(+(48 + rnd() * 9).toFixed(2)); stickiness.push(+(7.6 + rnd() * 3.1).toFixed(2)); }
+    var totHours = wave(rnd, days, 12500, 6000).map(Math.round);
+    var uninstalls = wave(rnd, days, 312, 55).map(Math.round);
+    var madAvg = Math.round(avg(mad)), sessTotal = sum(sessions), totalDevices = Math.round(madAvg * 2.75);
+    var VER = ["2.1.1.0", "2.1.0.0", "1.0.19.0", "1.0.18.0", "1.0.17.0", "1.0.15.0", "1.0.0.0"];
+    var VW = [0.9953, 0.0039, 0.0006, 0.0001, 0.00005, 0.00003, 0.00002];
+    var verRows = VER.map(function (v, k) {
+      return { ver: v, devices: Math.max(2, Math.round(totalDevices * VW[k])), sessions: Math.max(2, Math.round(sessTotal * VW[k] * (0.98 + rnd() * 0.04))) };
+    });
+    var devSum = sum(verRows.map(function (r) { return r.devices; })), sesSum = sum(verRows.map(function (r) { return r.sessions; }));
+    verRows.forEach(function (r) { r.dPct = +(r.devices / devSum * 100).toFixed(2); r.sPct = +(r.sessions / sesSum * 100).toFixed(2); });
+    var ADOPT_COL = ["#5b8def", "#3fb950", "#a371f7", "#d29922", "#39c5cf"];
+    var adopt = VER.slice(0, 5).map(function (v, k) { return { name: v, color: ADOPT_COL[k], values: [] }; });
+    for (i = 0; i < days; i++) {
+      var top = 97.5 + rnd() * 1.6; adopt[0].values.push(top);
+      var rest = 100 - top, parts = [0.55, 0.24, 0.13, 0.08];
+      for (var j = 1; j < adopt.length; j++) adopt[j].values.push(+(rest * parts[j - 1]).toFixed(3));
+    }
+    var CO = [["India", 0.451, 0.4706], ["United States", 0.1339, 0.1172], ["Japan", 0.0343, 0.0331], ["Indonesia", 0.0248, 0.0236], ["Mexico", 0.0261, 0.0233], ["South Africa", 0.0188, 0.0182], ["United Kingdom", 0.0202, 0.018]];
+    var coRows = CO.map(function (c) {
+      return { country: c[0], devices: Math.round(totalDevices * c[1] * (0.95 + rnd() * 0.1)), dPct: +(c[1] * 100).toFixed(2), sessions: Math.round(sessTotal * c[2] * (0.95 + rnd() * 0.1)), sPct: +(c[2] * 100).toFixed(2) };
+    });
+    return (usgCache[app.id] = {
+      labels: labels, mad: mad, newMonthly: newMonthly, dad: dad, newDaily: newDaily, sessions: sessions,
+      avgMin: avgMin, totHours: totHours, stickiness: stickiness, uninstalls: uninstalls,
+      madAvg: madAvg, newMonthlyAvg: Math.round(avg(newMonthly)), dadAvg: Math.round(avg(dad)), newDailyAvg: Math.round(avg(newDaily)),
+      sessTotal: sessTotal, avgEng: +avg(avgMin).toFixed(2), totEngHours: sum(totHours), dadMad: +avg(stickiness).toFixed(2), uninstallTotal: sum(uninstalls),
+      verRows: verRows, adopt: adopt, coRows: coRows
+    });
+  }
+  function distTable(headA, rows) {
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>' + headA + '</th><th class="num">Active devices</th><th class="num">Sessions</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return '<tr><td>' + esc(r.label) + '</td><td class="num">' + fmtComma(r.devices) + ' <span class="muted">(' + r.dPct.toFixed(2) + '%)</span></td>' +
+          '<td class="num">' + fmtComma(r.sessions) + ' <span class="muted">(' + r.sPct.toFixed(2) + '%)</span></td></tr>';
+      }).join("") + '</tbody></table></div>';
+  }
+  function usageTab(app) {
+    var d = usageData(app), L = d.labels, blue = "var(--brand)", pink = "#e3008c";
+    var cards = '<div class="sumrow sumrow--4">' +
+      sumCard("Monthly active devices (Avg)", fmtCompact(d.madAvg), "Last 30 days", d.mad, blue) +
+      sumCard("Sessions (Total)", fmtCompact(d.sessTotal), "Last 30 days", d.sessions, blue) +
+      sumCard("Avg engagement duration", d.avgEng + " min", "Last 30 days", d.avgMin, "#5ad1cd") +
+      sumCard("DAD/MAD", d.dadMad + "%", "Last 30 days", d.stickiness, "#f7b955") + '</div>';
+    var monthly = panelStats([{ label: "Monthly active devices (Avg)", val: fmtCompact(d.madAvg) }, { label: "New monthly devices (Avg)", val: fmtCompact(d.newMonthlyAvg) }]) +
+      chartLine({ series: [{ name: "Monthly active devices", color: blue, values: d.mad }, { name: "New monthly devices", color: pink, values: d.newMonthly }], labels: L }) +
+      legendDots([{ name: "Monthly active devices", color: blue }, { name: "New monthly devices", color: pink }]);
+    var daily = panelStats([{ label: "Daily active devices (Avg)", val: fmtCompact(d.dadAvg) }, { label: "New daily devices (Avg)", val: fmtCompact(d.newDailyAvg) }]) +
+      chartLine({ series: [{ name: "Daily active devices", color: blue, values: d.dad }, { name: "New daily devices", color: pink, values: d.newDaily }], labels: L }) +
+      legendDots([{ name: "Daily active devices", color: blue }, { name: "New daily devices", color: pink }]);
+    var sessions = panelStats([{ label: "Sessions (Total)", val: fmtCompact(d.sessTotal), sub: "in last 30 days" }]) +
+      chartLine({ series: [{ name: "Device sessions", color: blue, values: d.sessions }], labels: L }) + legendDots([{ name: "Device sessions", color: blue }]);
+    var engagement = panelStats([{ label: "Average engagement duration", val: d.avgEng + " min", sub: "in last 30 days" }, { label: "Total engagement duration", val: fmtCompact(d.totEngHours) + " hours", sub: "in last 30 days" }]) +
+      chartLine({ series: [{ name: "Total engagement hours", color: pink, values: d.totHours }], labels: L, right: { values: d.avgMin, color: blue, yMin: 46, yMax: 58, fmt: function (v) { return Math.round(v); } } }) +
+      legendDots([{ name: "Average engagement minutes", color: blue }, { name: "Total engagement hours", color: pink }]);
+    var adoption = chartStack({ series: d.adopt, labels: L }) + legendDots(d.adopt.map(function (s) { return { name: s.name, color: s.color }; }));
+    var stick = panelStats([{ label: "DAD/MAD", val: d.dadMad + "%" }]) +
+      chartLine({ series: [{ name: "DAD/MAD", color: blue, values: d.stickiness }], labels: L, fmt: pctFmt }) + legendDots([{ name: "DAD/MAD", color: blue }]);
+    var uninstall = panelStats([{ label: "User-initiated uninstalls", val: fmtCompact(d.uninstallTotal) }]) +
+      chartLine({ series: [{ name: "User-initiated uninstalls", color: blue, values: d.uninstalls }], labels: L }) + legendDots([{ name: "User-initiated uninstalls", color: blue }]);
+    var verRows = d.verRows.map(function (r) { return { label: r.ver, devices: r.devices, dPct: r.dPct, sessions: r.sessions, sPct: r.sPct }; });
+    var coRows = d.coRows.map(function (r) { return { label: r.country, devices: r.devices, dPct: r.dPct, sessions: r.sessions, sPct: r.sPct }; });
+    return cards +
+      '<div class="apanel-grid">' + apanel("Monthly activity", monthly) + apanel("Daily activity", daily) + '</div>' +
+      '<div class="apanel-grid">' + apanel("Sessions", sessions) + apanel("Engagement duration", engagement) + '</div>' +
+      apanel("App version adoption", adoption) +
+      '<div class="apanel-grid">' + apanel("DAD/MAD (Stickiness)", stick) + apanel("User-initiated uninstalls", uninstall) + '</div>' +
+      '<div class="apanel-grid">' + apanel("Distribution by app version", distTable("App version", verRows)) + apanel("Distribution by country", distTable("Country/region", coRows)) + '</div>';
+  }
+
+  /* ---- Ratings & reviews: full dashboard, modelled on Partner Center → Insights → Ratings & reviews ---- */
+  var REVIEW_POOL = [
+    { stars: 3, title: "часто лагает", body: "очень любила приложение. Работала только на нем, будь то макеты или простой текст. всё удобно и понятно. не знаю из-за чего, но уже неделю не могу войти в мои файлы! это ужас, все корректировки сохранены в приложении, работа остановилась и никакого аналога…", ver: "2.1.1.0", country: "Russia", name: "Марианна", date: "Tue, Jun 02, 2026 15:50:39 UTC" },
+    { stars: 1, title: "WORST PIECE OF **** BY EXCUSE OF A COMPANY", body: "its basically a trojan which wont be marked as virus", ver: "—", country: "India", name: "Sourav", date: "Wed, May 20, 2026 23:10:30 UTC" },
+    { stars: 2, title: "good but poor performance", body: "its a great app but lately it has started lagging. whenever i try to open the application it shows that its being used in another application and doesn’t open. a lot of my works are on going on it which i had to start from scratch in another app like canva and photoshop.", ver: "2.1.1.0", country: "India", name: "Meenu", date: "Tue, May 05, 2026 19:58:10 UTC" },
+    { stars: 5, title: "Love it for quick edits", body: "Best lightweight editor for my Surface — launches fast and the templates are great. Highly recommend.", ver: "2.1.1.0", country: "United States", name: "Jordan", date: "Sun, Apr 28, 2026 09:12:44 UTC" },
+    { stars: 4, title: "Solid, a few gaps", body: "Does what it says and the UI is clean. Would love more export formats and an offline mode.", ver: "2.1.0.0", country: "Brazil", name: "Lucas", date: "Sun, Apr 12, 2026 14:03:21 UTC" }
+  ];
+  var ratCache = {};
+  function ratingsData(app) {
+    if (ratCache[app.id]) return ratCache[app.id];
+    var rnd = anaRng(Math.abs(hashStr(app.id + "|rat")) || 1), days = 28, labels = [], i;
+    for (i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
+    var total = 3500 + Math.round(rnd() * 200);
+    var DIST = [["5", 0.58], ["4", 0.14], ["3", 0.07], ["2", 0.04], ["1", 0.17]];
+    var stars = DIST.map(function (s) { var c = Math.round(total * s[1]); var orig = Math.round(c * (0.78 + rnd() * 0.1)); return { star: s[0], count: c, pct: s[1] * 100, orig: orig, rev: c - orig }; });
+    var realTotal = stars.reduce(function (m, s) { return m + s.count; }, 0);
+    var avg = +((5 * stars[0].count + 4 * stars[1].count + 3 * stars[2].count + 2 * stars[3].count + 1 * stars[4].count) / realTotal).toFixed(2);
+    var orig = stars.reduce(function (m, s) { return m + s.orig; }, 0), rev = realTotal - orig;
+    var avgSeries = [], totSeries = [];
+    for (i = 0; i < days; i++) { avgSeries.push(+(3 + rnd() * 1.8).toFixed(2)); totSeries.push(Math.round(20 + rnd() * 45)); }
+    var GEO = [["United States", 4, 835, 84], ["India", 4.2, 568, 38], ["Brazil", 4, 207, 33], ["United Kingdom", 3.6, 166, 36], ["Russia", 3.6, 152, 21], ["Mexico", 4.1, 100, 10]];
+    var geo = GEO.map(function (g) { return { country: g[0], avg: g[1], ratings: g[2], reviews: g[3] }; });
+    return (ratCache[app.id] = { labels: labels, total: realTotal, stars: stars, avg: avg, orig: orig, rev: rev, avgSeries: avgSeries, totSeries: totSeries, reviews: REVIEW_POOL, geo: geo });
+  }
+  function starRowHTML(n, cls) {
+    var full = Math.round(n), s = "";
+    for (var i = 1; i <= 5; i++) s += '<span class="rstar' + (i <= full ? " is-on" : "") + '">★</span>';
+    return '<div class="starrow' + (cls ? " " + cls : "") + '">' + s + '</div>';
+  }
+  function ratingBars(stars) {
+    var mx = stars.reduce(function (m, s) { return Math.max(m, s.count); }, 1);
+    return '<div class="ratbars">' + stars.map(function (s) {
+      return '<div class="ratbar"><span class="ratbar__star">' + s.star + ' ★</span>' +
+        '<span class="ratbar__track"><span class="ratbar__fill" style="width:' + (s.count / mx * 100).toFixed(1) + '%">' +
+          '<span class="ratbar__blue" style="width:' + (s.orig / s.count * 100).toFixed(1) + '%"></span></span></span>' +
+        '<span class="ratbar__val">' + fmtComma(s.count) + ' (' + Math.round(s.pct) + '%)</span></div>';
+    }).join("") + '</div>';
+  }
+  function ratingsTab(app) {
+    var d = ratingsData(app), L = d.labels, blue = "var(--brand)", pink = "#e3008c";
+    var breakdown = '<div class="ratbreak"><div class="ratbreak__sum">' +
+      '<span class="muted">Average</span><strong class="ratbreak__avg">' + d.avg.toFixed(2) + '</strong>' + starRowHTML(d.avg) +
+      '<span class="muted ratbreak__lbl">Total Ratings</span><strong class="ratbreak__tot">' + fmtComma(d.total) + '</strong>' +
+      '<div class="ratbreak__split"><div><span class="muted">Original rating</span><strong>' + fmtCompact(d.orig) + '</strong></div>' +
+        '<div><span class="muted">Revised rating</span><strong>' + fmtComma(d.rev) + '</strong></div></div></div>' +
+      '<div class="ratbreak__bars">' + ratingBars(d.stars) + '</div></div>';
+    var overtime = panelStats([{ label: "Average rating", val: d.avg.toFixed(2) }, { label: "Total ratings", val: fmtComma(d.total) }]) +
+      chartLine({ series: [{ name: "Total Ratings", color: blue, values: d.totSeries }], labels: L, area: true, right: { values: d.avgSeries, color: pink, yMin: 0, yMax: 5, fmt: function (v) { return v.toFixed(0); } } }) +
+      legendDots([{ name: "Total Ratings", color: blue }, { name: "Average Rating", color: pink }]);
+    var reviews = '<div class="table-wrap"><table class="atable rtable"><thead><tr><th>Reviews</th><th>Version</th><th>Country/region</th><th>Name</th><th>Date</th></tr></thead><tbody>' +
+      d.reviews.map(function (r) {
+        return '<tr><td><div class="rev">' + starRowHTML(r.stars, "starrow--sm") + '<strong class="rev__title">' + esc(r.title) + '</strong>' +
+          '<p class="rev__body muted">' + esc(r.body) + '</p><a class="linkbtn rev__reply">Reply</a></div></td>' +
+          '<td>' + esc(r.ver) + '</td><td>' + esc(r.country) + '</td><td>' + esc(r.name) + '</td><td class="muted">' + esc(r.date) + '</td></tr>';
+      }).join("") + '</tbody></table></div>';
+    var geo = '<div class="table-wrap"><table class="atable"><thead><tr><th>Country</th><th class="num">Average Rating</th><th class="num">Total Ratings</th><th class="num">Total Review</th></tr></thead><tbody>' +
+      d.geo.map(function (g) { return '<tr><td>' + esc(g.country) + '</td><td class="num">' + g.avg + '</td><td class="num">' + fmtComma(g.ratings) + '</td><td class="num">' + fmtComma(g.reviews) + '</td></tr>'; }).join("") + '</tbody></table></div>';
+    return '<div class="apanel-grid">' + apanel("Ratings breakdown", breakdown) + apanel("Ratings over time", overtime) + '</div>' +
+      apanel("Reviews", reviews) + apanel("Geographical spread", geo);
+  }
+  function avgArr(a) { return a.reduce(function (m, v) { return m + v; }, 0) / a.length; }
+  function healthExtra(app, d) {
+    var rnd = anaRng(Math.abs(hashStr(app.id + "|health")) || 1), days = d.hits.labels.length, i;
+    var crashRateSeries = [], hangRateSeries = [];
+    for (i = 0; i < days; i++) { crashRateSeries.push(+(0.012 + rnd() * 0.055).toFixed(3)); hangRateSeries.push(+(0.004 + rnd() * 0.13).toFixed(3)); }
+    var GEO = [["Nigeria", 257, 37.03], ["United States", 81, 11.67], ["India", 59, 8.5], ["Tanzania", 59, 8.5], ["Unknown", 24, 3.46], ["Kenya", 21, 3.03], ["Zimbabwe", 16, 2.31], ["South Africa", 13, 1.87], ["United Kingdom", 12, 1.73], ["Ghana", 10, 1.44]];
+    return {
+      crashRateSeries: crashRateSeries, hangRateSeries: hangRateSeries,
+      crashRate: +avgArr(crashRateSeries).toFixed(3), hangRate: +avgArr(hangRateSeries).toFixed(3),
+      pkgVer: [{ ver: "2.1.1.0", hits: 692, pct: 99.71 }, { ver: "2.1.0.0", hits: 2, pct: 0.29 }],
+      geo: GEO.map(function (g) { return { country: g[0], hits: g[1], pct: g[2] }; })
+    };
+  }
+  function hitsTable(headA, rows) {
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>' + headA + '</th><th class="num">Hits</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr><td>' + esc(r.label) + '</td><td class="num">' + fmtComma(r.hits) + ' <span class="muted">(' + r.pct.toFixed(2) + '%)</span></td></tr>'; }).join("") + '</tbody></table></div>';
+  }
   function crashTab(app) {
     var d = anaData(app);
     if (anaFailure) return failureView(app, d);
-    var cards = '<div class="sumrow">' +
-      sumCard("Crashes", fmtCompact(d.crashes), "Last 12 months", d.hits.series[0].values, "var(--brand)") +
-      sumCard("Hangs", fmtCompact(d.hangs), "Last 12 months", d.hits.series[1].values, "#C239B3") +
-      sumCard("Crash rate", d.crashRate + "%", "Last 12 months", d.hits.series[2].values, "#8661C5") + '</div>';
+    var h = healthExtra(app, d), rateFmt = function (v) { return v.toFixed(2); };
+    var cards = '<div class="sumrow sumrow--4">' +
+      sumCard("Crashes", fmtCompact(d.crashes), "Last 30 days", d.hits.series[0].values, "var(--brand)") +
+      sumCard("Hangs", fmtCompact(d.hangs), "Last 30 days", d.hits.series[1].values, "#C239B3") +
+      sumCard("Crash rate", h.crashRate.toFixed(3) + "%", "Last 30 days", h.crashRateSeries, "#5ad1cd") +
+      sumCard("Hang rate", h.hangRate.toFixed(3) + "%", "Last 30 days", h.hangRateSeries, "#f7b955") + '</div>';
     return cards +
-      apanel("Failure Hits", chartLine({ series: d.hits.series, labels: d.hits.labels, area: true }) + chartLegend(d.hits.series)) +
+      apanel("Failure count", chartLine({ series: d.hits.series, labels: d.hits.labels, area: true }) + chartLegend(d.hits.series)) +
+      apanel("Failure rate", chartLine({ series: [{ name: "Crash rate", color: "var(--brand)", values: h.crashRateSeries }, { name: "Hang rate", color: "#e3008c", values: h.hangRateSeries }], labels: d.hits.labels, yMin: 0, yMax: 0.15, fmt: rateFmt }) + legendDots([{ name: "Crash rate", color: "var(--brand)" }, { name: "Hang rate", color: "#e3008c" }])) +
       apanel("Failure distribution", chartBars({ bars: d.dist }), "Crashes by app version") +
-      apanel("Failures", failuresTable(app, d));
+      apanel("Failures", failuresTable(app, d)) +
+      '<div class="apanel-grid">' +
+        apanel("Package version", hitsTable("Package version", h.pkgVer.map(function (r) { return { label: r.ver, hits: r.hits, pct: r.pct }; }))) +
+        apanel("Geographical Failure Hits", hitsTable("Country/region", h.geo.map(function (r) { return { label: r.country, hits: r.hits, pct: r.pct }; }))) +
+      '</div>';
   }
   function failuresTable(app, d) {
     var per = 6, pages = Math.ceil(d.failures.length / per), pg = Math.max(0, Math.min(anaPage, pages - 1));
@@ -685,7 +989,12 @@
     var panelEl = $("analyticsPanel");
     var app = appById(analyticsAppId) || state.apps[0];
     if (!app) { panelEl.innerHTML = emptyAnalyticsHTML(); return; }
-    var body = anaTab === "crashes" ? crashTab(app) : storeTab(app, anaTab);
+    var body = anaTab === "crashes" ? crashTab(app)
+      : !app.store ? storeTab(app, anaTab)
+      : anaTab === "acquisition" ? acquisitionTab(app)
+      : anaTab === "usage" ? usageTab(app)
+      : anaTab === "ratings" ? ratingsTab(app)
+      : storeTab(app, anaTab);
     var tabs = panelEl.querySelector(".anatabs"), bodyEl = panelEl.querySelector(".anabody");
     if (tabs && bodyEl) {
       // Keep the tab bar (and its icons) in the DOM — only flip the active state and
@@ -1031,7 +1340,7 @@
   }
 
   /* ---------------- Sidebar view router ---------------- */
-  var VIEWS = ["overview", "certificates", "apps", "analytics"];
+  var VIEWS = ["overview", "apps", "certificates", "analytics"];
   function showView(id) {
     if (VIEWS.indexOf(id) === -1) id = "overview";
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
