@@ -1,4 +1,4 @@
-/* Windows Developer Program — Verified Developer journey.
+/* Windows Developer Program — developer enrollment journey.
    Phase 1 "Create developer account" has 4 sub-steps; for the demo we only show
    the account-type screen — Continue SKIPS the rest and marks them complete, then
    jumps to Phase 2 "Submit signed binary". The certificate step uses the REAL WDP
@@ -64,7 +64,7 @@
 
   var PHASES = [
     { title: "Create developer account" },
-    { title: "Get verified" }
+    { title: "Enroll" }
   ];
   var STEPS = [
     { key: "account",  phase: 0, title: "Account type",
@@ -73,11 +73,11 @@
     { key: "profile",  phase: 0, title: "Profile details" },
     { key: "setup",    phase: 0, title: "Account setup" },
     { key: "path",     phase: 1, title: "Choose your path",
-      head: "How do you want to get verified?", headSub: "Both earn your Blue Badge — pick one now, you can do the other anytime from your portal." },
+      head: "How do you want to enroll?", headSub: "Both make you a Windows Developer Program member. Publishing to the Store unlocks the most complete set — pick one now, do the other anytime from your portal." },
     { key: "verify",   phase: 1, title: "Submit signed binary",
-      head: "Verify with your certificate", headSub: "Download your binary, sign it with your certificate, and submit it to earn your Blue Badge." },
+      head: "Verify with your certificate", headSub: "Download your binary, sign it with your certificate, and submit it to join the program." },
     { key: "app",      phase: 1, title: "Create your first app",
-      head: "Your developer account is ready", headSub: "Create your first app and publish it to the Microsoft Store to get verified and reach millions." }
+      head: "Your developer account is ready", headSub: "Create your first app and publish it to the Microsoft Store to unlock the complete benefit set and reach millions." }
   ];
   function idxOf(key) { for (var i = 0; i < STEPS.length; i++) if (STEPS[i].key === key) return i; return -1; }
 
@@ -161,10 +161,10 @@
         '<div class="pcmp__val">' + mark(c) + '</div>';
     }
     return '<div class="pcmp">' +
-      '<div class="pcmp__corner"><strong>Pick a plan</strong><small>Click a column to select it, then Continue.</small></div>' +
-      th("store", "rocket.png", true, "Publish to the Store", "Reach millions — verification built in") +
+      '<div class="pcmp__corner"><strong>Pick your path</strong><small>Click a column to select it, then Continue.</small></div>' +
+      th("store", "rocket.png", true, "Publish to the Store", "Reach millions — the complete benefit set") +
       th("cert", "shield-checkmark.png", false, "Verify with a certificate", "Submit a signed binary, your own way") +
-      row("Verified identity &amp; Blue Badge", true, true) +
+      row("Publisher identity &amp; recognition", true, true) +
       row("Frictionless installs (no SmartScreen)", true, true) +
       row("Crash analytics", true, true) +
       row("Distribute on your own", true, true) +
@@ -181,7 +181,7 @@
       '<div class="status-card__body">' +
         '<span class="pill pill--ok"><span class="verified-dot"></span>Microsoft Store developer</span>' +
         '<h2>Bring your app to the Store</h2>' +
-        '<p class="muted">Your developer account is active. Create your first app and reach over a billion Windows devices — verification comes built in.</p>' +
+        '<p class="muted">Your developer account is active. Create your first app and reach over a billion Windows devices — the complete benefit set comes built in.</p>' +
       '</div>' +
       '<div class="status-card__action wiz-actions">' +
         '<fluent-button appearance="primary" id="goCreate"><iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Create your first app</fluent-button>' +
@@ -252,14 +252,14 @@
       '<div class="hstep hstep--full">' +
         '<div class="hstep__num">3</div>' +
         '<h3>Submit the signed file</h3>' +
-        '<p class="muted">Drop it below to become a trusted developer.</p>' +
+        '<p class="muted">Drop it below to join the program.</p>' +
         dropzoneHTML() + errorHTML() +
-        '<div class="submit-row"><fluent-button appearance="primary" id="binSubmit"' + (pendingFile ? "" : " disabled") + '>Become a trusted developer</fluent-button></div>' +
+        '<div class="submit-row"><fluent-button appearance="primary" id="binSubmit"' + (pendingFile ? "" : " disabled") + '>Join the program</fluent-button></div>' +
       '</div>' +
       '<div class="wiz-laterbar">' +
         '<iconify-icon icon="fluent:clock-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon>' +
         '<div class="wiz-laterbar__text"><strong>Prefer to sign on your own time?</strong>' +
-          '<span>Download your binary now, then upload your signed file anytime from your WDP portal — your account stays ready to verify.</span></div>' +
+          '<span>Download your binary now, then upload your signed file anytime from your WDP portal — your account stays ready whenever you are.</span></div>' +
         '<fluent-button appearance="outline" id="goLater">Go to portal</fluent-button>' +
       '</div>' +
     '</div>';
@@ -278,14 +278,14 @@
       '</div>';
   }
 
-  // Completion = the portal's hero status-card banner + the verified certificate.
+  // Completion = the portal's hero status-card banner + the accepted certificate.
   function bodyDone() {
     return '<div class="status-card wiz-hero">' +
       '<img class="status-card__illo" src="assets/badge.png" alt="" />' +
       '<div class="status-card__body">' +
-        '<span class="pill pill--ok"><span class="verified-dot"></span>Verified Developer</span>' +
-        '<h2>You’re a Verified Developer</h2>' +
-        '<p class="muted">Your <strong>Blue Badge</strong> is active. Apps you sign now install without friction across Windows — and the trust you just earned follows every release.</p>' +
+        '<span class="pill pill--ok"><span class="verified-dot"></span>Member</span>' +
+        '<h2>Your account is ready</h2>' +
+        '<p class="muted">Your certificate is confirmed. Apps you sign now install without friction across Windows, with crash analytics and a reputation that follows every release.</p>' +
       '</div>' +
       '<div class="status-card__action">' +
         '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:open-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Go to developer portal</fluent-button>' +
@@ -314,7 +314,7 @@
     renderRail();
     if (done) {
       $("wizTitle").textContent = "You’re enrolled in the Windows Developer Program";
-      $("wizSub").textContent = "Your developer account is active and your code is verified.";
+      $("wizSub").textContent = "Your developer account is active and enrolled in the program.";
       $("wizBody").innerHTML = bodyDone();
       $("wizFootbar").innerHTML = "";
       wireDone();

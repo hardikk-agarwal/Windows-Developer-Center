@@ -59,7 +59,7 @@
     if (t === "Valid") return '<span class="pill pill--ok pill--sm">Valid</span>';
     if (t === "Offline") return '<span class="pill pill--ghost pill--sm">Hash only</span>';
     if (t === "NotSigned") return '<span class="pill pill--warn pill--sm">Unsigned</span>';
-    return '<span class="pill pill--warn pill--sm">Unverified</span>';
+    return '<span class="pill pill--warn pill--sm">Unknown</span>';
   }
   // A certificate whose issuer equals its subject is self-signed → not acceptable for TDP.
   function isSelfSigned(info) {
@@ -117,10 +117,10 @@
     $("accountStatus").innerHTML = STORE
       ? '<span class="verified-dot"></span>Store developer'
       : !state.verified
-        ? '<span class="verified-dot verified-dot--off"></span>Not verified'
+        ? '<span class="verified-dot verified-dot--off"></span>No certificate'
         : (hasValidCert()
-            ? '<span class="verified-dot"></span>Verified Developer'
-            : '<span class="verified-dot verified-dot--warn"></span>Identity verified');
+            ? '<span class="verified-dot"></span>Program member'
+            : '<span class="verified-dot verified-dot--warn"></span>Self-signed certificate');
   }
 
   function renderStatus() {
@@ -133,22 +133,22 @@
         '<div class="status-card status-card--off status-card--solo">' +
           '<img class="status-card__illo" src="assets/trust.png" alt="" />' +
           '<div class="status-card__body">' +
-            '<span class="pill pill--warn">Not verified</span>' +
-            '<h2>Get verified on Windows</h2>' +
-            '<p class="muted">Prove you own a code signing certificate to become a verified developer.</p>' +
+            '<span class="pill pill--warn">Certificate needed</span>' +
+            '<h2>Add a certificate to unlock your benefits</h2>' +
+            '<p class="muted">Add a code signing certificate to unlock frictionless installs and crash analytics for the apps you sign.</p>' +
           '</div>' +
         '</div>';
       return;
     }
     var valid = hasValidCert();
     var pill = valid
-      ? '<span class="pill pill--ok"><span class="verified-dot"></span>Verified Developer</span>'
-      : '<span class="pill pill--warn">Identity verified · certificate not verified</span>';
-    var head = valid ? esc(state.account.name) + " is verified on Windows"
-                     : esc(state.account.name) + "’s identity is verified";
+      ? '<span class="pill pill--ok"><span class="verified-dot"></span>Windows Developer Program</span>'
+      : '<span class="pill pill--warn">Self-signed certificate</span>';
+    var head = valid ? esc(state.account.name) + " is all set on Windows"
+                     : esc(state.account.name) + "’s certificate needs an upgrade";
     var body = valid
-      ? "Your identity and code signing certificate are verified. Apps you sign install without SmartScreen interruptions and have crash analytics unlocked."
-      : "Your <strong>identity</strong> is verified, but your certificate is self-signed and not chain-trusted by Windows — installs may still show SmartScreen. Use a CA-issued code signing certificate for frictionless installs.";
+      ? "Your code signing certificate is active. Apps you sign install without SmartScreen interruptions, with crash analytics and a reputation that follows every release."
+      : "Your certificate is self-signed, so Windows can’t validate its chain — installs may still show SmartScreen. Use a CA-issued code signing certificate for frictionless installs.";
     el.innerHTML =
       '<div class="status-card status-card--hero' + (valid ? '' : ' status-card--off') + '">' +
         '<div class="status-card__top">' +
@@ -286,7 +286,7 @@
       '<div class="hstep hstep--full">' +
         '<div class="hstep__num">3</div>' +
         '<h3>Submit the signed file</h3>' +
-        '<p class="muted">Drop it below to get verified.</p>' +
+        '<p class="muted">Drop it below to add it to your account.</p>' +
         dz + list + err +
         '<div class="submit-row"><fluent-button appearance="primary" class="js-submit" disabled>Submit &amp; verify</fluent-button></div>' +
       '</div>';
@@ -299,7 +299,7 @@
       '<div class="mflow__row"><div class="flow__num">2</div><div>' +
         '<h3>Sign it with your certificate</h3><p class="muted">Must be from a trusted authority — not self-signed.</p></div></div>' +
       '<div class="mflow__row"><div class="flow__num">3</div><div class="mflow__grow">' +
-        '<h3>Submit the signed file</h3><p class="muted">Drop it below to get verified.</p>' + dz + list + err +
+        '<h3>Submit the signed file</h3><p class="muted">Drop it below to add it to your account.</p>' + dz + list + err +
         '<div class="submit-row"><fluent-button appearance="primary" class="js-submit" disabled>Submit &amp; verify</fluent-button></div>' +
       '</div></div></div>';
   }
@@ -413,8 +413,8 @@
         : '<div class="empty">' +
             '<img src="assets/shield-checkmark.png" alt="" />' +
             '<strong>No certificates yet</strong>' +
-            '<p class="muted">Add a code signing certificate by submitting a signed binary to verify your developer ' +
-              'identity. Any app installed on this PC that uses it is then discovered automatically.</p>' +
+            '<p class="muted">Add a code signing certificate by submitting a signed binary to confirm your publisher ' +
+              'identity and unlock crash analytics for the apps you sign. Any app installed on this PC that uses it is then discovered automatically.</p>' +
             '<fluent-button appearance="primary" data-openmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>';
@@ -510,8 +510,8 @@
       ico = '<span class="cert-ico' + (cert.signed ? "" : " cert-ico--alt") + '">' + (cert.signed ? "CS" : "#") + '</span>';
       label = esc(cert.label);
       pill = cert.trust === "Valid"
-        ? '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Verified</span>'
-        : '<span class="pill pill--warn pill--sm">Cert not verified</span>';
+        ? '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Active</span>'
+        : '<span class="pill pill--warn pill--sm">Self-signed</span>';
     } else if (g.subject) {
       ico = '<span class="cert-ico cert-ico--alt">?</span>';
       label = esc(cnOf(g.subject));
@@ -602,7 +602,7 @@
      per-failure drill-down), tabbed by analytics type. ALL figures here are generated
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0;
-  // Crash Health is available for every verified app; the Store analytics (acquisition,
+  // Crash Health is available for every app; the Store analytics (acquisition,
   // usage, ratings) are LOCKED until the app is published to the Microsoft Store.
   var ANA_TABS = [
     { key: "crashes",     label: "Health",            icon: "fluent:bug-20-regular", free: true },
@@ -616,7 +616,7 @@
   function lockedAnalyticsHTML(app, tab) {
     return '<div class="ana-locked"><iconify-icon class="ana-locked__ico" icon="fluent:lock-closed-24-regular" width="34" height="34" aria-hidden="true"></iconify-icon>' +
       '<strong>' + esc(tab.label) + ' unlocks on the Microsoft Store</strong>' +
-      '<p class="muted">Crash <strong>Health</strong> is available for any verified app. ' + esc(tab.label) + ' — plus acquisition, usage and ratings — unlocks once you bring <strong>' + esc(app.name) + '</strong> to the Store.</p>' +
+      '<p class="muted">Crash <strong>Health</strong> is available for every app. ' + esc(tab.label) + ' — plus acquisition, usage and ratings — unlocks once you bring <strong>' + esc(app.name) + '</strong> to the Store.</p>' +
       '<fluent-button appearance="primary" data-store="' + app.id + '"><iconify-icon slot="start" icon="fluent:rocket-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Publish to the Store</fluent-button></div>';
   }
 
@@ -1198,7 +1198,7 @@
   }
   function rescanApps() {
     var certs = state.certs.filter(function (c) { return c.thumbKind === "cert"; });
-    if (!certs.length) { toast("Verify a certificate first", true); return; }
+    if (!certs.length) { toast("Add a certificate first", true); return; }
     certs.forEach(function (c) { discoverApps(c.thumb, c.id); });
   }
 
@@ -1361,7 +1361,7 @@
 
   var STORE_MSA = { name: "Priya Nair", email: "priya.nair@outlook.com", initials: "PN" };
 
-  // Demo: sign in as the verified WDP developer. Reads the REAL certificate from the
+  // Demo: sign in as the WDP developer with a real certificate. Reads the REAL certificate from the
   // bundled signed binary (signing-demo/trusted-sample.exe) through the same Authenticode
   // path as the cert modal, then auto-discovers the apps signed by that certificate.
   async function seedWdpDemo() {

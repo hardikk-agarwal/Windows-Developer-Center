@@ -142,9 +142,9 @@
       var verified = st && st.verified;
       var hasValid = st && Array.isArray(st.certs) && st.certs.some(function (c) { return c.trust === "Valid"; });
       stat.innerHTML = !verified
-        ? '<span class="verified-dot verified-dot--off"></span>Not verified'
-        : (hasValid ? '<span class="verified-dot"></span>Verified Developer'
-                    : '<span class="verified-dot verified-dot--warn"></span>Identity verified');
+        ? '<span class="verified-dot verified-dot--off"></span>No certificate'
+        : (hasValid ? '<span class="verified-dot"></span>Program member'
+                    : '<span class="verified-dot verified-dot--warn"></span>Self-signed certificate');
     }
   }
 
