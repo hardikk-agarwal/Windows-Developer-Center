@@ -85,7 +85,7 @@
             <p class="muted">Create, publish, and manage your apps on the Microsoft Store.</p>
           </div>
         </div>
-        <div id="statusCard"><!-- rendered by store-portal.js --></div>
+        <div id="statusCard"><!-- rendered by portal.js --></div>
         <div id="overviewSummary"></div>
       </section>
 
@@ -103,7 +103,7 @@
             </fluent-button>
           </span>
         </div>
-        <div class="apps" id="appsList"><!-- rendered by store-portal.js --></div>
+        <div class="apps" id="appsList"><!-- rendered by portal.js --></div>
       </section>
 
       <!-- ---------- CERTIFICATES ---------- -->
@@ -118,7 +118,7 @@
             Add certificate
           </fluent-button>
         </div>
-        <div id="certsList"><!-- rendered by store-portal.js --></div>
+        <div id="certsList"><!-- rendered by portal.js --></div>
       </section>
 
       <!-- ---------- ANALYTICS ---------- -->
@@ -130,7 +130,7 @@
           </div>
           <select class="select" id="analyticsApp" aria-label="Select app"></select>
         </div>
-        <div id="analyticsPanel"><!-- rendered by store-portal.js --></div>
+        <div id="analyticsPanel"><!-- rendered by portal.js --></div>
       </section>
     </main>
   </div>
@@ -274,6 +274,8 @@
     DialogDefinition.define(FluentDesignSystem.registry);
     DialogBodyDefinition.define(FluentDesignSystem.registry);
   </script>
-  <script src="store-portal.js"></script>
+  <!-- One engine, two doors: the Store portal is portal.js personalised for the Store path. -->
+  <script>window.PORTAL_MODE = "store";</script>
+  <script src="portal.js"></script>
 </body>
 </html>

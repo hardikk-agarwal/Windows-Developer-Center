@@ -444,32 +444,33 @@
     var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
   }
 
-  // Land in the WDP portal already signed in and verified, with the real cert.
+  // Land in the WDP portal already signed in. A freshly-created account starts from a
+  // CLEAN slate (overwrite, don't merge) so any earlier demo state can't leak in:
+  //  • "Go to portal" without submitting a binary → zero state, verified=false, no certs.
+  //  • After verifying a cert → that cert + its discovered apps, verified=true.
   function seedPortal() {
     try {
-      var KEY = "tdp.portal.v5", s;
-      try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-      if (!s || !s.certs || !s.apps) s = { signedIn: false, account: null, verified: false, certs: [], apps: [] };
-      s.signedIn = true;
-      s.account = { name: store.pubName || MSA.name, email: store.email || MSA.email, initials: initials(store.pubName || MSA.name) };
+      var KEY = "tdp.portal.v5";
+      var s = {
+        signedIn: true,
+        account: { name: store.pubName || MSA.name, email: store.email || MSA.email, initials: initials(store.pubName || MSA.name) },
+        verified: false, certs: [], apps: []
+      };
       if (verifiedCert) {
-        if (!s.certs.some(function (c) { return c.thumb === verifiedCert.thumb; })) s.certs.push(verifiedCert);
-        if (s.certs.length) s.verified = true;
-        discoveredApps.forEach(function (app) {
-          if (!s.apps.some(function (x) { return x.discoveryKey && x.discoveryKey === app.discoveryKey; })) s.apps.push(app);
-        });
+        s.certs.push(verifiedCert);
+        s.verified = true;
+        discoveredApps.forEach(function (app) { s.apps.push(app); });
       }
       localStorage.setItem(KEY, JSON.stringify(s));
     } catch (e) {}
   }
 
-  // Store path: land in the Store portal already signed in, on the Apps page.
+  // Store path: land in the Store portal already signed in, on the Apps page. Fresh account
+  // → clean slate (overwrite, don't merge) so no earlier demo apps leak into the zero state.
   function seedStorePortal() {
     try {
-      var KEY = "tdp.portal.store.v1", s;
-      try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-      if (!s || !s.apps) s = { signedIn: false, account: null, verified: false, certs: [], apps: [] };
-      s.signedIn = true; s.verified = true;
+      var KEY = "tdp.portal.store.v1";
+      var s = { signedIn: true, verified: true, certs: [], apps: [] };
       s.account = { name: store.pubName || MSA.name, email: store.email || MSA.email, initials: initials(store.pubName || MSA.name) };
       localStorage.setItem(KEY, JSON.stringify(s));
     } catch (e) {}
