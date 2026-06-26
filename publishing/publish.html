@@ -280,11 +280,10 @@
   .declarations__title { font-family: var(--font-display); font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-4); }
   .declarations__sub { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0; line-height: 1.5; }
   .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-  .declarations__item { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-12); align-items: start; padding: var(--sp-8) 0; }
-  .declarations__item fluent-switch { margin-top: 2px; flex: 0 0 auto; }
+  .declarations__item { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-12); align-items: center; padding: var(--sp-8) 0; }
+  .declarations__item fluent-switch { flex: 0 0 auto; }
   .declarations__copy { min-width: 0; }
-  .declarations__label { display: block; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin-bottom: 2px; cursor: pointer; }
-  .declarations__hint { margin: 0; font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.5; }
+  .declarations__label { display: block; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); cursor: pointer; }
 
   /* ===== Advanced listing — PDP-integrated sections + search-terms metadata ===== */
   /* Listing extras: privacy + search terms below the live card. Full-bleed to match the
@@ -905,8 +904,6 @@
   #submit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
   .ez-iarc-id-line { font-size: 13px; color: var(--fg-3); margin: var(--sp-16) 0 0; }
   /* ===== Submit-for-review dialog ===== */
-  #submit-dialog .ez-sd__intro { font-size: 13px; color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.45; }
-  #submit-dialog .ez-sd__intro strong { color: var(--fg-1); }
   #submit-dialog .ez-sd__section + .ez-sd__section { margin-top: var(--sp-20); padding-top: var(--sp-16); border-top: 1px solid var(--stroke-3); }
   #submit-dialog .ez-sd__title { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-8); }
   #submit-dialog .ez-sd__hint { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-10); line-height: 1.45; }
@@ -931,6 +928,8 @@
   #submit-dialog .ez-sd__adv[open] .ez-sd__adv-chev { transform: rotate(90deg); }
   #submit-dialog .ez-sd__adv-body { margin-top: var(--sp-12); }
   #submit-dialog .ez-sd__adv-body > div + div { margin-top: var(--sp-16); padding-top: var(--sp-16); border-top: 1px solid var(--stroke-3); }
+  #submit-dialog .ez-sd__adv-head-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  #submit-dialog .ez-sd__adv-sub { font-size: 11.5px; font-weight: 400; color: var(--fg-3); white-space: normal; }
   #submit-dialog .ez-sd__opt { font-weight: 400; font-size: 12px; color: var(--fg-3); }
   #submit-dialog .ez-sd__creds-list { display: flex; flex-direction: column; gap: var(--sp-8); margin-top: var(--sp-8); }
   #submit-dialog .ez-sd__cred-row { display: flex; align-items: center; gap: var(--sp-8); }
@@ -940,6 +939,8 @@
   #submit-dialog .ez-sd__cred-del { flex: 0 0 auto; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; }
   #submit-dialog .ez-sd__cred-del:hover { background: var(--subtle); color: var(--fg-1); }
   #submit-dialog .ez-sd__creds-add { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--sp-10); padding: 4px 0; background: none; border: 0; color: var(--brand); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  #submit-dialog .ez-sd__cert-notes { margin-top: var(--sp-12); width: 100%; }
+  #submit-dialog .ez-sd__cert-notes::part(root), #submit-dialog .ez-sd__cert-notes::part(control) { width: 100%; box-sizing: border-box; }
   /* ---- Notification audience (in-review banner + dialog) ---- */
   .notify-banner { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); padding: var(--sp-12) var(--sp-16); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--layer)); }
   .notify-banner__icon { flex: 0 0 auto; color: var(--brand); }
@@ -1053,11 +1054,6 @@
   /* ---- Age-rating territory preview: how the computed IARC rating maps across boards ---- */
   .ez-rating-terr { margin-top: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; background: var(--layer); }
   .ez-rating-terr[hidden] { display: none; }
-  /* IARC Terms-of-Use agreement shown in the preview phase — gates the Confirm button. */
-  .rating-terms { display: flex; align-items: flex-start; gap: var(--sp-8); margin-top: var(--sp-12); padding: var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas-tint); }
-  .rating-terms__text { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
-  .rating-terms__text a { color: var(--store-link); }
-  .rating-terms fluent-checkbox { flex: 0 0 auto; }
   .ez-rating-terr__head { display: flex; align-items: flex-start; gap: var(--sp-10); padding: var(--sp-12) var(--sp-16); border-bottom: 1px solid var(--stroke-2); }
   .ez-rating-terr__head iconify-icon { color: var(--fg-3); margin-top: 1px; }
   .ez-rating-terr__head strong { font-size: 13px; font-weight: 600; color: var(--fg-1); display: block; }
@@ -1087,6 +1083,11 @@
      height so the list scrolls internally; the header stays pinned. */
   .ez-rating-terr.is-dialog { margin-top: var(--sp-4); max-height: 56vh; overflow-y: auto; }
   .ez-rating-terr.is-dialog .ez-rating-terr__head { position: sticky; top: 0; z-index: 1; background: var(--layer); }
+  /* IARC Terms agreement in the preview phase (no card) — gates the Confirm button. */
+  .rating-terms { display: flex; align-items: flex-start; gap: var(--sp-8); margin-top: var(--sp-12); }
+  .rating-terms__text { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
+  .rating-terms__text a { color: var(--store-link); }
+  .rating-terms fluent-checkbox { flex: 0 0 auto; }
   /* Fluent buttons set their own display, so the bare [hidden] attribute can leak through
      — force phase-toggled action buttons to actually hide. */
   fluent-button[hidden] { display: none !important; }
@@ -3597,8 +3598,6 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <p class="ez-sd__intro">Microsoft Store certification — typically <strong>1&ndash;2 business days</strong>.</p>
-
     <section class="ez-sd__section">
       <h3 class="ez-sd__title">What you're submitting</h3>
       <dl class="ez-sd__summary" id="submit-summary"></dl>
@@ -3606,13 +3605,11 @@
 
     <section class="ez-sd__section">
       <h3 class="ez-sd__title">Disclosures</h3>
-      <p class="ez-sd__hint">Check anything that applies to your app.</p>
       <ul class="declarations__list">
         <li class="declarations__item">
           <fluent-switch data-declaration="genAi" id="decl-gen-ai"></fluent-switch>
           <div class="declarations__copy">
             <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
-            <p class="declarations__hint">End-user features like chatbots or image generation — not tools used to build the listing.</p>
           </div>
         </li>
         <!-- MSIX only -->
@@ -3620,7 +3617,6 @@
           <fluent-switch data-declaration="externalCommerce" id="decl-ext-commerce"></fluent-switch>
           <div class="declarations__copy">
             <label for="decl-ext-commerce" class="declarations__label">My app allows purchases outside the Microsoft Store</label>
-            <p class="declarations__hint">Payments that don't use the Microsoft Store commerce system.</p>
           </div>
         </li>
         <!-- Win32 only -->
@@ -3628,41 +3624,39 @@
           <fluent-switch data-declaration="drivers" id="decl-drivers"></fluent-switch>
           <div class="declarations__copy">
             <label for="decl-drivers" class="declarations__label">This product depends on non-Microsoft drivers or NT services</label>
-            <p class="declarations__hint">Relies on third-party kernel drivers or NT services.</p>
           </div>
         </li>
       </ul>
     </section>
 
-    <!-- Notes for certification — a regular field, outside Advanced settings. -->
-    <section class="ez-sd__section">
-      <label for="submit-notes" class="ez-sd__label">Notes for certification <span class="ez-sd__opt">optional</span></label>
-      <fluent-textarea id="submit-notes" rows="3" placeholder="Test credentials, known limitations, anything the cert team should know"></fluent-textarea>
-    </section>
-
-    <!-- Advanced settings: collapsible (publishing hold). MSIX only — hidden for Win32. -->
+    <!-- Advanced settings: optional extras — certification-team access (all types) + release timing (MSIX).
+         The summary previews the contents (set in JS) so it's clear what's inside without expanding. -->
     <details class="ez-sd__adv" id="ez-submit-adv">
       <summary class="ez-sd__adv-head">
         <iconify-icon class="ez-sd__adv-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Advanced settings
+        <span class="ez-sd__adv-head-text">
+          <span class="ez-sd__adv-title">Advanced settings</span>
+          <span class="ez-sd__adv-sub" id="submit-adv-sub"></span>
+        </span>
       </summary>
       <div class="ez-sd__adv-body">
-        <!-- Publishing hold (MSIX only) -->
+        <!-- For the certification team: test sign-in credentials + notes (optional, all package types). -->
+        <div class="ez-sd__creds" id="submit-creds">
+          <span class="ez-sd__label">For the certification team <span class="ez-sd__opt">optional</span></span>
+          <p class="ez-sd__hint">Add a test sign-in or notes, if the cert team needs them to review your app.</p>
+          <div class="ez-sd__creds-list" id="submit-creds-list"></div>
+          <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
+            <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add test credential
+          </button>
+          <fluent-textarea id="submit-notes" rows="3" class="ez-sd__cert-notes" placeholder="Known limitations or anything else the cert team should know"></fluent-textarea>
+        </div>
+        <!-- Release timing (MSIX only) -->
         <div id="submit-hold-opts">
-          <span class="ez-sd__label">Publishing hold</span>
+          <span class="ez-sd__label">Release timing</span>
           <p class="ez-sd__hint">When should it go live after it passes certification?</p>
           <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="auto" checked /><span>Publish as soon as it passes certification</span></label>
           <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="manual" /><span>Don't publish until I select Publish</span></label>
           <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="date" /><span>Start publishing on</span><fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
-        </div>
-        <!-- Test credentials for the certification team (MSIX + Win32) -->
-        <div class="ez-sd__creds" id="submit-creds">
-          <span class="ez-sd__label">Certification test credentials</span>
-          <p class="ez-sd__hint">If your app needs a sign-in, add test credentials so the cert team can access it.</p>
-          <div class="ez-sd__creds-list" id="submit-creds-list"></div>
-          <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
-            <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add credential
-          </button>
         </div>
       </div>
     </details>
@@ -6840,8 +6834,7 @@
     const cb = $('rating-confirm-btn'); if (cb) cb.hidden = !prev;
     if (prev) {
       renderRatingTerritories('rating-terr-quiz');
-      // Require a fresh IARC Terms agreement each time the preview is shown.
-      const tc = $('rating-terms-check'); if (tc) tc.checked = false;
+      const tc = $('rating-terms-check'); if (tc) tc.checked = false;   // fresh agreement each time
       if (cb) cb.disabled = true;
     }
   }
@@ -6887,31 +6880,30 @@
   function buildSubmitSummary() {
     const dl = $('submit-summary'); if (!dl) return;
     const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-    const r = computeAgeRating(contentAnswers);
     const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
-    const decl = [];
-    if (adv.declarations.genAi) decl.push('Generative AI');
-    if (!isWin32 && adv.declarations.externalCommerce) decl.push('Purchases outside Store');
-    if (isWin32 && adv.declarations.drivers) decl.push('Non-Microsoft drivers/services');
-    // Win32 paid apps are sold through the developer's own commerce, not a Store price.
+    // Architecture — de-duped across every real (non-pending) package.
+    const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '');
+    const arches = [];
+    (packages || []).filter(p => !p._pending).forEach(p => archOf(p).split(',').map(s => s.trim()).filter(Boolean).forEach(a => { if (arches.indexOf(a) < 0) arches.push(a); }));
+    const archVal = arches.length ? arches.join(', ') : '—';
+    // Listing languages — the default locale plus any added ones.
+    const locs = (adv.listing && adv.listing.locales) ? Object.keys(adv.listing.locales) : [];
+    const langs = ['en-US'].concat(locs.filter(c => c !== 'en-US'));
+    const langVal = langs.length <= 1 ? langLabelOf(langs[0]) : (langLabelOf(langs[0]) + ' +' + (langs.length - 1) + ' more');
+    // Price — Free, or Paid with the value (Win32 paid sells through the developer's own commerce).
     const priceVal = adv.price.mode === 'paid'
-      ? (isWin32 ? 'Paid · your own commerce' : (adv.price.currency + ' ' + adv.price.amount))
+      ? (isWin32 ? 'Paid · your own commerce' : ('Paid · ' + adv.price.currency + ' ' + adv.price.amount))
       : 'Free';
-    // Release reflects the MSIX publishing hold when set; otherwise the schedule.
-    const ph = adv.publishHold || { mode: 'auto', date: '' };
-    const releaseVal = (!isWin32 && ph.mode === 'manual') ? 'Hold for manual publish'
-      : (!isWin32 && ph.mode === 'date' && ph.date) ? ph.date
-      : ((adv.schedule.release.mode === 'date' && adv.schedule.release.date) ? adv.schedule.release.date : 'When approved');
+    const marketsVal = adv.markets.mode === 'all' ? 'All 240 markets' : (adv.markets.selected.length + ' markets');
+    const audienceVal = adv.audience.mode === 'public' ? 'Public'
+      : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group');
     const rows = [
-      ['App', fName.value || app.name || 'Untitled app'],
-      ['Type', typeLabel(app.type, app.subtype)],
+      ['Architecture', archVal],
+      ['Languages', langVal],
       ['Price', priceVal],
-      ['Markets', adv.markets.mode === 'all' ? 'All 240 markets' : (adv.markets.selected.length + ' selected')],
-      ['Release', releaseVal],
-      ['Age rating', adv.iarcId ? ('IARC ID ' + adv.iarcId) : (r.age + ' · ' + r.label)]
+      ['Markets', marketsVal],
+      ['Audience', audienceVal]
     ];
-    if (adv.audience.mode !== 'public') rows.push(['Audience', adv.audience.mode === 'link' ? 'Direct link' : 'Private']);
-    if (decl.length) rows.push(['Disclosures', decl.join(' · ')]);
     dl.innerHTML = rows.map(x => '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>').join('');
   }
   function doSubmit() {
@@ -6956,10 +6948,14 @@
     const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
     if (commerceItem) commerceItem.hidden = isWin32;
     if (driversItem) driversItem.hidden = !isWin32;
-    // Advanced settings stays available for both types (test credentials apply to all);
-    // only the publishing hold inside it is MSIX-only.
+    // Advanced settings: optional extras — cert-team access (all types) + release timing (MSIX only).
+    // Visible for both; the summary subtitle previews what's inside so it's clear without expanding.
     const advExpander = $('ez-submit-adv'); if (advExpander) advExpander.hidden = false;
     const holdOpts = $('submit-hold-opts'); if (holdOpts) holdOpts.hidden = isWin32;
+    const advSub = $('submit-adv-sub');
+    if (advSub) advSub.textContent = isWin32
+      ? 'Test sign-in & notes for the cert team'
+      : 'Release timing · test sign-in & notes for the cert team';
     syncPublishHoldUI();
     renderTestCreds();
     try { submitDlg.show(); } catch (e) {}
