@@ -333,6 +333,7 @@
   .ck-group__here { font-size: 10px; font-weight: 600; color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); padding: 1px 6px; border-radius: var(--r-full); }
   .ck-group__count { margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--fg-3); font-variant-numeric: tabular-nums; }
   .ck-group__count.is-done { color: var(--status-success); }
+  .ck-group__count.is-left { color: var(--status-warning); }
   .ck-group__body { display: none; padding: 0 0 var(--sp-8); }
   .ck-group.is-open .ck-group__body { display: block; }
   .ck-group__optlabel { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-4); margin: var(--sp-8) 0 2px var(--sp-6); }
@@ -869,6 +870,13 @@
   .ez-store-hero__iarc { display: inline-flex; align-items: center; gap: var(--sp-10); margin-top: var(--sp-16); }
   .ez-iarc-text strong { font-size: 13px; font-weight: 600; color: #fff; display: block; }
   .ez-iarc-text p { font-size: 11px; color: rgba(255,255,255,.72); margin: 0; }
+  /* Empty state — a faded IARC placeholder badge + prompt until the age rating is completed. */
+  .ez-iarc-empty { display: none; align-items: center; gap: var(--sp-10); margin: 0; }
+  .ez-iarc-empty__img { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 4px; object-fit: contain; background: #fff; filter: grayscale(1); opacity: .5; }
+  .ez-iarc-empty span { font-size: 12px; color: rgba(255,255,255,.72); }
+  .ez-store-hero__iarc.is-empty .iarc-badge,
+  .ez-store-hero__iarc.is-empty .ez-iarc-text { display: none; }
+  .ez-store-hero__iarc.is-empty .ez-iarc-empty { display: flex; }
   /* No divider under the hero (it fades in); a hairline only between sections. */
   /* Store-style content cards (Screenshots, Description) — mirror apps.microsoft.com PDP. */
   .ez-store-content { display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-16) var(--sp-20) var(--sp-24); }
@@ -1028,8 +1036,9 @@
   .iarc-badge__head { font-size: 8px; font-weight: 700; letter-spacing: .5px; margin-bottom: 2px; }
   .iarc-badge__age { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
   .rating-dialog__intro { font-size: 13px; color: var(--fg-2); margin: 0 0 var(--sp-12); }
-  /* Keep the dialog compact: the questions scroll inside a capped area. */
-  #rating-questions-mount { margin: 0 calc(var(--sp-8) * -1) var(--sp-8); padding: 0 var(--sp-8); }
+  /* Keep the dialog compact: the questions scroll inside a capped area, with the
+     intro above and the live result below staying put. */
+  #rating-questions-mount { margin: 0 calc(var(--sp-8) * -1) var(--sp-8); padding: 0 var(--sp-8); max-height: 44vh; overflow-y: auto; }
   .rating-section { margin-bottom: var(--sp-12); }
   .rating-section__title { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); font-weight: 600; margin: 0 0 var(--sp-4); }
   .rating-question { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-6) 0; border-bottom: 1px solid var(--stroke-3); }
@@ -1040,6 +1049,56 @@
   .rating-dialog__result { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-8); padding: var(--sp-12); border: 1px solid color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); border-radius: var(--r-8); background: var(--canvas-tint); }
   .rating-dialog__result-text strong { font-size: 14px; color: var(--fg-1); }
   .rating-dialog__result-text p { font-size: 12px; color: var(--fg-3); margin: 2px 0 0; }
+
+  /* ---- Age-rating territory preview: how the computed IARC rating maps across boards ---- */
+  .ez-rating-terr { margin-top: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; background: var(--layer); }
+  .ez-rating-terr[hidden] { display: none; }
+  /* IARC Terms-of-Use agreement shown in the preview phase — gates the Confirm button. */
+  .rating-terms { display: flex; align-items: flex-start; gap: var(--sp-8); margin-top: var(--sp-12); padding: var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas-tint); }
+  .rating-terms__text { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
+  .rating-terms__text a { color: var(--store-link); }
+  .rating-terms fluent-checkbox { flex: 0 0 auto; }
+  .ez-rating-terr__head { display: flex; align-items: flex-start; gap: var(--sp-10); padding: var(--sp-12) var(--sp-16); border-bottom: 1px solid var(--stroke-2); }
+  .ez-rating-terr__head iconify-icon { color: var(--fg-3); margin-top: 1px; }
+  .ez-rating-terr__head strong { font-size: 13px; font-weight: 600; color: var(--fg-1); display: block; }
+  .ez-rating-terr__head p { margin: 2px 0 0; font-size: 12px; color: var(--fg-3); }
+  /* Fixed columns (not auto/fr) so every independent row-grid lines up vertically. */
+  .ez-terr-row { display: grid; grid-template-columns: minmax(0, 1fr) 50px 128px 116px; align-items: center; gap: var(--sp-12); padding: var(--sp-10) var(--sp-16); border-top: 1px solid var(--stroke-3); }
+  .ez-terr-row:first-of-type { border-top: 0; }
+  .ez-terr-auth__code { font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  .ez-terr-auth__name { font-size: 12px; color: var(--fg-3); }
+  .ez-terr-auth__region { font-size: 12px; color: var(--fg-4); }
+  /* Badge cell: a 46px box holding the styled chip, overlaid by the official image when present. */
+  .ez-terr-badge-wrap { position: relative; width: 46px; height: 46px; justify-self: center; flex: 0 0 auto; }
+  .ez-terr-badge { width: 46px; height: 46px; border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #fff; line-height: 1; flex: 0 0 auto; padding: 2px; box-sizing: border-box; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+  .ez-terr-badge__val { font-weight: 800; letter-spacing: .2px; }
+  .ez-terr-badge__org { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; opacity: .85; max-width: 42px; overflow: hidden; white-space: nowrap; }
+  /* Official rating art (assets/ratings/<code>-<band>.<ext>) overlays the chip once it loads;
+     a missing file is removed on error so the chip shows through. */
+  .ez-terr-badge-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; border-radius: 7px; background: #fff; display: none; }
+  .ez-terr-badge-img.is-loaded { display: block; }
+  .ez-terr-badge[data-sev="0"]  { background: #2f8f4e; }
+  .ez-terr-badge[data-sev="7"]  { background: #5a9e2f; }
+  .ez-terr-badge[data-sev="12"] { background: #b58900; }
+  .ez-terr-badge[data-sev="16"] { background: #cc6d00; }
+  .ez-terr-badge[data-sev="18"] { background: #c0392b; }
+  .ez-terr-label { font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  /* Inside a dialog the preview is the main content — drop the top margin and cap the
+     height so the list scrolls internally; the header stays pinned. */
+  .ez-rating-terr.is-dialog { margin-top: var(--sp-4); max-height: 56vh; overflow-y: auto; }
+  .ez-rating-terr.is-dialog .ez-rating-terr__head { position: sticky; top: 0; z-index: 1; background: var(--layer); }
+  /* Fluent buttons set their own display, so the bare [hidden] attribute can leak through
+     — force phase-toggled action buttons to actually hide. */
+  fluent-button[hidden] { display: none !important; }
+  /* Roomy dialogs so the territory table breathes. */
+  #rating-dialog::part(control), #rating-dialog::part(dialog),
+  #iarc-id-dialog::part(control), #iarc-id-dialog::part(dialog),
+  #rating-terr-dialog::part(control), #rating-terr-dialog::part(dialog) { width: min(600px, 94vw); max-width: min(600px, 94vw); }
+  .ez-terr-source { font-size: 12px; color: var(--fg-3); text-align: right; white-space: nowrap; }
+  @media (max-width: 560px) {
+    .ez-terr-row { grid-template-columns: minmax(0, 1fr) 50px; }
+    .ez-terr-label, .ez-terr-source { display: none; }
+  }
 
   /* Floating design switcher (demo): hop between the three flow designs.
      Sits above the sticky submit bar, left side. */
@@ -2158,8 +2217,9 @@
                 <iconify-icon icon="fluent:share-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
               </button>
             </div>
-            <!-- IARC age rating at the bottom of the hero — same placement as variant B. -->
-            <div class="ez-store-hero__iarc">
+            <!-- IARC age rating at the bottom of the hero — same placement as variant B.
+                 Shows the .ez-iarc-empty prompt until the rating is completed (.is-empty). -->
+            <div class="ez-store-hero__iarc" id="ez-pv-iarc">
               <div class="iarc-badge">
                 <span class="iarc-badge__head">IARC</span>
                 <span class="iarc-badge__age" id="ez-pv-iarc-age">3+</span>
@@ -2167,6 +2227,10 @@
               <div class="ez-iarc-text">
                 <strong id="ez-pv-iarc-label">Everyone</strong>
                 <p id="ez-pv-iarc-desc">No content descriptors</p>
+              </div>
+              <div class="ez-iarc-empty">
+                <img class="ez-iarc-empty__img" src="assets/ratings/iarc-0.png" alt="" aria-hidden="true">
+                <span>Complete the age rating to display it here.</span>
               </div>
             </div>
           </div>
@@ -2304,6 +2368,10 @@
             <strong id="rating-label">Content rating</strong>
             <p id="rating-desc">Answer a few quick questions about your app's content.</p>
           </div>
+          <fluent-button id="rating-territories-btn" appearance="secondary" hidden>
+            <iconify-icon slot="start" icon="fluent:globe-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Preview ratings
+          </fluent-button>
           <fluent-button id="rating-review-btn" appearance="primary">
             <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             Start questionnaire
@@ -2610,26 +2678,50 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <p class="rating-dialog__intro" id="rating-dialog-intro">Answer these questions about your app's content. The rating updates as you change answers.</p>
+    <!-- Phase 1: questionnaire -->
+    <div id="rating-phase-questions">
+      <p class="rating-dialog__intro" id="rating-dialog-intro">Answer these questions about your app's content. The rating updates as you change answers.</p>
 
-    <div class="rating-questions" id="rating-questions-mount"></div>
+      <div class="rating-questions" id="rating-questions-mount"></div>
+    </div>
 
-    <div class="rating-dialog__result">
-      <div class="iarc-badge">
-        <span class="iarc-badge__head">IARC</span>
-        <span class="iarc-badge__age" id="rating-age-dialog">3+</span>
-      </div>
-      <div class="rating-dialog__result-text">
-        <strong id="rating-label-dialog">Everyone</strong>
-        <p id="rating-desc-dialog">No content descriptors</p>
+    <!-- Phase 2: cross-territory preview (filled by renderRatingTerritories) + IARC terms agreement -->
+    <div id="rating-phase-preview" hidden>
+      <div class="ez-rating-terr is-dialog" id="rating-terr-quiz"></div>
+      <div class="rating-terms">
+        <fluent-checkbox id="rating-terms-check" aria-describedby="rating-terms-text"></fluent-checkbox>
+        <span class="rating-terms__text" id="rating-terms-text">By checking this box, I hereby agree to the <a href="https://www.globalratings.com" target="_blank" rel="noopener">IARC Terms of Use</a> and I agree that I am the age of majority in my jurisdiction. <span class="field-mark field-mark--req" aria-label="required">*</span></span>
       </div>
     </div>
 
     <fluent-button slot="action" appearance="secondary" data-rating-dialog-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="rating-confirm-btn">
+    <fluent-button slot="action" appearance="secondary" id="rating-back-btn" hidden>
+      <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Back
+    </fluent-button>
+    <fluent-button slot="action" appearance="primary" id="rating-preview-btn">
+      <iconify-icon slot="start" icon="fluent:globe-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Preview rating
+    </fluent-button>
+    <fluent-button slot="action" appearance="primary" id="rating-confirm-btn" hidden>
       <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Confirm rating
     </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Read-only cross-territory ratings, opened from the confirmed Age-rating summary. -->
+<fluent-dialog id="rating-terr-dialog" modal-type="modal" aria-labelledby="rating-terr-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="rating-terr-dialog-title">
+      <iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      Age rating by territory
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-terr-dialog-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div class="ez-rating-terr is-dialog" id="rating-terr-view"></div>
+    <fluent-button slot="action" appearance="primary" data-terr-dialog-close>Close</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -2998,12 +3090,29 @@
     <fluent-button slot="title-action" appearance="subtle" data-iarc-id-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <p class="ez-ai-dialog__intro">If your app already has an IARC age-rating certificate, paste its ID here and we'll use it instead of the questionnaire.</p>
-    <fluent-text-input id="iarc-id-input" class="ez-ai-dialog__input" placeholder="e.g. 2a1b3c4d-5e6f-7890"></fluent-text-input>
+    <!-- Phase 1: enter the ID -->
+    <div id="iarc-phase-input">
+      <p class="ez-ai-dialog__intro">If your app already has an IARC age-rating certificate, paste its ID here and we'll use it instead of the questionnaire.</p>
+      <fluent-text-input id="iarc-id-input" class="ez-ai-dialog__input" placeholder="e.g. 2a1b3c4d-5e6f-7890"></fluent-text-input>
+    </div>
+
+    <!-- Phase 2: cross-territory preview (filled by renderRatingTerritories) -->
+    <div id="iarc-phase-preview" hidden>
+      <div class="ez-rating-terr is-dialog" id="rating-terr-iarc"></div>
+    </div>
+
     <fluent-button slot="action" appearance="secondary" data-iarc-id-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="iarc-id-apply">
+    <fluent-button slot="action" appearance="secondary" id="iarc-back-btn" hidden>
+      <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Back
+    </fluent-button>
+    <fluent-button slot="action" appearance="primary" id="iarc-preview-btn">
+      <iconify-icon slot="start" icon="fluent:globe-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Preview rating
+    </fluent-button>
+    <fluent-button slot="action" appearance="primary" id="iarc-id-apply" hidden>
       <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Apply rating
+      Confirm
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -3916,7 +4025,9 @@
     const ed = $('editor');
     if (ed) ed.setAttribute('data-active-section', activeSection); // gates the package-only identity banner
     document.querySelectorAll('#editor > .ez-step').forEach(s => s.classList.toggle('is-active', s.id === activeSection));
-    syncRail();
+    // Visiting Reach & price flips reachVisited, so refresh the whole gate (rail dots,
+    // the "N to finish" count, submit) — not just the rail. Falls back to syncRail early.
+    if (typeof updateGate === 'function') updateGate(); else syncRail();
     const body = document.querySelector('.ez-body');
     if (body && mode === 'advanced') window.scrollTo({ top: Math.max(0, body.offsetTop - 16), behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
@@ -3925,10 +4036,10 @@
       'step-package': state.pkg,
       'step-listing': state.name && state.desc && state.category && state.shots.length > 0,
       'step-rating': state.rating,
-      // Reach & price ships fine on defaults, so it reads "done" once the user
-      // has either opened the section (acknowledged the defaults) or moved
-      // something off a default. Both reset on a hard refresh.
-      'step-reach': reachVisited || adv.markets.mode !== 'all' || adv.audience.mode !== 'public' || adv.price.mode !== 'free' || adv.trial.mode !== 'none' || adv.schedule.release.mode !== 'now' || adv.schedule.end.mode !== 'never'
+      // Reach & price ships fine on defaults — it reads "done" whenever nothing
+      // required is outstanding (a free app needs nothing; a paid one needs a
+      // base price). Matches the step dots, the count, and the submit gate.
+      'step-reach': !ckSection('step-reach').some(it => ckRequired(it) && !ckDone(it))
     };
     document.querySelectorAll('.ez-rail__item').forEach(it => {
       const id = it.dataset.section;
@@ -4248,10 +4359,12 @@
   function wzStepComplete(id) {
     // Derived from the CHECKLIST_ITEMS registry (the one source of truth shared
     // with the gate + the per-section checklist), so adding a required field
-    // here flows through automatically.
-    if (ckSection(id).some(it => ckRequired(it) && !ckDone(it))) return false;
-    if (id === 'step-reach') return reachVisited; // defaults are valid, but only "complete" once visited
-    return true;
+    // here flows through automatically. A section with nothing required still
+    // outstanding is complete — including Reach & price on a free app, whose
+    // defaults are valid and never block review. This keeps the step dots in
+    // agreement with the "N to finish before review" count and the submit gate
+    // (which both read the same registry), so they can't disagree.
+    return !ckSection(id).some(it => ckRequired(it) && !ckDone(it));
   }
   // Has the section been started (some data entered) but not yet completed?
   function wzStepStarted(id) {
@@ -4305,7 +4418,10 @@
     const capsBanner = $('pkg-caps-notice');
     if (capsBanner) capsBanner.classList.toggle('is-wz-show', cur === 'step-package');
     easyOpen = cur; // keep the easy-stepper state coherent (summaries)
-    updateWzChrome();
+    // Full gate refresh, not just the step dots: landing on Reach & price flips
+    // reachVisited, which changes its completion, the "N to finish" count, and the
+    // submit button — so everything must re-read the registry on every step change.
+    if (typeof updateGate === 'function') updateGate(); else updateWzChrome();
     if (typeof ezRenderPreview === 'function') ezRenderPreview(); // keep the listing price preview in sync with Reach & price
     if (!opts || opts.scroll !== false) {
       const body = document.querySelector('.ez-body');
@@ -4441,6 +4557,12 @@
     if (packages.some(p => p.kind === 'msix') && collectRestrictedCapabilities().length > 0) return true;
     return false;
   }
+  // License terms are required for EXE/MSI (Win32) installers — they run outside the
+  // Store's MSIX licensing — but optional for MSIX/AppX packages.
+  function licenseRequired() {
+    if (!packages.length) return false;
+    return packages.some(p => p.win32);
+  }
   function privacyOk() {
     if (!privacyRequired()) return true;
     return (adv.listing.privacyMode === 'text')
@@ -4490,7 +4612,7 @@
     { section: 'step-listing', label: 'App logo', required: true, done: () => !!(userIconDataUrl || pkgIconDataUrl), focus: '#ez-pv-icon' },
     { section: 'step-listing', label: 'At least one screenshot', required: true, done: () => state.shots.length > 0, focus: '#ez-pv-shots' },
     { section: 'step-listing', label: 'Privacy policy', required: () => privacyRequired(), done: hasPrivacyContent, focus: '#ez-info-privacy' },
-    { section: 'step-listing', label: 'License terms', required: true, done: () => (adv.listing.licenseTerms || '').trim().length > 0, focus: '#ez-info-license' },
+    { section: 'step-listing', label: 'License terms', required: () => licenseRequired(), done: () => (adv.listing.licenseTerms || '').trim().length > 0, focus: '#ez-info-license' },
     // Store listing — optional enhancements
     { section: 'step-listing', label: 'Short description', required: false, done: () => (adv.listing.shortDesc || '').trim().length > 0, focus: '#ez-pv-short' },
     { section: 'step-listing', label: 'Hero image or trailer', required: false, done: () => !!adv.listing.hero || (adv.listing.trailers && adv.listing.trailers.length > 0), focus: '#ez-hero-add-btn' },
@@ -4498,8 +4620,14 @@
     { section: 'step-listing', label: 'Search terms', required: false, done: () => !!(adv.listing.keywords && adv.listing.keywords.length) },
     // Age rating
     { section: 'step-rating', label: 'Age rating confirmed', required: true, done: () => !!state.rating },
-    // Reach & price — base price is required only when Paid; the rest are optional
-    // tweaks (defaults — all markets, public, free, no trial — are valid as-is).
+    // Reach & price — its defaults are valid, but the developer must still open the
+    // page and review markets / audience / price / schedule before submitting. Visiting
+    // the step satisfies this (so does any non-default setting, which also covers a
+    // loaded draft after reachVisited resets on refresh). Keeps Reach & price
+    // "incomplete" until the developer has actually engaged with it.
+    { section: 'step-reach', label: 'Review reach & price', required: true, done: () => reachVisited || adv.price.mode !== 'free' || adv.markets.mode !== 'all' || adv.audience.mode !== 'public' || adv.trial.mode !== 'none' || adv.schedule.release.mode !== 'now' || adv.schedule.end.mode !== 'never' },
+    // Base price is required only when Paid; the rest are optional tweaks (defaults —
+    // all markets, public, free, no trial — are valid as-is).
     // Win32 paid apps use the developer's own commerce — no Store base price/trial.
     { section: 'step-reach', label: 'Base price', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: true, done: () => parseFloat(adv.price.amount) > 0, focus: '#price-amount' },
     { section: 'step-reach', label: 'Choose specific markets', required: false, done: () => adv.markets.mode === 'choose' },
@@ -4532,7 +4660,13 @@
     try { if (document.getElementById('flow-wrap').classList.contains('is-wizard')) return WZ_STEPS[wzIndex]; } catch (_) {}
     return (typeof activeSection !== 'undefined' && activeSection) || WZ_STEPS[0];
   }
-  function ckGroupIsOpen(id, cur) { return (id in ckGroupOpen) ? ckGroupOpen[id] : (id === cur); }
+  function ckGroupIsOpen(id, cur) {
+    if (id in ckGroupOpen) return ckGroupOpen[id];   // explicit user toggle wins
+    if (id === cur) return true;                     // the section you're on
+    // Otherwise open any section that still has required items left, so the
+    // checklist shows what's outstanding on each page at a glance.
+    return ckSection(id).some(it => ckRequired(it) && !ckDone(it));
+  }
   function renderChecklists() {
     const wrap = document.getElementById('submit-checklist');
     const panel = document.getElementById('submit-checklist-panel');
@@ -4541,11 +4675,19 @@
     // Before a package exists the rest is locked AND the count is misleading (a
     // package auto-fills name/logo/etc.), so point at the one real next action.
     const noPkg = !state.pkg;
-    const left = ckRequiredIncomplete().length;
-    const ready = left === 0;
+    const totalLeft = ckRequiredIncomplete().length;
+    const ready = totalLeft === 0;
     wrap.classList.toggle('is-ready', ready);
-    if (summaryEl) summaryEl.textContent = noPkg ? 'Add a package to start' : (ready ? 'Ready to submit for review' : (left + ' to finish before review'));
     const cur = ckCurrentSection();
+    // Lead the summary with what's left on the CURRENT page — the number the developer
+    // can act on right now. Once this page is clear, fall back to the overall count so
+    // they still know more remains before review; green "Ready" only when nothing's left anywhere.
+    const curLeft = ckSection(cur).filter(it => ckRequired(it) && !ckDone(it)).length;
+    if (summaryEl) summaryEl.textContent =
+      noPkg ? 'Add a package to start'
+      : ready ? 'Ready to submit for review'
+      : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
+      : (totalLeft + ' to finish before review');
     // Everything past the Package step is locked until a package is added.
     const reachable = (typeof wzFurthestReachable === 'function') ? wzFurthestReachable() : (WZ_STEPS.length - 1);
     let html = '', anyLocked = false;
@@ -4567,16 +4709,18 @@
         return;
       }
       const doneReq = req.filter(ckDone).length;
-      const complete = doneReq === req.length; // true when nothing required is left (incl. defaults-only sections)
+      const leftN = req.length - doneReq;
+      const complete = leftN === 0; // nothing required outstanding (incl. defaults-only sections)
       const open = ckGroupIsOpen(id, cur);
-      // Defaults-only sections (e.g. Reach & price when free) are ready as-is, not "optional".
-      const status = req.length ? (doneReq + ' / ' + req.length) : 'Ready';
+      // Lead with what's LEFT on this page — the count that matters most. Complete
+      // sections read “Done” (green); defaults-only sections with nothing required read “Ready”.
+      const status = complete ? (req.length ? 'Done' : 'Ready') : (leftN + ' left');
       html += '<div class="ck-group' + (open ? ' is-open' : '') + (id === cur ? ' is-current' : '') + '">' +
         '<button type="button" class="ck-group__head" data-ck-group="' + id + '" aria-expanded="' + open + '">' +
           '<iconify-icon class="ck-group__chev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
           '<span class="ck-group__name">' + WZ_SECTION_NAMES[id] + '</span>' +
           (id === cur ? '<span class="ck-group__here">You’re here</span>' : '') +
-          '<span class="ck-group__count' + (complete ? ' is-done' : '') + '">' +
+          '<span class="ck-group__count' + (complete ? ' is-done' : ' is-left') + '">' +
             (complete ? '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon> ' : '') + status +
           '</span>' +
         '</button>' +
@@ -4714,6 +4858,93 @@
     const band = [...RATING_BANDS].reverse().find(b => b.min <= minAge) || RATING_BANDS[0];
     return { ...band, descriptors };
   }
+
+  // Age-rating authorities (IARC participating boards + Store mappings). For each board,
+  // the [badge, label] per IARC band, ordered [3+, 7+, 12+, 16+, 18+]. Data mirrors
+  // Partner Center's territory table; badges are styled by severity, not official logos.
+  const RATING_BAND_MINS = [0, 7, 12, 16, 18];
+  // Official rating art (optional): drop licensed files at assets/ratings/<code>-<band>.<ext>,
+  // e.g. esrb-0.png, pegi-12.png, usk-18.png. Present files render in place of the styled chip;
+  // missing ones fall back to the chip. Switch to 'svg' if your assets are SVG.
+  const RATING_IMG_EXT = 'png';
+  const RATING_AUTHORITIES = [
+    { code: 'ACB',   name: 'Australian Classification Board',            region: 'Australia',     source: 'IARC',
+      m: [['G','General'],['PG','Parental Guidance'],['M','Mature'],['MA15+','Mature Accompanied'],['R18+','Restricted']] },
+    { code: 'CCC',   name: 'Cinematographic Qualification Council',      region: 'Chile',         source: 'Microsoft (mapped)',
+      m: [['TE','All ages'],['7','Ages 7+'],['14','Ages 14+'],['18','Ages 18+'],['18','Ages 18+']] },
+    { code: 'DGSC',  name: 'Digital Game Self-regulation Committee',     region: 'Taiwan',        source: 'IARC',
+      m: [['0+','General Public'],['6+','Protected'],['12+','Counsel 12+'],['15+','Counsel 15+'],['18+','Restricted']] },
+    { code: 'DJCTQ', name: 'Brazilian Advisory Rating System',          region: 'Brazil',        source: 'IARC',
+      m: [['L','All ages'],['10','Ages 10+'],['12','Ages 12+'],['16','Ages 16+'],['18','Ages 18+']] },
+    { code: 'ESRB',  name: 'Entertainment Software Rating Board',        region: 'United States', source: 'IARC',
+      m: [['E','Everyone'],['E10+','Everyone 10+'],['T','Teen'],['M','Mature 17+'],['AO','Adults Only']] },
+    { code: 'GAMR',  name: 'General Authority for Media Regulation',     region: 'Saudi Arabia',  source: 'IARC',
+      m: [['3','Ages 3+'],['7','Ages 7+'],['12','Ages 12+'],['16','Ages 16+'],['18','Ages 18+']] },
+    { code: 'IARC',  name: 'International Age Ratings Coalition',        region: 'Global',        source: 'IARC',
+      m: [['3+','Ages 3+'],['7+','Ages 7+'],['12+','Ages 12+'],['16+','Ages 16+'],['18+','Ages 18+']] },
+    { code: 'Microsoft', name: 'Microsoft Store',                       region: 'Global',        source: 'Microsoft (mapped)',
+      m: [['3+','Ages 3+'],['7+','Ages 7+'],['12+','Ages 12+'],['16+','Ages 16+'],['18+','Ages 18+']] },
+    { code: 'PCBP',  name: 'Russian Age Rating System',                 region: 'Russia',        source: 'IARC',
+      m: [['0+','All ages'],['6+','Ages 6+'],['12+','Ages 12+'],['16+','Ages 16+'],['18+','Ages 18+']] },
+    { code: 'PEGI',  name: 'Pan European Game Information',             region: 'Europe',        source: 'IARC',
+      m: [['3','PEGI 3'],['7','PEGI 7'],['12','PEGI 12'],['16','PEGI 16'],['18','PEGI 18']] },
+    { code: 'USK',   name: 'Entertainment Software Self-Regulation Body', region: 'Germany',     source: 'IARC',
+      m: [['0','All ages'],['6','Ages 6+'],['12','Ages 12+'],['16','Ages 16+'],['18','Ages 18+']] },
+  ];
+  // Builds a generic, severity-colored rating chip (board code + value). Deliberately NOT
+  // a replica of any board's trademarked logo — swap ratingBadgeHTML for an <img> pointing
+  // at official licensed rating images (dropped in publishing/assets/) to show the real art.
+  function ratingBadgeHTML(token, org, sev, code, alt) {
+    const len = (token || '').length;
+    const fs = len <= 2 ? 16 : len === 3 ? 13 : len === 4 ? 11 : 9;
+    const src = 'assets/ratings/' + String(code).toLowerCase() + '-' + sev + '.' + RATING_IMG_EXT;
+    const altEsc = String(alt || '').replace(/"/g, '&quot;');
+    return '<div class="ez-terr-badge-wrap">' +
+      '<div class="ez-terr-badge" data-sev="' + sev + '">' +
+        '<span class="ez-terr-badge__val" style="font-size:' + fs + 'px">' + token + '</span>' +
+        '<span class="ez-terr-badge__org">' + org + '</span>' +
+      '</div>' +
+      '<img class="ez-terr-badge-img" alt="' + altEsc + '" src="' + src + '">' +
+    '</div>';
+  }
+  // Renders the cross-territory mapping for the current rating into hostId — used by the
+  // rating / IARC-ID dialogs' preview phase. idOverride labels the source as an IARC ID.
+  function renderRatingTerritories(hostId, idOverride) {
+    const host = $(hostId);
+    if (!host) return;
+    const r = computeAgeRating(contentAnswers);
+    let idx = RATING_BAND_MINS.indexOf(r.min); if (idx < 0) idx = 0;
+    const sev = RATING_BAND_MINS[idx];
+    const rows = RATING_AUTHORITIES.map(a => {
+      const cell = a.m[idx] || a.m[0];
+      const org = a.code === 'Microsoft' ? 'MS' : a.code;
+      return '<div class="ez-terr-row">' +
+        '<div class="ez-terr-auth"><div class="ez-terr-auth__code">' + a.code + '</div>' +
+          '<div class="ez-terr-auth__name">' + a.name + '</div>' +
+          '<div class="ez-terr-auth__region">' + a.region + '</div></div>' +
+        ratingBadgeHTML(cell[0], org, sev, a.code, a.code + ' ' + cell[1]) +
+        '<div class="ez-terr-label">' + cell[1] + '</div>' +
+        '<div class="ez-terr-source">' + a.source + '</div>' +
+      '</div>';
+    }).join('');
+    const idForVia = (idOverride != null) ? idOverride : adv.iarcId;
+    const escId = String(idForVia || '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+    const via = idForVia ? ('IARC ID ' + escId) : (r.age + ' · ' + r.label);
+    host.innerHTML =
+      '<div class="ez-rating-terr__head">' +
+        '<iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+        '<div><strong>Your rating across territories</strong>' +
+        '<p>Based on ' + via + ' — how it maps to each ratings authority.</p></div>' +
+      '</div>' + rows;
+    // Show official art where the file exists; drop the <img> (chip shows through) where it 404s.
+    // Handle the cached case too: a reopened dialog may finish loading before these listeners attach.
+    host.querySelectorAll('.ez-terr-badge-img').forEach(img => {
+      img.addEventListener('load', () => img.classList.add('is-loaded'));
+      img.addEventListener('error', () => img.remove());
+      if (img.complete) { if (img.naturalWidth > 0) img.classList.add('is-loaded'); else img.remove(); }
+    });
+  }
+
   let contentAnswers = { ...DEFAULT_ANSWERS };
   let contentAnswersConfirmed = false;
 
@@ -6360,10 +6591,15 @@
     setText('ez-pv-short', ovShort ? ovShort : (desc ? deriveShort(desc) : 'A short summary will appear here, created from your description.'));
     setLiveField('ez-pv-desc', desc, 'Click to write your description', true);
 
-    const iarc = computeAgeRating(contentAnswers);
-    setText('ez-pv-iarc-age', iarc.age);
-    setText('ez-pv-iarc-label', iarc.label);
-    setText('ez-pv-iarc-desc', iarc.descriptors.length ? iarc.descriptors.join(' · ') : 'No content descriptors');
+    // Age rating: show the real badge once completed; until then, prompt the user to set it.
+    const iarcWrap = $('ez-pv-iarc');
+    if (iarcWrap) iarcWrap.classList.toggle('is-empty', !state.rating);
+    if (state.rating) {
+      const iarc = computeAgeRating(contentAnswers);
+      setText('ez-pv-iarc-age', iarc.age);
+      setText('ez-pv-iarc-label', iarc.label);
+      setText('ez-pv-iarc-desc', iarc.descriptors.length ? iarc.descriptors.join(' · ') : 'No content descriptors');
+    }
 
     // Keep the Advanced PDP sections (features, hero art, system reqs, additional info) in sync.
     if (typeof window.__advListingRender === 'function') window.__advListingRender();
@@ -6550,6 +6786,8 @@
       btn.innerHTML = '<iconify-icon slot="start" icon="' + (contentAnswersConfirmed ? 'fluent:edit-20-regular' : 'fluent:clipboard-text-20-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' + (contentAnswersConfirmed ? 'Edit answers' : 'Start questionnaire');
       btn.setAttribute('appearance', state.rating ? 'secondary' : 'primary');  // primary only when the rating still needs doing
     }
+    const tBtn = $('rating-territories-btn');
+    if (tBtn) tBtn.hidden = !state.rating;   // "Preview ratings" only once a rating is set
     ezRenderPreview();
     updateGate();
   }
@@ -6558,13 +6796,6 @@
   const ratingMount  = $('rating-questions-mount');
   let suppressDialogChange = false;
   let ratingDraft = null;
-
-  function renderDialogResult() {
-    const r = computeAgeRating(contentAnswers);
-    setText('rating-age-dialog', r.age);
-    setText('rating-label-dialog', r.label);
-    setText('rating-desc-dialog', r.descriptors.length ? r.descriptors.join(' · ') : 'No content descriptors');
-  }
 
   function renderRatingQuestions(answers) {
     if (!ratingMount) return;
@@ -6595,32 +6826,51 @@
           const label = sw.closest('.rating-question') && sw.closest('.rating-question').querySelector('.rating-question__yes-label');
           if (label) label.textContent = sw.checked ? 'Yes' : 'No';
         }
-        renderDialogResult();
       });
     });
   }
 
+  // Two-phase dialog: answer questions → Preview rating (cross-territory) → Confirm.
+  function ratingPhase(phase) {
+    const prev = phase === 'preview';
+    const q = $('rating-phase-questions'); if (q) q.hidden = prev;
+    const p = $('rating-phase-preview');   if (p) p.hidden = !prev;
+    const pb = $('rating-preview-btn'); if (pb) pb.hidden = prev;
+    const bb = $('rating-back-btn');    if (bb) bb.hidden = !prev;
+    const cb = $('rating-confirm-btn'); if (cb) cb.hidden = !prev;
+    if (prev) {
+      renderRatingTerritories('rating-terr-quiz');
+      // Require a fresh IARC Terms agreement each time the preview is shown.
+      const tc = $('rating-terms-check'); if (tc) tc.checked = false;
+      if (cb) cb.disabled = true;
+    }
+  }
   function openRatingDialog() {
     ratingDraft = { ...contentAnswers };
     suppressDialogChange = true;
     renderRatingQuestions(contentAnswers);
     setTimeout(() => { suppressDialogChange = false; }, 0);
-    renderDialogResult();
     const intro = $('rating-dialog-intro');
     if (intro) intro.textContent = contentAnswersConfirmed
       ? 'These are your confirmed answers. Change anything to update the rating.'
       : "Answer these questions about your app's content. The rating updates as you change answers.";
+    ratingPhase('questions');
     try { ratingDialog.show(); } catch (e) {}
   }
   function closeRatingDialog(restore) {
     if (restore && ratingDraft) contentAnswers = ratingDraft;
     ratingDraft = null;
-    renderDialogResult();
     try { ratingDialog.hide(); } catch (e) {}
   }
 
   $('rating-review-btn').addEventListener('click', openRatingDialog);
   ratingDialog.querySelectorAll('[data-rating-dialog-close]').forEach(el => el.addEventListener('click', () => closeRatingDialog(true)));
+  if ($('rating-preview-btn')) $('rating-preview-btn').addEventListener('click', () => ratingPhase('preview'));
+  if ($('rating-back-btn')) $('rating-back-btn').addEventListener('click', () => ratingPhase('questions'));
+  if ($('rating-terms-check')) $('rating-terms-check').addEventListener('change', () => {
+    const cb = $('rating-confirm-btn'), tc = $('rating-terms-check');
+    if (cb) cb.disabled = !(tc && tc.checked);   // Confirm unlocks only with the terms agreed
+  });
   $('rating-confirm-btn').addEventListener('click', () => {
     contentAnswersConfirmed = true;
     ratingDraft = null;
@@ -6962,10 +7212,31 @@
   (function iarcIdPath() {
     const dlg = $('iarc-id-dialog'), input = $('iarc-id-input'), openBtn = $('iarc-id-open'), applyBtn = $('iarc-id-apply');
     if (!dlg) return;
-    function open() { if (input) input.value = adv.iarcId || ''; try { dlg.show(); } catch (e) {} setTimeout(() => { try { input.focus(); } catch (e) {} }, 60); }
+    const previewBtn = $('iarc-preview-btn'), backBtn = $('iarc-back-btn');
+    // Two-phase: enter the ID → Preview rating (cross-territory) → Confirm.
+    function phase(p) {
+      const prev = p === 'preview';
+      const inP = $('iarc-phase-input');   if (inP) inP.hidden = prev;
+      const pvP = $('iarc-phase-preview'); if (pvP) pvP.hidden = !prev;
+      if (previewBtn) previewBtn.hidden = prev;
+      if (backBtn) backBtn.hidden = !prev;
+      if (applyBtn) applyBtn.hidden = !prev;
+      if (prev) renderRatingTerritories('rating-terr-iarc', (input && input.value || '').trim());
+    }
+    function open() { if (input) input.value = adv.iarcId || ''; phase('input'); try { dlg.show(); } catch (e) {} setTimeout(() => { try { input.focus(); } catch (e) {} }, 60); }
     function close() { try { dlg.hide(); } catch (e) {} }
     if (openBtn) openBtn.addEventListener('click', open);
     dlg.querySelectorAll('[data-iarc-id-close]').forEach(b => b.addEventListener('click', close));
+    if (previewBtn) previewBtn.addEventListener('click', () => {
+      const val = (input && input.value || '').trim();
+      if (!val) {  // empty input = clear any existing ID; nothing to preview
+        adv.iarcId = ''; persistAdvanced(); renderRatingStep(); close();
+        announce('IARC ID cleared.');
+        return;
+      }
+      phase('preview');
+    });
+    if (backBtn) backBtn.addEventListener('click', () => phase('input'));
     if (applyBtn) applyBtn.addEventListener('click', () => {
       adv.iarcId = (input && input.value || '').trim();
       persistAdvanced();
@@ -6973,6 +7244,17 @@
       close();
       announce(adv.iarcId ? 'Age rating set via IARC ID.' : 'IARC ID cleared.');
     });
+  })();
+
+  // Read-only "Preview ratings" — opens the cross-territory list from the confirmed summary.
+  (function ratingTerrView() {
+    const dlg = $('rating-terr-dialog'), openBtn = $('rating-territories-btn');
+    if (!dlg) return;
+    if (openBtn) openBtn.addEventListener('click', () => {
+      renderRatingTerritories('rating-terr-view');
+      try { dlg.show(); } catch (e) {}
+    });
+    dlg.querySelectorAll('[data-terr-dialog-close]').forEach(b => b.addEventListener('click', () => { try { dlg.hide(); } catch (e) {} }));
   })();
 
 
@@ -8159,12 +8441,13 @@ function openPriceScheduleDialog() {
       // ---- Additional terms (Privacy policy + Applicable license terms) — shown in both modes ----
       const privSet = (L.privacyMode === 'text') ? !!(L.privacyText || '').trim() : !!(L.privacyUrl || '').trim();
       const licSet = !!(L.licenseTerms || '').trim();
-      // Mandatory terms get a red "*" until filled. License terms is always required;
-      // privacy only when the package requires it (Win32 / restricted MSIX).
+      // Mandatory terms get a red "*" until filled. Both are conditional on the package:
+      // license terms for Win32 (EXE/MSI); privacy for Win32 / restricted MSIX.
       const reqStar = ' <span class="field-mark field-mark--req" aria-label="required">*</span>';
       const privReq = (typeof privacyRequired === 'function') && privacyRequired();
+      const licReq  = (typeof licenseRequired === 'function') && licenseRequired();
       const privCell = locked ? (privSet ? 'Privacy policy' : DASH) : (link('ez-info-privacy', privSet ? 'Privacy policy' : ADD('Add privacy policy')) + (privReq ? reqStar : ''));
-      const licCell  = locked ? (licSet ? 'License terms' : DASH)  : (link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms')) + reqStar);
+      const licCell  = locked ? (licSet ? 'License terms' : DASH)  : (link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms')) + (licReq ? reqStar : ''));
       const termsVal = '<span class="ez-info-item__line">' + privCell + '</span><span class="ez-info-item__line">' + licCell + '</span>';
       const termsRow = infoItem('fluent:document-bullet-list-20-regular', 'Additional terms', termsVal);
       // Simple mode: just the Additional terms (privacy + license) — the developer-actionable items.

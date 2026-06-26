@@ -86,7 +86,6 @@
   var pendingFile = null;     // the real File the user dropped/selected
   var verifyError = null;     // { name, reason } when a file is rejected
   var verifiedCert = null;    // the accepted certificate (real details)
-  var discoveredApps = [];    // installed apps on this PC signed by that certificate
   var store = { pubName: "", country: "United States", email: MSA.email };
 
   // In phase 2 only the chosen path's sub-step shows; before a choice, only "path".
@@ -166,11 +165,14 @@
       th("cert", "shield-checkmark.png", false, "Verify with a certificate", "Submit a signed binary, your own way") +
       row("Publisher identity &amp; recognition", true, true) +
       row("Frictionless installs (no SmartScreen)", true, true) +
-      row("Crash analytics", true, true) +
+      row("Crash &amp; health analytics", true, true) +
+      row("Package signing", true, true) +
+      row("Hosting &amp; delivery", true, true) +
       row("Distribute on your own", true, true) +
       row("Reach millions of Store shoppers", true, false) +
+      row("Rich analytics — acquisitions, installs &amp; usage", true, false) +
+      row("Ratings, reviews &amp; engagement", true, false) +
       row("Commerce, payments &amp; payouts", true, false) +
-      row("Ratings, reviews &amp; Store analytics", true, false) +
       '</div>';
   }
 
@@ -291,8 +293,7 @@
         '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:open-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Go to developer portal</fluent-button>' +
       '</div>' +
     '</div>' +
-    perksHTML() +
-    (verifiedCert ? '<div class="wiz-certcard">' + certDetail(verifiedCert) + '</div>' : '');
+    perksHTML();
   }
   function perksHTML() {
     function item(icon, title, desc) {
@@ -301,11 +302,11 @@
         '<div><strong>' + title + '</strong><span>' + desc + '</span></div></div>';
     }
     return '<div class="wiz-next">' +
-      '<p class="wiz-next__lead">In your developer portal, you can:</p>' +
+      '<p class="wiz-next__lead">In your developer portal:</p>' +
       '<div class="wiz-next__grid">' +
-        item("fluent:data-trending-20-regular", "Crash analytics", "Monitor crashes and app health.") +
-        item("fluent:share-20-regular", "Distribution", "Control where your apps are distributed.") +
-        item("fluent:certificate-20-regular", "Certificates", "Add and manage signing certificates.") +
+        item("fluent:data-trending-20-regular", "Crash analytics", "You can monitor crashes and app health.") +
+        item("fluent:share-20-regular", "Distribution control", "You can control where your apps are distributed.") +
+        item("fluent:certificate-20-regular", "Certificates", "You can add and manage signing certificates.") +
       '</div></div>';
   }
 
@@ -372,29 +373,7 @@
       render(); return;
     }
     verifiedCert = makeCert(info, file);
-    // One cert → all its apps: discover installed apps signed by this certificate.
-    if (verifiedCert.thumbKind === "cert") discoveredApps = await discoverAppsForCert(verifiedCert.thumb, verifiedCert.id);
     done = true; render(); window.scrollTo(0, 0);
-  }
-
-  // Mirror the portal's discoverApps: real apps on this PC signed by this cert.
-  async function discoverAppsForCert(thumb, certId) {
-    var apps = [];
-    try {
-      var res = await fetch("/api/apps-by-cert?thumbprint=" + encodeURIComponent(thumb));
-      if (res.ok) {
-        var list = await res.json();
-        if (Array.isArray(list)) list.forEach(function (a) {
-          apps.push({
-            id: uid(), name: a.name || a.file, file: a.file,
-            size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
-            icon: a.icon || null, signerThumb: thumb, signerSubject: null, trust: "Valid", certId: certId,
-            sources: [], store: false, added: today(), discoveryKey: "p:" + (a.path || (a.file + a.sizeKB)), discovered: true
-          });
-        });
-      }
-    } catch (e) {}
-    return apps;
   }
 
   function wireStep() {
@@ -441,13 +420,14 @@
     var later = $("goLater"); if (later) later.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
   }
   function wireDone() {
+    // Open the portal instantly; it scans + populates this cert's apps on load (its own skeleton).
     var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
   }
 
   // Land in the WDP portal already signed in. A freshly-created account starts from a
   // CLEAN slate (overwrite, don't merge) so any earlier demo state can't leak in:
   //  • "Go to portal" without submitting a binary → zero state, verified=false, no certs.
-  //  • After verifying a cert → that cert + its discovered apps, verified=true.
+  //  • After verifying a cert → that cert (the portal scans + populates its apps on load), verified=true.
   function seedPortal() {
     try {
       var KEY = "tdp.portal.v5";
@@ -459,7 +439,8 @@
       if (verifiedCert) {
         s.certs.push(verifiedCert);
         s.verified = true;
-        discoveredApps.forEach(function (app) { s.apps.push(app); });
+        // Let the WDP portal scan + populate this cert's apps on load (shows its own skeleton).
+        if (verifiedCert.thumbKind === "cert") s.discoverCert = { thumb: verifiedCert.thumb, certId: verifiedCert.id };
       }
       localStorage.setItem(KEY, JSON.stringify(s));
     } catch (e) {}

@@ -1529,6 +1529,12 @@
   if (location.hash === "#signin") { state.signedIn = false; save(); showSignin(); }
   else if (state.signedIn && state.account) {
     showApp();
+    // WDP path: arriving from signup with a freshly-added certificate → scan + populate its
+    // apps now, showing the portal's own "Scanning installed apps…" skeleton.
+    if (!STORE && state.discoverCert && state.discoverCert.thumb) {
+      var dc = state.discoverCert; delete state.discoverCert; save();
+      discoverApps(dc.thumb, dc.certId);
+    }
     // Store path: arriving from signup with a reserved app name → create it + open the
     // publishing flow (Back lands on the Apps page, per the portal's own flow).
     var cm = /[?&]create=([^&#]+)/.exec(location.search);
