@@ -403,11 +403,9 @@
       wrap.innerHTML = STORE
         ? '<div class="empty">' +
             '<img src="assets/shield-checkmark.png" alt="" />' +
-            '<strong>Have apps that aren’t on the Store?</strong>' +
-            '<p class="muted">Provide your code signing certificate and we’ll surface the apps signed by it — ' +
-              'unlocking <strong>crash analytics</strong> and <strong>distribution controls</strong> for your non-Store apps. ' +
-              'Bring any of them to the Microsoft Store whenever you’re ready.</p>' +
-            '<fluent-button appearance="primary" data-openmodal>' +
+            '<strong>Not publishing to the Store?</strong>' +
+            '<p class="muted">Add your code signing certificate to get crash analytics and distribution for the apps you’ve signed — no Store listing needed.</p>' +
+            '<fluent-button appearance="outline" data-openmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>'
         : '<div class="empty">' +
@@ -1452,7 +1450,9 @@
 
     document.querySelector(".main").addEventListener("click", function (e) {
       if (e.target.closest("[data-openmodal]")) { e.preventDefault();
-        if (state.verified) openModal(); else goView("overview"); return; }
+        // Store: the certs section IS the entry for adding your first cert, so always open the
+        // dialog. WDP: before verifying, route to the overview's verify flow.
+        if (STORE || state.verified) openModal(); else goView("overview"); return; }
       if (e.target.closest("[data-newapp]")) { openNewApp(); return; }
       if (e.target.closest("[data-rescan]")) { rescanApps(); return; }
       if (e.target.closest("[data-hero-dismiss]")) {
