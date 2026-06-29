@@ -1932,7 +1932,7 @@
   .userchip { display: flex; align-items: center; gap: 10px; }
   .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
     background: linear-gradient(135deg, #2886de, #115ea3); color: #fff; font-weight: 700; font-size: 13px; }
-  .userchip__meta { display: flex; flex-direction: column; line-height: 1.25; }
+  .userchip__meta { display: none; }   /* header shows just the profile icon (name/status hidden, still updated by JS) */
   .userchip__meta strong { font-size: 13px; color: #fff; }
   .userchip__meta span { font-size: 11.5px; color: #8b909e; display: flex; align-items: center; gap: 5px; }
   .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: #57c038; display: inline-block; }
@@ -1984,7 +1984,7 @@
 
   <!-- ===================== WDP HEADER (same header as the rest of the portal) ===================== -->
   <header class="appbar" role="banner">
-    <a class="brand" href="../portal.html" aria-label="Microsoft Windows Developer Program">
+    <a class="brand" href="../store-portal.html" aria-label="Microsoft Store Developer">
       <svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">
         <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
         <rect x="12" y="1" width="10" height="10" fill="#7FBA00"/>
@@ -1993,12 +1993,9 @@
       </svg>
       <span class="brand__name">Microsoft</span>
       <span class="brand__divider" aria-hidden="true"></span>
-      <span class="brand__sub">Windows Developer Program</span>
+      <span class="brand__sub">Store Developer</span>
     </a>
     <div class="appbar__right">
-      <button class="iconbtn" aria-label="Notifications">
-        <iconify-icon icon="fluent:alert-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-      </button>
       <div class="userchip">
         <span class="avatar" id="avatar">—</span>
         <span class="userchip__meta">
@@ -2010,16 +2007,16 @@
   </header>
 
   <!-- ===================== LEFT SIDEBAR (same as the portal — shown only when in review/published) ===================== -->
-  <aside class="sidebar" aria-label="Program navigation">
+  <aside class="sidebar" aria-label="Store navigation">
     <nav class="snav">
-      <a href="../portal.html#overview"><iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>
-      <a href="../portal.html#certificates"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Certificates</a>
-      <a href="../portal.html#apps" class="is-active"><iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Apps</a>
-      <a href="../portal.html#analytics"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Analytics</a>
+      <a href="../store-portal.html#overview"><iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>
+      <a href="../store-portal.html#apps" class="is-active"><iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Apps</a>
+      <a href="../store-portal.html#certificates"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Certificates</a>
+      <a href="../store-portal.html#analytics"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Analytics</a>
     </nav>
     <div class="snav snav--foot">
-      <a href="../portal.html"><iconify-icon icon="fluent:arrow-counterclockwise-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Reset demo state</a>
-      <a href="../index.html"><iconify-icon icon="fluent:sign-out-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Sign out</a>
+      <a href="../store-portal.html"><iconify-icon icon="fluent:arrow-counterclockwise-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Reset demo state</a>
+      <a href="../store-developer.html"><iconify-icon icon="fluent:sign-out-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Sign out</a>
     </div>
   </aside>
 
@@ -2032,7 +2029,7 @@
 
     <!-- Page-level back navigation: sits above the entity banner, on the canvas (web convention —
          page navigation is separate from the entity-identity header card). -->
-    <a class="ez-back" href="../portal.html#apps"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Apps</a>
+    <a class="ez-back" href="../store-portal.html#apps"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Apps</a>
 
     <!-- Banner band (variant D): app identity + step tabs fused into one elevated Mica surface. -->
     <div class="wz-banner">
@@ -3824,6 +3821,24 @@
   const apps   = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
   let app = apps.find(a => a.id === appId) || apps[apps.length - 1] || { id: appId, name: 'Untitled app', status: 'draft' };
 
+  // Portal context: this flow is shared by the Store and WDP portals. openPublishFlow passes ?from=;
+  // the markup defaults to the Store portal, so we only rewrite the chrome (brand, sidebar, back-link)
+  // back to the WDP portal when this was launched from there — "opened from WDP → stays in WDP".
+  (function () {
+    const from = params.get('from');
+    const isWdp = from === 'wdp' || (!from && /\/portal\.html/.test(document.referrer));
+    if (!isWdp) return;
+    document.querySelectorAll('a[href*="store-portal.html"]').forEach(function (el) {
+      el.setAttribute('href', el.getAttribute('href').replace('store-portal.html', 'portal.html'));
+    });
+    document.querySelectorAll('a[href*="store-developer.html"]').forEach(function (el) {
+      el.setAttribute('href', el.getAttribute('href').replace('store-developer.html', 'index.html'));
+    });
+    const sub = document.querySelector('.brand__sub'); if (sub) sub.textContent = 'Windows Developer Program';
+    const brand = document.querySelector('.appbar .brand'); if (brand) brand.setAttribute('aria-label', 'Microsoft Windows Developer Program');
+    const aside = document.querySelector('aside.sidebar'); if (aside) aside.setAttribute('aria-label', 'Program navigation');
+  })();
+
   const $ = (id) => document.getElementById(id);
   const announce = (msg) => { const a = $('sr-announcer'); if (a) a.textContent = msg; };
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4024,6 +4039,12 @@
       icon.style.backgroundPosition = 'center';
       icon.textContent = '';
       icon.classList.add('tdp-has-icon');   // real logo shows directly — no placeholder box
+      // Persist the logo so it also shows in the portal's Apps list and the app hub.
+      try {
+        const _all = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
+        const _i = _all.findIndex(a => a && a.id === (app && app.id));
+        if (_i >= 0 && _all[_i].icon !== iconUrl) { _all[_i].icon = iconUrl; localStorage.setItem('msstore.apps', JSON.stringify(_all)); }
+      } catch (e) {}
     } else {
       icon.style.backgroundImage = '';
       icon.style.backgroundSize = '';
@@ -6544,7 +6565,8 @@
   // Step 2: listing
   // -------------------------------------------------------------
   const fName = $('f-name'), fDesc = $('f-desc'), fCategory = $('f-category');
-  let userIconDataUrl = null;   // user-uploaded app icon (overrides the package icon in the preview)
+  let userIconDataUrl = (app && app.icon) || null;   // user-uploaded app icon; also restores a saved logo on reload
+  if (userIconDataUrl) { refreshAppHeadIcon(); refreshLogoHue(); }
 
   function syncName() {
     state.name = (fName.value || '').trim().length >= 2;

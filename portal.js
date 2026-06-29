@@ -459,6 +459,7 @@
   }
   function renderApps() {
     updateAppsHeader();
+    mergePublishIcons();   // pull any logo set during publishing (msstore.apps) into the rows
     var wrap = $("appsList");
     if (STORE) {                                          // Store variant: created apps, one flat table
       if (!state.apps.length) {
@@ -536,10 +537,24 @@
     '</section>';
   }
 
+  // App-list logo: handles a data URL or remote URL (publishing logo / PWA icon) as well as a
+  // bare base64 PNG (cert-discovered icons); falls back to a colored initial when there's none.
+  function appIcoImg(a) {
+    if (a.icon) {
+      var src = /^(data:|https?:|\/)/i.test(a.icon) ? a.icon : ('data:image/png;base64,' + a.icon);
+      return '<span class="app-ico app-ico--img"><img src="' + src + '" alt="" /></span>';
+    }
+    return '<span class="app-ico" style="background:linear-gradient(135deg,' + colorFor(a.name) + ',#0b2a4a)">' + esc(initials(a.name)) + '</span>';
+  }
+  // Merge a logo saved during publishing (msstore.apps) into the portal's apps, matched by id.
+  function mergePublishIcons() {
+    var ms; try { ms = JSON.parse(localStorage.getItem("msstore.apps")) || []; } catch (e) { return; }
+    if (!Array.isArray(ms)) return;
+    var byId = {}; ms.forEach(function (x) { if (x && x.id) byId[x.id] = x; });
+    state.apps.forEach(function (a) { var m = byId[a.id]; if (m && m.icon) a.icon = m.icon; });
+  }
   function appRowHTML(a) {
-    var iconHTML = a.icon
-      ? '<span class="app-ico app-ico--img"><img src="data:image/png;base64,' + a.icon + '" alt="" /></span>'
-      : '<span class="app-ico" style="background:linear-gradient(135deg,' + colorFor(a.name) + ',#0b2a4a)">' + esc(initials(a.name)) + '</span>';
+    var iconHTML = appIcoImg(a);
     var created = a.store || a.storeStatus === "in-progress";
     var store = a.store
       ? '<span class="pill pill--ok pill--sm">✓ In Microsoft Store</span>'
@@ -562,9 +577,7 @@
     "ja-JP": "Japanese", "zh-CN": "Chinese (Simplified)", "hi-IN": "Hindi (India)" };
   function langLabel(code) { return LANG_LABELS[code] || code || "English (United States)"; }
   function storeAppRowHTML(a) {
-    var iconHTML = a.icon
-      ? '<span class="app-ico app-ico--img"><img src="data:image/png;base64,' + a.icon + '" alt="" /></span>'
-      : '<span class="app-ico" style="background:linear-gradient(135deg,' + colorFor(a.name) + ',#0b2a4a)">' + esc(initials(a.name)) + '</span>';
+    var iconHTML = appIcoImg(a);
     var published = a.store || a.storeStatus === "published";
     var inReview = a.storeStatus === "in-review";
     var offStore = a.discovered && !a.store && !a.storeStatus;
@@ -1355,7 +1368,7 @@
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
-    location.href = "publishing/publish.html?id=" + encodeURIComponent(a.id);
+    location.href = "publishing/publish.html?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
   }
 
   var STORE_MSA = { name: "Priya Nair", email: "priya.nair@outlook.com", initials: "PN" };
