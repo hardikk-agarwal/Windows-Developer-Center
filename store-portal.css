@@ -14,7 +14,7 @@
 .gstep__t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .gstep__t strong { font-size: 15px; color: var(--text); }
 .gstep__t .muted { font-size: 13px; color: var(--text-2); }
-.gstart { margin-top: 18px; }
+.gstep__cta { margin-top: 8px; align-self: flex-start; }
 
 /* Apps table row actions + delete confirmation */
 .rowactions { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }

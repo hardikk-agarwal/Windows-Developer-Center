@@ -2118,7 +2118,7 @@
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </div>
-        <input type="file" id="pkg-file" accept=".msix,.msixbundle,.appx,.appxbundle,.exe,.msi" hidden multiple />
+        <input type="file" id="pkg-file" accept=".msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap,.exe,.msi" hidden multiple />
         <div id="pkg-family-dist" hidden></div>
         <div class="ez-package-list" id="package-list"></div>
         <div id="pkg-type-msg" class="ez-type-msg" hidden></div>
@@ -2127,7 +2127,7 @@
             <label class="ez-pkg-drop" id="upload-zone" for="pkg-file" tabindex="0" role="button" aria-label="Upload your app package">
               <iconify-icon icon="fluent:arrow-upload-24-regular" width="26" height="26" aria-hidden="true"></iconify-icon>
               <span class="ez-pkg-drop__title">Drop your app file, or <span class="ez-pkg-drop__browse">browse</span></span>
-              <span class="ez-pkg-drop__hint" id="pkg-drop-hint">MSIX, EXE, or MSI · up to 25 GB</span>
+              <span class="ez-pkg-drop__hint" id="pkg-drop-hint">.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap, .exe, .msi</span>
             </label>
             <div class="ez-pkg-or" id="pkg-or"><span>or</span></div>
             <div class="ez-pkg-url" id="pkg-url-part">
@@ -5030,6 +5030,9 @@
     if (/\.msix$/i.test(name)) return 'MSIX';
     if (/\.appxbundle$/i.test(name)) return 'AppX bundle';
     if (/\.appx$/i.test(name)) return 'AppX';
+    if (/\.msixupload$/i.test(name)) return 'MSIX upload';
+    if (/\.appxupload$/i.test(name)) return 'AppX upload';
+    if (/\.xap$/i.test(name)) return 'XAP';
     if (/\.exe$/i.test(name)) return 'Win32 EXE';
     if (/\.msi$/i.test(name)) return 'Win32 MSI';
     return 'Package';
@@ -5227,13 +5230,13 @@
   function updateUploadConstraints() {
     const locked = lockedUploadType();
     const hint = $('pkg-drop-hint');
-    if (hint) hint.textContent = locked === 'win32' ? 'EXE or MSI installers only · up to 25 GB'
-      : locked === 'msix' ? 'MSIX packages only · up to 25 GB'
-      : 'MSIX, EXE, or MSI · up to 25 GB';
+    if (hint) hint.textContent = locked === 'win32' ? '.exe, .msi'
+      : locked === 'msix' ? '.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap'
+      : '.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap, .exe, .msi';
     const inp = $('pkg-file');
     if (inp) inp.accept = locked === 'win32' ? '.exe,.msi'
-      : locked === 'msix' ? '.msix,.msixbundle,.appx,.appxbundle'
-      : '.msix,.msixbundle,.appx,.appxbundle,.exe,.msi';
+      : locked === 'msix' ? '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap'
+      : '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap,.exe,.msi';
   }
   function showTypeMsg(text) {
     const el = $('pkg-type-msg'); if (!el) return;

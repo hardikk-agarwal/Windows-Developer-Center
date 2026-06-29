@@ -200,9 +200,10 @@
   }
 
   // One numbered onboarding step for the Store Overview zero state.
-  function gstep(n, title, sub) {
+  function gstep(n, title, sub, cta) {
     return '<div class="gstep"><span class="gstep__n">' + n + '</span>' +
-      '<div class="gstep__t"><strong>' + title + '</strong><span class="muted">' + sub + '</span></div></div>';
+      '<div class="gstep__t"><strong>' + title + '</strong><span class="muted">' + sub + '</span>' +
+      (cta || '') + '</div></div>';
   }
 
   function renderSummary() {
@@ -213,12 +214,12 @@
         el.innerHTML =
           '<div class="block__head block__head--sub"><div><h2>Get started</h2></div></div>' +
           '<div class="gsteps">' +
-            gstep(1, "Create your app", "Reserve a name and default language — it takes a minute.") +
+            gstep(1, "Create your app", "Reserve a name and default language — it takes a minute.",
+              '<fluent-button class="gstep__cta" appearance="secondary" data-newapp>' +
+                '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create your first app</fluent-button>') +
             gstep(2, "Add packages &amp; listing", "Upload your build and write your Store listing with screenshots.") +
             gstep(3, "Submit &amp; go live", "Pass certification and reach customers across Windows.") +
-          '</div>' +
-          '<div class="gstart"><fluent-button appearance="primary" size="large" data-newapp>' +
-            '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Create your first app</fluent-button></div>';
+          '</div>';
         return;
       }
       var sn = state.apps.length, sInStore = state.apps.filter(function (a) { return a.store; }).length;
