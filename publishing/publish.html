@@ -153,6 +153,8 @@
   .ez-pkg-namewrap iconify-icon { color: var(--brand); flex: 0 0 auto; }
   .ez-pkg-logo { width: 20px; height: 20px; border-radius: var(--r-4); flex: 0 0 auto; object-fit: cover; display: block; }
   .ez-pkg-name { font-weight: 600; color: var(--fg-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ez-pkg-nametext { display: inline-flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+  .ez-pkg-sub { font-size: 12px; color: var(--fg-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ez-pkg-td--act { text-align: right; white-space: nowrap; }
   .ez-pkg-chev { color: var(--fg-3); vertical-align: middle; transition: transform var(--dur-2) var(--ease-out); margin-left: var(--sp-6); }
   .ez-pkg-trow.is-open .ez-pkg-chev { transform: rotate(180deg); }
@@ -335,7 +337,10 @@
   .ck-group__count.is-left { color: var(--status-warning); }
   .ck-group__body { display: none; padding: 0 0 var(--sp-8); }
   .ck-group.is-open .ck-group__body { display: block; }
-  .ck-group__optlabel { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-4); margin: var(--sp-8) 0 2px var(--sp-6); }
+  .ck-group__optlabel { display: inline-flex; align-items: center; gap: 4px; font-family: inherit; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-4); margin: var(--sp-8) 0 2px var(--sp-6); background: none; border: 0; padding: 2px 0; cursor: pointer; }
+  .ck-group__optlabel:hover { color: var(--fg-3); }
+  .ck-group__optchev { transition: transform var(--dur-2) var(--ease-out); }
+  .ck-group__optlabel[aria-expanded="true"] .ck-group__optchev { transform: rotate(90deg); }
   /* Locked sections (gated behind the package step). */
   .ck-group.is-locked .ck-group__head--locked { cursor: default; }
   .ck-group.is-locked .ck-group__head--locked:hover { background: none; }
@@ -354,6 +359,7 @@
   .ez-checklist__item--done .ez-checklist__icon { color: var(--status-success); }
   .ez-checklist__item--done .ez-checklist__label { color: var(--fg-3); }
   .ez-checklist__label { flex: 1; min-width: 0; }
+  .ez-checklist__value { flex: 0 0 auto; margin-left: var(--sp-8); font-size: 12px; font-weight: 600; color: var(--fg-3); white-space: nowrap; }
   .ez-extra-field__hint { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-12); line-height: 1.45; }
   /* Standard full-width Fluent field. The visible box lives in the component's shadow DOM (::part),
      so sizing the host alone leaves the inner box at its intrinsic width (the "field narrower than the
@@ -612,9 +618,20 @@
   .pwapkg__preview-title { font-size: 13px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pwapkg__preview-host { font-size: 12px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pwapkg__scan { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-16) 0; color: var(--fg-2); font-size: 13px; }
-  .pwapkg__checks { list-style: none; padding: 0; margin: 0 0 var(--sp-12); display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6) var(--sp-16); }
+  .pwapkg__checks { list-style: none; padding: 0; margin: 0 0 var(--sp-12); display: flex; flex-direction: column; gap: var(--sp-8); }
   .pwapkg__checks li { display: flex; align-items: center; gap: var(--sp-8); font-size: 13px; font-weight: 600; color: var(--fg-1); }
-  .pwapkg__checks li iconify-icon { color: var(--status-success); flex: 0 0 auto; }
+  .pwapkg__checks li iconify-icon, .pwapkg__checks li fluent-spinner { flex: 0 0 auto; }
+  .pwapkg__check--ok iconify-icon { color: var(--status-success); }
+  .pwapkg__check--warn iconify-icon { color: var(--status-warning, #e0a23a); }
+  .pwapkg__check--pending { color: var(--fg-2); }
+  .pwapkg__check-detail { font-weight: 400; color: var(--fg-3); }
+  /* Auto-draft toast — "Drafted from your site", with Undo (fixed, always visible regardless of step) */
+  .ez-draft-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1200; display: flex; align-items: center; gap: var(--sp-10); max-width: min(560px, calc(100vw - 32px)); padding: var(--sp-10) var(--sp-10) var(--sp-10) var(--sp-16); border-radius: 12px; background: color-mix(in srgb, var(--brand) 14%, var(--layer)); border: 1px solid color-mix(in srgb, var(--brand) 34%, var(--stroke-2)); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 13.5px; color: var(--fg-1); }
+  .ez-draft-toast[hidden] { display: none; }
+  .ez-draft-toast__icon { color: var(--brand); flex: 0 0 auto; }
+  .ez-draft-toast__text { flex: 1 1 auto; min-width: 0; }
+  .ez-draft-toast__actions { display: flex; align-items: center; gap: var(--sp-4); flex: 0 0 auto; }
+  .ez-draft-toast #draft-dismiss { min-width: 32px; }
   .pwapkg__identity { padding-top: var(--sp-12); border-top: 1px solid var(--stroke-3); }
   .pwapkg__identity-label { display: block; font-size: 12px; color: var(--fg-3); margin-bottom: var(--sp-4); }
   .pwapkg__identity-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--sp-12); margin: 0; }
@@ -771,7 +788,7 @@
   .pkgd-scroll { max-height: 58vh; overflow-y: auto; }
 
   /* ===== Add-another-package chooser ===== */
-  #add-method-dialog, #add-method-dialog::part(control), #add-method-dialog::part(dialog) { width: min(440px, 92vw); max-width: min(440px, 92vw); }
+  #add-method-dialog, #add-method-dialog::part(control), #add-method-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
   #add-method-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
   .addm-intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-16); }
   .addm-options { display: flex; flex-direction: column; gap: var(--sp-8); }
@@ -913,7 +930,7 @@
   .ez-store-shots__empty { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: var(--sp-6); padding: var(--sp-24); border: 1px dashed var(--stroke-2); border-radius: var(--r-8); color: var(--fg-3); font-size: 12px; text-align: center; }
 
   /* ---- Autofill-with-AI dialog ---- */
-  .ez-ai-dialog__intro { font-size: 13px; line-height: 18px; color: var(--fg-2); margin: 0 0 var(--sp-12); max-width: 52ch; }
+  .ez-ai-dialog__intro { font-size: 13px; line-height: 18px; color: var(--fg-2); margin: 0 0 var(--sp-12); }
   .ez-ai-dialog__input { width: 100%; min-width: 100%; box-sizing: border-box; }
   #ai-autofill-dialog fluent-text-input::part(root),
   #ai-autofill-dialog fluent-text-input::part(control) { width: 100%; min-width: 100%; box-sizing: border-box; }
@@ -1024,6 +1041,8 @@
   .ez-live .live-edit-target[data-required="true"][data-empty-required="true"]:not(#ez-pv-desc)::before { content: '* '; color: var(--status-danger); font-weight: 700; }
   .ez-live .live-edit-target.live-edit--active::before { content: none; }
   .ez-live .live-edit-empty { font-style: italic; opacity: .85; }
+  .ez-desc-error { margin: var(--sp-4) 0 0; font-size: 12px; color: var(--status-danger); }
+  .ez-desc-error[hidden] { display: none; }
   .ez-live .live-edit-input { font: inherit; color: inherit; background: transparent; border: 0; outline: none; padding: 0; margin: 0; width: 100%; box-sizing: border-box; resize: none; min-height: 1em; line-height: inherit; }
   /* Inline Fluent dropdown used by the category / subcategory live-editors. */
   .live-edit-dropdown { min-width: 180px; max-width: 100%; vertical-align: middle; }
@@ -1663,7 +1682,7 @@
   .ez-pkg-url__row fluent-text-input { flex: 1 1 auto; width: 100%; min-width: 0; max-width: none; }
   .ez-pkg-url__row fluent-text-input::part(root) { width: 100%; min-width: 100%; max-width: none; box-sizing: border-box; }
   .ez-pkg-url__row fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
-  .ez-pkg-url__row #pkg-url-add { flex: 0 0 auto; }
+  .ez-pkg-url__row fluent-button { flex: 0 0 auto; white-space: nowrap; }
   .ez-field { margin-bottom: var(--sp-16); }
   .ez-field:last-child { margin-bottom: 0; }
   .ez-field__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin-bottom: var(--sp-6); }
@@ -2287,6 +2306,7 @@
               </div>
               <div class="ez-card-section__body">
                 <p class="ez-store-desc" id="ez-pv-desc">Your description appears here.</p>
+                <p class="ez-desc-error" id="ez-pv-desc-error" hidden></p>
               </div>
             </section>
 
@@ -2810,6 +2830,19 @@
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
+
+<!-- Auto-draft notice: shown when a PWA's listing is drafted from its site (labeled + undoable). -->
+<div class="ez-draft-toast" id="draft-toast" hidden role="status" aria-live="polite">
+  <fluent-spinner size="extra-small" id="draft-toast-spinner" aria-hidden="true"></fluent-spinner>
+  <iconify-icon class="ez-draft-toast__icon" id="draft-toast-icon" icon="fluent:sparkle-20-filled" width="18" height="18" aria-hidden="true" hidden></iconify-icon>
+  <span class="ez-draft-toast__text" id="draft-toast-text">Drafting your listing from your site…</span>
+  <div class="ez-draft-toast__actions" id="draft-toast-actions" hidden>
+    <fluent-button appearance="primary" id="draft-undo">Undo</fluent-button>
+    <fluent-button appearance="subtle" id="draft-dismiss" aria-label="Dismiss">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+  </div>
+</div>
 
 <!-- Image edit dialog — shown after every manual image upload (logo + screenshots).
      Lets the user crop within the target aspect ratio (1:1 / 16:10), zoom,
@@ -3476,19 +3509,23 @@
     <fluent-button slot="title-action" appearance="subtle" data-add-method-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <p class="addm-intro">Win32 apps support both — how do you want to add this installer?</p>
-    <div class="addm-options">
-      <button type="button" class="addm-opt" data-add-method="upload">
-        <iconify-icon icon="fluent:arrow-upload-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
-        <span class="addm-opt__text"><strong>Upload a file</strong><span>Choose an .exe or .msi from your computer.</span></span>
-        <iconify-icon class="addm-opt__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-      </button>
-      <button type="button" class="addm-opt" data-add-method="url">
-        <iconify-icon icon="fluent:link-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
-        <span class="addm-opt__text"><strong>Paste a link</strong><span>Point to a hosted .exe or .msi installer.</span></span>
-        <iconify-icon class="addm-opt__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-      </button>
+    <input type="file" id="addpkg-file" accept=".msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap,.exe,.msi" hidden multiple />
+    <div class="ez-pkg-add">
+      <label class="ez-pkg-drop" id="addpkg-drop" for="addpkg-file" tabindex="0" role="button" aria-label="Upload your app package">
+        <iconify-icon icon="fluent:arrow-upload-24-regular" width="26" height="26" aria-hidden="true"></iconify-icon>
+        <span class="ez-pkg-drop__title">Drop your app file, or <span class="ez-pkg-drop__browse">browse</span></span>
+        <span class="ez-pkg-drop__hint" id="addpkg-drop-hint">.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap, .exe, .msi</span>
+      </label>
+      <div class="ez-pkg-or" id="addpkg-or"><span>or</span></div>
+      <div class="ez-pkg-url" id="addpkg-url-part">
+        <span class="ez-pkg-url__hint" id="addpkg-url-hint">Have a hosted installer or website? Add it by link instead of uploading.</span>
+        <div class="ez-pkg-url__row">
+          <fluent-text-input id="addpkg-url-input" placeholder="Paste a link to your .exe / .msi installer or website" aria-label="App or installer URL"></fluent-text-input>
+          <fluent-button id="addpkg-url-add" appearance="primary" disabled>Add package</fluent-button>
+        </div>
+      </div>
     </div>
+    <div id="addpkg-type-msg" class="ez-type-msg" hidden></div>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -4683,19 +4720,20 @@
     { section: 'step-listing', label: 'Search terms', required: false, done: () => !!(adv.listing.keywords && adv.listing.keywords.length) },
     // Age rating
     { section: 'step-rating', label: 'Age rating confirmed', required: true, done: () => !!state.rating },
-    // Reach & price — its defaults are valid, but the developer must still open the
-    // page and review markets / audience / price / schedule before submitting. Visiting
-    // the step satisfies this (so does any non-default setting, which also covers a
-    // loaded draft after reachVisited resets on refresh). Keeps Reach & price
-    // "incomplete" until the developer has actually engaged with it.
-    { section: 'step-reach', label: 'Review reach & price', required: true, done: () => reachVisited || adv.price.mode !== 'free' || adv.markets.mode !== 'all' || adv.audience.mode !== 'public' || adv.trial.mode !== 'none' || adv.schedule.release.mode !== 'now' || adv.schedule.end.mode !== 'never' },
-    // Base price is required only when Paid; the rest are optional tweaks (defaults —
-    // all markets, public, free, no trial — are valid as-is).
-    // Win32 paid apps use the developer's own commerce — no Store base price/trial.
-    { section: 'step-reach', label: 'Base price', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: true, done: () => parseFloat(adv.price.amount) > 0, focus: '#price-amount' },
-    { section: 'step-reach', label: 'Choose specific markets', required: false, done: () => adv.markets.mode === 'choose' },
-    { section: 'step-reach', label: 'Limit who can install', required: false, done: () => adv.audience.mode !== 'public' },
-    { section: 'step-reach', label: 'Offer a free trial', applies: () => !packages.some(p => p.win32 && !p._pending), required: false, done: () => adv.trial.mode !== 'none' },
+    // Reach & price — shown as live facets so the checklist reflects the actual settings.
+    // Defaults are valid (all markets, public, free, no trial), so each reads "set" with its
+    // current value; a Store-paid app must still set a base price (the one that can gate).
+    { section: 'step-reach', label: 'Markets', required: true, done: () => true,
+      value: () => adv.markets.mode === 'all' ? 'All 240 markets' : ((adv.markets.selected ? adv.markets.selected.length : 0) + ' markets') },
+    { section: 'step-reach', label: 'Audience', required: true, done: () => true,
+      value: () => adv.audience.mode === 'public' ? 'Public' : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group') },
+    { section: 'step-reach', label: 'Price', required: true, focus: '#price-amount',
+      done: () => adv.price.mode !== 'paid' || packages.some(p => p.win32 && !p._pending) || parseFloat(adv.price.amount) > 0,
+      value: () => adv.price.mode !== 'paid' ? 'Free'
+        : (packages.some(p => p.win32 && !p._pending) ? 'Paid · your own commerce'
+          : (parseFloat(adv.price.amount) > 0 ? 'Paid · ' + adv.price.currency + ' ' + adv.price.amount : 'Set a base price')) },
+    { section: 'step-reach', label: 'Free trial', applies: () => !packages.some(p => p.win32 && !p._pending), required: true, done: () => true,
+      value: () => adv.trial.mode === 'none' ? 'None' : ((adv.trial.duration || '7') + '-day trial') },
   ];
   function ckApplies(it) { return it.applies ? !!it.applies() : true; }
   function ckRequired(it) { if (!ckApplies(it)) return false; return typeof it.required === 'function' ? !!it.required() : !!it.required; }
@@ -4709,9 +4747,12 @@
     const idx = CHECKLIST_ITEMS.indexOf(it);
     const icon = done ? 'fluent:checkmark-circle-16-filled' : 'fluent:circle-16-regular';
     // Every row jumps to its section (and field, if it has a focus selector).
+    let val = '';
+    try { val = it.value ? (it.value() || '') : ''; } catch (_) { val = ''; }
     return '<li><button type="button" class="ez-checklist__item ez-checklist__item--' + (done ? 'done' : 'todo') + '" data-ck="' + idx + '">' +
       '<iconify-icon class="ez-checklist__icon" icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
       '<span class="ez-checklist__label">' + it.label + '</span>' +
+      (val ? '<span class="ez-checklist__value">' + val + '</span>' : '') +
       '</button></li>';
   }
   // Submit-readiness checklist: a per-section accordion. Each section shows its
@@ -4719,6 +4760,7 @@
   // the rest are collapsed (open them on demand). ckGroupOpen holds explicit
   // user toggles; unset sections fall back to "open if it's the current one".
   const ckGroupOpen = {};
+  const ckOptOpen = {};   // optional sublists are collapsed by default; this holds explicit expands
   function ckCurrentSection() {
     try { if (document.getElementById('flow-wrap').classList.contains('is-wizard')) return WZ_STEPS[wzIndex]; } catch (_) {}
     return (typeof activeSection !== 'undefined' && activeSection) || WZ_STEPS[0];
@@ -4775,6 +4817,7 @@
       const leftN = req.length - doneReq;
       const complete = leftN === 0; // nothing required outstanding (incl. defaults-only sections)
       const open = ckGroupIsOpen(id, cur);
+      const optOpen = !!ckOptOpen[id];   // optional items collapsed unless explicitly expanded
       // Lead with what's LEFT on this page — the count that matters most. Complete
       // sections read “Done” (green); defaults-only sections with nothing required read “Ready”.
       const status = complete ? (req.length ? 'Done' : 'Ready') : (leftN + ' left');
@@ -4789,7 +4832,13 @@
         '</button>' +
         '<div class="ck-group__body">' +
           (req.length ? '<ul class="ez-checklist__list">' + req.map(ckItemRow).join('') + '</ul>' : '') +
-          (opt.length ? '<div class="ck-group__optlabel">Optional</div><ul class="ez-checklist__list">' + opt.map(ckItemRow).join('') + '</ul>' : '') +
+          (opt.length ? (
+            '<button type="button" class="ck-group__optlabel" data-ck-opt="' + id + '" aria-expanded="' + (optOpen ? 'true' : 'false') + '">' +
+              '<iconify-icon class="ck-group__optchev" icon="fluent:chevron-right-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' +
+              'Optional <span class="ck-group__optcount">(' + opt.length + ')</span>' +
+            '</button>' +
+            (optOpen ? '<ul class="ez-checklist__list">' + opt.map(ckItemRow).join('') + '</ul>' : '')
+          ) : '') +
         '</div></div>';
     });
     if (anyLocked) html += '<div class="ck-locked-note"><iconify-icon icon="fluent:lock-closed-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon> Add your app package to unlock the rest.</div>';
@@ -4821,6 +4870,8 @@
     }
     const grp = e.target.closest('[data-ck-group]');
     if (grp) { const id = grp.getAttribute('data-ck-group'); ckGroupOpen[id] = !ckGroupIsOpen(id, ckCurrentSection()); renderChecklists(); return; }
+    const optTog = e.target.closest('[data-ck-opt]');
+    if (optTog) { const id = optTog.getAttribute('data-ck-opt'); ckOptOpen[id] = !ckOptOpen[id]; renderChecklists(); return; }
     const row = e.target.closest('.ez-checklist__item[data-ck]');
     if (row) { const it = CHECKLIST_ITEMS[parseInt(row.getAttribute('data-ck'), 10)]; ckClosePanel(); ckJumpTo(it); return; }
     if (!e.target.closest('#submit-checklist')) ckClosePanel();
@@ -5227,8 +5278,14 @@
     const up = packages.find(p => p.source === 'upload');
     return up ? (up.win32 ? 'win32' : 'msix') : null;
   }
+  // The submission's package family (MSIX vs Win32), set by the first package of ANY source
+  // (upload OR URL). One family per submission — never mix. null when there are no packages yet.
+  function lockedPkgType() {
+    const p = packages.find(Boolean);
+    return p ? (p.win32 ? 'win32' : 'msix') : null;
+  }
   function updateUploadConstraints() {
-    const locked = lockedUploadType();
+    const locked = lockedPkgType();
     const hint = $('pkg-drop-hint');
     if (hint) hint.textContent = locked === 'win32' ? '.exe, .msi'
       : locked === 'msix' ? '.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap'
@@ -5329,7 +5386,7 @@
     const verKey = v => String(v || '0').split('.').map(n => parseInt(n, 10) || 0);
     const ordered = packages.filter(p => !p._pending).sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
     const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : ((pkg.kind === 'pwa' || pkg.fromPwa) ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
-    const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—');
+    const archOf = pkg => pkg.fromPwa ? 'Web app' : ((pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—'));
     const verOf  = pkg => pkg.version ? 'v' + pkg.version : '—';
     const deviceOf = pkg => (pkg.devices && pkg.devices.length) ? pkg.devices.join(', ') : (pkg.win32 ? 'Desktop' : (pkg.kind === 'pwa' ? 'Web' : '—'));
     // Win32 table cells: a compact language summary, and the validation status (clickable when done).
@@ -5412,6 +5469,12 @@
         return '<div class="ez-setrows">' + rows + '</div>' + validationFooterHtml(pkg);
       }
       const dl = [];
+      // PWA-packaged MSIX: lead with the source website — the key detail for a web app.
+      if (pkg.fromPwa) {
+        const u = pkg.url || '';
+        dl.push(['Website', u ? '<a class="ez-info-item__value--link" href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u) + '</a>' : '—', true]);
+        dl.push(['Packaged from', 'Progressive web app']);
+      }
       const langs = (pkg.langs && pkg.langs.length) ? pkg.langs.map(langLabelOf).join(', ') : '';
       if (langs) dl.push(['Languages', langs]);
       const minOs = formatMinOsVersion(pkg.minOsVersion); if (minOs) dl.push(['Minimum OS', minOs]);
@@ -5419,7 +5482,7 @@
       const caps = (pkg.capabilities || []).filter(c => RESTRICTED_CAPABILITIES[c]).map(c => (RESTRICTED_CAPABILITIES[c] || { label: c }).label);
       if (caps.length) dl.push(['Restricted capabilities', caps.join(', ')]);
       if (!dl.length) return '<p class="ez-pkg-detail__empty">' + (pkg.manifestParsed ? 'No additional details.' : 'Reading manifest…') + '</p>';
-      return '<dl class="ez-pkg-detail__dl">' + dl.map(r => '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>').join('') + '</dl>';
+      return '<dl class="ez-pkg-detail__dl">' + dl.map(r => '<dt>' + esc(r[0]) + '</dt><dd>' + (r[2] ? r[1] : esc(r[1])) + '</dd>').join('') + '</dl>';
     }
     if (!ordered.length) {
       packageList.innerHTML = '';
@@ -5435,7 +5498,7 @@
         const midCols = win32Mode
           ? '<td>' + esc(archOf(pkg)) + '</td><td>' + langCellOf(pkg) + '</td><td class="ez-pkg-td--val">' + validationCell(pkg) + '</td>'
           : '<td>' + esc(verOf(pkg)) + '</td><td>' + esc(archOf(pkg)) + '</td><td>' + esc(deviceOf(pkg)) + '</td>';
-        const nameCell = '<td class="ez-pkg-td--name"><span class="ez-pkg-namewrap">' + (appBrandLogo ? '<img class="ez-pkg-logo" src="' + appBrandLogo + '" alt="" width="20" height="20" />' : '<iconify-icon icon="' + iconOf(pkg) + '" width="20" height="20" aria-hidden="true"></iconify-icon>') + '<span class="ez-pkg-name" title="' + esc(pkg.filename) + '">' + esc(pkg.filename) + '</span></span></td>';
+        const nameCell = '<td class="ez-pkg-td--name"><span class="ez-pkg-namewrap">' + (appBrandLogo ? '<img class="ez-pkg-logo" src="' + appBrandLogo + '" alt="" width="20" height="20" />' : '<iconify-icon icon="' + iconOf(pkg) + '" width="20" height="20" aria-hidden="true"></iconify-icon>') + '<span class="ez-pkg-nametext"><span class="ez-pkg-name" title="' + esc(pkg.filename) + '">' + esc(pkg.filename) + '</span>' + (pkg.fromPwa && pkg.url ? '<span class="ez-pkg-sub" title="' + esc(pkg.url) + '">' + esc(hostnameOf(pkg.url)) + '</span>' : '') + '</span></span></td>';
         const removeBtn = '<fluent-button class="ez-pkg-remove" appearance="transparent" size="small" data-remove="' + pkg.id + '" aria-label="Remove ' + esc(pkg.filename) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>';
         if (win32Mode) {
           // Win32 rows are compact + click-to-edit; the details live in the dialog, not inline.
@@ -5581,7 +5644,8 @@
       const pi = $('pkg-input'); if (pi) pi.hidden = true;   // a package exists: collapse the add UI
     }
     const addMore = $('add-more-pkg');   // both methods produce a package, so the label is uniform
-    if (addMore) addMore.hidden = packages.length === 0;
+    // A packaged web app is a single submission — no "add another package" for it.
+    if (addMore) addMore.hidden = packages.length === 0 || packages.some(p => p.fromPwa);
     updateUploadConstraints();   // drop-zone hint + accepted file types reflect the locked package type
     renderFamilyDistribution();  // per-family distribution toggles (only when packages span >1 family)
     // The "Building a package?" identity banner is MSIX-only (AppxManifest.xml). Re-derived every render:
@@ -6058,14 +6122,14 @@
     const files = Array.from(fileList || []).filter(Boolean);
     if (!files.length) return;
     // Enforce one package type per submission: the first upload (existing or in this batch) sets it.
-    let lockType = lockedUploadType();
+    let lockType = lockedPkgType();
     if (!lockType) lockType = uploadTypeOf(files[0].name);
     const accept = files.filter(f => uploadTypeOf(f.name) === lockType);
     const rejected = files.length - accept.length;
     if (rejected) {
       showTypeMsg('This submission uses ' + (lockType === 'win32' ? 'Win32 (EXE / MSI) installers' : 'MSIX packages') +
-        ', so ' + rejected + ' file' + (rejected === 1 ? ' was' : 's were') + ' skipped. Remove the current packages to switch type.');
-      announce('Skipped ' + rejected + ' file(s): a submission can\'t mix MSIX and EXE/MSI.');
+        ', so ' + rejected + ' file' + (rejected === 1 ? '' : 's') + ' can’t be added. Remove the current packages to switch type.');
+      announce('Can’t mix package types — ' + rejected + ' file(s) blocked.');
     } else { hideTypeMsg(); }
     if (!accept.length) return;
     // A win32 installer is identified by (architecture, language); skip any that would
@@ -6109,24 +6173,63 @@
   }
 
   pkgFile.addEventListener('change', (e) => { runExtraction(e.target.files); e.target.value = ''; });
-  // "Add another package": Win32 supports both upload and URL, so ask which; MSIX/PWA go straight to their one method.
+  // "Add another package" → a dialog with the same drop-zone + URL input as the package zero state.
+  // Both route through the shared add logic, so the single package family is enforced (with a clear
+  // in-dialog error on a mismatched type). Reuses the #add-method-dialog shell.
   const addMethodDialog = $('add-method-dialog');
-  function closeAddMethodDialog() { try { addMethodDialog.hide(); } catch (e) {} }
-  if (addMethodDialog) {
-    addMethodDialog.querySelectorAll('[data-add-method-close]').forEach(b => b.addEventListener('click', closeAddMethodDialog));
-    addMethodDialog.querySelectorAll('[data-add-method]').forEach(btn => btn.addEventListener('click', () => {
-      const method = btn.getAttribute('data-add-method');
-      closeAddMethodDialog();
-      if (method === 'upload') { pkgFile.click(); }
-      else { showAddUI('url'); const am = $('add-more-pkg'); if (am) am.hidden = true; }
-    }));
+  const addpkgFileInp = $('addpkg-file'), addpkgDrop = $('addpkg-drop');
+  const addpkgUrlInput = $('addpkg-url-input'), addpkgUrlBtn = $('addpkg-url-add');
+  function addpkgShowErr(t) { const el = $('addpkg-type-msg'); if (el) { el.hidden = false; el.textContent = t; } }
+  function addpkgSyncUrl() { if (addpkgUrlBtn) addpkgUrlBtn.disabled = !(addpkgUrlInput && addpkgUrlInput.value.trim()); }
+  function closeAddPkgDialog() { try { addMethodDialog.hide(); } catch (e) {} }
+  function openAddPkgDialog() {
+    const el = $('addpkg-type-msg'); if (el) el.hidden = true;
+    if (addpkgUrlInput) { addpkgUrlInput.value = ''; addpkgSyncUrl(); }
+    const lockType = lockedPkgType();   // restrict the picker + hint to the locked family
+    const exts = lockType === 'win32' ? '.exe,.msi'
+      : lockType === 'msix' ? '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap'
+      : '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap,.exe,.msi';
+    if (addpkgFileInp) addpkgFileInp.accept = exts;
+    const hint = $('addpkg-drop-hint'); if (hint) hint.textContent = exts.replace(/,/g, ', ');
+    // MSIX can only be uploaded — hide the URL option. Win32 keeps it, but as installer links only
+    // (no website; pasting one is blocked by the family rule in addPackageByUrl).
+    const showUrl = lockType !== 'msix';
+    const orEl = $('addpkg-or'), urlPart = $('addpkg-url-part');
+    if (orEl) orEl.style.display = showUrl ? '' : 'none';
+    if (urlPart) urlPart.style.display = showUrl ? '' : 'none';
+    if (showUrl) {
+      const uh = $('addpkg-url-hint'); if (uh) uh.textContent = 'Point to a hosted .exe or .msi installer.';
+      if (addpkgUrlInput) addpkgUrlInput.placeholder = 'Paste a link to your .exe or .msi installer';
+    }
+    try { addMethodDialog.show(); } catch (e) {}
   }
-  if ($('add-more-pkg')) $('add-more-pkg').addEventListener('click', () => {
-    if (packages.some(p => p.win32) && addMethodDialog) { try { addMethodDialog.show(); } catch (e) {} return; }   // Win32 → choose upload or link
-    if (packageMethod() === 'upload') { pkgFile.click(); return; }  // upload app: straight to the file picker
-    showAddUI('url');             // URL app: reveal the link input
-    $('add-more-pkg').hidden = true;
-  });
+  function addpkgTakeFiles(fileList) {
+    const files = Array.from(fileList || []).filter(Boolean);
+    if (!files.length) return;
+    const lockType = lockedPkgType();
+    if (lockType && files.some(f => uploadTypeOf(f.name) !== lockType)) {
+      addpkgShowErr('This submission uses ' + (lockType === 'win32' ? 'Win32 (EXE / MSI) installers' : 'MSIX packages') +
+        ', so those files can’t be added. Remove the current packages to switch type.');
+      announce('Can’t mix package types in one submission.');
+      return;   // keep the dialog open so they can try a matching file
+    }
+    closeAddPkgDialog();
+    runExtraction(files);
+  }
+  if (addMethodDialog) {
+    addMethodDialog.querySelectorAll('[data-add-method-close]').forEach(b => b.addEventListener('click', closeAddPkgDialog));
+    if (addpkgFileInp) addpkgFileInp.addEventListener('change', (e) => { addpkgTakeFiles(e.target.files); e.target.value = ''; });
+    if (addpkgDrop) {
+      addpkgDrop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addpkgFileInp.click(); } });
+      ['dragenter', 'dragover'].forEach(ev => addpkgDrop.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); addpkgDrop.classList.add('is-drag'); }));
+      ['dragleave', 'dragend'].forEach(ev => addpkgDrop.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); addpkgDrop.classList.remove('is-drag'); }));
+      addpkgDrop.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); addpkgDrop.classList.remove('is-drag'); addpkgTakeFiles(e.dataTransfer && e.dataTransfer.files); });
+    }
+    if (addpkgUrlInput) addpkgUrlInput.addEventListener('input', addpkgSyncUrl);
+    if (addpkgUrlBtn) addpkgUrlBtn.addEventListener('click', () => { if (addPackageByUrl(addpkgUrlInput.value, addpkgShowErr)) { addpkgUrlInput.value = ''; addpkgSyncUrl(); closeAddPkgDialog(); } });
+    if (addpkgUrlInput) addpkgUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); if (addpkgUrlBtn) addpkgUrlBtn.click(); } });
+  }
+  if ($('add-more-pkg')) $('add-more-pkg').addEventListener('click', openAddPkgDialog);
   uploadZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pkgFile.click(); } });
   // Drag-and-drop onto the dashed drop box (the upload affordance).
   ['dragenter', 'dragover'].forEach(ev => uploadZone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); uploadZone.classList.add('is-drag'); }));
@@ -6153,23 +6256,33 @@
     }
     return id;
   }
+  function pkgUrlNormalize(v) { v = (v || '').trim(); return /^https?:\/\//i.test(v) ? v : (v ? 'https://' + v : ''); }
+  function pkgIsInstallerUrl(v) { return /\.(exe|msi)(?:[?#]|$)/i.test(pkgUrlNormalize(v)); }
+  // Shared URL add: validate → enforce the single package family → route to Win32 (details dialog)
+  // or PWA→MSIX. showErr renders a blocked-type message (defaults to the step's #pkg-type-msg).
+  // Returns 'win32' | 'msix' on a real add, or false when the URL is invalid or the type is blocked.
+  function addPackageByUrl(rawValue, showErr) {
+    const url = pkgUrlNormalize(rawValue);
+    if (!url) return false;
+    try { new URL(url); } catch (e) { announce('Enter a valid URL.'); return false; }
+    const newType = pkgIsInstallerUrl(url) ? 'win32' : 'msix';
+    const lockedType = lockedPkgType();
+    if (lockedType && lockedType !== newType) {
+      (showErr || showTypeMsg)('This submission uses ' + (lockedType === 'win32' ? 'Win32 (EXE / MSI) installers' : 'MSIX packages') +
+        ', so you can’t add ' + (newType === 'win32' ? 'an installer' : 'a website') + ' here. Remove the current packages to switch type.');
+      announce('Can’t mix package types in one submission.');
+      return false;
+    }
+    if (pkgIsInstallerUrl(url)) { const id = addHostedPackage('win32', url); if (id) openPkgDetailsDialog(id, true); return 'win32'; }
+    openPwaPackager(url); return 'msix';
+  }
   (function wireUrlAdd() {
     const input = $('pkg-url-input'), btn = $('pkg-url-add');
     if (!input || !btn) return;
-    const normalize = (v) => { v = (v || '').trim(); return /^https?:\/\//i.test(v) ? v : (v ? 'https://' + v : ''); };
-    const isInstallerUrl = (v) => /\.(exe|msi)(?:[?#]|$)/i.test(normalize(v));
     const syncUrlType = () => { btn.disabled = !input.value.trim(); };
     const submit = () => {
-      const url = normalize(input.value);
-      if (!url) return;
-      try { new URL(url); } catch (e) { announce('Enter a valid URL.'); return; }
-      if (isInstallerUrl(url)) {
-        const id = addHostedPackage('win32', url);   // no render — the details dialog commits on Confirm
-        if (id) openPkgDetailsDialog(id, true);       // leave the link field untouched until the dialog resolves
-      } else {
-        openPwaPackager(url);          // website → package it as an MSIX (PWA Builder-style)
-        input.value = ''; syncUrlType();
-      }
+      const r = addPackageByUrl(input.value);   // errors render in the step's #pkg-type-msg
+      if (r === 'msix') { input.value = ''; syncUrlType(); }   // win32 leaves the link until the details dialog resolves
     };
     input.addEventListener('input', syncUrlType);
     btn.addEventListener('click', submit);
@@ -6186,17 +6299,38 @@
     return { identityName: storeId + '.' + appName, publisherDisplay: 'Hardik Agarwal' };
   }
   let pwaPkgPendingUrl = '';
+  let pwaPkgManifest = null;          // parsed web app manifest of the site being packaged (null until fetched)
+  let pwaPkgManifestDone = false;     // true once the fetch settles — lets the report tell "checking" from "none found"
+  let pwaPkgManifestPromise = null;   // in-flight manifest fetch, so packaging uses whatever has resolved
   function pwaPkgRenderReport() {
     const body = $('pwa-pkg-body'); if (!body) return;
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const id = pwaPkgIdentity();
-    const checks = ['Web app manifest', 'Service worker', 'Served over HTTPS'];
+    const mf = pwaPkgManifest;
+    const loading = !pwaPkgManifestDone;            // fetch still in flight → show "checking"
+    const https = /^https:/i.test(pwaPkgPendingUrl || '');
+    const hasManifest = !!(mf && mf.hadManifest);
+    const iconCount = (mf && mf.icons && mf.icons.length) || 0;
+    const appName = (mf && mf.name) || '';
+    // Real checks, driven by what we actually read from the site (PWA Builder–style) — no auto-pass.
+    const row = (state, label, detail) => {
+      const mark = state === 'pending'
+        ? '<fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner>'
+        : '<iconify-icon icon="' + (state === 'ok' ? 'fluent:checkmark-circle-16-filled' : 'fluent:warning-16-filled') + '" width="16" height="16" aria-hidden="true"></iconify-icon>';
+      return '<li class="pwapkg__check pwapkg__check--' + state + '">' + mark +
+        '<span>' + esc(label) + (detail ? ' <span class="pwapkg__check-detail">' + esc(detail) + '</span>' : '') + '</span></li>';
+    };
+    const rows = [
+      loading ? row('pending', 'Web app manifest', 'Checking…')
+        : hasManifest ? row('ok', 'Web app manifest', 'Found')
+        : row('warn', 'Web app manifest', 'None found — we’ll generate one'),
+      row(https ? 'ok' : 'warn', 'Served over HTTPS', https ? '' : 'HTTPS recommended'),
+      loading ? row('pending', 'App name & icon', 'Reading…')
+        : (appName || iconCount) ? row('ok', 'App name & icon', [appName, iconCount ? (iconCount + (iconCount === 1 ? ' icon' : ' icons')) : ''].filter(Boolean).join(' · '))
+        : row('warn', 'App name & icon', 'Using your app name')
+    ];
     body.innerHTML =
-      '<ul class="pwapkg__checks">' +
-        checks.map(t =>
-          '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' + t + '</li>'
-        ).join('') +
-      '</ul>' +
+      '<ul class="pwapkg__checks">' + rows.join('') + '</ul>' +
       '<div class="pwapkg__identity">' +
         '<span class="pwapkg__identity-label">Identity — applied automatically</span>' +
         '<dl class="pwapkg__identity-rows">' +
@@ -6250,9 +6384,123 @@
       })
       .catch(function () {});
   }
+  // --- Web app manifest reader (PWA Builder–style) -----------------------------
+  // Browsers can't read another origin's manifest directly (CORS), so we route the
+  // page + manifest through a public CORS proxy. Best-effort: any failure resolves
+  // to null and the flow continues — logo + AI listing simply fall back.
+  // Public CORS proxies, tried in order — corsproxy.io works in-browser (it sends Origin),
+  // allorigins is the no-header fallback, codetabs the last resort. First usable body wins,
+  // so an intermittent 5xx on one proxy just falls through to the next.
+  const CORS_PROXIES = [
+    function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); },
+    function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+    function (u) { return 'https://cors.eu.org/' + u; }
+  ];
+  async function proxiedText(url) {
+    for (let i = 0; i < CORS_PROXIES.length; i++) {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 7000);
+        const r = await fetch(CORS_PROXIES[i](url), { signal: ctrl.signal });
+        clearTimeout(t);
+        if (r.ok) { const txt = await r.text(); if (txt && txt.length > 40) return txt; }
+      } catch (e) {}
+    }
+    return '';
+  }
+  function resolveUrlSafe(base, rel) { try { return new URL(rel, base).href; } catch (e) { return rel || ''; } }
+  function firstMatch(s, re) { const m = (s || '').match(re); return m ? m[1] : ''; }
+  // Reliable primary: our own backend fetches + parses the manifest server-side (no CORS).
+  // Returns null when the server isn't there (static deploy) or didn't answer with our JSON,
+  // so the public-proxy path below takes over.
+  async function fetchWebManifestViaApi(pageUrl) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 9000);
+      const r = await fetch('/api/web-manifest?url=' + encodeURIComponent(pageUrl), { signal: ctrl.signal });
+      clearTimeout(t);
+      if (!r.ok || !/json/i.test(r.headers.get('content-type') || '')) return null;
+      const d = await r.json();
+      return (d && typeof d === 'object' && Array.isArray(d.icons)) ? d : null;
+    } catch (e) { return null; }
+  }
+  async function fetchWebManifest(pageUrl) {
+    // Prefer our backend (no CORS, reliable for most sites). But if it comes back thin —
+    // some sites serve datacenter IPs a stripped page while a real browser gets the full PWA
+    // (e.g. TikTok) — let the public proxies try, since those run from the user's browser.
+    const hit = mf => mf && (mf.hadManifest || (mf.icons && mf.icons.length));
+    const viaApi = await fetchWebManifestViaApi(pageUrl);
+    if (hit(viaApi)) return viaApi;
+    const viaProxy = await fetchWebManifestViaProxy(pageUrl);
+    return hit(viaProxy) ? viaProxy : (viaApi || viaProxy);
+  }
+  async function fetchWebManifestViaProxy(pageUrl) {
+    try {
+      const html = await proxiedText(pageUrl);
+      let manifest = {}, manifestBase = '';
+      const linkTag = (html.match(/<link\b[^>]*rel=["']?[^"'>]*manifest[^"'>]*["']?[^>]*>/i) || [])[0] || '';
+      const href = firstMatch(linkTag, /href=["']([^"']+)["']/i);
+      if (href) {
+        manifestBase = resolveUrlSafe(pageUrl, href);
+        const mtext = await proxiedText(manifestBase);
+        if (mtext) { try { manifest = JSON.parse(mtext); } catch (e) {} }
+      }
+      const base = manifestBase || pageUrl;
+      const icons = (Array.isArray(manifest.icons) ? manifest.icons : [])
+        .map(function (ic) { return { src: resolveUrlSafe(base, ic.src || ''), sizes: ic.sizes || '', purpose: ic.purpose || '' }; })
+        .filter(function (ic) { return ic.src; });
+      const screenshots = (Array.isArray(manifest.screenshots) ? manifest.screenshots : [])
+        .map(function (s) { return resolveUrlSafe(base, s.src || ''); }).filter(Boolean);
+      const appleTag = (html.match(/<link\b[^>]*rel=["'][^"']*apple-touch-icon[^"']*["'][^>]*>/i) || [])[0] || '';
+      return {
+        name: (manifest.name || manifest.short_name || firstMatch(html, /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) || '').trim(),
+        shortName: (manifest.short_name || '').trim(),
+        description: (manifest.description
+          || firstMatch(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)
+          || firstMatch(html, /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i) || '').trim(),
+        categories: Array.isArray(manifest.categories) ? manifest.categories : [],
+        themeColor: manifest.theme_color || '',
+        icons: icons, screenshots: screenshots,
+        appleIcon: resolveUrlSafe(pageUrl, firstMatch(appleTag, /href=["']([^"']+)["']/i)),
+        ogImage: resolveUrlSafe(pageUrl, firstMatch(html, /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)),
+        hadManifest: !!href
+      };
+    } catch (e) { return null; }
+  }
+  // Best logo: largest non-maskable manifest icon → apple-touch-icon → og:image.
+  function pickPwaLogo(mf) {
+    if (!mf) return '';
+    const area = function (ic) { const m = (ic.sizes || '').match(/(\d+)x(\d+)/); if (m) return (+m[1]) * (+m[2]); return /any|scalable/i.test(ic.sizes || '') ? 1e9 : 1; };
+    const icons = mf.icons || [];
+    const pref = icons.filter(function (ic) { return !/maskable/i.test(ic.purpose || ''); });
+    const pool = (pref.length ? pref : icons).slice().sort(function (a, b) { return area(b) - area(a); });
+    return (pool[0] && pool[0].src) || mf.appleIcon || mf.ogImage || '';
+  }
+  // Paint a freshly-read manifest into the packager preview (truer name + logo), and if
+  // the package is already in the table, back-fill its logo (covers a late-resolving fetch).
+  function applyPwaManifest(mf) {
+    if (!mf) return;
+    const titleEl = $('pwa-pkg-ptitle'), fav = $('pwa-pkg-favicon');
+    if (mf.name && titleEl) titleEl.textContent = mf.name;
+    const logo = pickPwaLogo(mf);
+    if (logo && fav) { fav.onerror = function () { fav.style.display = 'none'; }; fav.style.display = ''; fav.src = logo; }
+    if (logo && !userIconDataUrl && packages.some(function (p) { return p.fromPwa; })) {
+      pkgIconDataUrl = logo; refreshAppHeadIcon(); refreshLogoHue();
+      if (typeof ezRenderPreview === 'function') ezRenderPreview();
+    }
+  }
   function openPwaPackager(url) {
     const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
     pwaPkgPendingUrl = url;
+    pwaPkgManifest = null;
+    pwaPkgManifestDone = false;
+    // Kick off the manifest read as the dialog opens; it usually resolves well before the user
+    // clicks "Package as MSIX", so the logo + AI context are ready by then. Re-render the report
+    // once it settles so the checks reflect the real site rather than a "checking…" state.
+    pwaPkgManifestPromise = fetchWebManifest(url)
+      .then(function (mf) { pwaPkgManifest = mf; applyPwaManifest(mf); return mf; })
+      .catch(function () { return null; })
+      .finally(function () { pwaPkgManifestDone = true; pwaPkgRenderReport(); });
     pwaPkgPreview(url);
     pwaPkgSetPhase('scan');
     try { dlg.show(); } catch (e) {}
@@ -6261,17 +6509,26 @@
   function addPackagedPwa(url) {
     const appName = ((app && app.name) || 'YourApp').replace(/\s+/g, '');
     const id = 'pkg-' + Math.random().toString(36).slice(2, 8);
+    const mf = pwaPkgManifest;
     packages.push({
       id, source: 'url', kind: 'msix', win32: false, fromPwa: true, url,
       filename: appName + '.msix', type: 'PWA (MSIX)',
       version: '1.0.0.0', arches: ['neutral'], langs: ['en-US'],
       installParams: '', capabilities: [], devices: ['Desktop'],
-      manifestParsed: true, sizeBytes: 2 * 1024 * 1024
+      manifestParsed: true, sizeBytes: 2 * 1024 * 1024, manifest: mf || null
     });
+    // Bring the site's own logo into the app icon (header + live listing), unless the user
+    // already uploaded one. Falls back to the site favicon when the manifest had no icon.
+    if (!userIconDataUrl) {
+      const logo = pickPwaLogo(mf) || ('https://www.google.com/s2/favicons?domain=' + encodeURIComponent(hostnameOf(url)) + '&sz=128');
+      pkgIconDataUrl = logo; refreshAppHeadIcon(); refreshLogoHue();
+    }
     state.pkg = packages.some(p => !p._pending);
     renderPackages();
+    if (typeof ezRenderPreview === 'function') ezRenderPreview();
     if (typeof updateGate === 'function') updateGate();
-    announce('Your website was packaged as an MSIX and added.');
+    announce('Your website was packaged as an MSIX and added.' + (mf && mf.name ? ' Logo and details pulled from the site.' : ''));
+    autoDraftFromSite();   // full auto-draft of the listing — only when we actually got site details
   }
   (function wirePwaPackager() {
     const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
@@ -6304,7 +6561,15 @@
     const enUSDesc = (al === 'en-US')
       ? (fDesc.value || '')
       : ((adv.listing.locales['en-US'] && adv.listing.locales['en-US'].description) || '');
-    state.desc = enUSDesc.trim().length >= 20;
+    const descLen = enUSDesc.trim().length;
+    state.desc = descLen >= 20;
+    // Make the 20-char minimum explicit: error only once they've started typing (1–19 chars).
+    const dErr = $('ez-pv-desc-error');
+    if (dErr) {
+      const tooShort = descLen > 0 && descLen < 20;
+      dErr.hidden = !tooShort;
+      if (tooShort) dErr.textContent = 'Description needs at least 20 characters — ' + descLen + ' so far.';
+    }
     updateGate();
     ezRenderPreview();
     if (typeof window.__refreshKwSuggest === 'function') window.__refreshKwSuggest();
@@ -6317,20 +6582,48 @@
 
   // Autofill-with-AI dialog: opened from the button on the Step 2 title row.
   const aiDialog = $('ai-autofill-dialog');
-  function openAiDialog() { try { aiDialog.show(); } catch (e) {} setTimeout(() => { try { $('ai-pitch').focus(); } catch (e) {} }, 60); }
+  function openAiDialog() {
+    // Seed the pitch from the packaged site's manifest so the draft starts from the real app.
+    // Guard everything: a pre-seed hiccup must never stop the dialog from opening.
+    try {
+      const pitchEl = $('ai-pitch');
+      if (pitchEl && !(pitchEl.value || '').trim()) {
+        const pkg = packages.find(p => p.fromPwa && p.manifest);
+        const mf = pkg && pkg.manifest;
+        if (mf && (mf.description || mf.name)) pitchEl.value = mf.description || mf.name;
+      }
+    } catch (e) {}
+    try { aiDialog.show(); } catch (e) {}
+    setTimeout(() => { try { $('ai-pitch').focus(); } catch (e) {} }, 60);
+  }
   function closeAiDialog() { try { aiDialog.hide(); } catch (e) {} }
   $('ai-autofill-open').addEventListener('click', openAiDialog);
   aiDialog.querySelectorAll('[data-ai-close]').forEach((b) => b.addEventListener('click', closeAiDialog));
 
   // Autofill the listing with AI (or a clean heuristic draft).
-  $('ai-autofill').addEventListener('click', async () => {
-    const idea = ($('ai-pitch').value || '').trim() || (app.name + ' helps you get things done.');
+  // Listing autofill — shared by the "Autofill with AI" button and the automatic
+  // draft-from-site after a PWA is packaged. `auto` skips the dialog button/close chrome.
+  async function runAutofill(auto) {
+    const pwaPkg = packages.find(p => p.fromPwa && p.manifest);
+    const mf = pwaPkg && pwaPkg.manifest;
+    let idea = ($('ai-pitch').value || '').trim();
+    if (!idea && mf && (mf.description || mf.name)) idea = mf.description || mf.name;
+    if (!idea) idea = app.name + ' helps you get things done.';
     const btn = $('ai-autofill');
-    btn.disabled = true;
-    btn.innerHTML = '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Writing…';
+    if (!auto && btn) { btn.disabled = true; btn.innerHTML = '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Writing…'; }
+    // Ground the draft in the real website when this is a packaged PWA.
+    let pitch = idea;
+    if (mf) {
+      const bits = [];
+      if (mf.name) bits.push('Name: ' + mf.name);
+      if (mf.description) bits.push('Description: ' + mf.description);
+      if (mf.categories && mf.categories.length) bits.push('Categories: ' + mf.categories.join(', '));
+      if (pwaPkg.url) bits.push('Website: ' + pwaPkg.url);
+      if (bits.length) pitch = idea + '\n\nFrom the website’s web app manifest:\n- ' + bits.join('\n- ');
+    }
     let listing = null;
     if (window.AI && window.AI.enabled) {
-      try { listing = await window.AI.generateListing({ appName: app.name, pitch: idea, tone: 'friendly' }); } catch (e) {}
+      try { listing = await window.AI.generateListing({ appName: app.name, pitch: pitch, tone: 'friendly' }); } catch (e) {}
     }
     let descText = listing && (listing.fullDescription || listing.shortDescription);
     if (!descText) {
@@ -6353,13 +6646,60 @@
     };
     if (typeof window.__advApplyAI === 'function') window.__advApplyAI(adv2);
     ezRenderPreview();
-    btn.disabled = false;
-    btn.innerHTML = '<iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Autofill';
-    closeAiDialog();
+    if (!auto && btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Autofill';
+      closeAiDialog();
+    }
     announce(mode === 'advanced'
       ? 'Listing drafted with AI: description, category, subcategory, short summary, features, and search terms.'
       : 'Listing drafted with AI.');
-  });
+  }
+  $('ai-autofill').addEventListener('click', () => runAutofill(false));
+
+  // ---- Auto-draft the listing from the packaged site (labeled + fully undoable) ----
+  let draftUndoSnap = null;
+  function captureListingSnapshot() {
+    return {
+      desc: fDesc.value || '',
+      category: fCategory.value || '',
+      adv: (typeof window.__advSnapshot === 'function') ? window.__advSnapshot() : null
+    };
+  }
+  function restoreListingSnapshot(s) {
+    if (!s) return;
+    fDesc.value = s.desc || ''; syncDesc();
+    fCategory.value = s.category || ''; syncCategory();
+    if (s.adv && typeof window.__advRestore === 'function') window.__advRestore(s.adv);
+    ezRenderPreview();
+  }
+  function showDraftToast(phase) {
+    const t = $('draft-toast'); if (!t) return;
+    const txt = $('draft-toast-text'), acts = $('draft-toast-actions'), spin = $('draft-toast-spinner'), ic = $('draft-toast-icon');
+    const drafting = phase === 'drafting';
+    t.hidden = false;
+    if (txt) txt.textContent = drafting ? 'Drafting your listing from your site…' : 'Drafted from your site — review and edit anything.';
+    if (acts) acts.hidden = drafting;
+    if (spin) spin.hidden = !drafting;
+    if (ic) ic.hidden = drafting;
+  }
+  function hideDraftToast() { const t = $('draft-toast'); if (t) t.hidden = true; }
+  // Only auto-populate when we actually pulled details from the manifest — never fabricate
+  // a listing from nothing (the user can still click "Autofill with AI" by hand in that case).
+  async function autoDraftFromSite() {
+    try { if (pwaPkgManifestPromise) await pwaPkgManifestPromise; } catch (e) {}
+    const pkg = packages.find(p => p.fromPwa);
+    if (pkg && !pkg.manifest && pwaPkgManifest) pkg.manifest = pwaPkgManifest;   // carry the resolved manifest
+    const mf = pkg && pkg.manifest;
+    const hasInfo = !!(mf && (mf.name || mf.description || (mf.categories && mf.categories.length)));
+    if (!hasInfo) return;
+    draftUndoSnap = captureListingSnapshot();
+    showDraftToast('drafting');
+    await runAutofill(true);
+    showDraftToast('done');
+  }
+  const draftUndoBtn = $('draft-undo'); if (draftUndoBtn) draftUndoBtn.addEventListener('click', () => { restoreListingSnapshot(draftUndoSnap); hideDraftToast(); announce('Reverted the AI draft.'); });
+  const draftDismissBtn = $('draft-dismiss'); if (draftDismissBtn) draftDismissBtn.addEventListener('click', hideDraftToast);
 
   // Screenshots — REAL image upload, rendered inline on the live PDP (thumbnails + add tile).
   const ssFile = $('ss-file');
@@ -6725,6 +7065,7 @@
         resolve({ h: Math.round(h), s: Math.round(s * 100) });
       };
       img.onerror = () => resolve(null);
+      try { img.crossOrigin = 'anonymous'; } catch (e) {}   // read CORS-friendly remote logos; tainted ones just fall back to the name hue
       img.src = imgSrc;
     });
   }
@@ -7096,7 +7437,7 @@
     const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
     // Architecture — de-duped across every real (non-pending) package.
-    const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '');
+    const archOf = pkg => pkg.fromPwa ? 'Web app' : ((pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : ''));
     const arches = [];
     (packages || []).filter(p => !p._pending).forEach(p => archOf(p).split(',').map(s => s.trim()).filter(Boolean).forEach(a => { if (arches.indexOf(a) < 0) arches.push(a); }));
     const archVal = arches.length ? arches.join(', ') : '—';
@@ -8648,7 +8989,7 @@ function openPriceScheduleDialog() {
       const DASH = '<span style="color:var(--fg-3);">—</span>';
       const ADD = (label) => '<iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true" style="vertical-align:-1px;margin-right:3px;"></iconify-icon>' + label;
       const link = (id, inner) => '<a class="ez-info-item__value--link" id="' + id + '">' + inner + '</a>';
-      // ---- Additional terms (Privacy policy + Applicable license terms) — shown in both modes ----
+      // ---- Additional terms (Privacy policy + Applicable license terms) ----
       const privSet = (L.privacyMode === 'text') ? !!(L.privacyText || '').trim() : !!(L.privacyUrl || '').trim();
       const licSet = !!(L.licenseTerms || '').trim();
       // Mandatory terms get a red "*" until filled. Both are conditional on the package:
@@ -8658,7 +8999,11 @@ function openPriceScheduleDialog() {
       const licReq  = (typeof licenseRequired === 'function') && licenseRequired();
       const privCell = locked ? (privSet ? 'Privacy policy' : DASH) : (link('ez-info-privacy', privSet ? 'Privacy policy' : ADD('Add privacy policy')) + (privReq ? reqStar : ''));
       const licCell  = locked ? (licSet ? 'License terms' : DASH)  : (link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms')) + (licReq ? reqStar : ''));
-      const termsVal = '<span class="ez-info-item__line">' + privCell + '</span><span class="ez-info-item__line">' + licCell + '</span>';
+      // License terms is advanced-only for MSIX (it's optional there); Win32 requires it, so it
+      // stays visible in both modes. Privacy always shows.
+      const showLicense = advanced || licReq;
+      const termsVal = '<span class="ez-info-item__line">' + privCell + '</span>' +
+        (showLicense ? '<span class="ez-info-item__line">' + licCell + '</span>' : '');
       const termsRow = infoItem('fluent:document-bullet-list-20-regular', 'Additional terms', termsVal);
       // Simple mode: just the Additional terms (privacy + license) — the developer-actionable items.
       if (!advanced) {
@@ -8851,6 +9196,20 @@ function openPriceScheduleDialog() {
       if (g.subcategory) L.subcategory = String(g.subcategory);
       if (Array.isArray(g.features) && g.features.length) L.features = g.features.map(s => String(s).trim()).filter(Boolean).join('\n');
       if (Array.isArray(g.keywords) && g.keywords.length) L.keywords = g.keywords.map(s => String(s).trim()).filter(Boolean);
+      persistAdvanced();
+      renderKeywords(); renderFeatures(); renderInfo();
+    };
+    // Snapshot/restore the advanced listing fields so the auto-draft is fully undoable.
+    // (Unlike __advApplyAI, restore can also CLEAR fields the draft had set.)
+    window.__advSnapshot = function () {
+      return { shortDesc: L.shortDesc || '', subcategory: L.subcategory || '', features: L.features || '', keywords: (L.keywords || []).slice() };
+    };
+    window.__advRestore = function (s) {
+      if (!s) return;
+      L.shortDesc = s.shortDesc || ''; if (fShort) fShort.value = L.shortDesc;
+      L.subcategory = s.subcategory || '';
+      L.features = s.features || '';
+      L.keywords = Array.isArray(s.keywords) ? s.keywords.slice() : [];
       persistAdvanced();
       renderKeywords(); renderFeatures(); renderInfo();
     };

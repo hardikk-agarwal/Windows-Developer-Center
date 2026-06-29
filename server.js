@@ -180,6 +180,65 @@ function handleLinkPreview(req, res) {
     .catch(function () { sendJson(res, 200, { url: parsed.href, title: "", description: "", image: "", logo: "" }); });
 }
 
+// Server-side web app manifest read (PWA Builder–style): fetch the page, find its
+// <link rel="manifest">, fetch + parse it, and resolve icon/screenshot URLs. No CORS, so
+// this is the reliable path whenever the Node server is running; the client falls back to
+// public CORS proxies on the static deploy. Returns the same shape the client builds itself.
+function wmFetchText(target) {
+  var ctrl = new AbortController();
+  var to = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 8000);
+  return fetch(target, {
+    redirect: "follow", signal: ctrl.signal,
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36", "Accept": "text/html,application/xhtml+xml,application/json,*/*" }
+  }).then(function (r) { return r.text().then(function (t) { return { url: r.url || target, ok: r.ok, body: t || "" }; }); })
+    .finally(function () { clearTimeout(to); });
+}
+function wmHref(html, re) { var tag = (html.match(re) || [])[0] || ""; var m = tag.match(/\bhref\s*=\s*["']([^"']+)["']/i); return m ? m[1] : ""; }
+function webManifest(pageUrl) {
+  return wmFetchText(pageUrl).then(function (page) {
+    var html = (page.body || "").slice(0, 512 * 1024);
+    var finalUrl = page.url || pageUrl;
+    var href = wmHref(html, /<link[^>]*\brel\s*=\s*["']?[^"'>]*manifest[^"'>]*["']?[^>]*>/i);
+    var step = href
+      ? wmFetchText(lpAbsUrl(href, finalUrl)).then(function (mf) {
+          var man = {}; try { man = JSON.parse((mf.body || "").replace(/^﻿/, "")); } catch (e) {}
+          return { manifest: man, base: mf.url || finalUrl };
+        }).catch(function () { return { manifest: {}, base: finalUrl }; })
+      : Promise.resolve({ manifest: {}, base: finalUrl });
+    return step.then(function (r) {
+      var man = r.manifest || {}, base = r.base || finalUrl;
+      var icons = (Array.isArray(man.icons) ? man.icons : [])
+        .map(function (ic) { return { src: lpAbsUrl(ic.src || "", base), sizes: ic.sizes || "", purpose: ic.purpose || "" }; })
+        .filter(function (ic) { return ic.src; });
+      var shots = (Array.isArray(man.screenshots) ? man.screenshots : [])
+        .map(function (s) { return lpAbsUrl(s.src || "", base); }).filter(Boolean);
+      var ogImage = lpMeta(html, "og:image") || lpMeta(html, "twitter:image");
+      return {
+        name: lpDecode(man.name || man.short_name || lpMeta(html, "og:title") || ""),
+        shortName: lpDecode(man.short_name || ""),
+        description: lpDecode(man.description || lpMeta(html, "description") || lpMeta(html, "og:description") || ""),
+        categories: Array.isArray(man.categories) ? man.categories : [],
+        themeColor: man.theme_color || "",
+        icons: icons, screenshots: shots,
+        appleIcon: lpAbsUrl(wmHref(html, /<link[^>]*\brel\s*=\s*["'][^"']*apple-touch-icon[^"']*["'][^>]*>/i), finalUrl),
+        ogImage: ogImage ? lpAbsUrl(ogImage, finalUrl) : "",
+        hadManifest: !!href
+      };
+    });
+  });
+}
+function handleWebManifest(req, res) {
+  var u = new URL(req.url, "http://localhost");
+  var target = u.searchParams.get("url") || "";
+  var parsed;
+  try { parsed = new URL(target); } catch (e) { return sendJson(res, 400, { error: "bad url" }); }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return sendJson(res, 400, { error: "bad protocol" });
+  if (lpIsPrivateHost(parsed.hostname)) return sendJson(res, 400, { error: "blocked host" });
+  webManifest(parsed.href)
+    .then(function (d) { sendJson(res, 200, d); })
+    .catch(function () { sendJson(res, 200, { name: "", shortName: "", description: "", categories: [], themeColor: "", icons: [], screenshots: [], appleIcon: "", ogImage: "", hadManifest: false }); });
+}
+
 function sendJson(res, code, obj) {
   var body = JSON.stringify(obj);
   res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" });
@@ -220,6 +279,7 @@ http.createServer(function (req, res) {
   if (req.method === "GET" && req.url.indexOf("/api/apps-by-cert") === 0) return handleAppsByCert(req, res);
   if (req.method === "GET" && req.url.indexOf("/api/crash-analytics") === 0) return handleCrash(req, res);
   if (req.method === "GET" && req.url.indexOf("/api/link-preview") === 0) return handleLinkPreview(req, res);
+  if (req.method === "GET" && req.url.indexOf("/api/web-manifest") === 0) return handleWebManifest(req, res);
   if (req.method === "GET") return serveStatic(req, res);
   res.writeHead(405); res.end("Method not allowed");
 }).listen(PORT, "127.0.0.1", function () {
