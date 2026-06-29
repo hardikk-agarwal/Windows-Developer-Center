@@ -121,6 +121,65 @@ function handleCrash(req, res) {
     .catch(function (e) { sendJson(res, 500, { error: String(e && e.message || e) }); });
 }
 
+// Server-side link preview: fetch a page and pull its Open Graph image / title / description +
+// favicon, so the client never calls a third-party preview service. Best-effort; returns blanks
+// on any failure (the client falls back to just the hostname).
+function lpAbsUrl(maybe, base) { try { return new URL(maybe, base).href; } catch (e) { return ""; } }
+function lpDecode(s) {
+  return String(s || "")
+    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;/g, "'")
+    .replace(/&#x27;/gi, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+}
+function lpMeta(html, key) {
+  // <meta property|name="key" ... content="..."> — any attribute order.
+  var esc = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  var tag = (html.match(new RegExp('<meta[^>]*\\b(?:property|name)\\s*=\\s*["\\\']' + esc + '["\\\'][^>]*>', "i")) || [])[0];
+  if (!tag) return "";
+  var m = tag.match(/\bcontent\s*=\s*["']([^"']*)["']/i);
+  return m ? lpDecode(m[1]) : "";
+}
+function lpFavicon(html, base) {
+  var tag = (html.match(/<link[^>]*\brel\s*=\s*["'][^"']*icon[^"']*["'][^>]*>/i) || [])[0];
+  if (tag) { var h = tag.match(/\bhref\s*=\s*["']([^"']*)["']/i); if (h && h[1]) return lpAbsUrl(h[1], base); }
+  return lpAbsUrl("/favicon.ico", base);
+}
+function linkPreview(target) {
+  var ctrl = new AbortController();
+  var to = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 7000);
+  return fetch(target, {
+    redirect: "follow", signal: ctrl.signal,
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36", "Accept": "text/html,application/xhtml+xml" }
+  }).then(function (r) {
+    return r.text().then(function (full) {
+      var html = full.slice(0, 512 * 1024);   // OG tags live in <head>
+      var finalUrl = r.url || target;
+      var title = lpMeta(html, "og:title") || lpMeta(html, "twitter:title");
+      if (!title) { var t = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i); title = t ? lpDecode(t[1]) : ""; }
+      var image = lpMeta(html, "og:image") || lpMeta(html, "og:image:url") || lpMeta(html, "twitter:image") || lpMeta(html, "twitter:image:src");
+      var desc = lpMeta(html, "og:description") || lpMeta(html, "twitter:description") || lpMeta(html, "description");
+      return { url: finalUrl, title: title, description: desc, image: image ? lpAbsUrl(image, finalUrl) : "", logo: lpFavicon(html, finalUrl) };
+    });
+  }).finally(function () { clearTimeout(to); });
+}
+function lpIsPrivateHost(h) {
+  h = (h || "").toLowerCase();
+  if (h === "localhost" || h === "0.0.0.0" || h === "::1") return true;
+  if (/^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h) || /^169\.254\./.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
+  return false;
+}
+function handleLinkPreview(req, res) {
+  var u = new URL(req.url, "http://localhost");
+  var target = u.searchParams.get("url") || "";
+  var parsed;
+  try { parsed = new URL(target); } catch (e) { return sendJson(res, 400, { error: "bad url" }); }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return sendJson(res, 400, { error: "bad protocol" });
+  if (lpIsPrivateHost(parsed.hostname)) return sendJson(res, 400, { error: "blocked host" });
+  linkPreview(parsed.href)
+    .then(function (d) { sendJson(res, 200, d); })
+    .catch(function () { sendJson(res, 200, { url: parsed.href, title: "", description: "", image: "", logo: "" }); });
+}
+
 function sendJson(res, code, obj) {
   var body = JSON.stringify(obj);
   res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" });
@@ -160,6 +219,7 @@ http.createServer(function (req, res) {
   if (req.method === "POST" && req.url.indexOf("/api/verify-signature") === 0) return handleVerify(req, res);
   if (req.method === "GET" && req.url.indexOf("/api/apps-by-cert") === 0) return handleAppsByCert(req, res);
   if (req.method === "GET" && req.url.indexOf("/api/crash-analytics") === 0) return handleCrash(req, res);
+  if (req.method === "GET" && req.url.indexOf("/api/link-preview") === 0) return handleLinkPreview(req, res);
   if (req.method === "GET") return serveStatic(req, res);
   res.writeHead(405); res.end("Method not allowed");
 }).listen(PORT, "127.0.0.1", function () {

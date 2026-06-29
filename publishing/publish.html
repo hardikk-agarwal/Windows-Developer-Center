@@ -601,6 +601,25 @@
   .manifest-identity__copy { background: transparent; border: 0; width: 28px; height: 28px; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; transition: color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
   .manifest-identity__copy:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
   .manifest-identity__copy--copied { color: var(--status-success) !important; background: color-mix(in srgb, var(--status-success) 12%, transparent) !important; }
+  /* ===== "Package your website" (PWA → MSIX) dialog ===== */
+  #pwa-pkg-dialog::part(control), #pwa-pkg-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  .pwapkg__preview { display: block; text-decoration: none; border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--subtle); }
+  .pwapkg__preview-hero { height: 128px; background-size: cover; background-position: center top; background-color: var(--canvas-tint); }
+  .pwapkg__preview-hero[hidden] { display: none; }
+  .pwapkg__preview-body { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-10) var(--sp-12); }
+  .pwapkg__preview-favicon { width: 28px; height: 28px; border-radius: var(--r-4); flex: 0 0 auto; background: #fff; object-fit: contain; }
+  .pwapkg__preview-text { min-width: 0; display: flex; flex-direction: column; }
+  .pwapkg__preview-title { font-size: 13px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pwapkg__preview-host { font-size: 12px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pwapkg__scan { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-16) 0; color: var(--fg-2); font-size: 13px; }
+  .pwapkg__checks { list-style: none; padding: 0; margin: 0 0 var(--sp-12); display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6) var(--sp-16); }
+  .pwapkg__checks li { display: flex; align-items: center; gap: var(--sp-8); font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  .pwapkg__checks li iconify-icon { color: var(--status-success); flex: 0 0 auto; }
+  .pwapkg__identity { padding-top: var(--sp-12); border-top: 1px solid var(--stroke-3); }
+  .pwapkg__identity-label { display: block; font-size: 12px; color: var(--fg-3); margin-bottom: var(--sp-4); }
+  .pwapkg__identity-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--sp-12); margin: 0; }
+  .pwapkg__identity-rows dt { font-size: 12px; color: var(--fg-3); white-space: nowrap; }
+  .pwapkg__identity-rows dd { margin: 0; font-size: 12px; color: var(--fg-1); font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
   /* ===== Restricted capabilities dialog (justification) ===== */
   #restricted-caps-dialog, #restricted-caps-dialog::part(control), #restricted-caps-dialog::part(dialog) { width: min(560px, 92vw); max-width: min(560px, 92vw); }
@@ -748,6 +767,8 @@
   .pkgd-mono { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; color: var(--fg-1); font-weight: var(--font-weight-semibold); }
   .pkgd-hint { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-12) 0 0; font-size: var(--font-size-base-200); color: var(--status-warning); }
   .pkgd-hint iconify-icon { flex: 0 0 auto; }
+  /* Cap the body so the dialog stays compact — title + footer pinned, fields scroll. */
+  .pkgd-scroll { max-height: 58vh; overflow-y: auto; }
 
   /* ===== Add-another-package chooser ===== */
   #add-method-dialog, #add-method-dialog::part(control), #add-method-dialog::part(dialog) { width: min(440px, 92vw); max-width: min(440px, 92vw); }
@@ -901,6 +922,8 @@
   #rating-dialog fluent-button[slot="title-action"],
   #iarc-id-dialog fluent-button[slot="title-action"],
   #image-edit-dialog fluent-button[slot="title-action"],
+  #rating-terr-dialog fluent-button[slot="title-action"],
+  #pwa-pkg-dialog fluent-button[slot="title-action"],
   #submit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
   .ez-iarc-id-line { font-size: 13px; color: var(--fg-3); margin: var(--sp-16) 0 0; }
   /* ===== Submit-for-review dialog ===== */
@@ -2726,6 +2749,46 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
+<!-- Package a website as an MSIX (PWA Builder-style). A website URL opens this: a quick
+     manifest / service-worker / HTTPS report, the reserved identity applied automatically,
+     then a simulated build that produces a real MSIX package. -->
+<fluent-dialog id="pwa-pkg-dialog" modal-type="modal" aria-labelledby="pwa-pkg-title">
+  <fluent-dialog-body>
+    <span slot="title" id="pwa-pkg-title">
+      <iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      Package your website
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-pwa-pkg-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <!-- Chat-app-style link preview of the site (favicon + title, plus og:image hero when present). -->
+    <a class="pwapkg__preview" id="pwa-pkg-preview" target="_blank" rel="noopener" aria-label="Open website in a new tab">
+      <div class="pwapkg__preview-hero" id="pwa-pkg-hero" hidden></div>
+      <div class="pwapkg__preview-body">
+        <img class="pwapkg__preview-favicon" id="pwa-pkg-favicon" alt="" />
+        <span class="pwapkg__preview-text">
+          <span class="pwapkg__preview-title" id="pwa-pkg-ptitle"></span>
+          <span class="pwapkg__preview-host" id="pwa-pkg-phost"></span>
+        </span>
+      </div>
+    </a>
+
+    <div class="pwapkg__scan" id="pwa-pkg-scan" hidden>
+      <fluent-spinner size="small" aria-hidden="true"></fluent-spinner>
+      <span>Reading your web manifest and service worker…</span>
+    </div>
+
+    <div id="pwa-pkg-body" hidden></div>
+
+    <fluent-button slot="action" appearance="secondary" data-pwa-pkg-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="pwa-pkg-go" hidden>
+      <iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Package as MSIX
+    </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
 <!-- Autofill-with-AI dialog: describe the app in a line, draft description + category. -->
 <fluent-dialog id="ai-autofill-dialog" modal-type="modal" aria-labelledby="ai-autofill-title">
   <fluent-dialog-body>
@@ -3359,6 +3422,7 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
+    <div class="pkgd-scroll">
     <div class="pkgd-file" id="pkgd-file"></div>
     <p class="pkgd-intro" id="pkgd-intro">We read these from your installer's file name — review them and confirm. We'll validate the package in the background.</p>
 
@@ -3395,7 +3459,12 @@
     </div>
 
     <p class="pkgd-hint" id="pkgd-hint" hidden></p>
+    </div>
     <fluent-button slot="action" appearance="secondary" data-pkgd-cancel>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="secondary" id="pkgd-convert">
+      <iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Convert to MSIX
+    </fluent-button>
     <fluent-button slot="action" appearance="primary" id="pkgd-confirm">Confirm</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -5256,7 +5325,7 @@
     // Display newest version first. (The packages array itself keeps insertion order — packageMethod relies on packages[0].)
     const verKey = v => String(v || '0').split('.').map(n => parseInt(n, 10) || 0);
     const ordered = packages.filter(p => !p._pending).sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
-    const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : (pkg.kind === 'pwa' ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
+    const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : ((pkg.kind === 'pwa' || pkg.fromPwa) ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
     const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—');
     const verOf  = pkg => pkg.version ? 'v' + pkg.version : '—';
     const deviceOf = pkg => (pkg.devices && pkg.devices.length) ? pkg.devices.join(', ') : (pkg.win32 ? 'Desktop' : (pkg.kind === 'pwa' ? 'Web' : '—'));
@@ -5846,6 +5915,7 @@
     const urlOk = pkg.source !== 'url' || !!(urlEl && urlEl.value.trim());
     const langOk = win32LangsOf(pkg).length > 0;
     btn.disabled = !(urlOk && langOk);
+    const cv = $('pkgd-convert'); if (cv) cv.disabled = !(urlOk && langOk);
     let msg = '';
     if (!urlOk) msg = 'Paste your installer link to confirm.';
     else if (!langOk) msg = 'Add at least one language to confirm.';
@@ -5921,6 +5991,39 @@
     renderPackages();
     openNextPendingPkg();
   }
+  // Convert this Win32 installer into an MSIX (real-world: the MSIX Packaging Tool wraps the
+  // EXE/MSI). Simulated repackage; the package becomes a real MSIX in the table, in place.
+  function convertPkgToMsix() {
+    const pkg = pkgdPkg(); if (!pkg) { try { pkgDetailsDialog.hide(); } catch (e) {} return; }
+    const btn = $('pkgd-convert'), confirmBtn = $('pkgd-confirm');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Converting…'; }
+    if (confirmBtn) confirmBtn.disabled = true;
+    const urlInput = $('pkgd-url');   // keep the latest URL edit so the name carries over
+    if (pkg.source === 'url' && urlInput && urlInput.value.trim()) { pkg.url = urlInput.value.trim(); pkg.filename = basenameOf(pkg.url); }
+    setTimeout(function () {
+      const base = (pkg.filename || 'app').replace(/\.(exe|msi)(?:[?#].*)?$/i, '');
+      pkg.origType = pkg.type;
+      pkg.kind = 'msix';
+      pkg.win32 = false;
+      pkg.fromWin32 = true;
+      pkg.type = 'MSIX (converted)';
+      pkg.filename = base + '.msix';
+      pkg.version = pkg.version || '1.0.0.0';
+      pkg.arches = (pkg.arches && pkg.arches.length) ? pkg.arches : ['x64'];
+      pkg.devices = ['Desktop'];
+      pkg.installParams = '';
+      delete pkg.exitCodes; delete pkg.validation; delete pkg._pending;
+      pkg.manifestParsed = true;
+      if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Convert to MSIX'; }
+      if (confirmBtn) confirmBtn.disabled = false;
+      try { pkgDetailsDialog.hide(); } catch (e) {}
+      state.pkg = packages.some(p => !p._pending);
+      renderPackages();
+      if (typeof updateGate === 'function') updateGate();
+      announce('Converted to an MSIX package and added.');
+      openNextPendingPkg();
+    }, 1200);
+  }
   function cancelPkgDetails() {
     const pkg = pkgdPkg();
     if (pkg) {
@@ -5937,6 +6040,7 @@
   if (pkgDetailsDialog) {
     pkgDetailsDialog.querySelectorAll('[data-pkgd-cancel]').forEach(b => b.addEventListener('click', cancelPkgDetails));
     if ($('pkgd-confirm')) $('pkgd-confirm').addEventListener('click', confirmPkgDetails);
+    if ($('pkgd-convert')) $('pkgd-convert').addEventListener('click', convertPkgToMsix);
     if ($('pkgd-url')) $('pkgd-url').addEventListener('input', updatePkgdConfirm);   // enable Confirm once a link is entered
     const advBtn = $('pkgd-adv-toggle');
     if (advBtn) advBtn.addEventListener('click', () => {
@@ -6060,13 +6164,120 @@
         const id = addHostedPackage('win32', url);   // no render — the details dialog commits on Confirm
         if (id) openPkgDetailsDialog(id, true);       // leave the link field untouched until the dialog resolves
       } else {
-        addHostedPackage('pwa', url);
+        openPwaPackager(url);          // website → package it as an MSIX (PWA Builder-style)
         input.value = ''; syncUrlType();
       }
     };
     input.addEventListener('input', syncUrlType);
     btn.addEventListener('click', submit);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  })();
+
+  // ---- "Package your website" (PWA → MSIX), PWA-Builder-style. A website URL opens this
+  // dialog: a quick (simulated) manifest / service-worker / HTTPS report card, the identity we
+  // already hold from the reservation (no Partner Center copy/paste), then a simulated build
+  // that produces a real MSIX package the rest of the flow treats like any uploaded MSIX. ----
+  function pwaPkgIdentity() {
+    const appName = ((app && app.name) || 'YourApp').replace(/\s+/g, '');
+    const storeId = (app && typeof app.storeId === 'string' && app.storeId) || '9N2KRDT2DD0S';
+    return { identityName: storeId + '.' + appName, publisherDisplay: 'Hardik Agarwal' };
+  }
+  let pwaPkgPendingUrl = '';
+  function pwaPkgRenderReport() {
+    const body = $('pwa-pkg-body'); if (!body) return;
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const id = pwaPkgIdentity();
+    const checks = ['Web app manifest', 'Service worker', 'Served over HTTPS'];
+    body.innerHTML =
+      '<ul class="pwapkg__checks">' +
+        checks.map(t =>
+          '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' + t + '</li>'
+        ).join('') +
+      '</ul>' +
+      '<div class="pwapkg__identity">' +
+        '<span class="pwapkg__identity-label">Identity — applied automatically</span>' +
+        '<dl class="pwapkg__identity-rows">' +
+          '<dt>Package</dt><dd title="' + esc(id.identityName) + '">' + esc(id.identityName) + '</dd>' +
+          '<dt>Publisher</dt><dd>' + esc(id.publisherDisplay) + '</dd>' +
+        '</dl>' +
+      '</div>';
+  }
+  function pwaPkgSetPhase(phase) {   // 'scan' | 'review' | 'building'
+    const scan = $('pwa-pkg-scan'), body = $('pwa-pkg-body'), go = $('pwa-pkg-go');
+    if (scan) scan.hidden = phase !== 'scan';
+    if (body) body.hidden = phase === 'scan';
+    if (go) {
+      go.hidden = phase === 'scan';
+      go.disabled = phase === 'building';
+      go.innerHTML = phase === 'building'
+        ? '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Building your MSIX…'
+        : '<iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Package as MSIX';
+    }
+  }
+  // Chat-app-style link preview: favicon + title always, plus an og:image hero when the site has
+  // one. Best-effort via a public preview service; if it's unreachable or rate-limited, the favicon
+  // + host card stands on its own. (A real build would fetch this through our own /api proxy.)
+  function pwaPkgPreview(url) {
+    const host = hostnameOf(url);
+    const a = $('pwa-pkg-preview'), fav = $('pwa-pkg-favicon'), hero = $('pwa-pkg-hero');
+    const titleEl = $('pwa-pkg-ptitle'), hostEl = $('pwa-pkg-phost');
+    if (a) a.href = url;
+    if (titleEl) titleEl.textContent = host;
+    if (hostEl) hostEl.textContent = host;
+    if (fav) { fav.style.display = ''; fav.onerror = function () { fav.style.display = 'none'; }; fav.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host) + '&sz=64'; }
+    // Hero = a live screenshot of the page. A site's own og:image is often just a logo card
+    // (e.g. apple.com), so a real screenshot is a truer "website preview". Falls back to no hero.
+    if (hero) {
+      hero.hidden = true; hero.style.backgroundImage = '';
+      const shotUrl = 'https://image.thum.io/get/width/800/crop/450/' + url;
+      const shot = new Image();
+      shot.onload = function () { hero.style.backgroundImage = 'url("' + shotUrl.replace(/"/g, '%22') + '")'; hero.hidden = false; };
+      shot.onerror = function () { hero.hidden = true; };
+      shot.src = shotUrl;
+    }
+    // Title + favicon from a public preview service (best-effort; browsers can't read another origin's tags directly).
+    let ctrl = null;
+    try { ctrl = new AbortController(); setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 6000); } catch (e) {}
+    fetch('https://api.microlink.io/?url=' + encodeURIComponent(url), ctrl ? { signal: ctrl.signal } : undefined)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        const d = (j && j.data) || {};
+        if (d.title && titleEl) titleEl.textContent = d.title;
+        if (d.logo && d.logo.url && fav) { fav.onerror = function () { fav.style.display = 'none'; }; fav.src = d.logo.url; }
+      })
+      .catch(function () {});
+  }
+  function openPwaPackager(url) {
+    const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
+    pwaPkgPendingUrl = url;
+    pwaPkgPreview(url);
+    pwaPkgSetPhase('scan');
+    try { dlg.show(); } catch (e) {}
+    setTimeout(function () { pwaPkgRenderReport(); pwaPkgSetPhase('review'); }, 900);
+  }
+  function addPackagedPwa(url) {
+    const appName = ((app && app.name) || 'YourApp').replace(/\s+/g, '');
+    const id = 'pkg-' + Math.random().toString(36).slice(2, 8);
+    packages.push({
+      id, source: 'url', kind: 'msix', win32: false, fromPwa: true, url,
+      filename: appName + '.msix', type: 'PWA (MSIX)',
+      version: '1.0.0.0', arches: ['neutral'], langs: ['en-US'],
+      installParams: '', capabilities: [], devices: ['Desktop'],
+      manifestParsed: true, sizeBytes: 2 * 1024 * 1024
+    });
+    state.pkg = packages.some(p => !p._pending);
+    renderPackages();
+    if (typeof updateGate === 'function') updateGate();
+    announce('Your website was packaged as an MSIX and added.');
+  }
+  (function wirePwaPackager() {
+    const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
+    const go = $('pwa-pkg-go');
+    if (go) go.addEventListener('click', () => {
+      pwaPkgSetPhase('building');
+      setTimeout(() => { addPackagedPwa(pwaPkgPendingUrl); try { dlg.hide(); } catch (e) {} }, 1200);
+    });
+    dlg.querySelectorAll('[data-pwa-pkg-close]').forEach(b => b.addEventListener('click', () => { try { dlg.hide(); } catch (e) {} }));
   })();
 
   // -------------------------------------------------------------
