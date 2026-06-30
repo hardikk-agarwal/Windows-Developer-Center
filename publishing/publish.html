@@ -5407,7 +5407,7 @@
     const verKey = v => String(v || '0').split('.').map(n => parseInt(n, 10) || 0);
     const ordered = packages.filter(p => !p._pending).sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
     const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : ((pkg.kind === 'pwa' || pkg.fromPwa) ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
-    const archOf = pkg => pkg.fromPwa ? 'Web app' : ((pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—'));
+    const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—');
     const verOf  = pkg => pkg.version ? 'v' + pkg.version : '—';
     const deviceOf = pkg => (pkg.devices && pkg.devices.length) ? pkg.devices.join(', ') : (pkg.win32 ? 'Desktop' : (pkg.kind === 'pwa' ? 'Web' : '—'));
     // Win32 table cells: a compact language summary, and the validation status (clickable when done).
@@ -7459,7 +7459,7 @@
     const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
     // Architecture — de-duped across every real (non-pending) package.
-    const archOf = pkg => pkg.fromPwa ? 'Web app' : ((pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : ''));
+    const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '');
     const arches = [];
     (packages || []).filter(p => !p._pending).forEach(p => archOf(p).split(',').map(s => s.trim()).filter(Boolean).forEach(a => { if (arches.indexOf(a) < 0) arches.push(a); }));
     const archVal = arches.length ? arches.join(', ') : '—';
