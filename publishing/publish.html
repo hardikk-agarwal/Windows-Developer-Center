@@ -22,6 +22,8 @@
 <script src="ai-config.js"></script>
 <script src="ai-client.js"></script>
 <script src="tooltip.js" defer></script>
+<!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
+<script src="cert-issues.js" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
 <script src="tdp-bridge.js" defer></script>
 <link rel="stylesheet" href="styles.css">
@@ -98,8 +100,68 @@
 
   /* Steps */
   .ez-step { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-24); margin-bottom: var(--sp-16); }
-  .ez-step__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); }
+  .ez-step__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; }
   .ez-step__action { margin-left: auto; flex: 0 0 auto; }
+  /* "Autofill with AI" — a distinct, prominent AI action so developers actually spot it.
+     This Fluent build paints the button surface on the host element (it exposes no "control"
+     part), so the gradient/glow go on the host, with !important to beat the component styles. */
+  .ez-ai-btn {
+    /* Colours come from the app's Fluent tokens + the existing in-app AI gradient
+       (the design-mode switch), so the AI action stays on-brand and consistent. */
+    --ai-g1: var(--brand-bg);   /* Fluent colorBrandBackground (#0F6CBD) */
+    --ai-g2: #4C8BF5;           /* app AI-gradient blue */
+    --ai-g3: #B794F4;           /* app AI-gradient lavender */
+    color: #fff !important; border: 0 !important;
+    height: 36px; padding: 0 var(--sp-16) !important; border-radius: var(--r-8) !important;
+    font-weight: 600; letter-spacing: .1px; cursor: pointer;
+    background-color: transparent !important;
+    background-image: linear-gradient(120deg, var(--ai-g1) 0%, var(--ai-g2) 48%, var(--ai-g3) 100%) !important;
+    background-size: 180% 100% !important; background-position: 0% 50% !important;
+    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--brand-bg) 60%, transparent);
+    transition: background-position .5s var(--ease-out), transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+    animation: aiBreathe 3s ease-in-out infinite;
+  }
+  .ez-ai-btn:hover { background-position: 100% 50% !important; transform: translateY(-1px); box-shadow: 0 8px 22px -4px color-mix(in srgb, var(--brand-bg) 80%, transparent); animation: none; }
+  .ez-ai-btn:active { transform: translateY(0); }
+  .ez-ai-btn:focus-visible { outline: 2px solid #fff !important; outline-offset: 2px; }
+  .ez-ai-btn iconify-icon { color: #fff !important; }
+  @keyframes aiBreathe {
+    0%, 100% { box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--brand-bg) 50%, transparent); }
+    50% { box-shadow: 0 6px 22px -2px color-mix(in srgb, var(--brand-bg) 78%, transparent), 0 0 0 3px color-mix(in srgb, #B794F4 22%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) { .ez-ai-btn, .ez-ai-btn:hover { animation: none; } }
+  /* Small "Draft with AI" chips echo the AI action on empty fields (same on-brand gradient). */
+  .ez-ai-chip { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 4px 8px; border: 0; border-radius: var(--r-4); font: inherit; font-size: 12px; font-weight: 600; line-height: 1; color: var(--brand); cursor: pointer; background: transparent; transition: background var(--dur-2) var(--ease-out); }
+  .ez-ai-chip[hidden] { display: none; }
+  .ez-ai-chip:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+  .ez-ai-chip iconify-icon { color: var(--brand); }
+  .ez-ai-chip.is-busy { opacity: .55; pointer-events: none; }
+  /* Adaptive "Enhance with AI" menu (opens from a field chip; positioned in JS). */
+  .ai-menu { position: fixed; z-index: 1000; min-width: 224px; padding: var(--sp-6); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: 0 10px 28px -8px rgba(0,0,0,.55); animation: aiHintIn .16s var(--ease-out) both; }
+  .ai-menu[hidden] { display: none; }
+  .ai-menu__head { font-size: 12px; font-weight: 600; color: var(--fg-2); margin: var(--sp-4) var(--sp-8) var(--sp-6); }
+  .ai-menu__label { font-size: 10.5px; color: var(--fg-4); margin: var(--sp-6) var(--sp-8) var(--sp-2); text-transform: uppercase; letter-spacing: .05em; }
+  .ai-menu__item { display: flex; align-items: center; gap: var(--sp-8); width: 100%; padding: 6px var(--sp-8); border: 0; background: none; font: inherit; font-size: 13px; color: var(--fg-1); text-align: left; border-radius: var(--r-4); cursor: pointer; }
+  .ai-menu__item iconify-icon { color: var(--brand); flex: 0 0 auto; }
+  .ai-menu__item:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+  .ai-menu__sep { height: 1px; background: var(--stroke-3); margin: var(--sp-4) var(--sp-4); }
+  /* Fluent 2 TeachingPopover-style coachmark / FRE: solid brand surface, white text, a beak,
+     and a footer action. Shared by the Autofill-with-AI hint and the Advanced-options hint. */
+  .fre-coach { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: 300px; padding: var(--sp-16); border-radius: var(--r-8); background: var(--brand-bg); color: #fff; box-shadow: 0 8px 16px rgba(0,0,0,.3), 0 0 2px rgba(0,0,0,.3); animation: aiHintIn .28s var(--ease-out) both; }
+  .fre-coach[hidden] { display: none; }
+  .fre-coach--left { right: auto; left: 0; }
+  .fre-coach::before { content: ''; position: absolute; top: -5px; right: 40px; width: 12px; height: 12px; background: var(--brand-bg); transform: rotate(45deg); border-radius: 2px 0 0 0; }
+  .fre-coach--left::before { right: auto; left: 22px; }
+  .fre-coach__body { display: flex; align-items: flex-start; gap: var(--sp-10); }
+  .fre-coach__ico { color: #fff; flex: 0 0 auto; margin-top: 1px; }
+  .fre-coach__text { flex: 1; min-width: 0; }
+  .fre-coach__text strong { display: block; font-size: 14px; font-weight: 600; color: #fff; }
+  .fre-coach__text span { display: block; font-size: 12.5px; line-height: 17px; color: rgba(255,255,255,.92); margin-top: 3px; }
+  .fre-coach__foot { display: flex; justify-content: flex-end; margin-top: var(--sp-12); }
+  .fre-coach__btn { border: 0; background: #fff; color: var(--brand-bg); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: var(--r-4); cursor: pointer; }
+  .fre-coach__btn:hover { background: rgba(255,255,255,.9); }
+  @keyframes aiHintIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .fre-coach { animation: none; } }
   .ez-step__num { width: 28px; height: 28px; flex: 0 0 auto; border-radius: 50%; background: var(--subtle); color: var(--fg-3); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 13px; transition: background var(--dur-3) var(--ease-out), color var(--dur-3) var(--ease-out); }
   .ez-step--done .ez-step__num { background: var(--status-success); color: var(--fg-on-brand); }
   .ez-step__title { font-size: var(--font-size-base-500); line-height: var(--line-height-base-500); font-weight: 600; color: var(--fg-1); margin: 0; }
@@ -488,9 +550,18 @@
   .ez-store-hero[data-has-media="true"] .ez-store-hero__desc,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__cta,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__iarc { max-width: 45%; }
-  /* Empty-state "add hero" Fluent button (Advanced only) + the sibling remove button. */
-  .ez-hero-add-btn { position: absolute; z-index: 4; bottom: var(--sp-12); right: var(--sp-16); }
-  .ez-hero-add-btn[hidden] { display: none !important; }
+  /* In-place "add hero" empty state (Advanced only) — a clickable drop zone sitting exactly
+     where the hero art renders (right-side banner), so it's obvious what it fills. */
+  .ez-hero-empty { position: absolute; z-index: 3; top: 10px; right: 10px; bottom: 10px; width: 46%;
+    flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6);
+    border: 1.5px dashed rgba(255,255,255,.45); border-radius: var(--r-8); background: rgba(0,0,0,.18);
+    color: #fff; cursor: pointer; text-align: center; padding: var(--sp-12);
+    transition: border-color .12s ease, background .12s ease; }
+  .ez-hero-empty:hover { border-color: #fff; background: rgba(0,0,0,.30); }
+  .ez-hero-empty iconify-icon { opacity: .95; }
+  .ez-hero-empty__title { font-size: 13px; font-weight: 600; }
+  .ez-hero-empty__hint { font-size: 11px; opacity: .82; line-height: 1.3; }
+  .ez-hero-empty[hidden] { display: none !important; }
   .ez-hero-media__remove { position: absolute; z-index: 4; top: var(--sp-12); right: var(--sp-16); width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
   .ez-hero-media__remove:hover { background: rgba(196,43,28,.9); }
   /* Features list on the PDP. */
@@ -834,8 +905,20 @@
   #lang-dialog .lang-dialog__opt fluent-switch { flex: 0 0 auto; margin-top: 2px; }
   #lang-dialog .lang-dialog__opt-title { display: block; font-size: var(--font-size-base-300); color: var(--fg-1); font-weight: var(--font-weight-semibold); }
   #lang-dialog .lang-dialog__opt-hint { display: block; font-size: var(--font-size-base-200); color: var(--fg-3); margin-top: 2px; line-height: 1.45; }
+  /* "Set default" action shown on added, non-default rows in Manage languages. */
+  #lang-dialog .lang-row__setdef { justify-self: start; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--brand); background: none; border: 0; padding: 1px 6px; border-radius: var(--r-4); cursor: pointer; white-space: nowrap; }
+  #lang-dialog .lang-row__setdef:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  /* Shared-field edit warning overlay (editing a cross-language field in a non-default locale). */
+  .shared-warn { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); padding: var(--sp-16); }
+  .shared-warn[hidden] { display: none; }
+  .shared-warn__card { width: min(420px, 96vw); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: 0 24px 60px -12px rgba(0,0,0,.6); padding: var(--sp-20); }
+  .shared-warn__head { display: flex; align-items: center; gap: var(--sp-10); margin: 0 0 var(--sp-10); }
+  .shared-warn__icon { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); flex: 0 0 auto; }
+  .shared-warn__title { margin: 0; font-size: var(--font-size-base-400); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .shared-warn__body { margin: 0 0 var(--sp-20); font-size: var(--font-size-base-300); color: var(--fg-2); line-height: 1.5; }
+  .shared-warn__foot { display: flex; justify-content: flex-end; gap: var(--sp-8); }
   /* Default-only fields look non-interactive while a non-default locale is active. */
-  #ez-live.is-locale-locked #ez-pv-category { cursor: default; }
+  #ez-live.is-locale-locked #ez-pv-category { cursor: pointer; }
 
   /* Sticky submit */
   /* Offset past the left rail so it spans the main column, not the whole viewport. */
@@ -879,6 +962,86 @@
   .submit-strip__title { font-size: 15px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-2); }
   .submit-strip__desc { font-size: 13px; color: var(--fg-3); margin: 0; }
 
+  /* ===== Certification result: preview switcher (prototype-only demo control) =====
+     Floats at the bottom-centre of the screen so it reads as a demo control, not part of the
+     product UI. Only visible while #state-done is shown (post-submit; hidden with its parent). */
+  .cert-switch { position: fixed; left: 50%; bottom: var(--sp-16); transform: translateX(-50%); z-index: 90; display: inline-flex; align-items: center; gap: var(--sp-6); margin: 0; padding: var(--sp-6) var(--sp-8); background: var(--layer); border: 1px dashed var(--stroke-2); border-radius: var(--r-full); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  .cert-switch__label { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--fg-4); padding: 0 var(--sp-6); }
+  .cert-switch__opt { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 12px; font-weight: 600; padding: var(--sp-4) var(--sp-10); border-radius: var(--r-6); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .cert-switch__opt:hover { background: var(--subtle); color: var(--fg-1); }
+  .cert-switch__opt.is-active { background: var(--subtle); color: var(--fg-1); box-shadow: inset 0 0 0 1px var(--stroke-2); }
+
+  /* ===== Certification result: failed report ===== */
+  .cert-result { animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; }
+  @keyframes certResultIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .cert-result { animation: none; } }
+  /* Failed cert reuses the in-progress timeline card, with a red header icon + a failed stage. */
+  .cert-card__icon--fail { background: color-mix(in srgb, var(--status-danger) 15%, transparent); color: var(--status-danger); }
+  .cert-stage--fail .cert-stage__bullet { background: var(--status-danger); border-color: var(--status-danger); color: #fff; }
+  .cert-stage--blocked { opacity: .55; }
+  .cert-stage__pill { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 11px; font-weight: 600; padding: 2px var(--sp-8); border-radius: var(--r-full); flex: 0 0 auto; white-space: nowrap; }
+  .cert-stage__pill--fail { color: var(--status-danger); background: color-mix(in srgb, var(--status-danger) 14%, transparent); }
+  .cert-stage__pill--hold { color: var(--fg-4); background: var(--subtle); }
+
+  .cert-issues { display: flex; flex-direction: column; }
+  .cert-issue { display: flex; gap: var(--sp-16); padding: var(--sp-20) var(--sp-32); border-bottom: 1px solid var(--stroke-2); }
+  .cert-issue:last-child { border-bottom: 0; }
+  .cert-issue__ico { width: 36px; height: 36px; border-radius: var(--r-8); flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--subtle); color: var(--fg-2); }
+  .cert-issue__body { flex: 1; min-width: 0; }
+  .cert-issue__title { font-size: 15px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-8); }
+  .cert-issue__line { display: flex; gap: var(--sp-8); font-size: 13px; line-height: 1.5; margin-top: var(--sp-4); }
+  .cert-issue__line iconify-icon { flex: 0 0 auto; margin-top: 2px; }
+  .cert-issue__line--problem iconify-icon { color: var(--status-danger); }
+  .cert-issue__line--fix iconify-icon { color: var(--status-success); }
+  .cert-issue__line span { color: var(--fg-2); }
+  .cert-issue__line--fix b { color: var(--fg-1); font-weight: 600; }
+  .cert-issue__foot { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); flex-wrap: wrap; }
+  .cert-issue__policy { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 11px; color: var(--fg-4); background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 2px var(--sp-8); }
+  /* Failure callout + collapsible report, shown inside the timeline card. */
+  .cert-failbar { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-20); padding: var(--sp-12) var(--sp-16); background: color-mix(in srgb, var(--status-danger) 8%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 30%, transparent); border-radius: var(--r-8); flex-wrap: wrap; }
+  .cert-failbar > iconify-icon { color: var(--status-danger); flex: 0 0 auto; }
+  .cert-failbar span { flex: 1; min-width: 12ch; font-size: 13px; color: var(--fg-2); }
+  .cert-failbar strong { color: var(--fg-1); }
+  .cert-failbar fluent-button { flex: 0 0 auto; }
+  /* Certification issues fold into the header submit-checklist as distinct rows: a mark-fixed
+     toggle + the plain-language fix, so the one checklist is where "what's left" always lives. */
+  .ez-ckcert { display: flex; align-items: flex-start; gap: var(--sp-6); width: 100%; padding: var(--sp-6); background: color-mix(in srgb, var(--status-danger) 6%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 22%, transparent); border-radius: var(--r-6); }
+  .ez-ckcert.is-done { background: color-mix(in srgb, var(--status-success) 7%, var(--layer)); border-color: color-mix(in srgb, var(--status-success) 26%, transparent); }
+  .ez-ckcert__mark { appearance: none; border: 0; background: none; padding: 2px; margin: 1px 0 0; color: var(--status-danger); cursor: pointer; flex: 0 0 auto; display: inline-flex; border-radius: var(--r-full); }
+  .ez-ckcert.is-done .ez-ckcert__mark { color: var(--status-success); }
+  .ez-ckcert__mark:hover { background: color-mix(in srgb, var(--fg-4) 18%, transparent); }
+  .ez-ckcert__go { appearance: none; border: 0; background: none; padding: 0; margin: 0; font: inherit; text-align: left; cursor: pointer; flex: 1; min-width: 0; display: block; }
+  .ez-ckcert__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--fg-1); }
+  .ez-ckcert.is-done .ez-ckcert__label { text-decoration: line-through; text-decoration-color: var(--fg-4); color: var(--fg-3); }
+  .ez-ckcert__fix { display: block; font-size: 12px; color: var(--fg-2); margin-top: 1px; }
+  .ez-ckcert__fix b { color: var(--fg-1); font-weight: 600; }
+  .ez-ckcert__go:hover .ez-ckcert__label { text-decoration: underline; }
+  /* Small banner at the top of the checklist panel while resolving certification issues. */
+  .ck-certnote { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-8); padding: var(--sp-8) var(--sp-10); font-size: 12px; line-height: 16px; color: var(--fg-2); background: color-mix(in srgb, var(--status-danger) 8%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 22%, transparent); border-radius: var(--r-6); }
+  .ck-certnote iconify-icon { color: var(--status-danger); flex: 0 0 auto; margin-top: 1px; }
+  .ck-certnote b { color: var(--fg-1); }
+  .ck-certnote--done { background: color-mix(in srgb, var(--status-success) 8%, var(--layer)); border-color: color-mix(in srgb, var(--status-success) 26%, transparent); }
+  .ck-certnote--done iconify-icon { color: var(--status-success); }
+  .cert-report { margin-top: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; }
+  .cert-report[hidden] { display: none; }
+  .cert-report .cert-issue { padding: var(--sp-16) var(--sp-20); }
+  .cert-report__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-16); padding: var(--sp-16) var(--sp-20); background: var(--subtle); border-top: 1px solid var(--stroke-2); flex-wrap: wrap; }
+  .cert-report__foot p { font-size: 13px; color: var(--fg-3); margin: 0; max-width: 52ch; }
+
+  /* ===== Certification result: passed (compact banner) ===== */
+  .cert-pass { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); background: color-mix(in srgb, var(--status-success) 8%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); border-radius: var(--r-8); margin-bottom: var(--sp-16); }
+  .cert-pass__badge { width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--status-success) 18%, transparent); color: var(--status-success); }
+  .cert-pass__text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .cert-pass__title { font-size: 14px; line-height: 18px; font-weight: 600; color: var(--fg-1); }
+  .cert-pass__sub { font-size: 12.5px; line-height: 16px; color: var(--fg-2); }
+  .cert-pass fluent-button { flex: 0 0 auto; }
+  @media (max-width: 520px) { .cert-pass { flex-wrap: wrap; } .cert-pass__text { flex-basis: 100%; } }
+
+  @media (max-width: 600px) {
+    .cert-fail__head, .cert-issue, .cert-fail__foot { padding-left: var(--sp-20); padding-right: var(--sp-20); }
+    .cert-fail__foot { flex-direction: column; align-items: stretch; }
+  }
+
   @media (max-width: 600px) {
     .ez-wrap { padding: var(--sp-20) var(--sp-16) var(--sp-32); }
     .ez-title { font-size: 26px; line-height: 32px; }
@@ -889,7 +1052,7 @@
      content below (the card's canvas), like the full flow's live preview. */
   /* Subtle, real-Store-style tint: the logo's hue at a muted (--ez-sat) saturation, kept dark so it
      reads as a gentle wash that fades into the page rather than a vivid colour block. */
-  .ez-store-hero { position: relative; padding: var(--sp-32) var(--sp-24) var(--sp-48); color: #fff; background-color: transparent; background-image: linear-gradient(180deg, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 21%) 0%, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 14%) 50%, var(--layer) 88%); }
+  .ez-store-hero { position: relative; padding: var(--sp-32) var(--sp-24) var(--sp-20); color: #fff; background-color: transparent; background-image: linear-gradient(180deg, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 21%) 0%, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 14%) 50%, var(--layer) 92%); }
   .ez-store-hero__top { display: flex; align-items: flex-start; gap: var(--sp-16); }
   .ez-store-hero__icon { width: 72px; height: 72px; flex: 0 0 auto; border-radius: var(--r-12); background: linear-gradient(135deg, hsl(var(--ez-hue, 320), 80%, 60%), hsl(var(--ez-hue, 320), 70%, 40%)); background-size: cover; background-position: center; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
   .ez-store-hero__heading { min-width: 0; padding-top: 2px; }
@@ -909,7 +1072,7 @@
   .ez-iarc-text p { font-size: 11px; color: rgba(255,255,255,.72); margin: 0; }
   /* Empty state — a faded IARC placeholder badge + prompt until the age rating is completed. */
   .ez-iarc-empty { display: none; align-items: center; gap: var(--sp-10); margin: 0; }
-  .ez-iarc-empty__img { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 4px; object-fit: contain; background: #fff; filter: grayscale(1); opacity: .5; }
+  .ez-iarc-empty__badge { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px dashed rgba(255,255,255,.5); background: rgba(255,255,255,.06); color: rgba(255,255,255,.78); font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1; }
   .ez-iarc-empty span { font-size: 12px; color: rgba(255,255,255,.72); }
   .ez-store-hero__iarc.is-empty .iarc-badge,
   .ez-store-hero__iarc.is-empty .ez-iarc-text { display: none; }
@@ -1627,8 +1790,9 @@
   .price-sale-item__remove:hover { background: var(--hover, color-mix(in srgb, var(--fg-1) 10%, transparent)); color: var(--fg-1); }
   /* "More options" per-step toggle (wizard only) — reveals the advanced Listing / Reach
      fields on demand. Off by default; only shown on the Listing and Reach & price steps. */
-  #flow-wrap.is-wizard #wz-more-bar { display: flex; align-items: center; margin: 0 0 var(--sp-16); }
+  #flow-wrap.is-wizard #wz-more-bar { display: flex; align-items: center; margin: 0 0 var(--sp-16); position: relative; }
   #wz-more-bar[hidden] { display: none !important; }
+  /* Advanced-options coachmark reuses the shared .fre-coach / .fre-coach--left styles above. */
   .wz-more__toggle { display: inline-flex; align-items: center; gap: var(--sp-12); cursor: pointer; }
   .wz-more__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .wz-more__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
@@ -1636,12 +1800,17 @@
   #flow-wrap.is-wizard #step-listing.is-more .listing-langs-control.adv-only { display: flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-card-section.adv-only { display: block !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only { display: inline-flex !important; }
-  #flow-wrap.is-wizard #step-listing.is-more .ez-hero-add-btn.adv-only:not([hidden]) { display: inline-flex !important; }
+  #flow-wrap.is-wizard #step-listing.is-more .ez-hero-empty.adv-only:not([hidden]) { display: flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-hero-media__remove.adv-only:not([hidden]) { display: inline-flex !important; }
+  /* Keep the listing content clear of the drop zone while the empty state shows. */
+  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__top,
+  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__desc,
+  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__cta,
+  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__iarc { max-width: 48%; }
   /* Hero image + trailer are MSIX-only listing features. When the submission has a Win32 (exe/msi/url)
      package, suppress both "add" affordances even in Advanced. MSIX submissions keep showing them. */
   #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only,
-  #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-hero-add-btn.adv-only { display: none !important; }
+  #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-hero-empty.adv-only { display: none !important; }
   #flow-wrap.is-wizard #editor > .ez-step:not(.is-wz-active) { display: none !important; }
   #flow-wrap.is-wizard .ez-step__expand, #flow-wrap.is-wizard .ez-step__summary { display: none !important; }
   #flow-wrap.is-wizard .ez-step { cursor: default; margin-bottom: 0; padding: var(--sp-32); border-color: var(--stroke-3); box-shadow: none; }
@@ -2110,6 +2279,18 @@
             <span class="wz-more__hint" id="wz-more-hint">Languages, trailer, features, and system requirements.</span>
           </span>
         </label>
+        <div class="fre-coach fre-coach--left" id="wz-adv-hint" role="status" hidden>
+          <div class="fre-coach__body">
+            <iconify-icon class="fre-coach__ico" icon="fluent:options-16-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
+            <div class="fre-coach__text">
+              <strong id="wz-adv-hint-title">More options here</strong>
+              <span id="wz-adv-hint-body">Turn this on to unlock more.</span>
+            </div>
+          </div>
+          <div class="fre-coach__foot">
+            <button type="button" class="fre-coach__btn" id="wz-adv-hint-dismiss">Got it</button>
+          </div>
+        </div>
       </div>
 
       <!-- Identity reference (Advanced, Package tab only): sits ABOVE the package
@@ -2178,11 +2359,23 @@
             <p class="ez-step__sub">Click any field on your live Store listing to edit it.</p>
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
-          <fluent-button id="ai-autofill-open" class="ez-step__action" appearance="secondary">
-            <iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+          <fluent-button id="ai-autofill-open" class="ez-step__action ez-ai-btn" appearance="secondary">
+            <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
             Autofill with AI
           </fluent-button>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+          <div class="fre-coach" id="ai-autofill-hint" role="status" hidden>
+            <div class="fre-coach__body">
+              <iconify-icon class="fre-coach__ico" icon="fluent:sparkle-16-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
+              <div class="fre-coach__text">
+                <strong>Let AI draft your listing</strong>
+                <span>Turn one line about your app into a description &amp; category.</span>
+              </div>
+            </div>
+            <div class="fre-coach__foot">
+              <button type="button" class="fre-coach__btn" id="ai-hint-dismiss">Got it</button>
+            </div>
+          </div>
         </div>
 
         <!-- Multi-language (Advanced): pick the editing language; Manage opens the
@@ -2232,10 +2425,11 @@
           <div class="ez-store-hero" id="ez-hero">
             <!-- Hero art (image/video) — right-side masked banner, exactly as variant B's live listing. -->
             <div class="ez-store-hero-media" id="ez-pv-hero-media" hidden></div>
-            <fluent-button class="ez-hero-add-btn adv-only" id="ez-hero-add-btn" appearance="secondary" size="small">
-              <iconify-icon slot="start" icon="fluent:image-add-24-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              Add hero image or video
-            </fluent-button>
+            <button type="button" class="ez-hero-empty adv-only" id="ez-hero-add" aria-label="Add hero image or video">
+              <iconify-icon icon="fluent:image-add-24-regular" width="26" height="26" aria-hidden="true"></iconify-icon>
+              <span class="ez-hero-empty__title">Add hero image or video</span>
+              <span class="ez-hero-empty__hint">Appears as a banner at the top of your listing</span>
+            </button>
             <button type="button" class="ez-hero-media__remove adv-only" id="ez-hero-del" aria-label="Remove hero media" hidden>
               <iconify-icon icon="fluent:dismiss-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
             </button>
@@ -2270,8 +2464,8 @@
                 <p id="ez-pv-iarc-desc">No content descriptors</p>
               </div>
               <div class="ez-iarc-empty">
-                <img class="ez-iarc-empty__img" src="assets/ratings/iarc-0.png" alt="" aria-hidden="true">
-                <span>Complete the age rating to display it here.</span>
+                <span class="ez-iarc-empty__badge" aria-hidden="true">?</span>
+                <span>Age rating not set yet — complete it to display here.</span>
               </div>
             </div>
           </div>
@@ -2301,6 +2495,9 @@
             <section class="ez-card-section">
               <div class="ez-card-section__head">
                 <h4 class="ez-card-section__title">Description <span class="field-mark field-mark--req" aria-label="required">*</span></h4>
+                <button type="button" class="ez-ai-chip" id="desc-ai-chip">
+                  <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span class="ez-ai-chip__label">Draft with AI</span>
+                </button>
               </div>
               <div class="ez-card-section__body">
                 <p class="ez-store-desc" id="ez-pv-desc">Your description appears here.</p>
@@ -2312,6 +2509,9 @@
             <section class="ez-card-section adv-only" id="ez-features-section">
               <div class="ez-card-section__head">
                 <h4 class="ez-card-section__title">Features</h4>
+                <button type="button" class="ez-ai-chip" id="feat-ai-chip">
+                  <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span class="ez-ai-chip__label">Draft with AI</span>
+                </button>
               </div>
               <div class="ez-card-section__body">
                 <ul class="ez-store-features" id="ez-pv-features"></ul>
@@ -2439,7 +2639,7 @@
           <div class="reach-row">
             <div class="reach-row__head">
               <iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-              <strong>Markets</strong>
+              <strong>Markets <span class="field-mark field-mark--req" aria-label="required">*</span></strong>
             </div>
             <div class="seg" role="radiogroup" aria-label="Markets" data-choice="markets">
               <button class="seg__opt seg__opt--active" data-value="all" type="button">All 240</button>
@@ -2459,7 +2659,7 @@
           <div class="reach-row" id="reach-audience-row">
             <div class="reach-row__head">
               <iconify-icon icon="fluent:people-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-              <strong>Audience</strong>
+              <strong>Audience <span class="field-mark field-mark--req" aria-label="required">*</span></strong>
             </div>
             <div class="seg" role="radiogroup" aria-label="Audience" data-choice="audience">
               <button class="seg__opt seg__opt--active" data-value="public" type="button">Public</button>
@@ -2490,7 +2690,7 @@
           <div class="reach-row">
             <div class="reach-row__head">
               <iconify-icon icon="fluent:tag-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-              <strong>Price <span class="field-mark field-mark--req" id="price-req-star" aria-label="required" hidden>*</span></strong>
+              <strong>Price <span class="field-mark field-mark--req" aria-label="required">*</span></strong>
             </div>
             <div class="seg" role="radiogroup" aria-label="Price" data-choice="price">
               <button class="seg__opt seg__opt--active" data-value="free" type="button">Free</button>
@@ -2527,7 +2727,7 @@
                 </fluent-listbox>
               </fluent-dropdown>
               <label for="price-amount" class="price-paid-row__label">Base price</label>
-              <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="number" value="4.99"></fluent-text-input>
+              <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="text" inputmode="decimal" value="4.99"></fluent-text-input>
               <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
             </div>
             <div class="price-advanced" id="price-advanced" hidden>
@@ -2640,6 +2840,17 @@
         </div>
         <fluent-button appearance="secondary" size="small" id="notify-audience-open">Manage</fluent-button>
       </div>
+
+      <!-- Prototype preview switcher — jump between certification outcomes (demo/testing only). -->
+      <div class="cert-switch" id="cert-switch" role="group" aria-label="Preview certification result">
+        <span class="cert-switch__label"><iconify-icon icon="fluent:eye-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Preview</span>
+        <button type="button" class="cert-switch__opt is-active" data-cert-view="progress">In review</button>
+        <button type="button" class="cert-switch__opt" data-cert-view="passed">Passed</button>
+        <button type="button" class="cert-switch__opt" data-cert-view="failed">Needs attention</button>
+      </div>
+
+      <!-- In-progress certification timeline -->
+      <div id="cert-progress">
       <div class="cert-card">
         <div class="cert-card__head">
           <div class="cert-card__icon">
@@ -2691,8 +2902,12 @@
           <span><strong>Estimated time:</strong> 1&ndash;2 business days. Most apps clear certification on the first attempt.</span>
         </div>
       </div>
+      </div><!-- /#cert-progress -->
 
-      <div class="submit-strip" style="margin-top: var(--sp-16);">
+      <!-- Certification result (passed or failed) — rendered by tdp-bridge.js -->
+      <div id="cert-result" hidden></div>
+
+      <div class="submit-strip" id="cert-actions" style="margin-top: var(--sp-16);">
         <div class="submit-strip__text">
           <h3 class="submit-strip__title">Need to make changes?</h3>
           <p class="submit-strip__desc">You can withdraw the submission until it goes live.</p>
@@ -2807,24 +3022,39 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
+<!-- Adaptive AI assist menu: opens from a field's "Enhance with AI" chip (position set in JS). -->
+<div class="ai-menu" id="ai-assist-menu" role="menu" hidden>
+  <p class="ai-menu__head" id="ai-menu-head">Enhance with AI</p>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="improve"><iconify-icon icon="fluent:wand-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Improve writing</button>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="shorter"><iconify-icon icon="fluent:text-collapse-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Make it shorter</button>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="longer"><iconify-icon icon="fluent:text-expand-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Make it longer</button>
+  <div class="ai-menu__sep"></div>
+  <p class="ai-menu__label">Change tone</p>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="tone" data-tone="professional"><iconify-icon icon="fluent:briefcase-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Professional</button>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="tone" data-tone="friendly"><iconify-icon icon="fluent:emoji-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Friendly</button>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="tone" data-tone="concise"><iconify-icon icon="fluent:slide-text-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Concise</button>
+  <div class="ai-menu__sep"></div>
+  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="grammar"><iconify-icon icon="fluent:text-grammar-checkmark-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix spelling &amp; grammar</button>
+</div>
+
 <!-- Autofill-with-AI dialog: describe the app in a line, draft description + category. -->
 <fluent-dialog id="ai-autofill-dialog" modal-type="modal" aria-labelledby="ai-autofill-title">
   <fluent-dialog-body>
     <span slot="title" id="ai-autofill-title">
       <iconify-icon icon="fluent:sparkle-20-filled" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px; color: var(--brand);"></iconify-icon>
-      Autofill with AI
+      <span id="ai-dialog-title-text">Autofill with AI</span>
     </span>
     <fluent-button slot="title-action" appearance="subtle" data-ai-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <p class="ez-ai-dialog__intro">Describe your app in a line and we'll draft your description, category, search keywords, and feature highlights. You can edit everything after.</p>
+    <p class="ez-ai-dialog__intro" id="ai-dialog-intro">Describe your app in a line and we'll draft your description, category, search keywords, and feature highlights. You can edit everything after.</p>
     <fluent-text-input id="ai-pitch" class="ez-ai-dialog__input" placeholder="e.g. A fast, private note-taking app"></fluent-text-input>
 
     <fluent-button slot="action" appearance="secondary" data-ai-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="ai-autofill">
       <iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Autofill
+      <span id="ai-autofill-label">Autofill</span>
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -3089,7 +3319,7 @@
       </div>
       <div class="field">
         <label for="price-schedule-price" class="field__label">New base price (USD)</label>
-        <fluent-text-input id="price-schedule-price" type="number" placeholder="2.99"></fluent-text-input>
+        <fluent-text-input id="price-schedule-price" type="text" inputmode="decimal" placeholder="2.99"></fluent-text-input>
       </div>
     </div>
 
@@ -3134,7 +3364,7 @@
           <fluent-dropdown id="price-sale-currency" class="price-currency-dropdown" aria-label="Sale price currency">
             <fluent-listbox></fluent-listbox>
           </fluent-dropdown>
-          <fluent-text-input id="price-sale-amount" type="number" placeholder="2.99"></fluent-text-input>
+          <fluent-text-input id="price-sale-amount" type="text" inputmode="decimal" placeholder="2.99"></fluent-text-input>
         </div>
       </div>
       <div class="field" id="price-sale-percent-field" hidden>
@@ -3336,7 +3566,7 @@
 
     <p class="lang-dialog__note">
       <iconify-icon icon="fluent:info-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Customers see your listing in their language if you've added it; otherwise they see the default (English).
+      Customers see your listing in their language if you've added it; otherwise they see your default language. Use “Set default” to change which language is the default.
     </p>
 
     <fluent-text-input id="lang-search" class="markets-dialog__search" placeholder="Search languages…">
@@ -3360,6 +3590,23 @@
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
+
+<!-- Shared-field edit warning — shown once per session when the developer edits a field that's
+     identical across every language (category, keywords, privacy…) while a non-default editing
+     language is active. -->
+<div class="shared-warn" id="shared-warn" hidden role="dialog" aria-modal="true" aria-labelledby="shared-warn-title">
+  <div class="shared-warn__card" role="document">
+    <div class="shared-warn__head">
+      <span class="shared-warn__icon"><iconify-icon icon="fluent:globe-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+      <h3 class="shared-warn__title" id="shared-warn-title">This applies to every language</h3>
+    </div>
+    <p class="shared-warn__body" id="shared-warn-body"></p>
+    <div class="shared-warn__foot">
+      <fluent-button appearance="secondary" id="shared-warn-cancel">Cancel</fluent-button>
+      <fluent-button appearance="accent" id="shared-warn-ok">Change for all languages</fluent-button>
+    </div>
+  </div>
+</div>
 
 <!-- Restricted capabilities — justify each capability the package declares. Opens
      from the package notice in both Easy and Advanced. -->
@@ -4033,19 +4280,13 @@
   function refreshAppHeadIcon() {
     const icon = $('app-icon');
     if (!icon) return;
-    const iconUrl = userIconDataUrl || pkgIconDataUrl;
+    const iconUrl = userIconDataUrl || pkgIconDataUrl || baseIcon;
     if (iconUrl) {
       icon.style.backgroundImage = 'url(' + iconUrl + ')';
       icon.style.backgroundSize = 'cover';
       icon.style.backgroundPosition = 'center';
       icon.textContent = '';
       icon.classList.add('tdp-has-icon');   // real logo shows directly — no placeholder box
-      // Persist the logo so it also shows in the portal's Apps list and the app hub.
-      try {
-        const _all = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
-        const _i = _all.findIndex(a => a && a.id === (app && app.id));
-        if (_i >= 0 && _all[_i].icon !== iconUrl) { _all[_i].icon = iconUrl; localStorage.setItem('msstore.apps', JSON.stringify(_all)); }
-      } catch (e) {}
     } else {
       icon.style.backgroundImage = '';
       icon.style.backgroundSize = '';
@@ -4053,16 +4294,35 @@
       icon.textContent = (app.name || 'A').charAt(0).toUpperCase();
       icon.classList.remove('tdp-has-icon');
     }
+    // Only a MANUAL logo upload changes the stored (portal Apps table) logo. A package logo overrides
+    // the header + live listing for this session only, so we never write it to msstore.apps — that keeps
+    // the table = the app's base identity and lets "remove package" revert cleanly to the base logo.
+    try {
+      if (userIconDataUrl) {
+        const _all = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
+        const _i = _all.findIndex(a => a && a.id === (app && app.id));
+        if (_i >= 0 && (_all[_i].icon || null) !== userIconDataUrl) {
+          _all[_i].icon = userIconDataUrl;
+          localStorage.setItem('msstore.apps', JSON.stringify(_all));
+        }
+      }
+    } catch (e) {}
   }
 
   // Recognized brand apps (internal/placeholder) derive their header + live-listing icon from the
   // PRESENT package — mirroring how the real flow reads the icon from the uploaded manifest. Remove
   // the last package and the icon reverts to the name placeholder. Runs on every package add/remove.
   function syncBrandLogo() {
-    if (!appBrandLogo) return;                       // only recognized brand apps
-    const want = packages.length ? appBrandLogo : null;
-    if (pkgIconDataUrl === want) return;
-    pkgIconDataUrl = want;
+    // No package present → drop any package-derived logo (a recognized brand logo OR a manifest
+    // icon), so the header + live icon revert to the name placeholder when the last package is
+    // removed. A user-uploaded logo (userIconDataUrl) is separate and still wins.
+    if (!packages.length) {
+      if (pkgIconDataUrl !== null) { pkgIconDataUrl = null; refreshLogoHue(); refreshAppHeadIcon(); if (typeof ezRenderPreview === 'function') ezRenderPreview(); }
+      return;
+    }
+    if (!appBrandLogo) return;                        // recognized brand apps derive their icon from package presence
+    if (pkgIconDataUrl === appBrandLogo) return;
+    pkgIconDataUrl = appBrandLogo;
     refreshLogoHue();
     refreshAppHeadIcon();
     if (typeof ezRenderPreview === 'function') ezRenderPreview();
@@ -4158,10 +4418,10 @@
       'step-package': state.pkg,
       'step-listing': state.name && state.desc && state.category && state.shots.length > 0,
       'step-rating': state.rating,
-      // Reach & price ships fine on defaults — it reads "done" whenever nothing
-      // required is outstanding (a free app needs nothing; a paid one needs a
-      // base price). Matches the step dots, the count, and the submit gate.
-      'step-reach': !ckSection('step-reach').some(it => ckRequired(it) && !ckDone(it))
+      // Reach & price ships fine on defaults — but it should only read "done" once the
+      // user has actually opened it (reachVisited); otherwise it would show complete before
+      // it's ever been seen. Submission is still allowed on defaults (the gate is separate).
+      'step-reach': reachVisited && !ckSection('step-reach').some(it => ckRequired(it) && !ckDone(it))
     };
     document.querySelectorAll('.ez-rail__item').forEach(it => {
       const id = it.dataset.section;
@@ -4189,7 +4449,7 @@
     clone.querySelectorAll(
       '.ez-hero-media__remove, .ez-trailer-add-btn, input[type="file"], ' +
       '.ez-pv-shot__del, .ez-pv-shot-add, .ez-shots-arrow, ' +
-      '.ez-store-features-empty, .ez-hero-add-btn'
+      '.ez-store-features-empty, .ez-hero-empty'
     ).forEach(n => n.remove());
     // Hide optional sections that have no content (Features / Sys req / Info / Screenshots).
     clone.querySelectorAll('.ez-store-features, .ez-store-sysreq, .ez-info-grid, .ez-store-shots').forEach(list => {
@@ -4340,9 +4600,10 @@
       // details; 'custom' = per-app details below. Not localized (shared contact info).
       support: { mode: 'account', address1: '', address2: '', city: '', zip: '', state: '', country: 'US', website: '', phone: '', email: '' },
       // Multi-language: per-locale buckets for the translated fields (description,
-      // shortDesc, features). 'en-US' is the default and lives in the live buffers
-      // (fDesc / shortDesc / features); other locales store {description,shortDesc,features}.
-      locales: {}, activeLocale: 'en-US' }
+      // shortDesc, features). The default locale (initially 'en-US') lives in the live
+      // buffers (fDesc / shortDesc / features); other locales store {description,shortDesc,features}.
+      // defaultLocale is the base language and can be changed from Manage languages.
+      locales: {}, activeLocale: 'en-US', defaultLocale: 'en-US' }
   });
   // Advanced settings are SESSION state: they live only in this runtime object,
   // so the in-page Easy<->Advanced toggle is lossless, but a hard refresh starts
@@ -4482,10 +4743,12 @@
     // Derived from the CHECKLIST_ITEMS registry (the one source of truth shared
     // with the gate + the per-section checklist), so adding a required field
     // here flows through automatically. A section with nothing required still
-    // outstanding is complete — including Reach & price on a free app, whose
-    // defaults are valid and never block review. This keeps the step dots in
-    // agreement with the "N to finish before review" count and the submit gate
-    // (which both read the same registry), so they can't disagree.
+    // outstanding is complete. Reach & price is the one exception: even though its
+    // defaults are valid, review stays gated until the developer has actually
+    // VISITED the step (reachVisited) — so "Submit for review" can't enable until
+    // Reach & price has been opened. The gate, the "N to finish" count, and the
+    // step dots all read this, so they stay in agreement.
+    if (id === 'step-reach' && !reachVisited) return false;
     return !ckSection(id).some(it => ckRequired(it) && !ckDone(it));
   }
   // Has the section been started (some data entered) but not yet completed?
@@ -4500,7 +4763,13 @@
     return false;
   }
   function wzStepStatus(id) {
-    if (wzStepComplete(id)) return 'complete';
+    if (wzStepComplete(id)) {
+      // Reach & price is valid on defaults, but shouldn't read "complete" (green ✓) until
+      // the user has actually opened it — otherwise the step shows done before it's seen.
+      // Submission stays allowed on defaults (the gate reads wzStepComplete, not this).
+      if (id === 'step-reach' && !reachVisited) return wzStepStarted(id) ? 'in-progress' : 'not-started';
+      return 'complete';
+    }
     return wzStepStarted(id) ? 'in-progress' : 'not-started';
   }
   function wzFurthestReachable() {
@@ -4737,7 +5006,7 @@
     { section: 'step-listing', label: 'License terms', required: () => licenseRequired(), done: () => (adv.listing.licenseTerms || '').trim().length > 0, focus: '#ez-info-license' },
     // Store listing — optional enhancements
     { section: 'step-listing', label: 'Short description', required: false, done: () => (adv.listing.shortDesc || '').trim().length > 0, focus: '#ez-pv-short' },
-    { section: 'step-listing', label: 'Hero image or trailer', required: false, done: () => !!adv.listing.hero || (adv.listing.trailers && adv.listing.trailers.length > 0), focus: '#ez-hero-add-btn' },
+    { section: 'step-listing', label: 'Hero image or trailer', required: false, done: () => !!adv.listing.hero || (adv.listing.trailers && adv.listing.trailers.length > 0), focus: '#ez-hero-add' },
     { section: 'step-listing', label: 'Feature highlights', required: false, done: () => (adv.listing.features || '').trim().length > 0, focus: '#ez-features-add' },
     { section: 'step-listing', label: 'Search terms', required: false, done: () => !!(adv.listing.keywords && adv.listing.keywords.length) },
     // Age rating
@@ -4763,10 +5032,53 @@
   function ckSection(id) { return CHECKLIST_ITEMS.filter(it => it.section === id && ckApplies(it)); }
   function ckRequiredIncomplete() { return CHECKLIST_ITEMS.filter(it => ckRequired(it) && !ckDone(it)); }
 
+  // ---- Certification issues fold into THIS checklist ------------------------
+  // When a rejected app is being fixed, the cert issues become required checklist
+  // items in their section (Store listing), so the single header checklist is the
+  // one place that shows "what's left" — no separate panel taking over the editor.
+  // Each stays not-done (and gates "Submit for review") until the developer marks it
+  // fixed, and jumps straight to the field when its label is clicked.
+  let certFixActive = false, certFixInjected = false;
+  const certFixed = {};
+  function certIssuesLeft() { return (window.CERT_ISSUES || []).filter((_, i) => !certFixed[i]).length; }
+  window.certFixActivate = function () {
+    if (!certFixInjected) {
+      (window.CERT_ISSUES || []).forEach(function (ci, i) {
+        CHECKLIST_ITEMS.push({
+          section: ci.section, label: ci.title, certFix: ci, certIdx: i,
+          required: true, applies: () => certFixActive, done: () => !!certFixed[i]
+        });
+      });
+      certFixInjected = true;
+    }
+    certFixActive = true;
+    try { updateGate(); } catch (_) {}
+    // Open the header checklist once so the developer immediately sees the folded issues.
+    try {
+      const panel = document.getElementById('submit-checklist-panel'), wrap = document.getElementById('submit-checklist'), tog = document.getElementById('submit-checklist-toggle');
+      if (panel && panel.hidden) { panel.hidden = false; if (wrap) wrap.classList.add('is-open'); if (tog) tog.setAttribute('aria-expanded', 'true'); }
+    } catch (_) {}
+    try { renderChecklists(); } catch (_) {}
+  };
+
   // ---- Submit-readiness checklist (renders from CHECKLIST_ITEMS) -------------
   function ckItemRow(it) {
     const done = ckDone(it);
     const idx = CHECKLIST_ITEMS.indexOf(it);
+    // Certification issues render as distinct rows: a mark-fixed toggle + the plain-language
+    // fix. The label jumps to the step; the toggle checks it off (which clears the submit gate).
+    if (it.certFix) {
+      const cIcon = done ? 'fluent:checkmark-circle-16-filled' : 'fluent:circle-16-regular';
+      return '<li><div class="ez-ckcert' + (done ? ' is-done' : '') + '">' +
+        '<button type="button" class="ez-ckcert__mark" data-ckfix="' + it.certIdx + '" aria-pressed="' + (done ? 'true' : 'false') + '" title="' + (done ? 'Mark as not fixed' : 'Mark as fixed') + '">' +
+          '<iconify-icon icon="' + cIcon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        '</button>' +
+        '<button type="button" class="ez-ckcert__go" data-ck="' + idx + '">' +
+          '<span class="ez-ckcert__label">' + it.label + '</span>' +
+          '<span class="ez-ckcert__fix"><b>Fix:</b> ' + it.certFix.fix + '</span>' +
+        '</button>' +
+      '</div></li>';
+    }
     const icon = done ? 'fluent:checkmark-circle-16-filled' : 'fluent:circle-16-regular';
     // Every row jumps to its section (and field, if it has a focus selector).
     let val = '';
@@ -4803,7 +5115,10 @@
     // package auto-fills name/logo/etc.), so point at the one real next action.
     const noPkg = !state.pkg;
     const totalLeft = ckRequiredIncomplete().length;
-    const ready = totalLeft === 0;
+    const allItemsDone = totalLeft === 0;
+    // "Ready" also requires the developer to have opened Reach & price at least once — its
+    // defaults are valid, but they shouldn't submit a page they've never actually seen.
+    const ready = allItemsDone && reachVisited;
     wrap.classList.toggle('is-ready', ready);
     const cur = ckCurrentSection();
     // Lead the summary with what's left on the CURRENT page — the number the developer
@@ -4813,6 +5128,7 @@
     if (summaryEl) summaryEl.textContent =
       noPkg ? 'Add a package to start'
       : ready ? 'Ready to submit for review'
+      : (allItemsDone && !reachVisited) ? 'Open Reach & price to finish'
       : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
       : (totalLeft + ' to finish before review');
     // Everything past the Package step is locked until a package is added.
@@ -4837,12 +5153,15 @@
       }
       const doneReq = req.filter(ckDone).length;
       const leftN = req.length - doneReq;
-      const complete = leftN === 0; // nothing required outstanding (incl. defaults-only sections)
+      // Reach & price defaults are valid, but the developer must OPEN the step once before it
+      // counts as complete (matches the submit gate) — until then it reads "Review", not "Done".
+      const reachPending = (id === 'step-reach' && !reachVisited);
+      const complete = leftN === 0 && !reachPending; // nothing required outstanding (incl. defaults-only sections)
       const open = ckGroupIsOpen(id, cur);
       const optOpen = !!ckOptOpen[id];   // optional items collapsed unless explicitly expanded
       // Lead with what's LEFT on this page — the count that matters most. Complete
       // sections read “Done” (green); defaults-only sections with nothing required read “Ready”.
-      const status = complete ? (req.length ? 'Done' : 'Ready') : (leftN + ' left');
+      const status = complete ? (req.length ? 'Done' : 'Ready') : (reachPending && leftN === 0 ? 'Review' : (leftN + ' left'));
       html += '<div class="ck-group' + (open ? ' is-open' : '') + (id === cur ? ' is-current' : '') + '">' +
         '<button type="button" class="ck-group__head" data-ck-group="' + id + '" aria-expanded="' + open + '">' +
           '<iconify-icon class="ck-group__chev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
@@ -4864,6 +5183,15 @@
         '</div></div>';
     });
     if (anyLocked) html += '<div class="ck-locked-note"><iconify-icon icon="fluent:lock-closed-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon> Add your app package to unlock the rest.</div>';
+    // While resolving a failed certification, lead the panel with a short recap so the
+    // developer always recalls why these issues are here and how many remain.
+    if (certFixActive) {
+      const tot = (window.CERT_ISSUES || []).length, left = certIssuesLeft();
+      html = (left > 0
+        ? '<div class="ck-certnote"><iconify-icon icon="fluent:error-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon><span>Certification found <b>' + tot + '</b> ' + (tot === 1 ? 'issue' : 'issues') + ' — fix each and mark it done. <b>' + (tot - left) + ' of ' + tot + ' fixed</b>.</span></div>'
+        : '<div class="ck-certnote ck-certnote--done"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon><span>All <b>' + tot + '</b> certification ' + (tot === 1 ? 'issue' : 'issues') + ' fixed — resubmit when ready.</span></div>'
+      ) + html;
+    }
     panel.innerHTML = html;
   }
   function ckClosePanel() {
@@ -4894,7 +5222,9 @@
     if (grp) { const id = grp.getAttribute('data-ck-group'); ckGroupOpen[id] = !ckGroupIsOpen(id, ckCurrentSection()); renderChecklists(); return; }
     const optTog = e.target.closest('[data-ck-opt]');
     if (optTog) { const id = optTog.getAttribute('data-ck-opt'); ckOptOpen[id] = !ckOptOpen[id]; renderChecklists(); return; }
-    const row = e.target.closest('.ez-checklist__item[data-ck]');
+    const ckfix = e.target.closest('[data-ckfix]');
+    if (ckfix) { const ci = parseInt(ckfix.getAttribute('data-ckfix'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
+    const row = e.target.closest('.ez-checklist__item[data-ck], .ez-ckcert__go[data-ck]');
     if (row) { const it = CHECKLIST_ITEMS[parseInt(row.getAttribute('data-ck'), 10)]; ckClosePanel(); ckJumpTo(it); return; }
     if (!e.target.closest('#submit-checklist')) ckClosePanel();
   });
@@ -4909,6 +5239,7 @@
     refreshDefaultsLine();
     syncRail();
     renderEasySteps();
+    if (window.__updateAiChips) window.__updateAiChips();
     if (typeof updateWzChrome === 'function') updateWzChrome();
     renderChecklists();
 
@@ -4916,13 +5247,17 @@
     const missing = ckRequiredIncomplete().map(it => it.label);
 
     const gate = $('gate-hint'), text = $('gate-text'), btn = $('submit');
-    btn.disabled = missing.length !== 0;
+    // Submit needs every required item done AND the developer to have opened Reach & price.
+    btn.disabled = missing.length !== 0 || !reachVisited;
     // In the wizard, updateWzChrome owns the hint text + ready state (one step at a time);
     // only the non-wizard easy/advanced flow uses this global summary line.
     if (!document.getElementById('flow-wrap').classList.contains('is-wizard')) {
-      if (missing.length === 0) {
+      if (missing.length === 0 && reachVisited) {
         gate.classList.add('ez-gate--ready');
         text.textContent = 'Ready to submit. ' + advSummary() + ' · age rating set.';
+      } else if (missing.length === 0) {
+        gate.classList.remove('ez-gate--ready');
+        text.textContent = 'Open Reach & price to finish.';
       } else {
         gate.classList.remove('ez-gate--ready');
         text.textContent = 'Still needed: ' + missing.join(' · ') + '.';
@@ -5096,6 +5431,11 @@
   const packageList = $('package-list');
   const packages = [];
   let pkgIconDataUrl = null;   // app icon pulled from the package manifest (for the live preview)
+  // Base logo = the same logo shown in the portal Apps table, seeded on entry (app.baseLogo — a real
+  // image if the app has one, else a faithful copy of the initials tile; app.icon is the legacy field).
+  // It's what the header + live listing show on entry and revert to when a package is removed. A package
+  // logo (pkgIconDataUrl) or a manual upload (userIconDataUrl) overrides it for header + listing.
+  const baseIcon = (app && (app.baseLogo || app.icon)) || null;
   let appBrandLogo = null;     // internal/placeholder brand logo for recognized demo apps (e.g. Photoshop)
 
   function detectType(name) {
@@ -6566,8 +6906,9 @@
   // Step 2: listing
   // -------------------------------------------------------------
   const fName = $('f-name'), fDesc = $('f-desc'), fCategory = $('f-category');
-  let userIconDataUrl = (app && app.icon) || null;   // user-uploaded app icon; also restores a saved logo on reload
-  if (userIconDataUrl) { refreshAppHeadIcon(); refreshLogoHue(); }
+  let userIconDataUrl = null;   // in-session manual logo upload. A package logo (pkgIconDataUrl) is also session-only; both override the base logo for the header + live listing but aren't restored from storage on load.
+  // On entry, show the app's base logo (the same image as the portal Apps table) in the header + hero.
+  if (userIconDataUrl || baseIcon) { refreshAppHeadIcon(); refreshLogoHue(); }
 
   function syncName() {
     state.name = (fName.value || '').trim().length >= 2;
@@ -6579,12 +6920,13 @@
   function syncDesc() {
     // The gate always validates the DEFAULT-locale description. When a non-default
     // editing language is active, fDesc holds that locale's copy, so read the
-    // captured en-US description instead (kept current by the language switcher).
-    const al = (adv.listing.activeLocale) || 'en-US';
-    const enUSDesc = (al === 'en-US')
+    // captured default-locale description instead (kept current by the language switcher).
+    const def = (adv.listing.defaultLocale) || 'en-US';
+    const al = (adv.listing.activeLocale) || def;
+    const defDesc = (al === def)
       ? (fDesc.value || '')
-      : ((adv.listing.locales['en-US'] && adv.listing.locales['en-US'].description) || '');
-    const descLen = enUSDesc.trim().length;
+      : ((adv.listing.locales[def] && adv.listing.locales[def].description) || '');
+    const descLen = defDesc.trim().length;
     state.desc = descLen >= 20;
     // Make the 20-char minimum explicit: error only once they've started typing (1–19 chars).
     const dErr = $('ez-pv-desc-error');
@@ -6598,6 +6940,7 @@
     if (typeof window.__refreshKwSuggest === 'function') window.__refreshKwSuggest();
   }
   function syncCategory() { state.category = !!fCategory.value; updateGate(); ezRenderPreview(); }
+  window.__syncDesc = syncDesc;  // let the language switcher re-validate the gate after the default language changes
 
   fName.addEventListener('input', syncName);
   fDesc.addEventListener('input', syncDesc);
@@ -6605,9 +6948,27 @@
 
   // Autofill-with-AI dialog: opened from the button on the Step 2 title row.
   const aiDialog = $('ai-autofill-dialog');
-  function openAiDialog() {
+  let aiDescOnly = false;
+  function openAiDialog(mode) {
+    // The Description chip drafts ONLY the description; the header button drafts the whole
+    // listing. And the dialog only lists the advanced fields (search keywords, feature
+    // highlights) when Advanced options are on — otherwise those sections aren't visible,
+    // so promising them is confusing. Keep the copy matched to what the developer can see.
+    aiDescOnly = (mode === 'desc');
+    try {
+      const advOn = (document.getElementById('flow-wrap').getAttribute('data-mode') === 'advanced');
+      const titleEl = document.getElementById('ai-dialog-title-text');
+      const introEl = document.getElementById('ai-dialog-intro');
+      const labelEl = document.getElementById('ai-autofill-label');
+      if (titleEl) titleEl.textContent = aiDescOnly ? 'Draft description with AI' : 'Autofill with AI';
+      if (labelEl) labelEl.textContent = aiDescOnly ? 'Draft description' : 'Autofill';
+      if (introEl) introEl.textContent = aiDescOnly
+        ? 'Describe your app in a line and we\u2019ll draft your description. You can edit it after.'
+        : advOn
+          ? 'Describe your app in a line and we\u2019ll draft your description, category, search keywords, and feature highlights. You can edit everything after.'
+          : 'Describe your app in a line and we\u2019ll draft your description and category. You can edit them after.';
+    } catch (e) {}
     // Seed the pitch from the packaged site's manifest so the draft starts from the real app.
-    // Guard everything: a pre-seed hiccup must never stop the dialog from opening.
     try {
       const pitchEl = $('ai-pitch');
       if (pitchEl && !(pitchEl.value || '').trim()) {
@@ -6623,10 +6984,210 @@
   $('ai-autofill-open').addEventListener('click', openAiDialog);
   aiDialog.querySelectorAll('[data-ai-close]').forEach((b) => b.addEventListener('click', closeAiDialog));
 
+  // ---- AI + Advanced-options discoverability: one-time coachmarks (sequential, no overlap) ----
+  (function () {
+    const AKEY = 'wdp.aiAutofillHintSeen';   // AI autofill hint (listing)
+    const LKEY = 'wdp.advHintListingSeen';   // Advanced-options hint (listing)
+    const RKEY = 'wdp.advHintReachSeen';     // Advanced-options hint (reach & price)
+    const aiHint = document.getElementById('ai-autofill-hint');
+    const advHint = document.getElementById('wz-adv-hint');
+    const advTitle = document.getElementById('wz-adv-hint-title');
+    const advBody = document.getElementById('wz-adv-hint-body');
+    const step = document.getElementById('step-listing');
+    const bar = document.getElementById('wz-more-bar');
+    const descChip = document.getElementById('desc-ai-chip');
+    // Per page load (not persisted): every hard refresh — and every usability-test
+    // participant on the same machine — sees the coachmarks again.
+    const shownThisLoad = {};
+    function seen(k) { return !!shownThisLoad[k]; }
+    function mark(k) { shownThisLoad[k] = true; }
+    function curStep() { try { return WZ_STEPS[wzIndex]; } catch (e) { return null; } }
+
+    // AI autofill hint — only on the listing step, only while the description is empty.
+    function dismissAi() { if (aiHint) aiHint.hidden = true; mark(AKEY); }
+    function maybeAi() {
+      if (!aiHint || seen(AKEY)) return;
+      if (!step || step.offsetParent === null) return;   // only when the listing step is actually visible
+      // The Advanced-options coachmark goes first on the listing step; wait while it's still
+      // showable (bar visible) and hasn't been dismissed yet.
+      if (bar && !bar.hidden && bar.offsetParent !== null && curStep() === 'step-listing' && !seen(LKEY)) { aiHint.hidden = true; return; }
+      if (state && state.desc) { mark(AKEY); aiHint.hidden = true; return; }  // nothing to draft
+      aiHint.hidden = false;
+    }
+
+    // Advanced-options hint — on the Listing and Reach & price steps, with copy for what that
+    // step's advanced mode unlocks. On listing it shows first, then the AI hint follows.
+    function advCfg() {
+      const s = curStep();
+      if (s === 'step-listing') return { key: LKEY, title: 'More ways to stand out', body: 'Turn this on for extra languages, a trailer, feature highlights, and system requirements.' };
+      if (s === 'step-reach') return { key: RKEY, title: 'Fine-tune your release', body: 'Turn this on for per-market prices, free trials, and release scheduling.' };
+      return null;
+    }
+    function dismissAdv() { const c = advCfg(); if (c) mark(c.key); if (advHint) advHint.hidden = true; maybeAi(); }
+    function maybeAdv() {
+      if (!advHint) return;
+      if (!bar || bar.hidden || bar.offsetParent === null) { advHint.hidden = true; return; }
+      const c = advCfg();
+      if (!c || seen(c.key)) { advHint.hidden = true; return; }
+      if (advTitle) advTitle.textContent = c.title;
+      if (advBody) advBody.textContent = c.body;
+      advHint.hidden = false;
+    }
+    function refresh() { maybeAi(); maybeAdv(); }
+
+    window.__dismissAiHint = dismissAi;   // let the AI-assist chips retire the hint too
+    const aiGot = document.getElementById('ai-hint-dismiss');
+    if (aiGot) aiGot.addEventListener('click', dismissAi);
+    const openBtn = document.getElementById('ai-autofill-open');
+    if (openBtn) openBtn.addEventListener('click', dismissAi);
+    const advGot = document.getElementById('wz-adv-hint-dismiss');
+    if (advGot) advGot.addEventListener('click', dismissAdv);
+    // Interacting with the toggle itself also retires that step's advanced hint.
+    if (bar) bar.addEventListener('click', function (e) { if (e.target.closest('#wz-adv-hint')) return; dismissAdv(); });
+
+    try { if (step) new MutationObserver(refresh).observe(step, { attributes: true, attributeFilter: ['class', 'style', 'hidden'] }); } catch (e) {}
+    try { if (bar) new MutationObserver(refresh).observe(bar, { attributes: true, attributeFilter: ['hidden', 'style'] }); } catch (e) {}
+    setTimeout(refresh, 500);
+
+  })();
+
+  // ---- Adaptive AI assist for text fields (Description + Features) -----------
+  // Empty field -> "Draft with AI" (generate). Filled -> "Enhance with AI" menu
+  // (improve / shorter / longer / change tone / fix grammar). Uses window.AI when
+  // configured, with local heuristics as a fallback so it always does something.
+  (function () {
+    const descChip = document.getElementById('desc-ai-chip');
+    const featChip = document.getElementById('feat-ai-chip');
+    const menu = document.getElementById('ai-assist-menu');
+    const menuHead = document.getElementById('ai-menu-head');
+    let menuField = 'desc';
+
+    function descText() { try { return ((fDesc && fDesc.value) || '').trim(); } catch (e) { return ''; } }  // fDesc holds the text; state.desc is just a boolean gate
+    function featText() { try { return (window.__getFeatures ? window.__getFeatures() : '').trim(); } catch (e) { return ''; } }
+    function fieldText(f) { return f === 'features' ? featText() : descText(); }
+    function setField(f, t) {
+      if (f === 'features') { if (window.__setFeatures) window.__setFeatures(t); }
+      else if (typeof fDesc !== 'undefined' && fDesc) { fDesc.value = t; if (typeof syncDesc === 'function') syncDesc(); }
+    }
+    function labelChip(chip, filled) {
+      if (!chip) return;
+      const lbl = chip.querySelector('.ez-ai-chip__label');
+      if (lbl) lbl.textContent = filled ? 'Enhance with AI' : 'Draft with AI';
+      chip.title = filled ? 'Enhance this with AI' : 'Draft this with AI';
+    }
+    window.__updateAiChips = function () { labelChip(descChip, !!descText()); labelChip(featChip, !!featText()); };
+    window.__updateAiChips();
+
+    function openMenu(chip, field) {
+      if (!menu) return;
+      menuField = field;
+      if (menuHead) menuHead.textContent = 'Enhance ' + (field === 'features' ? 'features' : 'description') + ' with AI';
+      menu.hidden = false;
+      const r = chip.getBoundingClientRect();
+      const mw = menu.offsetWidth || 224;
+      menu.style.left = Math.round(Math.max(12, Math.min(r.left, window.innerWidth - mw - 12))) + 'px';
+      menu.style.top = Math.round(r.bottom + 6) + 'px';
+    }
+    function closeMenu() { if (menu) menu.hidden = true; }
+
+    function onChip(field, chip) {
+      try { if (window.__dismissAiHint) window.__dismissAiHint(); } catch (e) {}
+      if (fieldText(field)) openMenu(chip, field);
+      else if (field === 'desc') { if (typeof openAiDialog === 'function') openAiDialog('desc'); }
+      else runAssist('features', 'draft', '');
+    }
+    if (descChip) descChip.addEventListener('click', function (e) { e.stopPropagation(); onChip('desc', descChip); });
+    if (featChip) featChip.addEventListener('click', function (e) { e.stopPropagation(); onChip('features', featChip); });
+    if (menu) menu.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-ai-act]'); if (!b) return;
+      closeMenu();
+      runAssist(menuField, b.getAttribute('data-ai-act'), b.getAttribute('data-tone') || '');
+    });
+    document.addEventListener('click', function (e) { if (menu && !menu.hidden && !e.target.closest('#ai-assist-menu') && !e.target.closest('.ez-ai-chip')) closeMenu(); });
+    window.addEventListener('resize', closeMenu);
+    window.addEventListener('scroll', closeMenu, true);
+
+    async function runAssist(field, action, tone) {
+      const chip = field === 'features' ? featChip : descChip;
+      const cur = fieldText(field);
+      if (action !== 'draft' && !cur) return;
+      if (chip) chip.classList.add('is-busy');
+      let out = '';
+      if (window.AI && window.AI.enabled && typeof window.AI.transformText === 'function') {
+        try { out = await window.AI.transformText(buildPrompt(field, action, tone, cur)); } catch (e) {}
+      }
+      if (!out) out = heuristic(field, action, tone, cur);
+      if (out) { setField(field, out); announceAssist(field, action, tone); }
+      if (chip) chip.classList.remove('is-busy');
+      if (window.__updateAiChips) window.__updateAiChips();
+    }
+    function announceAssist(field, action, tone) {
+      if (typeof announce !== 'function') return;
+      const what = field === 'features' ? 'Features' : 'Description';
+      const how = action === 'draft' ? 'drafted' : action === 'tone' ? ('rewritten in a ' + tone + ' tone') : action === 'improve' ? 'improved' : action === 'shorter' ? 'shortened' : action === 'longer' ? 'expanded' : 'grammar-checked';
+      announce(what + ' ' + how + ' with AI.');
+    }
+    function buildPrompt(field, action, tone, cur) {
+      const kind = field === 'features' ? 'feature highlights (one short benefit per line, no bullet characters)' : 'Microsoft Store app description';
+      const instr = action === 'draft' ? ('Write ' + kind + ' for this app.')
+        : action === 'improve' ? 'Improve the writing so it is clearer and benefit-led, without fluff. Keep the meaning.'
+        : action === 'shorter' ? 'Make it noticeably shorter while keeping the key points.'
+        : action === 'longer' ? 'Expand it with a little more useful, specific detail (no filler).'
+        : action === 'tone' ? ('Rewrite it in a ' + tone + ' tone.')
+        : 'Fix only spelling, grammar and punctuation. Keep the wording and meaning.';
+      const system = 'You edit Microsoft Store listing copy. Return only the revised ' + kind + ' as plain text, with no preamble or quotes.';
+      let user = instr;
+      if (cur) user += '\n\nCurrent text:\n' + cur;
+      else user += '\n\nApp name: ' + ((typeof app !== 'undefined' && app && app.name) || 'this app') + (descText() ? '\nApp description:\n' + descText() : '');
+      return { system, user, maxTokens: 700 };
+    }
+    // ---- Heuristic fallbacks (AI off): visible, sensible transforms ----------
+    function sentences(t) { return (t || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean); }
+    function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+    function withPeriod(s) { s = (s || '').trim(); return !s || /[.!?]$/.test(s) ? s : s + '.'; }
+    function descHeuristic(action, tone, cur) {
+      const nm = (typeof app !== 'undefined' && app && app.name) || 'This app';
+      if (action === 'draft') { const base = descText() || (nm + ' helps you get more done on Windows.'); return cap(base) + ' Built for Windows, it stays fast and out of your way, with a clean design that fits light and dark themes.'; }
+      let ss = sentences(cur);
+      if (action === 'shorter') return ss.slice(0, Math.max(1, Math.ceil(ss.length / 2))).map(withPeriod).join(' ');
+      if (action === 'longer') return cur.trim() + ' It works offline, respects your privacy, and keeps things simple so you can focus on what matters.';
+      if (action === 'improve' || action === 'grammar') return ss.map(s => withPeriod(cap(s.trim()))).join(' ');
+      if (action === 'tone') {
+        const body = ss.map(s => cap(s.trim())).join(' ');
+        if (tone === 'professional') return 'Designed for everyday productivity, ' + (body.charAt(0).toLowerCase() + body.slice(1));
+        if (tone === 'friendly') return 'Meet your new favorite tool. ' + body;
+        if (tone === 'concise') return withPeriod(ss[0] || body);
+        return body;
+      }
+      return cur;
+    }
+    function featHeuristic(action, tone, cur) {
+      let lines = (cur || '').split('\n').map(s => s.replace(/^[-*\u2022]\s*/, '').trim()).filter(Boolean);
+      if (action === 'draft' || lines.length === 0) {
+        lines = ['Fast and lightweight', 'Clean design for light and dark themes', 'Works offline', 'Private by default'];
+        const d0 = sentences(descText())[0];
+        if (d0) lines.unshift(cap(d0).replace(/[.!?]+$/, ''));
+        return lines.slice(0, 5).join('\n');
+      }
+      if (action === 'shorter') return lines.slice(0, 3).map(l => cap(l.split(/[,\u2014-]/)[0].trim())).join('\n');
+      if (action === 'longer') return lines.concat(['Regular updates', 'Backed by helpful support']).join('\n');
+      if (action === 'improve' || action === 'grammar') return lines.map(cap).join('\n');
+      if (action === 'tone') {
+        if (tone === 'friendly') return lines.map(l => cap(l) + ' \u2014 you\u2019ll love it').join('\n');
+        if (tone === 'concise') return lines.map(l => cap(l.split(/[,\u2014-]/)[0].trim())).slice(0, 4).join('\n');
+        return lines.map(cap).join('\n');
+      }
+      return cur;
+    }
+    function heuristic(field, action, tone, cur) { return field === 'features' ? featHeuristic(action, tone, cur) : descHeuristic(action, tone, cur); }
+  })();
+
   // Autofill the listing with AI (or a clean heuristic draft).
   // Listing autofill — shared by the "Autofill with AI" button and the automatic
   // draft-from-site after a PWA is packaged. `auto` skips the dialog button/close chrome.
   async function runAutofill(auto) {
+    const descOnly = !auto && aiDescOnly;
+    const advancedOn = (document.getElementById('flow-wrap').getAttribute('data-mode') === 'advanced');
     const pwaPkg = packages.find(p => p.fromPwa && p.manifest);
     const mf = pwaPkg && pwaPkg.manifest;
     let idea = ($('ai-pitch').value || '').trim();
@@ -6655,28 +7216,31 @@
     }
     fDesc.value = descText;
     syncDesc();
-    if (listing && listing.category) {
+    if (!descOnly && listing && listing.category) {
       const opt = fCategory.querySelector('fluent-option[value="' + listing.category + '"]');
       if (opt) { fCategory.value = listing.category; syncCategory(); }
     }
-    // Advanced fields: short description, subcategory, features, search terms.
-    // Falls back to sensible drafts when AI isn't configured, so Advanced fills too.
-    const adv2 = {
-      shortDescription: (listing && listing.shortDescription) || deriveShort(descText),
-      subcategory: (listing && listing.subcategory) || '',
-      features: (listing && listing.features) || ['Fast and lightweight', 'Clean, modern design that fits light and dark themes', 'Works offline'],
-      keywords: (listing && listing.keywords) || Array.from(new Set(((app.name || 'app') + ' app windows tool utility').toLowerCase().split(/\s+/).filter(w => w.length > 2)))
-    };
-    if (typeof window.__advApplyAI === 'function') window.__advApplyAI(adv2);
+    // Advanced fields (short description, subcategory, features, search terms) — only fill
+    // them when the developer is in Advanced mode (those sections are hidden otherwise, so
+    // silently populating them is confusing). `auto` (draft-from-site) always fills them.
+    if (auto || (!descOnly && advancedOn)) {
+      const adv2 = {
+        shortDescription: (listing && listing.shortDescription) || deriveShort(descText),
+        subcategory: (listing && listing.subcategory) || '',
+        features: (listing && listing.features) || ['Fast and lightweight', 'Clean, modern design that fits light and dark themes', 'Works offline'],
+        keywords: (listing && listing.keywords) || Array.from(new Set(((app.name || 'app') + ' app windows tool utility').toLowerCase().split(/\s+/).filter(w => w.length > 2)))
+      };
+      if (typeof window.__advApplyAI === 'function') window.__advApplyAI(adv2);
+    }
     ezRenderPreview();
     if (!auto && btn) {
       btn.disabled = false;
-      btn.innerHTML = '<iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Autofill';
+      btn.innerHTML = '<iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> <span id="ai-autofill-label">' + (descOnly ? 'Draft description' : 'Autofill') + '</span>';
       closeAiDialog();
     }
-    announce(mode === 'advanced'
-      ? 'Listing drafted with AI: description, category, subcategory, short summary, features, and search terms.'
-      : 'Listing drafted with AI.');
+    announce(descOnly ? 'Description drafted with AI.'
+      : (auto || advancedOn) ? 'Listing drafted with AI: description, category, short summary, features, and search terms.'
+      : 'Listing drafted with AI: description and category.');
   }
   $('ai-autofill').addEventListener('click', () => runAutofill(false));
 
@@ -6737,8 +7301,10 @@
       add.innerHTML = '<iconify-icon icon="fluent:image-add-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon><span>Add screenshot</span>';
       grid.appendChild(add);
     }
-    // Trailers next (Advanced only) — distinct thumbnail items, shown first like the real Store.
-    if (mode === 'advanced') {
+    // Trailers next — distinct thumbnail items, shown first (right after the add tile) like the
+    // real Store. Render whenever any exist, regardless of mode: the wizard runs in easy mode but
+    // can still add a trailer via "Show advanced options", and it must appear here too.
+    if (adv.listing.trailers && adv.listing.trailers.length) {
       adv.listing.trailers.forEach((tr, i) => {
         const video = (tr && tr.video) || tr, thumb = (tr && tr.thumb) || '';
         const w = document.createElement('div');
@@ -7094,7 +7660,7 @@
   }
   // Recompute the hero tint from the current icon (user upload wins over the package icon), then re-render.
   function refreshLogoHue() {
-    const iconUrl = userIconDataUrl || pkgIconDataUrl;
+    const iconUrl = userIconDataUrl || pkgIconDataUrl || baseIcon;
     if (!iconUrl) { logoHue = null; logoSat = null; ezRenderPreview(); return; }
     extractLogoColor(iconUrl).then(c => { logoHue = c ? c.h : null; logoSat = c ? c.s : null; ezRenderPreview(); });
   }
@@ -7135,7 +7701,7 @@
     setLiveField('ez-pv-name', nameVal, 'Click to name your app', true);
 
     const iconEl = $('ez-pv-icon');
-    const iconUrl = userIconDataUrl || pkgIconDataUrl;
+    const iconUrl = userIconDataUrl || pkgIconDataUrl || baseIcon;
     if (iconEl) {
       if (iconUrl) {
         iconEl.style.background = '';
@@ -7281,17 +7847,20 @@
     el.setAttribute('role', 'button');
     const open = () => {
       if (el.classList.contains('live-edit--active')) return;
-      // Category is a default-language field: locked while editing another locale.
-      if (typeof window.__advLocaleLocked === 'function' && window.__advLocaleLocked()) {
-        if (typeof announce === 'function') announce('Switch to the default language to change the category.');
-        return;
+      const doOpen = () => {
+        const options = [{ value: '', label: 'Pick a category' }];
+        dropdown.querySelectorAll('fluent-option').forEach(opt => options.push({ value: opt.getAttribute('value') || '', label: opt.textContent.trim() }));
+        openInlineDropdown(el, options, dropdown.value || '', (value) => {
+          dropdown.value = value;
+          dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      };
+      // Category is the same across every language; editable in any locale, but warn (once
+      // per session) that changing it here applies to all languages.
+      if (typeof window.__advLocaleLocked === 'function' && window.__advLocaleLocked() && typeof window.__advEnsureSharedEdit === 'function') {
+        window.__advEnsureSharedEdit(doOpen); return;
       }
-      const options = [{ value: '', label: 'Pick a category' }];
-      dropdown.querySelectorAll('fluent-option').forEach(opt => options.push({ value: opt.getAttribute('value') || '', label: opt.textContent.trim() }));
-      openInlineDropdown(el, options, dropdown.value || '', (value) => {
-        dropdown.value = value;
-        dropdown.dispatchEvent(new Event('change', { bubbles: true }));
-      });
+      doOpen();
     };
     el.addEventListener('click', open);
     el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !el.classList.contains('live-edit--active')) { e.preventDefault(); open(); } });
@@ -7466,7 +8035,8 @@
     const archVal = arches.length ? arches.join(', ') : '—';
     // Listing languages — the default locale plus any added ones.
     const locs = (adv.listing && adv.listing.locales) ? Object.keys(adv.listing.locales) : [];
-    const langs = ['en-US'].concat(locs.filter(c => c !== 'en-US'));
+    const defLoc = (adv.listing && adv.listing.defaultLocale) || 'en-US';
+    const langs = [defLoc].concat(locs.filter(c => c !== defLoc));
     const langVal = langs.length <= 1 ? langLabelOf(langs[0]) : (langLabelOf(langs[0]) + ' +' + (langs.length - 1) + ' more');
     // Price — Free, or Paid with the value (Win32 paid sells through the developer's own commerce).
     const priceVal = adv.price.mode === 'paid'
@@ -7491,9 +8061,19 @@
       try {
         const all = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
         const idx = all.findIndex(a => a.id === app.id);
-        if (idx >= 0) { all[idx].status = 'in-review'; all[idx].name = fName.value.trim() || all[idx].name; localStorage.setItem('msstore.apps', JSON.stringify(all)); }
+        if (idx >= 0) {
+          all[idx].status = 'in-review';
+          all[idx].name = fName.value.trim() || all[idx].name;
+          // Carry a logo supplied in the flow (MSIX package or manual upload) back to the portal Apps
+          // table — the portal's mergePublishIcons + tdp-bridge syncBack read msstore.apps[id].icon.
+          const finalLogo = userIconDataUrl || pkgIconDataUrl;
+          if (finalLogo) all[idx].icon = finalLogo;
+          localStorage.setItem('msstore.apps', JSON.stringify(all));
+        }
       } catch (e) {}
       try { submitDlg.hide(); } catch (e) {}
+      // Restore the confirm button so the dialog is ready if it's opened again later.
+      if (cbtn) { cbtn.disabled = false; cbtn.innerHTML = '<iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Submit for review'; }
       $('editor').hidden = true;
       $('submit-bar').hidden = true;
       $('state-done').hidden = false;
@@ -7520,6 +8100,10 @@
   }
   $('submit').addEventListener('click', () => {
     if ($('submit').disabled) return;
+    // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which
+    // would otherwise show a stuck spinner when the dialog is reopened (e.g. after Edit submission).
+    const _cb = $('submit-confirm-btn');
+    if (_cb) { _cb.disabled = false; _cb.innerHTML = '<iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Submit for review'; }
     buildSubmitSummary();
     // Disclosures by package type: MSIX → external commerce; Win32 → driver/service dependency.
     const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
@@ -7707,7 +8291,6 @@
       // collect base price / trials / per-market pricing, so show a note instead.
       const win32 = !!document.getElementById('flow-wrap')?.classList.contains('has-win32-pkg');
       const storePaid = paid && !win32;   // paid AND the Store handles the money
-      const pstar = document.getElementById('price-req-star'); if (pstar) pstar.hidden = !storePaid; // base price is mandatory only for Store-paid
       const note = $('price-win32-note'); if (note) note.hidden = !(paid && win32);
       $('price-paid-row').hidden = !storePaid;
       $('price-advanced').hidden = !storePaid;
@@ -8772,15 +9355,55 @@ function openPriceScheduleDialog() {
       { code: 'hi-IN', name: 'Hindi (India)' }, { code: 'th-TH', name: 'Thai (Thailand)' },
       { code: 'vi-VN', name: 'Vietnamese (Vietnam)' }, { code: 'id-ID', name: 'Indonesian (Indonesia)' }
     ];
-    const DEFAULT_LOCALE = 'en-US';
+    let DEFAULT_LOCALE = (L.defaultLocale) || 'en-US';   // the base language; changeable from Manage languages
     const localeNameOf = (c) => (SUPPORTED_LOCALES.find(l => l.code === c) || {}).name || c;
     const localeShortNameOf = (c) => localeNameOf(c).replace(/\s*\(.*\)$/, '');
     const emptyLangBucket = () => ({ description: '', shortDesc: '', features: '' });
     const langTranslating = new Set();
     if (!L.locales) L.locales = {};
     if (!L.activeLocale) L.activeLocale = DEFAULT_LOCALE;
+    if (!L.defaultLocale) L.defaultLocale = DEFAULT_LOCALE;
     function localeLocked() { return (L.activeLocale || DEFAULT_LOCALE) !== DEFAULT_LOCALE; }
     function addedLocales() { return [DEFAULT_LOCALE].concat(Object.keys(L.locales).filter(c => c !== DEFAULT_LOCALE)); }
+
+    // Fields that are identical across every language (category, subcategory, keywords,
+    // privacy, license terms, developer / copyright). They stay editable in any locale, but the
+    // first time the developer changes one while a non-default editing language is active, we
+    // warn that the change applies to ALL languages (acknowledged once per session).
+    let sharedEditAck = false;
+    function ensureSharedEdit(proceed) {
+      if (typeof proceed !== 'function') return;
+      if (!localeLocked() || sharedEditAck) { proceed(); return; }
+      const dlg = $('shared-warn'); if (!dlg) { proceed(); return; }
+      const body = $('shared-warn-body');
+      if (body) body.textContent = 'Category, subcategory, keywords, privacy policy and other shared details are identical in every language. Changing this while editing ' + localeShortNameOf(L.activeLocale) + ' updates it for all ' + addedLocales().length + ' languages.';
+      dlg.__proceed = proceed;
+      dlg.hidden = false;
+    }
+    (function wireSharedWarn() {
+      const dlg = $('shared-warn'); if (!dlg) return;
+      const close = () => { dlg.hidden = true; dlg.__proceed = null; };
+      const ok = $('shared-warn-ok'), cancel = $('shared-warn-cancel');
+      if (cancel) cancel.addEventListener('click', close);
+      if (ok) ok.addEventListener('click', () => { sharedEditAck = true; const p = dlg.__proceed; close(); if (typeof p === 'function') p(); });
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+    })();
+    window.__advEnsureSharedEdit = ensureSharedEdit;
+
+    // Change which added language is the default (base) language. Only added locales qualify.
+    function setDefaultLocale(code) {
+      if (!code || code === DEFAULT_LOCALE || !L.locales[code]) return;
+      captureActiveLocale();          // keep the current editing buffers safe first
+      // The outgoing default must remain an added language with its content intact.
+      if (!L.locales[DEFAULT_LOCALE]) L.locales[DEFAULT_LOCALE] = emptyLangBucket();
+      DEFAULT_LOCALE = code;
+      L.defaultLocale = code;
+      persistAdvanced();
+      renderLangSelector(); updateLockUI(); updateTranslatingBanner();
+      if (typeof window.__syncDesc === 'function') window.__syncDesc();  // re-validate the gate against the new default
+      ezRenderPreview();
+      announce(localeShortNameOf(code) + ' is now your default language.');
+    }
     const SUBCATS = {
       'productivity': ['Notes & lists', 'Calendar', 'Tasks', 'Office', 'Other'],
       'developer-tools': ['Editors', 'Version control', 'Databases', 'Testing', 'Other'],
@@ -8851,15 +9474,15 @@ function openPriceScheduleDialog() {
       renderKwSuggest();
       renderKwEasy();
     }
-    function addKeyword(v) { if (localeLocked()) return; v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; kwUserEdited = true; L.keywords.push(v); persistAdvanced(); renderKeywords(); }
+    function addKeyword(v) { v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(function () { addKeyword(v); }); return; } kwUserEdited = true; L.keywords.push(v); persistAdvanced(); renderKeywords(); }
     if (kwInput) {
       kwInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKeyword(kwInput.value); kwInput.value = ''; }
-        else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length && !localeLocked()) { kwUserEdited = true; L.keywords.pop(); persistAdvanced(); renderKeywords(); }
+        else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length && (!localeLocked() || sharedEditAck)) { kwUserEdited = true; L.keywords.pop(); persistAdvanced(); renderKeywords(); }
       });
       kwInput.addEventListener('blur', () => { if (kwInput.value.trim()) { addKeyword(kwInput.value); kwInput.value = ''; } });
     }
-    if (chipsWrap) chipsWrap.addEventListener('click', (e) => { if (localeLocked()) return; const b = e.target.closest('button[data-i]'); if (b) { kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); } });
+    if (chipsWrap) chipsWrap.addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; const doRemove = () => { kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); }; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(doRemove); return; } doRemove(); });
     renderKeywords();
 
     // ---- Privacy policy: Link or Text, with an optional AI-drafted starter ----
@@ -8945,9 +9568,12 @@ function openPriceScheduleDialog() {
     if (featAdd) featAdd.addEventListener('click', editFeatures);
     if (featList) featList.addEventListener('click', editFeatures);
     renderFeatures();
+    // Exposed for the adaptive AI assist (draft/enhance the Features field).
+    window.__getFeatures = function () { return L.features || ''; };
+    window.__setFeatures = function (t) { L.features = t || ''; persistAdvanced(); renderFeatures(); if (typeof updateGate === 'function') updateGate(); };
 
     // ---- Hero art (image/video) — right-side masked banner, exactly as variant B ----
-    const heroEl = $('ez-hero'), heroMedia = $('ez-pv-hero-media'), heroFile = $('adv-hero-file'), heroDel = $('ez-hero-del'), heroAdd = $('ez-hero-add-btn');
+    const heroEl = $('ez-hero'), heroMedia = $('ez-pv-hero-media'), heroFile = $('adv-hero-file'), heroDel = $('ez-hero-del'), heroAdd = $('ez-hero-add');
     function renderHeroMedia() {
       if (!heroMedia || !heroEl) return;
       heroMedia.querySelectorAll('img, video').forEach(el => el.remove());
@@ -9007,9 +9633,7 @@ function openPriceScheduleDialog() {
       if (infoGrid.querySelector('fluent-dropdown, select, input, textarea')) return;
       const fw = document.getElementById('flow-wrap');
       const advanced = !!(($('step-listing') && $('step-listing').classList.contains('is-more')) || (fw && fw.getAttribute('data-mode') === 'advanced'));
-      const locked = localeLocked();
       const section = $('ez-info-section');
-      const DASH = '<span style="color:var(--fg-3);">—</span>';
       const ADD = (label) => '<iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true" style="vertical-align:-1px;margin-right:3px;"></iconify-icon>' + label;
       const link = (id, inner) => '<a class="ez-info-item__value--link" id="' + id + '">' + inner + '</a>';
       // ---- Additional terms (Privacy policy + Applicable license terms) ----
@@ -9020,8 +9644,9 @@ function openPriceScheduleDialog() {
       const reqStar = ' <span class="field-mark field-mark--req" aria-label="required">*</span>';
       const privReq = (typeof privacyRequired === 'function') && privacyRequired();
       const licReq  = (typeof licenseRequired === 'function') && licenseRequired();
-      const privCell = locked ? (privSet ? 'Privacy policy' : DASH) : (link('ez-info-privacy', privSet ? 'Privacy policy' : ADD('Add privacy policy')) + (privReq ? reqStar : ''));
-      const licCell  = locked ? (licSet ? 'License terms' : DASH)  : (link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms')) + (licReq ? reqStar : ''));
+      // Shared across all languages, but editable in any locale (with a one-time warning).
+      const privCell = link('ez-info-privacy', privSet ? 'Privacy policy' : ADD('Add privacy policy')) + (privReq ? reqStar : '');
+      const licCell  = link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms')) + (licReq ? reqStar : '');
       // License terms is advanced-only for MSIX (it's optional there); Win32 requires it, so it
       // stays visible in both modes. Privacy always shows.
       const showLicense = advanced || licReq;
@@ -9036,15 +9661,15 @@ function openPriceScheduleDialog() {
       }
       if (section) section.hidden = false;
       // ---- Full developer grid (advanced) — mirrors the real Store's Additional information ----
-      const devVal   = locked ? ((L.developedBy || '').trim() ? esc(L.developedBy) : DASH) : link('ez-info-developed', (L.developedBy || '').trim() ? esc(L.developedBy) : ADD('Add'));
-      const copyCell = locked ? ((L.copyright || '').trim() ? esc(L.copyright) : '') : link('ez-info-copyright', (L.copyright || '').trim() ? esc(L.copyright) : ADD('Add copyright'));
+      const devVal   = link('ez-info-developed', (L.developedBy || '').trim() ? esc(L.developedBy) : ADD('Add'));
+      const copyCell = link('ez-info-copyright', (L.copyright || '').trim() ? esc(L.copyright) : ADD('Add copyright'));
       const pubVal   = '<span class="ez-info-item__line">' + esc('Hardik Agarwal') + '</span>' + (copyCell ? '<span class="ez-info-item__line ez-info-item__sub">' + copyCell + '</span>' : '');
-      const subVal   = locked ? (L.subcategory ? esc(L.subcategory) : DASH) : link('ez-info-subcat', L.subcategory ? esc(L.subcategory) : ADD('Add'));
+      const subVal   = link('ez-info-subcat', L.subcategory ? esc(L.subcategory) : ADD('Add'));
       const langsVal = esc(addedLocales().map(localeShortNameOf).join(', '));
       // Support info (EU DSA) — account details by default, or custom per-app.
       const sup = (adv.listing && adv.listing.support) || {};
       const supText = sup.mode === 'custom' ? 'Custom contact info' : 'Account contact info';
-      const supVal = locked ? supText : link('ez-info-support', supText);
+      const supVal = link('ez-info-support', supText);
       infoGrid.innerHTML =
         infoItem('fluent:box-20-regular', 'Developed by', devVal) +
         infoItem('fluent:building-20-regular', 'Published by', pubVal) +
@@ -9056,7 +9681,7 @@ function openPriceScheduleDialog() {
     }
     window.__refreshInfo = renderInfo;
     function editSubcat() {
-      if (localeLocked()) { announce('Switch to the default language to change the subcategory.'); return; }
+      if (localeLocked() && !sharedEditAck) { ensureSharedEdit(editSubcat); return; }
       const target = $('ez-info-subcat'); if (!target) return;
       const list = SUBCATS[(fCat && fCat.value) || ''] || [];
       if (!list.length) {
@@ -9074,7 +9699,7 @@ function openPriceScheduleDialog() {
       });
     }
     function openPrivacyDialog() {
-      if (localeLocked()) { announce('Switch to the default language to edit the privacy policy.'); return; }
+      if (localeLocked() && !sharedEditAck) { ensureSharedEdit(openPrivacyDialog); return; }
       const dlg = $('privacy-edit-dialog'); if (!dlg) return;
       // Sync the dialog's controls from the current state, then show it.
       if (typeof setPrivacyMode === 'function') setPrivacyMode(getPrivacyMode(), false);
@@ -9092,7 +9717,7 @@ function openPriceScheduleDialog() {
       }));
     })();
     function openLicenseDialog() {
-      if (localeLocked()) { announce('Switch to the default language to edit license terms.'); return; }
+      if (localeLocked() && !sharedEditAck) { ensureSharedEdit(openLicenseDialog); return; }
       const dlg = $('license-edit-dialog'); if (!dlg) return;
       const ta = $('license-terms-input'); if (ta) ta.value = L.licenseTerms || '';
       try { dlg.show(); } catch (e) {}
@@ -9103,7 +9728,7 @@ function openPriceScheduleDialog() {
       const saveBtn = $('license-edit-save');
       if (saveBtn) saveBtn.addEventListener('click', () => {
         const ta = $('license-terms-input');
-        if (ta && !localeLocked()) L.licenseTerms = (ta.value || '').trim();
+        if (ta) L.licenseTerms = (ta.value || '').trim();
         try { dlg.hide(); } catch (e) {}
         renderInfo();
         if (typeof updateGate === 'function') updateGate(); // license terms is required → refresh gate + tabs + checklist
@@ -9164,7 +9789,7 @@ function openPriceScheduleDialog() {
     // Generic single-field editor (Developed by, Copyright) — every editable cell opens a dialog.
     let fieldEditCommit = null;
     function openFieldDialog(opts) {
-      if (localeLocked()) { announce('Switch to the default language to edit this field.'); return; }
+      if (localeLocked() && !sharedEditAck) { ensureSharedEdit(function () { openFieldDialog(opts); }); return; }
       const dlg = $('field-edit-dialog'); if (!dlg) return;
       const titleEl = $('field-edit-title'), hintEl = $('field-edit-hint'), inp = $('field-edit-input');
       if (titleEl) titleEl.textContent = opts.title || 'Edit';
@@ -9286,8 +9911,8 @@ function openPriceScheduleDialog() {
       if (live) live.classList.toggle('is-locale-locked', locked);
       if (kwInput) {
         if (kwInput.dataset.ph == null) kwInput.dataset.ph = kwInput.getAttribute('placeholder') || 'Type a keyword, then press Enter';
-        kwInput.disabled = locked;
-        kwInput.placeholder = locked ? 'Switch to the default language to edit keywords' : kwInput.dataset.ph;
+        kwInput.disabled = false;
+        kwInput.placeholder = locked ? 'Shared across all languages — press Enter to add' : kwInput.dataset.ph;
       }
       renderInfo();
     }
@@ -9336,12 +9961,18 @@ function openPriceScheduleDialog() {
         else if (isDef) tag = '<span class="lang-row__tag lang-row__tag--default">default</span>';
         else if (pAdd) tag = '<span class="lang-row__tag lang-row__tag--new">new</span>';
         else if (pRem) tag = '<span class="lang-row__tag lang-row__tag--removing">removing</span>';
+        else if (on) tag = '<button type="button" class="lang-row__setdef" data-setdef="' + l.code + '">Set default</button>';
         else tag = '<span class="lang-row__tag"></span>';
         return '<label class="' + cls + '"><input type="checkbox" data-code="' + l.code + '" ' + (on ? 'checked' : '') + (isDef ? ' disabled' : '') + '/>' +
           '<span class="lang-row__name">' + esc(l.name) + '</span>' + tag +
           '<span class="lang-row__code">' + l.code + '</span></label>';
       }).join('');
       langList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', () => toggleLocale(cb.dataset.code, cb.checked)));
+      langList.querySelectorAll('.lang-row__setdef').forEach(btn => btn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        setDefaultLocale(btn.dataset.setdef);
+        renderLangList(langSearch ? langSearch.value : '');
+      }));
       updateLangCount();
     }
     async function translateInto(bucket, src, code) {

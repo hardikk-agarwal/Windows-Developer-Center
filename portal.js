@@ -52,6 +52,19 @@
   }
   var PALETTE = ["#0F6CBD", "#8661C5", "#107C41", "#C239B3", "#D83B01", "#0B6A0B"];
   function colorFor(seed) { return PALETTE[Math.abs(hashStr(seed)) % PALETTE.length]; }
+  // A data-URL copy of the portal's app tile (gradient + initials) so the publishing header + live
+  // listing can show the SAME logo as the Apps table until a real package logo replaces it.
+  function tileDataUrl(name) {
+    var c = colorFor(name), t = initials(name);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96">'
+      + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+      + '<stop offset="0" stop-color="' + c + '"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs>'
+      + '<rect width="96" height="96" fill="url(#g)"/>'
+      + '<text x="48" y="62" font-family="Segoe UI, system-ui, sans-serif" font-size="40" font-weight="600" fill="#ffffff" text-anchor="middle">' + t + '</text>'
+      + '</svg>';
+    // base64 (not percent-encoded) so it renders reliably as a CSS background-image, not just in <canvas>.
+    return 'data:image/svg+xml;base64,' + btoa(svg);
+  }
   function cnOf(subject) { if (!subject) return null; var m = /CN=([^,]+)/i.exec(subject); return m ? m[1].trim() : subject; }
   function certById(id) { return state.certs.filter(function (c) { return c.id === id; })[0] || null; }
   function trustWord(s) { return s === "Valid" ? "verified" : s === "NotSigned" ? "unsigned" : "self-signed (not yet verified)"; }
@@ -107,7 +120,14 @@
 
   /* ---------------- Renderers ---------------- */
   function renderAll() {
-    renderAccount(); renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderSummary();
+    renderAccount(); renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderSummary(); updateStoreNav();
+  }
+  // Store: an app is "live" once it's published to the Store.
+  function hasLiveStoreApp() { return state.apps.some(function (a) { return a.store || a.storeStatus === "published"; }); }
+  // Store: Promo codes is a commerce feature — it only appears in the sidebar once an app is live in the Store.
+  function updateStoreNav() {
+    if (!STORE) return;
+    var promo = $("navPromo"); if (promo) promo.hidden = !hasLiveStoreApp();
   }
 
   function renderAccount() {
@@ -365,6 +385,7 @@
         // listed as an app. The Apps page is populated solely by discoverApps()
         // below: the real apps installed on this PC that use this certificate.
         var gc = getOrCreateCert(info, file); if (gc.created) newCerts++; accepted++; lastCert = gc.cert;
+        gc.cert.verified = true;                          // a signed binary proves ownership of this certificate
       }
       setVerifying(false);
       pending = []; renderList();
@@ -377,7 +398,9 @@
           : "Certificate already added" + (lastCert ? " · " + lastCert.label : "");
         if (rejected.length) msg += " · " + rejected.length + " rejected";
         toast(msg);
-        if (lastCert && lastCert.thumbKind === "cert") discoverApps(lastCert.thumb, lastCert.id);
+        // WDP auto-discovers the cert's other apps here. In the Store portal those apps are already
+        // surfaced (locked) by discoverStoreApps(); this upload just verifies ownership to unlock them.
+        if (!STORE && lastCert && lastCert.thumbKind === "cert") discoverApps(lastCert.thumb, lastCert.id);
         return;
       }
       // Nothing accepted — surface the reasons in place (don't re-render the flow)
@@ -452,17 +475,27 @@
       if (rs) rs.hidden = true;
       return;
     }
-    var published = state.apps.some(function (a) { return a.store; });
-    var createBtn = $("createAppBtn"), addCert = $("addCertBtn");
-    if (createBtn) createBtn.hidden = !published;
-    if (addCert) addCert.setAttribute("appearance", published ? "outline" : "primary");
+    var addCert = $("addCertBtn");
+    if (addCert) addCert.setAttribute("appearance", "outline");
   }
+  // An app is "in the Store pipeline" once you've taken it toward the Store — whether it's a Draft,
+  // In certification (in-review) or Live (published). Cert-discovered / signed-only apps are not.
+  function inStorePipeline(a) { return !!a.store || !!a.storeStatus; }
   function renderApps() {
     updateAppsHeader();
     mergePublishIcons();   // pull any logo set during publishing (msstore.apps) into the rows
     var wrap = $("appsList");
-    if (STORE) {                                          // Store variant: created apps, one flat table
-      if (!state.apps.length) {
+    if (STORE) {                                          // Store variant: your Store apps + a WDP-style cert table
+      // TEMP DEMO (revert later): after a signed Win32 app is published we "recognize" its code signing
+      // certificate and surface the developer's other signed apps in a separate WDP-style table below.
+      var sbanner = scanning
+        ? '<div class="scan-banner"><span class="spinner"></span>Recognized your code signing certificate — scanning for your other signed apps…</div>'
+        : "";
+      // Split (shared with WDP): apps in the Store pipeline (Draft / In certification / Live) vs apps
+      // still only found via the certificate.
+      var below = state.apps.filter(function (a) { return !inStorePipeline(a); });
+      var above = state.apps.filter(inStorePipeline);
+      if (!above.length && !below.length && !scanning) {
         wrap.innerHTML = '<div class="empty">' +
           '<img src="assets/rocket.png" alt="" />' +
           '<strong>Publish your first app</strong>' +
@@ -473,9 +506,20 @@
         '</div>';
         return;
       }
-      wrap.innerHTML = '<div class="table-wrap"><table class="table apptable">' +
-        '<thead><tr><th>App</th><th>Status</th><th>Default language</th><th>Last updated</th><th class="col-store"></th></tr></thead>' +
-        '<tbody>' + state.apps.map(storeAppRowHTML).join("") + '</tbody></table></div>';
+      var html = "";
+      if (above.length) html += storeTableHTML(above);
+      html += sbanner;
+      if (below.length) {
+        var dCert = certById(below[0].certId), dVerified = dCert && dCert.verified === true;
+        var note = dVerified
+          ? '<div class="disc-note"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+              '<span>Found from the <strong>code signing certificate</strong> of the app you just published — <strong>ownership verified</strong>. Crash analytics and distribution are unlocked.</span></div>'
+          : '<div class="disc-note disc-note--verify"><iconify-icon icon="fluent:lock-closed-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+              '<span><strong>Verify you own this certificate.</strong> These apps are signed by the same certificate as the app you just published. Download our verification file, sign it with that certificate, and upload it to unlock crash analytics &amp; distribution.</span>' +
+              '<fluent-button appearance="primary" size="small" data-openmodal>Verify ownership</fluent-button></div>';
+        html += '<div class="disc-section">' + note + certGroupsHTML(below) + '</div>';
+      }
+      wrap.innerHTML = html;
       return;
     }
     var banner = scanning
@@ -492,15 +536,20 @@
       '</div>');
       return;
     }
-    // Group apps by the certificate that signs them. Signing identity + trust are a
-    // property of the CERTIFICATE, so they show once per group — not on every app.
-    var groups = [], byKey = {};
-    state.apps.forEach(function (a) {
-      var key = a.certId || (a.signerSubject ? "subj:" + a.signerSubject : "none");
-      if (!byKey[key]) { byKey[key] = { certId: a.certId, subject: a.signerSubject, apps: [] }; groups.push(byKey[key]); }
-      byKey[key].apps.push(a);
-    });
-    wrap.innerHTML = banner + groups.map(certGroupHTML).join("") + (scanning ? appSkeletonHTML(2) : "");
+    // Two tables (shared with the Store portal). The WDP apps page leads with the apps that are IN the
+    // Store (Draft / In certification / Live) on top, and shows the signed, not-yet-in-Store apps
+    // (grouped by certificate) below.
+    var wSigned = state.apps.filter(function (a) { return !inStorePipeline(a); });
+    var wStore = state.apps.filter(inStorePipeline);
+    var wHtml = banner;
+    if (wStore.length) {
+      var wNote = '<div class="disc-note"><iconify-icon icon="fluent:storefront-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+        '<span><strong>In the Microsoft Store.</strong> Installs, crash health and ratings for your apps in the Store — select one to open its analytics.</span></div>';
+      wHtml += '<div class="store-block">' + wNote + storeTableHTML(wStore) + '</div>';
+    }
+    var wSignedHtml = certGroupsHTML(wSigned);
+    if (wSignedHtml) wHtml += (wStore.length ? '<div class="disc-section">' + wSignedHtml + '</div>' : wSignedHtml);
+    wrap.innerHTML = wHtml + (scanning ? appSkeletonHTML(2) : "");
   }
 
   // One certificate → one header (signer + trust, shown once) → a table of its apps.
@@ -521,20 +570,42 @@
       label = "No certificate";
       pill = '<span class="pill pill--warn pill--sm">Unsigned</span>';
     }
-    var n = g.apps.length;
-    var thumb = cert ? ' · <span class="mono">' + fmtThumb(cert.thumb) + '</span>' : "";
+    var FP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a2 2 0 0 1 2 2c0 3-.5 5.2-1.3 6.9"/><path d="M12 6a6 6 0 0 1 6 6c0 1.7-.1 3.2-.4 4.7"/><path d="M9 6.8A6 6 0 0 0 6 12c0 3.6-.4 5.6-1.1 7"/><path d="M9 14c0-1.7 1.3-3 3-3"/></svg>';
+    var facts = "";
+    if (cert) facts += '<span class="certfact" title="Certificate thumbprint">' + FP + '<span class="mono">' + fmtThumb(cert.thumb) + '</span></span>';
     return '<section class="certgroup">' +
-      '<header class="certgroup__head">' + ico +
-        '<div class="certgroup__id">' +
-          '<div class="certgroup__name">Signed by <strong>' + label + '</strong>' + pill + '</div>' +
-          '<span class="certgroup__meta">' + n + ' app' + (n > 1 ? "s" : "") + thumb + '</span>' +
+      '<header class="certcard">' + ico +
+        '<div class="certcard__id">' +
+          '<span class="certcard__kicker">Signing certificate</span>' +
+          '<div class="certcard__name">' + label + '</div>' +
         '</div>' +
+        '<div class="certcard__meta">' + facts + pill + '</div>' +
       '</header>' +
       '<div class="table-wrap"><table class="table apptable">' +
         '<thead><tr><th>App</th><th>Crash analytics</th><th>Download sources</th><th class="col-store">Store</th></tr></thead>' +
         '<tbody>' + g.apps.map(appRowHTML).join("") + '</tbody>' +
       '</table></div>' +
     '</section>';
+  }
+
+  // Group a set of apps by their signing certificate (one cert card + one WDP-style table each).
+  // Shared by both portals for the "not yet in the Store" apps.
+  function certGroupsHTML(apps) {
+    var groups = [], byKey = {};
+    apps.forEach(function (a) {
+      var key = a.certId || (a.signerSubject ? "subj:" + a.signerSubject : "none");
+      if (!byKey[key]) { byKey[key] = { certId: a.certId, subject: a.signerSubject, apps: [] }; groups.push(byKey[key]); }
+      byKey[key].apps.push(a);
+    });
+    return groups.map(certGroupHTML).join("");
+  }
+  // The Store-pipeline table (shared by both portals): every app you've taken toward the Store —
+  // Draft, In certification and Live — with the metrics that matter once live (installs, crash
+  // rate, rating). Analytics show only for live apps; pre-live rows show the stage instead.
+  function storeTableHTML(apps) {
+    return '<div class="table-wrap"><table class="table apptable apptable--store">' +
+      '<thead><tr><th>App</th><th>Status</th><th>Installs</th><th>Crash rate</th><th>Rating</th><th class="col-store"></th></tr></thead>' +
+      '<tbody>' + apps.map(storeAppRowHTML).join("") + '</tbody></table></div>';
   }
 
   // App-list logo: handles a data URL or remote URL (publishing logo / PWA icon) as well as a
@@ -553,20 +624,37 @@
     var byId = {}; ms.forEach(function (x) { if (x && x.id) byId[x.id] = x; });
     state.apps.forEach(function (a) { var m = byId[a.id]; if (m && m.icon) a.icon = m.icon; });
   }
+  // Store portal only: cert-discovered apps stay locked (no crash analytics / distribution) until the
+  // developer proves they OWN the signing certificate by signing our verification file. WDP verifies
+  // ownership through the Add-certificate modal already, so this gate never applies there.
+  function storeLocked(a) {
+    if (!STORE || !a.storeDiscovered) return false;
+    var c = a.certId ? certById(a.certId) : null;
+    return !c || c.verified !== true;
+  }
   function appRowHTML(a) {
     var iconHTML = appIcoImg(a);
+    var locked = storeLocked(a);
     var created = a.store || a.storeStatus === "in-progress";
-    var store = a.store
-      ? '<span class="pill pill--ok pill--sm">✓ In Microsoft Store</span>'
-      : created
-        ? '<fluent-button appearance="outline" size="small" data-continue="' + a.id + '">Continue setup</fluent-button>'
-        : '<fluent-button appearance="primary" size="small" data-store="' + a.id + '">Publish to Store</fluent-button>';
+    var lockCell = '<span class="celllock" data-openmodal title="Verify certificate ownership to unlock">' +
+      '<iconify-icon icon="fluent:lock-closed-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>Locked</span>';
+    var store = locked
+      ? lockCell
+      : a.store
+        ? '<span class="pill pill--ok pill--sm">✓ In Microsoft Store</span>'
+        : created
+          ? '<fluent-button appearance="outline" size="small" data-continue="' + a.id + '">Continue setup</fluent-button>'
+          : '<fluent-button appearance="primary" size="small" data-store="' + a.id + '">Publish to Store</fluent-button>';
+    var health = locked ? lockCell
+      : '<button class="health" data-analytics="' + a.id + '" data-health="' + a.id + '" title="View crash analytics">' + healthCellInner(a) + '</button>';
+    var sources = locked ? lockCell
+      : '<div class="srccell"><span class="src-summary">' + srcSummary(a) + '</span>' +
+        '<button class="linkbtn" data-sources="' + a.id + '">Manage</button></div>';
     return '<tr' + (created ? ' class="approw--open" data-openapp="' + a.id + '" title="Open publishing flow"' : '') + '>' +
       '<td><div class="cell-main">' + iconHTML +
-        '<div><strong>' + esc(a.name) + '</strong>' + (a.size ? '<span class="muted">' + esc(a.size) + '</span>' : '') + '</div></div></td>' +
-      '<td><button class="health" data-analytics="' + a.id + '" data-health="' + a.id + '" title="View crash analytics">' + healthCellInner(a) + '</button></td>' +
-      '<td><div class="srccell"><span class="src-summary">' + srcSummary(a) + '</span>' +
-        '<button class="linkbtn" data-sources="' + a.id + '">Manage</button></div></td>' +
+        '<div><strong>' + esc(a.storeName || a.name) + '</strong>' + (a.size ? '<span class="muted">' + esc(a.size) + '</span>' : '') + '</div></div></td>' +
+      '<td>' + health + '</td>' +
+      '<td>' + sources + '</td>' +
       '<td class="col-store">' + store + '</td>' +
     '</tr>';
   }
@@ -576,25 +664,40 @@
     "fr-FR": "French (France)", "de-DE": "German (Germany)", "pt-BR": "Portuguese (Brazil)", "it-IT": "Italian (Italy)",
     "ja-JP": "Japanese", "zh-CN": "Chinese (Simplified)", "hi-IN": "Hindi (India)" };
   function langLabel(code) { return LANG_LABELS[code] || code || "English (United States)"; }
+  // In-store app row (shared by both portals). Live apps show real analytics and open their
+  // dashboard; Draft / In-certification apps show their stage and open the publishing flow.
   function storeAppRowHTML(a) {
     var iconHTML = appIcoImg(a);
-    var published = a.store || a.storeStatus === "published";
+    var live = a.store || a.storeStatus === "published";
     var inReview = a.storeStatus === "in-review";
-    var offStore = a.discovered && !a.store && !a.storeStatus;
-    var pill = published
+    var rejected = a.storeStatus === "rejected";
+    var pill = live
       ? '<span class="pill pill--ok pill--sm">✓ In the Store</span>'
-      : inReview
-        ? '<span class="pill pill--info pill--sm">In review</span>'
-        : offStore
-          ? '<span class="pill pill--ghost pill--sm">Not on Store</span>'
+      : rejected
+        ? '<span class="pill pill--warn pill--sm">Needs attention</span>'
+        : inReview
+          ? '<span class="pill pill--info pill--sm">In certification</span>'
           : '<span class="pill pill--ghost pill--sm">Draft</span>';
-    return '<tr class="approw--open" data-openapp="' + a.id + '" title="Open publishing flow">' +
-      '<td><div class="cell-main">' + iconHTML + '<div><strong>' + esc(a.name) + '</strong></div></div></td>' +
+    // Acquisition / usage / ratings only exist once an app is LIVE; pre-live rows show "—".
+    var na = '<span class="muted">—</span>';
+    var installs = na, crash = na, rating = na;
+    if (live) {
+      var acq = acqData(a), ana = anaData(a), rat = ratingsData(a);
+      var dot = ana.crashRate >= 5 ? "warn" : "ok";
+      installs = '<strong>' + fmtCompact(acq.instTotal) + '</strong>';
+      crash = '<span class="metric__row"><span class="health__dot is-' + dot + '"></span>' + ana.crashRate.toFixed(2) + '%</span>';
+      rating = '<span class="ratecell"><span class="ratecell__star">★</span><strong>' + rat.avg.toFixed(1) + '</strong> <span class="muted">(' + fmtCompact(rat.total) + ')</span></span>';
+    }
+    var openAttr = live ? ' data-analytics="' + a.id + '"' : ' data-openapp="' + a.id + '"';
+    var title = live ? "View analytics" : "Continue in the publishing flow";
+    return '<tr class="approw--open"' + openAttr + ' title="' + title + '">' +
+      '<td><div class="cell-main">' + iconHTML + '<div><strong>' + esc(a.storeName || a.name) + '</strong>' + (a.size ? '<span class="muted">' + esc(a.size) + '</span>' : '') + '</div></div></td>' +
       '<td>' + pill + '</td>' +
-      '<td>' + esc(langLabel(a.storeLang)) + '</td>' +
-      '<td class="muted">' + esc(a.storeCreated || a.added || "—") + '</td>' +
+      '<td>' + installs + '</td>' +
+      '<td>' + crash + '</td>' +
+      '<td>' + rating + '</td>' +
       '<td class="col-store"><span class="rowactions">' +
-        (offStore ? '<button class="linkbtn" data-sources="' + a.id + '" title="Manage authorized download sources">Manage distribution</button>' : '') +
+        (rejected ? '<button class="linkbtn" data-report="' + a.id + '" title="View certification report">View report</button>' : '') +
         '<button class="iconbtn iconbtn--danger" data-delapp="' + a.id + '" title="Delete app" aria-label="Delete app">' +
           '<iconify-icon icon="fluent:delete-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
         '<iconify-icon class="row-chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span></td>' +
@@ -1213,6 +1316,44 @@
     if (!certs.length) { toast("Add a certificate first", true); return; }
     certs.forEach(function (c) { discoverApps(c.thumb, c.id); });
   }
+  // ===== TEMP DEMO (store portal, revert later) =========================================
+  // Once an app is published in the Store portal we "recognize" the developer's code signing
+  // certificate (the published app was a signed Win32 app) and surface their OTHER signed apps
+  // via the REAL /api/apps-by-cert scan (same one the WDP portal uses) — so they can manage
+  // Store distribution and view health analytics. Scans once. To revert: delete this function +
+  // the `if (STORE) discoverStoreApps()` call in doCreateApp + the store scanning banner/note in
+  // renderApps + the .disc-note CSS.
+  async function discoverStoreApps() {
+    if (!STORE || scanning) return;
+    if (state.apps.some(function (a) { return a.storeDiscovered; })) return;   // scan only once
+    // Real Microsoft code signing certificate — the same one used in WDP (from signing-demo/trusted-sample.exe).
+    var CS_THUMB = "1D6C5C2964313A6FD555B53BB6FFE077A4FA82F2";
+    var certId = uid();
+    state.certs.push({ id: certId, label: "Microsoft Corporation", thumb: CS_THUMB,
+      thumbKind: "cert", trust: "Valid", signed: true, added: today(), verified: false });
+    scanning = true; renderApps();
+    // Populate the REAL apps signed by this certificate — the same /api/apps-by-cert scan the WDP portal uses.
+    var added = 0;
+    try {
+      var res = await fetch("/api/apps-by-cert?thumbprint=" + encodeURIComponent(CS_THUMB));
+      if (res.ok) {
+        var list = await res.json();
+        if (Array.isArray(list)) list.forEach(function (a) {
+          state.apps.push({
+            id: uid(), name: a.name || a.file, file: a.file,
+            size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
+            icon: a.icon || null, signerThumb: CS_THUMB, signerSubject: null, trust: "Valid", certId: certId,
+            sources: [], store: false, added: today(), discovered: true, storeDiscovered: true
+          });
+          added++;
+        });
+      }
+    } catch (e) {}
+    scanning = false; save(); renderAll();
+    toast(added ? "Found " + added + " app" + (added > 1 ? "s" : "") + " signed by your certificate"
+                : "No other apps found for this certificate", !added);
+  }
+  // ===== END TEMP DEMO ==================================================================
 
   /* ---------------- Add-certificate modal (reuses the same flow) ---------------- */
   function openModal() {
@@ -1338,8 +1479,8 @@
     }
     a.storeName = name;
     a.storeLang = readDropdownValue($("pubLang")) || "en-US";
-    if (!a.store) a.storeStatus = "in-progress";        // reserved → entering the flow
     a.storeCreated = a.storeCreated || today();
+    if (!a.store) a.storeStatus = "in-progress";        // reserved → entering the flow
     save(); renderApps(); closePublish();               // persist + reflect the new row before navigating
     openPublishFlow(a.id);                              // launch the full publishing flow
   }
@@ -1365,6 +1506,14 @@
       status: a.storeStatus === "in-review" ? "in-review" : ((a.store || a.storeStatus === "published") ? "published" : "draft"),
       createdAt: a.storeCreated || new Date().toISOString()
     };
+    // Seed the SAME logo shown in the portal Apps table so the flow header + live listing show it on
+    // entry — a real image if the app has one, otherwise a faithful copy of the initials tile. A package
+    // logo uploaded in the flow overrides this. baseLogo is flow-only and isn't merged back to the table.
+    // Discovered-app icons are stored as BARE base64 (no data: prefix); normalize to a usable URL the same
+    // way appIcoImg does, so the flow can paint it as a CSS background-image (a bare string renders nothing).
+    var realIcon = a.icon ? (/^(data:|https?:|\/)/i.test(a.icon) ? a.icon : "data:image/png;base64," + a.icon) : null;
+    if (realIcon) mapped.icon = realIcon;
+    mapped.baseLogo = realIcon || tileDataUrl(a.name);
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
@@ -1399,6 +1548,16 @@
           id: "app-demo-store", name: "Pixel Paint Studio", icon: null,
           file: "PixelPaintStudio.exe", size: "", sources: [], created: true,
           store: true, storeStatus: "published", storeLang: "en-US",
+          storeCreated: today(), added: today()
+        }, {
+          id: "app-demo-cert", name: "Northwind Invoicing", icon: null,
+          file: "NorthwindInvoicing.exe", size: "", sources: [], created: true,
+          store: false, storeStatus: "in-review", storeLang: "en-US",
+          storeCreated: today(), added: today()
+        }, {
+          id: "app-demo-draft", name: "Mica Weather", icon: null,
+          file: "MicaWeather.exe", size: "", sources: [], created: true,
+          store: false, storeStatus: "in-progress", storeLang: "en-US",
           storeCreated: today(), added: today()
         }]
       }));
@@ -1473,6 +1632,8 @@
         try { localStorage.setItem("wdp.appsHero.dismissed", "1"); } catch (_) {}
         var hb = $("appsHero"); if (hb) hb.hidden = true; return;
       }
+      var rep = e.target.closest("[data-report]");
+      if (rep) { location.href = "publishing/cert-report.html?id=" + encodeURIComponent(rep.getAttribute("data-report")); return; }
       var ms = e.target.closest("[data-sources]");
       if (ms) { openSources(ms.getAttribute("data-sources")); return; }
       var del = e.target.closest("[data-delapp]");
@@ -1517,9 +1678,13 @@
   }
 
   /* ---------------- Sidebar view router ---------------- */
-  var VIEWS = ["overview", "apps", "certificates", "analytics"];
+  // Promo codes + Customer groups are Store-portal-only views.
+  var VIEWS = STORE
+    ? ["overview", "apps", "certificates", "analytics", "promo-codes", "customer-groups"]
+    : ["overview", "apps", "certificates", "analytics"];
   function showView(id) {
     if (VIEWS.indexOf(id) === -1) id = "overview";
+    if (id === "promo-codes" && STORE && !hasLiveStoreApp()) id = "overview";   // Promo codes is gated until an app is live
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
     document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === id); });
     if (id === "analytics") renderAnalytics();

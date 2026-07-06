@@ -269,7 +269,11 @@ function serveStatic(req, res) {
   if (!filePath.startsWith(ROOT)) { res.writeHead(403); return res.end("Forbidden"); }
   fs.readFile(filePath, function (err, data) {
     if (err) { res.writeHead(404, { "Content-Type": "text/plain" }); return res.end("Not found"); }
-    res.writeHead(200, { "Content-Type": TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream" });
+    res.writeHead(200, {
+      "Content-Type": TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream",
+      // Dev prototype: always serve fresh HTML/JS/CSS so edits show on a normal reload (no stale cache).
+      "Cache-Control": "no-cache, no-store, must-revalidate"
+    });
     res.end(data);
   });
 }

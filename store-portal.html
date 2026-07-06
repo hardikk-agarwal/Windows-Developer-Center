@@ -50,13 +50,17 @@
           <iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           Apps
         </a>
-        <a href="#certificates" data-nav>
-          <iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-          Certificates
-        </a>
         <a href="#analytics" data-nav>
           <iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           Analytics
+        </a>
+        <a href="#promo-codes" id="navPromo" data-nav hidden>
+          <iconify-icon icon="fluent:ticket-diagonal-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+          Promo codes
+        </a>
+        <a href="#customer-groups" data-nav>
+          <iconify-icon icon="fluent:people-team-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+          Customer groups
         </a>
       </nav>
       <div class="snav snav--foot">
@@ -128,6 +132,93 @@
           <select class="select" id="analyticsApp" aria-label="Select app"></select>
         </div>
         <div id="analyticsPanel"><!-- rendered by portal.js --></div>
+      </section>
+
+      <!-- ---------- PROMO CODES ---------- -->
+      <section class="block" id="promo-codes">
+        <div class="block__head">
+          <div>
+            <h2>Promo codes</h2>
+            <p class="muted">Give reviewers, testers, and fans free access to your paid apps and add-ons — up to 250 codes per app every 6 months.</p>
+          </div>
+          <fluent-button appearance="primary">
+            <iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            New promo code order
+          </fluent-button>
+        </div>
+        <div class="table-wrap">
+          <table class="table apptable">
+            <thead><tr><th>Order</th><th>App</th><th>Codes used</th><th>Created</th><th>Expires</th><th class="col-store">Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Launch reviewers</strong></td>
+                <td class="muted">Contoso Notes</td>
+                <td>42 <span class="muted">/ 100</span></td>
+                <td class="muted">Jun 12, 2026</td>
+                <td class="muted">Sep 12, 2026</td>
+                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
+              </tr>
+              <tr>
+                <td><strong>Press &amp; influencers</strong></td>
+                <td class="muted">Contoso Notes</td>
+                <td>8 <span class="muted">/ 25</span></td>
+                <td class="muted">Jun 28, 2026</td>
+                <td class="muted">Dec 28, 2026</td>
+                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
+              </tr>
+              <tr>
+                <td><strong>Beta testers · Q1</strong></td>
+                <td class="muted">Pixel Paint Studio</td>
+                <td>100 <span class="muted">/ 100</span></td>
+                <td class="muted">Feb 02, 2026</td>
+                <td class="muted">May 02, 2026</td>
+                <td class="col-store"><span class="pill pill--ghost pill--sm">Expired</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- CUSTOMER GROUPS ---------- -->
+      <section class="block" id="customer-groups">
+        <div class="block__head">
+          <div>
+            <h2>Customer groups</h2>
+            <p class="muted">Define segments of customers to target with sale pricing, promotions, and notifications.</p>
+          </div>
+          <fluent-button appearance="primary">
+            <iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Create customer group
+          </fluent-button>
+        </div>
+        <div class="table-wrap">
+          <table class="table apptable">
+            <thead><tr><th>Group</th><th>Type</th><th>Customers</th><th>Created</th><th class="col-store">Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Windows 11 Insiders</strong></td>
+                <td class="muted">Segment</td>
+                <td>1.2M</td>
+                <td class="muted">May 20, 2026</td>
+                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
+              </tr>
+              <tr>
+                <td><strong>Lapsed users · 90 days</strong></td>
+                <td class="muted">Segment</td>
+                <td>84K</td>
+                <td class="muted">Jun 01, 2026</td>
+                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
+              </tr>
+              <tr>
+                <td><strong>Education &amp; EDU licenses</strong></td>
+                <td class="muted">Known customers</td>
+                <td>3,540</td>
+                <td class="muted">Apr 14, 2026</td>
+                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   </div>

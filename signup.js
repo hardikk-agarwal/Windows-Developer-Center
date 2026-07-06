@@ -155,19 +155,20 @@
         : '<span class="pcmp-no" aria-label="Not included">—</span>';
     }
     function row(label, s, c) {
+      // Columns: label | Verify with a certificate (c) | Publish to the Store (s)
       return '<div class="pcmp__feat">' + label + '</div>' +
-        '<div class="pcmp__val">' + mark(s) + '</div>' +
-        '<div class="pcmp__val">' + mark(c) + '</div>';
+        '<div class="pcmp__val">' + mark(c) + '</div>' +
+        '<div class="pcmp__val">' + mark(s) + '</div>';
     }
     return '<div class="pcmp">' +
       '<div class="pcmp__corner"><strong>Pick your path</strong><small>Click a column to select it, then Continue.</small></div>' +
-      th("store", "rocket.png", true, "Publish to the Store", "Reach millions — the complete benefit set") +
       th("cert", "shield-checkmark.png", false, "Verify with a certificate", "Submit a signed binary, your own way") +
+      th("store", "rocket.png", true, "Publish to the Store", "Reach millions — the complete benefit set") +
       row("Publisher identity &amp; recognition", true, true) +
       row("Frictionless installs (no SmartScreen)", true, true) +
       row("Crash &amp; health analytics", true, true) +
-      row("Package signing", true, true) +
-      row("Hosting &amp; delivery", true, true) +
+      row("Package signing", true, false) +
+      row("Hosting &amp; delivery", true, false) +
       row("Distribute on your own", true, true) +
       row("Reach millions of Store shoppers", true, false) +
       row("Rich analytics — acquisitions, installs &amp; usage", true, false) +

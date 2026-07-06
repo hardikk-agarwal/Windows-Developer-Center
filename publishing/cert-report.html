@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Certification report · Microsoft Store</title>
+<!-- Theme bootstrap (sync, no FOUC) — mirrors publish.html. -->
+<script>
+(function(){ try { var s=localStorage.getItem('msstore.theme'); var t=s||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'); document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');} })();
+</script>
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-beta.133/dist/web-components.min.js"></script>
+<script type="module" src="fluent-bootstrap.js"></script>
+<script src="cert-issues.js"></script>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { margin: 0; background: var(--canvas, #0f1218); color: var(--fg-1); font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .rep-appbar { display: flex; align-items: center; gap: var(--sp-12); height: 48px; padding: 0 var(--sp-24); border-bottom: 1px solid var(--stroke-2); background: var(--layer); position: sticky; top: 0; z-index: 5; }
+  .rep-appbar .brand { display: inline-flex; align-items: center; gap: var(--sp-8); text-decoration: none; color: var(--fg-1); font-weight: 600; font-size: 14px; }
+  .rep-appbar .brand svg { display: block; }
+  .rep-appbar .brand__sub { color: var(--fg-3); font-weight: 400; }
+  .rep-appbar .brand__divider { width: 1px; height: 18px; background: var(--stroke-2); }
+
+  .rep-wrap { max-width: 880px; margin: 0 auto; padding: var(--sp-20) var(--sp-24) var(--sp-48); }
+  .rep-back { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 13px; color: var(--fg-3); text-decoration: none; background: none; border: 0; cursor: pointer; padding: var(--sp-8) 0; }
+  .rep-back:hover { color: var(--brand); }
+  .rep-crumb { font-size: 12px; color: var(--fg-4); margin: var(--sp-4) 0 var(--sp-12); }
+  .rep-crumb b { color: var(--fg-2); font-weight: 600; }
+  .rep-headrow { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; }
+  .rep-title { font-family: var(--font-display); font-size: 28px; line-height: 1.2; font-weight: 600; color: var(--fg-1); margin: 0; }
+  .rep-statuspill { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12px; font-weight: 600; padding: 3px var(--sp-10); border-radius: var(--r-full); color: var(--status-danger); background: color-mix(in srgb, var(--status-danger) 14%, transparent); }
+
+  .rep-summary { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--sp-12) var(--sp-32); margin: var(--sp-20) 0; padding: var(--sp-20) var(--sp-24); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); }
+  .rep-row dt { font-size: 12px; color: var(--fg-4); margin: 0 0 2px; }
+  .rep-row dd { font-size: 14px; color: var(--fg-1); margin: 0; font-weight: 500; word-break: break-word; }
+
+  .rep-intro { display: flex; gap: var(--sp-12); padding: var(--sp-16); background: color-mix(in srgb, var(--status-danger) 7%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 28%, transparent); border-radius: var(--r-8); margin-bottom: var(--sp-24); }
+  .rep-intro iconify-icon { color: var(--status-danger); flex: 0 0 auto; }
+  .rep-intro p { margin: 0; font-size: 13.5px; color: var(--fg-2); line-height: 1.55; }
+  .rep-intro strong { color: var(--fg-1); }
+
+  .rep-issues__title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-12); }
+  .rep-issue-list { display: flex; flex-direction: column; gap: var(--sp-12); }
+
+  /* Issue card — same visual language as the in-flow timeline summary. */
+  .cert-issue { display: flex; gap: var(--sp-16); padding: var(--sp-20) var(--sp-24); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); }
+  .cert-issue__ico { width: 40px; height: 40px; border-radius: var(--r-8); flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--subtle); color: var(--fg-2); }
+  .cert-issue__body { flex: 1; min-width: 0; }
+  .cert-issue__title { font-size: 15px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-8); }
+  .cert-issue__line { display: flex; gap: var(--sp-8); font-size: 13px; line-height: 1.5; margin-top: var(--sp-4); }
+  .cert-issue__line iconify-icon { flex: 0 0 auto; margin-top: 2px; }
+  .cert-issue__line--problem iconify-icon { color: var(--status-danger); }
+  .cert-issue__line--fix iconify-icon { color: var(--status-success); }
+  .cert-issue__line span { color: var(--fg-2); }
+  .cert-issue__line--fix b { color: var(--fg-1); font-weight: 600; }
+  .cert-issue__foot { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); flex-wrap: wrap; }
+  .cert-issue__policy { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 11px; color: var(--fg-4); background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 2px var(--sp-8); }
+
+  .rep-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-16); margin-top: var(--sp-24); padding: var(--sp-20) var(--sp-24); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); flex-wrap: wrap; }
+  .rep-foot p { margin: 0; font-size: 13px; color: var(--fg-3); max-width: 52ch; }
+
+  @media (max-width: 620px) { .rep-summary { grid-template-columns: 1fr; } .rep-foot { flex-direction: column; align-items: stretch; } }
+</style>
+</head>
+<body>
+  <header class="rep-appbar">
+    <a class="brand" href="../store-portal.html" aria-label="Microsoft Store Developer">
+      <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true"><rect x="1" y="1" width="10" height="10" fill="#F25022"/><rect x="12" y="1" width="10" height="10" fill="#7FBA00"/><rect x="1" y="12" width="10" height="10" fill="#00A4EF"/><rect x="12" y="12" width="10" height="10" fill="#FFB900"/></svg>
+      <span>Microsoft</span><span class="brand__divider" aria-hidden="true"></span><span class="brand__sub">Store Developer</span>
+    </a>
+  </header>
+
+  <main class="rep-wrap">
+    <button class="rep-back" id="rep-back" type="button"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Back</button>
+    <nav class="rep-crumb">Apps &rsaquo; <b id="rep-crumb-name">App</b> &rsaquo; Certification report</nav>
+
+    <div class="rep-headrow">
+      <h1 class="rep-title">Certification report</h1>
+      <span class="rep-statuspill"><iconify-icon icon="fluent:error-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Action needed</span>
+    </div>
+
+    <section class="rep-summary" id="rep-summary"></section>
+
+    <div class="rep-intro">
+      <iconify-icon icon="fluent:info-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
+      <p>We reviewed your submission and it needs a few changes before we can publish it. Fix the issues below, then resubmit for certification &mdash; there&rsquo;s no extra fee for resubmitting.</p>
+    </div>
+
+    <section>
+      <h2 class="rep-issues__title" id="rep-issues-title">Issues to fix</h2>
+      <div class="rep-issue-list" id="rep-issues"></div>
+    </section>
+
+    <div class="rep-foot">
+      <p>Once you&rsquo;ve fixed these, resubmit your app. Certification usually completes within 1&ndash;2 business days.</p>
+      <fluent-button appearance="primary" id="rep-edit"><iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Edit submission</fluent-button>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var id = new URLSearchParams(location.search).get('id') || '';
+      function readJSON(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+      var ms = readJSON('msstore.apps', []);
+      var app = (Array.isArray(ms) ? ms : []).filter(function (a) { return a && a.id === id; })[0] || { id: id, name: 'Your app' };
+      var portal = readJSON('tdp.portal.store.v1', null) || readJSON('tdp.portal.v5', null);
+      var publisher = (portal && portal.account && portal.account.name) || 'Test Publisher';
+      var name = app.name || 'Your app';
+      var today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+      var issues = window.CERT_ISSUES || [];
+      var n = issues.length;
+
+      document.title = name + ' \u2014 Certification report';
+      document.getElementById('rep-crumb-name').textContent = name;
+
+      function row(k, v, raw) { return '<div class="rep-row"><dt>' + esc(k) + '</dt><dd>' + (raw ? v : esc(v)) + '</dd></div>'; }
+      document.getElementById('rep-summary').innerHTML =
+        row('Product name', name) +
+        row('Product ID', id || '\u2014') +
+        row('Status', '<span style="color:var(--status-danger);font-weight:600">Attention needed</span>', true) +
+        row('Publisher', publisher) +
+        row('Review completed', today);
+
+      document.getElementById('rep-issues-title').textContent = n + ' ' + (n === 1 ? 'issue' : 'issues') + ' to fix';
+      document.getElementById('rep-issues').innerHTML = issues.map(function (it, i) {
+        return '<div class="cert-issue">' +
+          '<span class="cert-issue__ico"><iconify-icon icon="' + it.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="cert-issue__body">' +
+            '<p class="cert-issue__title">' + (i + 1) + '. ' + esc(it.title) + '</p>' +
+            '<div class="cert-issue__line cert-issue__line--problem"><iconify-icon icon="fluent:dismiss-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + esc(it.problem) + '</span></div>' +
+            '<div class="cert-issue__line cert-issue__line--fix"><iconify-icon icon="fluent:wrench-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span><b>Fix:</b> ' + esc(it.fix) + '</span></div>' +
+            '<div class="cert-issue__foot">' +
+              '<fluent-button appearance="primary" size="small" data-fix="' + esc(it.section) + '"><iconify-icon slot="start" icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Fix this</fluent-button>' +
+              '<span class="cert-issue__policy"><iconify-icon icon="fluent:book-20-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Store Policy ' + esc(it.policy) + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      // Fixing takes you back into the flow's editor: withdraw to draft so it opens editable, then navigate.
+      function goFix() {
+        try { var all = readJSON('msstore.apps', []); var i = all.findIndex(function (a) { return a && a.id === id; }); if (i >= 0) { all[i].status = 'draft'; localStorage.setItem('msstore.apps', JSON.stringify(all)); } } catch (e) {}
+        location.href = 'publish.html?id=' + encodeURIComponent(id);
+      }
+      document.getElementById('rep-issues').addEventListener('click', function (e) { var f = e.target.closest('[data-fix]'); if (f) { e.preventDefault(); goFix(); } });
+      document.getElementById('rep-edit').addEventListener('click', goFix);
+      document.getElementById('rep-back').addEventListener('click', function () { if (history.length > 1) history.back(); else location.href = '../store-portal.html#apps'; });
+    })();
+  </script>
+</body>
+</html>

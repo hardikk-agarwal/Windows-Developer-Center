@@ -35,9 +35,13 @@
     if (!app) return;
     var ms = readJSON(MS_KEY, []);
     var msApp = (Array.isArray(ms) ? ms : []).filter(function (a) { return a.id === id; })[0];
-    app.store = true;                                    // portal table shows "✓ In Store"
-    app.storeStatus = (msApp && msApp.status) || "in-review";
+    var status = (msApp && msApp.status) || "in-review";
+    // Reflect the real submission status. A failed ("rejected") cert is NOT in the Store.
+    if (status === "rejected") { app.store = false; app.storeStatus = "rejected"; }
+    else if (status === "published") { app.store = true; app.storeStatus = "published"; }
+    else { app.store = true; app.storeStatus = status; }   // in-review
     if (msApp && msApp.name) app.storeName = msApp.name;  // name may have been edited in the flow
+    if (msApp && msApp.icon) app.icon = msApp.icon;       // reflect the flow's final logo (MSIX package/manual upload) in the portal Apps table
     if (!app.storeCreated) {
       app.storeCreated = new Date().toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
     }
@@ -84,36 +88,190 @@
       '<span class="live-card__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
       '<iconify-icon class="live-card__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></a>';
   }
-  function passCertification(done) {
-    if (!done || done.hidden) return;
-    done.__passed = true;
+  // ---- Certification result data (plain language + Partner Center policy refs) ----
+  // Each issue: what's wrong, how to fix, which step to jump to, and the policy number
+  // (de-emphasised) for anyone who wants the official reference.
+  // Issue data is shared with the standalone report page (see publishing/cert-issues.js).
+  var CERT_ISSUES = window.CERT_ISSUES || [];
+
+  // A single timeline stage (matches the in-progress card markup). `right` is the trailing slot.
+  function stageHTML(state, bullet, title, desc, right) {
+    var cls = state === "done" ? "cert-stage cert-stage--done"
+            : state === "fail" ? "cert-stage cert-stage--fail"
+            : state === "blocked" ? "cert-stage cert-stage--blocked" : "cert-stage";
+    var b = bullet === "check" ? '<iconify-icon icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>'
+          : bullet === "x" ? '<iconify-icon icon="fluent:dismiss-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>'
+          : esc(bullet);
+    return '<div class="' + cls + '">' +
+      '<span class="cert-stage__bullet">' + b + '</span>' +
+      '<div class="cert-stage__body"><p class="cert-stage__title">' + esc(title) + '</p><p class="cert-stage__desc">' + esc(desc) + '</p></div>' +
+      (right || "") +
+    '</div>';
+  }
+
+  function failHTML() {
+    var name = appName();
+    var n = CERT_ISSUES.length;
+    var word = n === 1 ? "issue" : "issues";
+    var stages =
+      stageHTML("done", "check", "Submission received", "Your package and metadata are validated.", '<span class="cert-stage__time">Done</span>') +
+      stageHTML("done", "check", "Automated checks", "Malware scan, certificate validation, manifest review.", '<span class="cert-stage__time">Passed</span>') +
+      stageHTML("fail", "x", "Policy review", n + " " + word + " found during manual review against Store policies.", '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Action needed</span>') +
+      stageHTML("blocked", "4", "Final approval", "Resumes once you\u2019ve fixed the issues and resubmitted.", '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
+    return '<div class="cert-card cert-card--fail">' +
+      '<div class="cert-card__head">' +
+        '<span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
+        '<div>' +
+          '<h2 class="cert-card__title">Certification didn\u2019t pass</h2>' +
+          '<p class="cert-card__sub">We reviewed <strong>' + esc(name) + '</strong> and found ' + n + ' ' + word + ' during policy review. Open the report for the details, then edit &amp; fix.</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cert-stages">' + stages + '</div>' +
+      '<div class="cert-failbar">' +
+        '<iconify-icon icon="fluent:warning-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+        '<span><strong>' + n + ' ' + (n === 1 ? "issue needs" : "issues need") + ' your attention</strong> before your app can go live.</span>' +
+        '<fluent-button appearance="primary" size="small" data-cert-report><iconify-icon slot="start" icon="fluent:document-bullet-list-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>See report</fluent-button>' +
+        '<fluent-button appearance="secondary" size="small" data-edit><iconify-icon slot="start" icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Edit &amp; fix</fluent-button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function passHTML() {
     var groups = LIVE_GROUPS.map(function (g) {
       return '<div class="live-card-list"><h3 class="live-card-list__title">' + esc(g.title) + '</h3>' +
         g.cards.map(liveCard).join("") + '</div>';
     }).join("");
-    done.innerHTML = '<div class="live-hub">' + groups + '</div>';
-    // Primary action ("View in Store") goes in the header's right-side action slot.
-    var bar = document.getElementById("submit-bar");
-    if (bar) {
-      bar.innerHTML = '<fluent-button appearance="primary" size="large"><iconify-icon slot="start" icon="fluent:open-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View in Store</fluent-button>';
-      bar.hidden = false;
-    }
-    var pill = document.getElementById("app-status");
-    if (pill) { pill.textContent = "Published"; pill.className = "status-pill status-pill--published"; }
-    try { var ms = readJSON(MS_KEY, []); var i = (Array.isArray(ms) ? ms : []).map(function (a) { return a.id; }).indexOf(id); if (i >= 0) { ms[i].status = "published"; localStorage.setItem(MS_KEY, JSON.stringify(ms)); } } catch (e) {}
+    return '<div class="cert-pass">' +
+      '<span class="cert-pass__badge"><iconify-icon icon="fluent:checkmark-circle-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="cert-pass__text">' +
+        '<strong class="cert-pass__title">Certification passed</strong>' +
+        '<span class="cert-pass__sub"><strong>' + esc(appName()) + '</strong> is now live in the Microsoft Store.</span>' +
+      '</div>' +
+      '<fluent-button appearance="primary" size="small"><iconify-icon slot="start" icon="fluent:open-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View in Store</fluent-button>' +
+    '</div>' +
+    '<div class="live-hub">' + groups + '</div>';
+  }
+
+  // ---- Certification result view state machine ----
+  var certTimer = null;
+  var nextOutcome = "passed";   // default result after a submit; the preview switcher (or an edit) can force the other outcome
+  function $id(x) { return document.getElementById(x); }
+  function clearCertTimer() { if (certTimer) { clearTimeout(certTimer); certTimer = null; } }
+  function setSwitch(view) {
+    var opts = document.querySelectorAll("#cert-switch .cert-switch__opt");
+    Array.prototype.forEach.call(opts, function (b) { b.classList.toggle("is-active", b.getAttribute("data-cert-view") === view); });
+  }
+  function setPill(text, cls) { var p = $id("app-status"); if (p) { p.textContent = text; p.className = "status-pill status-pill--" + cls; } }
+  // The submission-notification banner is only relevant while a submission is pending;
+  // hide it once the app is published. (Class selector beats [hidden], so toggle display.)
+  function setNotify(show) { var n = document.querySelector("#state-done .notify-banner"); if (n) n.style.display = show ? "" : "none"; }
+  function setMsStatus(status) {
+    try { var ms = readJSON(MS_KEY, []); var i = (Array.isArray(ms) ? ms : []).map(function (a) { return a.id; }).indexOf(id); if (i >= 0) { ms[i].status = status; localStorage.setItem(MS_KEY, JSON.stringify(ms)); } } catch (e) {}
+  }
+  function setPortalStore(store, storeStatus) {
     var s = readJSON(TDP_KEY, null);
-    if (s && Array.isArray(s.apps)) { var ta = s.apps.filter(function (a) { return a.id === id; })[0]; if (ta) { ta.store = true; ta.storeStatus = "published"; try { localStorage.setItem(TDP_KEY, JSON.stringify(s)); } catch (e) {} } }
+    if (s && Array.isArray(s.apps)) { var ta = s.apps.filter(function (a) { return a.id === id; })[0]; if (ta) { ta.store = store; ta.storeStatus = storeStatus; try { localStorage.setItem(TDP_KEY, JSON.stringify(s)); } catch (e) {} } }
+  }
+
+  function showProgress() {
+    var done = $id("state-done"); if (done) done.__result = "progress";
+    var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
+    if (prog) prog.hidden = false;
+    if (res) { res.hidden = true; res.innerHTML = ""; }
+    if (act) act.hidden = false;
+    var bar = $id("submit-bar"); if (bar) bar.hidden = true;
+    setPill("In review", "in-review");
+    setNotify(true);
+    setSwitch("progress");
+  }
+  function showPassed() {
+    var done = $id("state-done"); if (done) done.__result = "passed";
+    var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
+    if (prog) prog.hidden = true;
+    if (res) { res.hidden = false; res.innerHTML = passHTML(); }
+    if (act) act.hidden = true;
+    var bar = $id("submit-bar"); if (bar) bar.hidden = true;
+    setPill("Published", "published");
+    setMsStatus("published"); setPortalStore(true, "published");
+    setNotify(false);   // published: the submission-notification banner no longer applies
+    setSwitch("passed");
+  }
+  function showFailed() {
+    var done = $id("state-done"); if (done) done.__result = "failed";
+    var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
+    if (prog) prog.hidden = true;
+    if (res) { res.hidden = false; res.innerHTML = failHTML(); }
+    if (act) act.hidden = true;
+    var bar = $id("submit-bar"); if (bar) bar.hidden = true;
+    setPill("Action needed", "rejected");
+    setMsStatus("rejected"); setPortalStore(false, "rejected");
+    setNotify(true);
+    setSwitch("failed");
+  }
+  function resolveTo(view) { clearCertTimer(); if (view === "passed") showPassed(); else if (view === "failed") showFailed(); else showProgress(); }
+  function armCertTimer() { clearCertTimer(); certTimer = setTimeout(function () { resolveTo(nextOutcome); }, 4500); }
+
+  // From the report: go back to the editor to fix issues, then aim the next result at "passed".
+  function certGoToSection(section) {
+    section = section || "step-listing";
+    try { if (typeof window.setActiveSection === "function") window.setActiveSection(section); } catch (e) {}
+    var rail = document.querySelector('.ez-rail__item[data-section="' + section + '"]');
+    if (rail) { try { rail.click(); } catch (e) {} }
+    var el = document.getElementById(section);
+    if (el) { try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { try { el.scrollIntoView(); } catch (e2) {} } }
+  }
+  function goEditAndFix(section) {
+    section = section || "step-listing";
+    nextOutcome = "passed";
+    var wb = $id("withdraw-btn"); if (wb) { try { wb.click(); } catch (e) {} }   // return to editor (wired in publish.html)
+    setTimeout(function () {
+      // Fold the certification issues into the existing header checklist so the developer can
+      // click it any time to recall exactly what's left — no big panel taking over the editor.
+      try { if (typeof window.certFixActivate === "function") window.certFixActivate(); } catch (e) {}
+      certGoToSection(section);
+    }, 90);
+  }
+
+  // Wire the preview switcher + the report's Fix / Edit buttons (once each).
+  function wireCertControls() {
+    var sw = $id("cert-switch");
+    if (sw && !sw.__wired) {
+      sw.__wired = true;
+      sw.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-cert-view]"); if (!b) return;
+        var v = b.getAttribute("data-cert-view");
+        clearCertTimer();
+        if (v === "passed") { nextOutcome = "passed"; showPassed(); }
+        else if (v === "failed") { nextOutcome = "failed"; showFailed(); }
+        else { showProgress(); }
+      });
+    }
+    var res = $id("cert-result");
+    if (res && !res.__wired) {
+      res.__wired = true;
+      res.addEventListener("click", function (e) {
+        var report = e.target.closest("[data-cert-report]");
+        if (report) { e.preventDefault(); window.open("cert-report.html?id=" + encodeURIComponent(id), "_blank", "noopener"); return; }
+        var edit = e.target.closest("[data-edit]");
+        if (edit) { e.preventDefault(); goEditAndFix("step-listing"); return; }
+        var fix = e.target.closest("[data-fix]");
+        if (fix) { e.preventDefault(); goEditAndFix(fix.getAttribute("data-fix")); }
+      });
+    }
   }
 
   // doSubmit() reveals #state-done (hidden = false) once the app is submitted.
   function watch() {
     var done = document.getElementById("state-done");
     if (!done) return;
+    wireCertControls();
     function shown() {
       toggleSteps(true); syncBack();
-      if (!done.__passed && !done.__certTimer) done.__certTimer = setTimeout(function () { passCertification(done); }, 5000);
+      // If a terminal result was already restored (passed/failed), keep it. Otherwise show
+      // the in-progress timeline and let it resolve to the next outcome after a short beat.
+      if (done.__result !== "passed" && done.__result !== "failed") { showProgress(); armCertTimer(); }
     }
-    function hidden() { toggleSteps(false); if (done.__certTimer) { clearTimeout(done.__certTimer); done.__certTimer = null; } }
+    function hidden() { toggleSteps(false); clearCertTimer(); done.__result = null; }
     if (!done.hidden) shown();
     new MutationObserver(function () { if (!done.hidden) shown(); else hidden(); })
       .observe(done, { attributes: true, attributeFilter: ["hidden"] });
@@ -134,7 +292,6 @@
       document.querySelectorAll('a[href^="../portal.html"]').forEach(function (a) {
         a.setAttribute("href", a.getAttribute("href").replace("../portal.html", "../store-portal.html"));
       });
-      var cnav = document.querySelector('a[href*="store-portal.html#certificates"]'); if (cnav) cnav.style.display = "none";
       if (stat) stat.innerHTML = '<span class="verified-dot"></span>Store developer';
       return;
     }
@@ -150,24 +307,11 @@
 
   // Use the app's real logo (the base64 icon the portal already has) in the flow's
   // app-identity banner, replacing the letter placeholder. Re-applied if v4 re-renders it.
-  function applyLogo() {
-    var el = document.getElementById("app-icon");
-    if (!el) return;
-    var st = readJSON(TDP_KEY, null);
-    var app = st && Array.isArray(st.apps) ? st.apps.filter(function (a) { return a.id === id; })[0] : null;
-    if (!app || !app.icon) return;
-    var html = '<img src="data:image/png;base64,' + app.icon + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block">';
-    el.classList.add("tdp-has-icon"); // drop the placeholder box; show the icon directly
-    el.innerHTML = html;
-    if (!el.__tdpLogo) {
-      el.__tdpLogo = true;
-      new MutationObserver(function () {
-        // Re-apply only when the icon reverted to the empty/initial placeholder; leave an
-        // uploaded package's icon (the flow paints it as a background-image) in place.
-        if (!el.querySelector("img") && !el.style.backgroundImage) { el.classList.add("tdp-has-icon"); el.innerHTML = html; }
-      }).observe(el, { childList: true });
-    }
-  }
+  // The publish flow itself now owns the app-header icon: it follows the CURRENT package (or an
+  // in-session logo upload) and reverts to the name placeholder when there's none. We deliberately
+  // do NOT inject the portal's saved icon here — otherwise a hard refresh (packages are session-
+  // only, so none are loaded) would keep showing a logo that belongs to a package that's gone.
+  function applyLogo() { /* intentionally a no-op — see note above */ }
 
   // On reload, v4 shows the editor by default but the persisted status is still
   // in-review/published — restore the submitted view so the tag and panel agree
@@ -176,12 +320,18 @@
     var ms = readJSON(MS_KEY, []);
     var a = (Array.isArray(ms) ? ms : []).filter(function (x) { return x.id === id; })[0];
     var status = a && a.status;
-    if (status !== "in-review" && status !== "published") return;
+    if (status !== "in-review" && status !== "published" && status !== "rejected") return;
     var editor = document.getElementById("editor"), bar = document.getElementById("submit-bar"),
         done = document.getElementById("state-done");
     if (editor) editor.hidden = true;
     if (bar) bar.hidden = true;
-    if (done) { done.hidden = false; if (status === "published") passCertification(done); }
+    if (done) {
+      done.hidden = false;
+      wireCertControls();
+      if (status === "published") showPassed();
+      else if (status === "rejected") showFailed();
+      // in-review: watch()'s shown() shows the in-progress timeline and arms the resolve timer.
+    }
   }
   function init() { populateHeader(); applyLogo(); restoreSubmittedState(); watch(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
