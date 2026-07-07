@@ -124,10 +124,10 @@
   }
   // Store: an app is "live" once it's published to the Store.
   function hasLiveStoreApp() { return state.apps.some(function (a) { return a.store || a.storeStatus === "published"; }); }
-  // Store: Promo codes is a commerce feature — it only appears in the sidebar once an app is live in the Store.
+  // Promo codes is hidden from the left sidebar.
   function updateStoreNav() {
     if (!STORE) return;
-    var promo = $("navPromo"); if (promo) promo.hidden = !hasLiveStoreApp();
+    var promo = $("navPromo"); if (promo) promo.hidden = true;   // Promo codes hidden from the sidebar
   }
 
   function renderAccount() {

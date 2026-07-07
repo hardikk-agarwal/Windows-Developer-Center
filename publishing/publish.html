@@ -550,17 +550,17 @@
   .ez-store-hero[data-has-media="true"] .ez-store-hero__desc,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__cta,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__iarc { max-width: 45%; }
-  /* In-place "add hero" empty state (Advanced only) — a clickable drop zone sitting exactly
-     where the hero art renders (right-side banner), so it's obvious what it fills. */
-  .ez-hero-empty { position: absolute; z-index: 3; top: 10px; right: 10px; bottom: 10px; width: 46%;
+  /* In-place "add hero" empty state (Advanced only) — sits exactly where the hero art renders
+     (right-side banner). No box: just an icon + label that blends into the hero, with a soft
+     wash on hover (fading in from the right, mirroring how the real art appears). */
+  .ez-hero-empty { position: absolute; z-index: 3; top: 0; right: 0; bottom: 0; width: 52%;
     flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6);
-    border: 1.5px dashed rgba(255,255,255,.45); border-radius: var(--r-8); background: rgba(0,0,0,.18);
-    color: #fff; cursor: pointer; text-align: center; padding: var(--sp-12);
-    transition: border-color .12s ease, background .12s ease; }
-  .ez-hero-empty:hover { border-color: #fff; background: rgba(0,0,0,.30); }
-  .ez-hero-empty iconify-icon { opacity: .95; }
-  .ez-hero-empty__title { font-size: 13px; font-weight: 600; }
-  .ez-hero-empty__hint { font-size: 11px; opacity: .82; line-height: 1.3; }
+    border: 0; background: none; color: rgba(255,255,255,.82); cursor: pointer; text-align: center; padding: var(--sp-16);
+    transition: color .14s ease, background .14s ease; }
+  .ez-hero-empty:hover { color: #fff; background: linear-gradient(to left, rgba(255,255,255,.10), transparent 82%); }
+  .ez-hero-empty iconify-icon { opacity: .9; }
+  .ez-hero-empty__title { font-size: 13px; font-weight: var(--font-weight-semibold); }
+  .ez-hero-empty__hint { font-size: 11px; opacity: .72; line-height: 1.3; }
   .ez-hero-empty[hidden] { display: none !important; }
   .ez-hero-media__remove { position: absolute; z-index: 4; top: var(--sp-12); right: var(--sp-16); width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
   .ez-hero-media__remove:hover { background: rgba(196,43,28,.9); }
@@ -601,6 +601,21 @@
   /* Values can stack multiple lines/links (Published by + Copyright; Additional terms = privacy + license). */
   .ez-info-item__value { display: flex; flex-direction: column; gap: 3px; }
   .ez-info-item__sub { color: var(--fg-3); }
+  /* Additional-information values — clean label/value like the real Store, but with a clear
+     filled vs. empty read: filled = solid white value; empty = a muted "Add …" prompt
+     (required-but-empty is nudged in the Store link colour so it's obviously still needed). */
+  .ez-info-val { display: inline-flex; align-items: center; gap: 4px; width: fit-content; cursor: pointer; text-decoration: none; }
+  .ez-info-val > iconify-icon { flex: 0 0 auto; }
+  .ez-info-val:focus-visible { outline: 2px solid var(--store-link); outline-offset: 2px; border-radius: 3px; }
+  .ez-info-val--set { color: var(--fg-1); font-weight: 600; }
+  .ez-info-val--set:hover { color: var(--store-link); text-decoration: underline; }
+  .ez-info-val--empty { color: var(--fg-3); font-weight: 500; }
+  .ez-info-val--empty > iconify-icon { color: var(--fg-3); }
+  .ez-info-val--empty:hover, .ez-info-val--empty:hover > iconify-icon { color: var(--store-link); }
+  .ez-info-val--req { color: var(--store-link); }
+  .ez-info-val--req > iconify-icon { color: var(--store-link); }
+  .ez-info-static { color: var(--fg-1); font-weight: 600; }
+  .ez-info-notset { color: var(--fg-3); font-weight: 500; }
   /* Inline editors inside the info grid get a visible box (the live-PDP inline edits are borderless). */
   .ez-live .ez-info-item .live-edit-input--info { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-4); padding: 4px 6px; color: var(--fg-1); width: 100%; box-sizing: border-box; outline: none; font: inherit; }
   .ez-live .ez-info-item textarea.live-edit-input--info { resize: vertical; min-height: 76px; line-height: 1.45; }
@@ -2154,17 +2169,7 @@
 
   <!-- ===================== WDP HEADER (same header as the rest of the portal) ===================== -->
   <header class="appbar" role="banner">
-    <a class="brand" href="../store-portal.html" aria-label="Microsoft Store Developer">
-      <svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">
-        <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
-        <rect x="12" y="1" width="10" height="10" fill="#7FBA00"/>
-        <rect x="1" y="12" width="10" height="10" fill="#00A4EF"/>
-        <rect x="12" y="12" width="10" height="10" fill="#FFB900"/>
-      </svg>
-      <span class="brand__name">Microsoft</span>
-      <span class="brand__divider" aria-hidden="true"></span>
-      <span class="brand__sub">Store Developer</span>
-    </a>
+    <a class="brand" href="../store-portal.html" data-wdp-brand></a>
     <div class="appbar__right">
       <div class="userchip">
         <span class="avatar" id="avatar">—</span>
@@ -2175,6 +2180,7 @@
       </div>
     </div>
   </header>
+  <script src="../wdp-header.js"></script>
 
   <!-- ===================== LEFT SIDEBAR (same as the portal — shown only when in review/published) ===================== -->
   <aside class="sidebar" aria-label="Store navigation">
@@ -4082,8 +4088,8 @@
     document.querySelectorAll('a[href*="store-developer.html"]').forEach(function (el) {
       el.setAttribute('href', el.getAttribute('href').replace('store-developer.html', 'index.html'));
     });
-    const sub = document.querySelector('.brand__sub'); if (sub) sub.textContent = 'Windows Developer Program';
-    const brand = document.querySelector('.appbar .brand'); if (brand) brand.setAttribute('aria-label', 'Microsoft Windows Developer Program');
+    const sub = document.querySelector('.brand__sub'); if (sub) sub.textContent = 'Windows Developer Portal';
+    const brand = document.querySelector('.appbar .brand'); if (brand) brand.setAttribute('aria-label', 'Microsoft Windows Developer Portal');
     const aside = document.querySelector('aside.sidebar'); if (aside) aside.setAttribute('aria-label', 'Program navigation');
   })();
 
@@ -9634,8 +9640,12 @@ function openPriceScheduleDialog() {
       const fw = document.getElementById('flow-wrap');
       const advanced = !!(($('step-listing') && $('step-listing').classList.contains('is-more')) || (fw && fw.getAttribute('data-mode') === 'advanced'));
       const section = $('ez-info-section');
-      const ADD = (label) => '<iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true" style="vertical-align:-1px;margin-right:3px;"></iconify-icon>' + label;
-      const link = (id, inner) => '<a class="ez-info-item__value--link" id="' + id + '">' + inner + '</a>';
+      const PLUS = '<iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon>';
+      // Editable value with a clear state: filled -> solid value (click to edit); empty -> muted
+      // "Add …" prompt (click to add). Required-but-empty is nudged in the Store link colour + red *.
+      const stateVal = (id, filledHtml, addLabel, req) => filledHtml
+        ? '<a class="ez-info-val ez-info-val--set" id="' + id + '" role="button" tabindex="0">' + filledHtml + '</a>'
+        : '<a class="ez-info-val ez-info-val--empty' + (req ? ' ez-info-val--req' : '') + '" id="' + id + '" role="button" tabindex="0">' + PLUS + '<span>' + addLabel + '</span></a>' + (req ? reqStar : '');
       // ---- Additional terms (Privacy policy + Applicable license terms) ----
       const privSet = (L.privacyMode === 'text') ? !!(L.privacyText || '').trim() : !!(L.privacyUrl || '').trim();
       const licSet = !!(L.licenseTerms || '').trim();
@@ -9645,8 +9655,8 @@ function openPriceScheduleDialog() {
       const privReq = (typeof privacyRequired === 'function') && privacyRequired();
       const licReq  = (typeof licenseRequired === 'function') && licenseRequired();
       // Shared across all languages, but editable in any locale (with a one-time warning).
-      const privCell = link('ez-info-privacy', privSet ? 'Privacy policy' : ADD('Add privacy policy')) + (privReq ? reqStar : '');
-      const licCell  = link('ez-info-license',  licSet ? 'License terms'  : ADD('Add license terms')) + (licReq ? reqStar : '');
+      const privCell = stateVal('ez-info-privacy', privSet ? 'Privacy policy' : '', 'Add privacy policy', privReq);
+      const licCell  = stateVal('ez-info-license',  licSet ? 'License terms'  : '', 'Add license terms', licReq);
       // License terms is advanced-only for MSIX (it's optional there); Win32 requires it, so it
       // stays visible in both modes. Privacy always shows.
       const showLicense = advanced || licReq;
@@ -9661,19 +9671,23 @@ function openPriceScheduleDialog() {
       }
       if (section) section.hidden = false;
       // ---- Full developer grid (advanced) — mirrors the real Store's Additional information ----
-      const devVal   = link('ez-info-developed', (L.developedBy || '').trim() ? esc(L.developedBy) : ADD('Add'));
-      const copyCell = link('ez-info-copyright', (L.copyright || '').trim() ? esc(L.copyright) : ADD('Add copyright'));
-      const pubVal   = '<span class="ez-info-item__line">' + esc('Hardik Agarwal') + '</span>' + (copyCell ? '<span class="ez-info-item__line ez-info-item__sub">' + copyCell + '</span>' : '');
-      const subVal   = link('ez-info-subcat', L.subcategory ? esc(L.subcategory) : ADD('Add'));
-      const langsVal = esc(addedLocales().map(localeShortNameOf).join(', '));
-      // Support info (EU DSA) — account details by default, or custom per-app.
+      const devVal   = stateVal('ez-info-developed', (L.developedBy || '').trim() ? esc(L.developedBy) : '', 'Add developer', false);
+      const copyCell = stateVal('ez-info-copyright', (L.copyright || '').trim() ? esc(L.copyright) : '', 'Add copyright', false);
+      const pubVal   = '<span class="ez-info-item__line ez-info-static">' + esc('Hardik Agarwal') + '</span><span class="ez-info-item__line">' + copyCell + '</span>';
+      const subVal   = stateVal('ez-info-subcat', L.subcategory ? esc(L.subcategory) : '', 'Add subcategory', false);
+      const langsVal = '<span class="ez-info-static">' + esc(addedLocales().map(localeShortNameOf).join(', ')) + '</span>';
+      // Support info (EU DSA) — account details by default, or custom per-app (always has a value).
       const sup = (adv.listing && adv.listing.support) || {};
       const supText = sup.mode === 'custom' ? 'Custom contact info' : 'Account contact info';
-      const supVal = link('ez-info-support', supText);
+      const supVal = stateVal('ez-info-support', supText, 'Add contact info', false);
+      // Category is shown here for reference; it's set from the hero chip at the top of the listing.
+      const catVal = (fCat && fCat.value)
+        ? '<span class="ez-info-static">' + esc(catLabel()) + '</span>'
+        : '<span class="ez-info-notset">Not set</span>';
       infoGrid.innerHTML =
         infoItem('fluent:box-20-regular', 'Developed by', devVal) +
         infoItem('fluent:building-20-regular', 'Published by', pubVal) +
-        infoItem('fluent:bookmark-20-regular', 'Category', esc(catLabel())) +
+        infoItem('fluent:bookmark-20-regular', 'Category', catVal) +
         infoItem('fluent:tag-multiple-20-regular', 'Subcategory', subVal) +
         infoItem('fluent:globe-20-regular', 'Supported languages', langsVal) +
         infoItem('fluent:person-support-20-regular', 'Support', supVal) +
