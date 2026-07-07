@@ -385,6 +385,52 @@
   .submit-checklist.is-open .submit-checklist__chev { transform: rotate(180deg); }
   .submit-checklist__panel { position: absolute; top: calc(100% + 6px); right: 0; width: 300px; max-width: 84vw; max-height: 64vh; overflow-y: auto; padding: var(--sp-12); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: var(--shadow-3, 0 12px 32px rgba(0,0,0,.4)); z-index: 60; }
   .submit-checklist__panel[hidden] { display: none; }
+  /* ===== Floating submit-readiness rail — vertically-centered, hover-to-expand, sticky =====
+     A compact status "spine" pins to the right edge (quick scan of every step). Hovering it
+     reveals the full checklist panel. Floats over the layout (no reserved column); falls back
+     to the header dropdown below 1200px and in Advanced mode. */
+  .submit-rail { display: none; }
+  #flow-wrap.is-wizard[data-mode="easy"] #submit-rail { display: block; position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 55; animation: submitRailIn 360ms var(--ease-out) both; }
+  @keyframes submitRailIn { from { opacity: 0; transform: translateY(-50%) translateX(14px); } to { opacity: 1; transform: translateY(-50%) translateX(0); } }
+  @keyframes submitSpinePop { 0% { transform: scale(1); } 35% { transform: scale(1.26); } 68% { transform: scale(.94); } 100% { transform: scale(1); } }
+  #flow-wrap.is-wizard[data-mode="easy"] #editor[hidden] ~ #submit-rail { display: none; animation: none; }
+  #flow-wrap.is-wizard[data-mode="easy"] #submit-checklist { display: none; }
+  @media (max-width: 1199px) {
+    #flow-wrap.is-wizard[data-mode="easy"] #submit-rail { display: none; }
+    #flow-wrap.is-wizard[data-mode="easy"] #submit-checklist { display: block; }
+  }
+  .submit-rail__spine { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--sp-6) var(--sp-4); background: var(--layer); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-full); box-shadow: var(--shadow-8); transition: opacity var(--dur-3) var(--ease-out), filter var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-3) var(--ease-out); }
+  .ck-spine__node { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: transparent; border: 0; color: var(--fg-2); cursor: pointer; padding: 0; transition: transform var(--dur-1) var(--ease-out), background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+  .ck-spine__node:not([disabled]):hover { background: color-mix(in srgb, var(--fg-1) 9%, transparent); color: var(--fg-1); }
+  .ck-spine__node:not([disabled]):active { transform: scale(.94); transition-duration: var(--dur-1); }
+  .ck-spine__node:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand); }
+  .ck-spine__node[disabled] { cursor: default; }
+  .ck-spine__node.is-done { color: var(--fg-3); }
+  .ck-spine__node.is-locked { color: var(--fg-4); }
+  .ck-spine__node.is-current { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); box-shadow: inset 0 0 0 1.5px var(--brand); }
+  .ck-spine__node.is-current:not([disabled]):hover { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--brand); }
+  .ck-spine__node.just-done { animation: submitSpinePop 440ms var(--ease-out); }
+  .ck-spine__badge { position: absolute; top: -1px; right: -1px; min-width: 15px; height: 15px; padding: 0 4px; box-sizing: border-box; border-radius: var(--r-full); background: var(--fg-2); color: var(--layer); font-size: 9.5px; font-weight: 700; line-height: 15px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--layer); }
+  .ck-spine__node.is-current .ck-spine__badge { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, var(--layer)); }
+  .ck-spine__dot { position: absolute; top: 1px; right: 1px; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 2px var(--layer); }
+  .ck-spine__node.is-current .ck-spine__dot { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, var(--layer)); }
+  .ck-spine__check { position: absolute; right: -2px; bottom: -2px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; color: #fff; background: var(--status-success); box-shadow: 0 0 0 2px var(--layer); }
+  .submit-rail.is-ready .submit-rail__spine { border-color: color-mix(in srgb, var(--status-success) 40%, transparent); box-shadow: var(--shadow-8), 0 0 0 1px color-mix(in srgb, var(--status-success) 30%, transparent); }
+  .submit-rail__full { position: absolute; right: 0; top: 50%; transform: translateY(-50%) translateX(8px) scale(.97); transform-origin: right center; width: 300px; max-width: 82vw; max-height: calc(100vh - var(--sp-32)); overflow-y: auto; padding: var(--sp-16); background: var(--layer); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); box-shadow: var(--shadow-16); opacity: 0; pointer-events: none; transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out); }
+  .submit-rail:hover .submit-rail__full, .submit-rail:focus-within .submit-rail__full { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); pointer-events: auto; transition-delay: 80ms; }
+  .submit-rail:hover .submit-rail__spine, .submit-rail:focus-within .submit-rail__spine { opacity: 0; filter: blur(3px); pointer-events: none; transition-delay: 80ms; }
+  .submit-rail__head { margin: 0 0 var(--sp-12); padding-bottom: var(--sp-12); border-bottom: 1px solid var(--stroke-2); }
+  .submit-rail__title { display: block; font-size: var(--font-size-base-400); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .submit-rail__summary { display: block; margin-top: 2px; font-size: var(--font-size-base-200); color: var(--fg-3); }
+  .submit-rail.is-ready .submit-rail__summary { color: var(--status-success); font-weight: var(--font-weight-semibold); }
+  @media (prefers-reduced-motion: reduce) {
+    #flow-wrap.is-wizard[data-mode="easy"] #submit-rail { animation: none; }
+    .submit-rail__spine, .ck-spine__node, .submit-rail__full { transition: none; }
+    .ck-spine__node.just-done { animation: none; }
+    .ck-spine__node:not([disabled]):hover, .ck-spine__node:not([disabled]):active { transform: none; }
+    .submit-rail:hover .submit-rail__full, .submit-rail:focus-within .submit-rail__full { transition-delay: 0ms; transform: translateY(-50%) translateX(0); }
+    .submit-rail:hover .submit-rail__spine, .submit-rail:focus-within .submit-rail__spine { transition-delay: 0ms; filter: none; }
+  }
   /* Per-section accordion inside the panel. */
   .ck-group + .ck-group { border-top: 1px solid var(--stroke-3); }
   .ck-group__head { display: flex; align-items: center; gap: var(--sp-6); width: 100%; padding: var(--sp-8) var(--sp-4); margin: 0; background: none; border: 0; border-radius: var(--r-4); font: inherit; cursor: pointer; text-align: left; }
@@ -683,7 +729,8 @@
   /* Variant D (wizard): show the identity banner on the Package step, above the card. */
   #flow-wrap.is-wizard #ez-pkg-identity-banner.is-wz-show { display: flex !important; }
   .manifest-identity-prompt iconify-icon { color: var(--brand); flex: 0 0 auto; }
-  .manifest-identity-prompt .link-btn { margin-left: auto; padding: 0; }
+  .manifest-identity-prompt .link-btn { padding: 0; }
+  .manifest-identity-prompt__actions { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-16); flex: 0 0 auto; }
   #identity-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
   .manifest-identity__rows { display: grid; grid-template-columns: 1fr; gap: var(--sp-4); margin-bottom: var(--sp-8); }
   .manifest-identity__row { display: grid; grid-template-columns: 180px 1fr auto; align-items: center; gap: var(--sp-12); padding: var(--sp-6) var(--sp-10); border-radius: var(--r-4); transition: background var(--dur-2) var(--ease-out); }
@@ -693,6 +740,50 @@
   .manifest-identity__copy { background: transparent; border: 0; width: 28px; height: 28px; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; transition: color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
   .manifest-identity__copy:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
   .manifest-identity__copy--copied { color: var(--status-success) !important; background: color-mix(in srgb, var(--status-success) 12%, transparent) !important; }
+  /* ===== "How to build your package" guide dialog ===== */
+  #build-guide-dialog::part(control), #build-guide-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  #build-guide-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  .build-guide__intro { font-size: var(--font-size-base-300); color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.5; }
+  .build-guide__list { list-style: none; margin: 0 0 var(--sp-16); padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+  .build-guide__step { display: grid; grid-template-columns: 36px 1fr; gap: var(--sp-12); align-items: start; padding: var(--sp-10) var(--sp-8); border-radius: var(--r-6); }
+  .build-guide__step:hover { background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .build-guide__icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); flex: 0 0 auto; }
+  .build-guide__name { margin: 0 0 3px; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .build-guide__desc { margin: 0; font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.5; }
+  .build-guide__desc code { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: .92em; background: var(--subtle); padding: 1px 5px; border-radius: var(--r-4); }
+  .build-guide__note { display: flex; align-items: flex-start; gap: var(--sp-6); padding: var(--sp-10) var(--sp-12); margin: var(--sp-16) 0 0; background: color-mix(in srgb, var(--fg-1) 4%, transparent); border-radius: var(--r-6); font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.5; }
+  .build-guide__note iconify-icon { color: var(--fg-3); flex: 0 0 auto; margin-top: 1px; }
+  .build-guide__inline-link { padding: 0; font-size: inherit; vertical-align: baseline; }
+  .build-guide__learn { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-base-200); color: var(--store-link, var(--brand)); text-decoration: none; }
+  .build-guide__learn:hover { text-decoration: underline; }
+  .build-guide__hint { display: inline-block; margin-top: 6px; font-size: var(--font-size-base-200); color: var(--fg-3); }
+  .build-guide__doclink { display: inline-flex; align-items: center; gap: 3px; margin-top: 5px; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--store-link, var(--brand)); text-decoration: none; }
+  .build-guide__doclink:hover { text-decoration: underline; }
+  .build-guide__doclink iconify-icon { flex: 0 0 auto; }
+  /* Tabbed build guide (VS Code / Other) with numbered steps. */
+  .build-guide__tabs { display: flex; gap: var(--sp-4); border-bottom: 1px solid var(--stroke-2); margin: 0 0 var(--sp-16); }
+  .build-guide__tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: var(--sp-8) var(--sp-12); font: inherit; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-3); cursor: pointer; }
+  .build-guide__tab:hover { color: var(--fg-1); }
+  .build-guide__tab.is-active { color: var(--brand); border-bottom-color: var(--brand); }
+  .build-guide__tab:focus-visible { outline: 2px solid var(--store-link); outline-offset: 2px; border-radius: var(--r-4); }
+  .build-guide__panel[hidden] { display: none; }
+  .build-guide__paneltitle { margin: 0 0 var(--sp-10); font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .build-guide__steps { margin: 0; padding: 0; list-style: none; counter-reset: bgstep; display: flex; flex-direction: column; gap: var(--sp-12); }
+  .build-guide__steps > li { counter-increment: bgstep; display: grid; grid-template-columns: 22px 1fr; gap: var(--sp-10); align-items: start; font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.5; }
+  .build-guide__steps > li::before { content: counter(bgstep); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); font-size: 11px; font-weight: 700; flex: 0 0 auto; }
+  .build-guide__steps strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .build-guide__steps code { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: .92em; background: var(--subtle); padding: 1px 5px; border-radius: var(--r-4); }
+  .build-guide__steps .build-guide__cmd { display: block; margin-top: 5px; padding: 6px 8px; background: var(--subtle); border: 1px solid var(--stroke-3); border-radius: var(--r-4); color: var(--fg-1); overflow-x: auto; white-space: nowrap; }
+  .build-guide__panel .build-guide__doclink { margin-top: var(--sp-14); }
+  .build-guide__panelintro { margin: 0 0 var(--sp-16); font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.5; }
+  .build-guide__tools { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-16); }
+  .build-guide__toolname { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .build-guide__tooldesc { margin: 2px 0 4px; font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.5; }
+  .build-guide__tooldesc strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .build-guide__tools .build-guide__doclink { margin-top: 0; }
+  .build-guide__subnote { margin: var(--sp-14) 0 0; padding: var(--sp-8) var(--sp-10); background: color-mix(in srgb, var(--fg-1) 3%, transparent); border-radius: var(--r-4); font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.5; }
+  .build-guide__subnote a { color: var(--store-link, var(--brand)); text-decoration: none; }
+  .build-guide__subnote a:hover { text-decoration: underline; }
   /* ===== "Package your website" (PWA → MSIX) dialog ===== */
   #pwa-pkg-dialog::part(control), #pwa-pkg-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
   .pwapkg__preview { display: block; text-decoration: none; border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--subtle); }
@@ -1862,7 +1953,7 @@
   .ez-pkg-or::before, .ez-pkg-or::after { content: ''; flex: 1; height: 1px; background: var(--stroke-2); }
   /* URL method: link field, then any contextual fields, then the Add action last */
   .ez-pkg-url { display: flex; flex-direction: column; gap: var(--sp-8); }
-  .ez-pkg-url__hint { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .ez-pkg-url__hint { font-size: var(--font-size-base-300); color: var(--fg-3); line-height: 1.4; }
   .ez-pkg-url__row { display: flex; align-items: center; gap: var(--sp-12); }
   .ez-pkg-url__row fluent-text-input { flex: 1 1 auto; width: 100%; min-width: 0; max-width: none; }
   .ez-pkg-url__row fluent-text-input::part(root) { width: 100%; min-width: 100%; max-width: none; box-sizing: border-box; }
@@ -2303,8 +2394,11 @@
            card, outside it. Reference-only one-liner that opens the identity dialog. -->
       <p class="manifest-identity-prompt adv-only" id="ez-pkg-identity-banner">
         <iconify-icon icon="fluent:document-bullet-list-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-        Building a package? Get the identity values for your AppxManifest.xml.
-        <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
+        Building an MSIX package? Get the identity values for your AppxManifest.xml.
+        <span class="manifest-identity-prompt__actions">
+          <button type="button" class="link-btn" id="build-guide-btn">How to build a package</button>
+          <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
+        </span>
       </p>
 
       <!-- Restricted-capabilities notice: a submission-level banner that sits ABOVE the
@@ -2833,6 +2927,20 @@
         </fluent-button>
       </div>
     </div>
+
+    <!-- Submit-readiness rail (Easy/wizard, wide screens): a persistent panel beside the step
+         content so progress stays in view. Falls back to the header dropdown on narrow screens
+         and in Advanced. Populated by renderChecklists(); hides with #editor after submit. -->
+    <aside class="submit-rail" id="submit-rail" aria-label="Submit readiness">
+      <div class="submit-rail__spine" id="submit-rail-spine"></div>
+      <div class="submit-rail__full">
+        <div class="submit-rail__head">
+          <span class="submit-rail__title">Before you submit</span>
+          <span class="submit-rail__summary" id="submit-rail-summary">Checklist</span>
+        </div>
+        <div class="submit-rail__panel" id="submit-rail-panel" role="region" aria-label="What's left to submit for review"></div>
+      </div>
+    </aside>
     </div>
 
     <!-- ===== Submitted / in-review state (ported verbatim from variant B) ===== -->
@@ -3555,6 +3663,71 @@
       <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Copy &lt;Identity&gt; snippet
     </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- How to build your package — tool-by-tool MSIX guidance for developers who
+     haven't packaged their app yet. Opens from the identity banner (Package step). -->
+<fluent-dialog id="build-guide-dialog" modal-type="modal" aria-labelledby="build-guide-title">
+  <fluent-dialog-body>
+    <span slot="title" id="build-guide-title">
+      <iconify-icon icon="fluent:box-multiple-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      How to build your package
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-build-guide-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <p class="build-guide__intro">
+      Package your app as an <strong>MSIX</strong> (.msix / .msixbundle), then drop it in the box above. Pick how you build:
+    </p>
+
+    <div class="build-guide__tabs" role="tablist" aria-label="Choose how you build">
+      <button type="button" class="build-guide__tab is-active" role="tab" aria-selected="true" id="bg-tab-vscode" data-bg-tab="vscode">VS Code</button>
+      <button type="button" class="build-guide__tab" role="tab" aria-selected="false" id="bg-tab-other" data-bg-tab="other">Other</button>
+    </div>
+
+    <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-vscode" data-bg-panel="vscode">
+      <ol class="build-guide__steps">
+        <li><span><strong>Install the Windows SDK.</strong> It gives you <code>makeappx</code> and <code>signtool</code>.</span></li>
+        <li><span><strong>Set your identity.</strong> In <code>AppxManifest.xml</code>, match the Name and Publisher to your reservation.</span></li>
+        <li><span><strong>Build.</strong><code class="build-guide__cmd">makeappx pack /d YourAppFolder /p App.msix</code></span></li>
+        <li><span><strong>Sign.</strong><code class="build-guide__cmd">signtool sign /fd SHA256 /a /f cert.pfx App.msix</code></span></li>
+        <li><span><strong>Upload</strong> the signed <code>App.msix</code> in the box above.</span></li>
+      </ol>
+      <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/win32/appxpkg/make-appx-package--makeappx-exe-" target="_blank" rel="noopener">Full walkthrough <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
+    </div>
+
+    <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-other" data-bg-panel="other" hidden>
+      <p class="build-guide__panelintro">Prefer a GUI, or already have an installer? These also produce a valid MSIX.</p>
+      <ul class="build-guide__tools">
+        <li>
+          <div class="build-guide__toolname">Visual Studio</div>
+          <p class="build-guide__tooldesc">Add a <strong>Windows Application Packaging Project</strong>, then <strong>Publish → Create App Packages</strong>. Your identity fills in automatically.</p>
+          <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/msix/desktop/desktop-to-uwp-packaging-dot-net" target="_blank" rel="noopener">Guide <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
+        </li>
+        <li>
+          <div class="build-guide__toolname">MSIX Packaging Tool</div>
+          <p class="build-guide__tooldesc">Repackage an existing <strong>.exe / .msi</strong> installer into MSIX.</p>
+          <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Guide <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
+        </li>
+        <li>
+          <div class="build-guide__toolname">Advanced Installer &amp; others</div>
+          <p class="build-guide__tooldesc">Most installer tools can output MSIX — set the package Name and Publisher to match your reservation.</p>
+        </li>
+      </ul>
+    </div>
+
+    <p class="build-guide__note">
+      <iconify-icon icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+      <span>Your package's <strong>Name</strong> and <strong>Publisher</strong> must match your Store reservation exactly, or the upload is rejected. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span>
+    </p>
+
+    <a slot="action" class="build-guide__learn" href="https://learn.microsoft.com/windows/msix/overview" target="_blank" rel="noopener">
+      Learn more about MSIX
+      <iconify-icon icon="fluent:open-20-regular" width="13" height="13" aria-hidden="true"></iconify-icon>
+    </a>
+    <fluent-button slot="action" appearance="primary" data-build-guide-close>Done</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -4584,6 +4757,28 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       if (typeof announce === 'function') announce('Starter AppxManifest.xml downloaded.');
     });
+
+    // "How to build a package" guide dialog — opens beside "Show identity" and can hand
+    // off to the identity dialog for the exact values.
+    const guideDlg = $('build-guide-dialog');
+    const guideBtn = $('build-guide-btn');
+    if (guideBtn && guideDlg) {
+      const openGuide = () => { try { guideDlg.show(); } catch (e) {} };
+      const closeGuide = () => { try { guideDlg.hide(); } catch (e) {} };
+      guideBtn.addEventListener('click', openGuide);
+      guideDlg.querySelectorAll('[data-build-guide-close]').forEach(el => el.addEventListener('click', closeGuide));
+      guideDlg.querySelectorAll('[data-build-guide-identity]').forEach(el => el.addEventListener('click', () => { closeGuide(); openIdentity(); }));
+      // Tabs inside the guide (VS Code / Other).
+      const bgTabs = guideDlg.querySelectorAll('[data-bg-tab]');
+      const bgPanels = guideDlg.querySelectorAll('[data-bg-panel]');
+      bgTabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          const key = t.getAttribute('data-bg-tab');
+          bgTabs.forEach(function (x) { const on = x === t; x.classList.toggle('is-active', on); x.setAttribute('aria-selected', on ? 'true' : 'false'); });
+          bgPanels.forEach(function (p) { p.hidden = p.getAttribute('data-bg-panel') !== key; });
+        });
+      });
+    }
   })();
 
   // Advanced-mode settings (reach & price, listing extras, disclosures). Shared
@@ -4744,6 +4939,7 @@
   // ===================================================================
   const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach'];
   const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Age rating', 'step-reach': 'Reach & price' };
+  const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
   let wzIndex = 0;
   function wzStepComplete(id) {
     // Derived from the CHECKLIST_ITEMS registry (the one source of truth shared
@@ -5101,16 +5297,17 @@
   // user toggles; unset sections fall back to "open if it's the current one".
   const ckGroupOpen = {};
   const ckOptOpen = {};   // optional sublists are collapsed by default; this holds explicit expands
+  let ckSpinePrev = {};   // per-section done state from the previous render — powers the "just completed" pop
   function ckCurrentSection() {
     try { if (document.getElementById('flow-wrap').classList.contains('is-wizard')) return WZ_STEPS[wzIndex]; } catch (_) {}
     return (typeof activeSection !== 'undefined' && activeSection) || WZ_STEPS[0];
   }
   function ckGroupIsOpen(id, cur) {
     if (id in ckGroupOpen) return ckGroupOpen[id];   // explicit user toggle wins
-    if (id === cur) return true;                     // the section you're on
-    // Otherwise open any section that still has required items left, so the
-    // checklist shows what's outstanding on each page at a glance.
-    return ckSection(id).some(it => ckRequired(it) && !ckDone(it));
+    if (id === cur) return true;                     // the section you're on — show its tasks
+    // Everything else starts collapsed: the rail is a quick scan (section + status at a glance).
+    // Expand a section to see its individual items when you want the detail.
+    return false;
   }
   function renderChecklists() {
     const wrap = document.getElementById('submit-checklist');
@@ -5131,30 +5328,50 @@
     // can act on right now. Once this page is clear, fall back to the overall count so
     // they still know more remains before review; green "Ready" only when nothing's left anywhere.
     const curLeft = ckSection(cur).filter(it => ckRequired(it) && !ckDone(it)).length;
-    if (summaryEl) summaryEl.textContent =
+    const summaryText =
       noPkg ? 'Add a package to start'
       : ready ? 'Ready to submit for review'
       : (allItemsDone && !reachVisited) ? 'Open Reach & price to finish'
       : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
       : (totalLeft + ' to finish before review');
+    if (summaryEl) summaryEl.textContent = summaryText;
+    const railSummaryEl = document.getElementById('submit-rail-summary');
+    if (railSummaryEl) railSummaryEl.textContent = summaryText;
+    const railWrap = document.getElementById('submit-rail');
+    if (railWrap) railWrap.classList.toggle('is-ready', ready);
     // Everything past the Package step is locked until a package is added.
     const reachable = (typeof wzFurthestReachable === 'function') ? wzFurthestReachable() : (WZ_STEPS.length - 1);
-    let html = '', anyLocked = false;
+    let html = '', spineHtml = '', anyLocked = false;
+    const ckSpineNext = {};
     WZ_STEPS.forEach((id, i) => {
       const items = ckSection(id);
       const req = items.filter(ckRequired);
       const opt = items.filter(it => !ckRequired(it));
       if (!req.length && !opt.length) return;
-      // Locked: not yet reachable (the package gate isn't met). Show it greyed,
-      // not expandable, with no premature counts — the work isn't actionable yet.
+
+      // Compact spine node (collapsed quick-scan): one status dot per section, so overall
+      // progress reads at a glance before you hover in for the detail.
+      const sLocked = i > reachable;
+      const sLeftN = req.length - req.filter(ckDone).length;
+      const sReachPending = (id === 'step-reach' && !reachVisited);
+      const sComplete = !sLocked && sLeftN === 0 && !sReachPending;
+      const sJustDone = (ckSpinePrev[id] === false && sComplete) ? ' just-done' : '';
+      ckSpineNext[id] = sComplete;
+      const sState = sLocked ? 'is-locked' : sComplete ? 'is-done' : (sReachPending && sLeftN === 0) ? 'is-review' : 'is-left';
+      const sBadge = (!sLocked && !sComplete && sLeftN > 0) ? ('<span class="ck-spine__badge">' + sLeftN + '</span>') : '';
+      const sCheck = sComplete ? '<span class="ck-spine__check"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span>' : '';
+      const sDot = (sState === 'is-review') ? '<span class="ck-spine__dot"></span>' : '';
+      const sTip = WZ_SECTION_NAMES[id] + (sLocked ? ' \u2014 locked' : sComplete ? ' \u2014 done' : (sReachPending && sLeftN === 0) ? ' \u2014 review' : ' \u2014 ' + sLeftN + ' left');
+      spineHtml += '<button type="button" class="ck-spine__node ' + sState + (id === cur ? ' is-current' : '') + sJustDone + '"' + (sLocked ? ' disabled' : '') + ' data-ck-spine="' + id + '" title="' + sTip + '" aria-label="' + sTip + '">' +
+        '<iconify-icon icon="' + (WZ_SECTION_ICON[id] || 'fluent:circle-16-regular') + '" width="20" height="20" aria-hidden="true"></iconify-icon>' + sBadge + sCheck + sDot +
+        '</button>';
+
+      // Locked: not yet reachable (the package gate isn't met). Don't re-list these as their
+      // own rows — the step tabs right above already show them locked, so a per-section row here
+      // is pure duplication. Fold them all into the single "unlock the rest" note below, keeping
+      // the panel focused on what's actionable now.
       if (i > reachable) {
         anyLocked = true;
-        html += '<div class="ck-group is-locked">' +
-          '<div class="ck-group__head ck-group__head--locked">' +
-            '<iconify-icon class="ck-group__chev" icon="fluent:lock-closed-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon>' +
-            '<span class="ck-group__name">' + WZ_SECTION_NAMES[id] + '</span>' +
-            '<span class="ck-group__count">Locked</span>' +
-          '</div></div>';
         return;
       }
       const doneReq = req.filter(ckDone).length;
@@ -5199,6 +5416,11 @@
       ) + html;
     }
     panel.innerHTML = html;
+    const railPanel = document.getElementById('submit-rail-panel');
+    if (railPanel) railPanel.innerHTML = html;
+    const railSpine = document.getElementById('submit-rail-spine');
+    if (railSpine) railSpine.innerHTML = spineHtml;
+    ckSpinePrev = ckSpineNext;
   }
   function ckClosePanel() {
     const wrap = document.getElementById('submit-checklist'), panel = document.getElementById('submit-checklist-panel'), tog = document.getElementById('submit-checklist-toggle');
@@ -5228,6 +5450,13 @@
     if (grp) { const id = grp.getAttribute('data-ck-group'); ckGroupOpen[id] = !ckGroupIsOpen(id, ckCurrentSection()); renderChecklists(); return; }
     const optTog = e.target.closest('[data-ck-opt]');
     if (optTog) { const id = optTog.getAttribute('data-ck-opt'); ckOptOpen[id] = !ckOptOpen[id]; renderChecklists(); return; }
+    const spineN = e.target.closest('[data-ck-spine]');
+    if (spineN) {
+      const sec = spineN.getAttribute('data-ck-spine');
+      const isWizard = document.getElementById('flow-wrap').classList.contains('is-wizard');
+      try { if (isWizard && typeof showWzStep === 'function') showWzStep(WZ_STEPS.indexOf(sec)); else if (typeof setActiveSection === 'function') setActiveSection(sec); } catch (_) {}
+      return;
+    }
     const ckfix = e.target.closest('[data-ckfix]');
     if (ckfix) { const ci = parseInt(ckfix.getAttribute('data-ckfix'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
     const row = e.target.closest('.ez-checklist__item[data-ck], .ez-ckcert__go[data-ck]');
