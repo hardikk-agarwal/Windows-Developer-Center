@@ -212,7 +212,7 @@
           '</div>' +
           '<div class="status-card__action">' +
             '<fluent-button appearance="primary" size="large" data-newapp>' +
-              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Create new app</fluent-button>' +
+              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
           '</div>' +
         '</div>' +
         metricsStrip +
@@ -226,6 +226,31 @@
       (cta || '') + '</div></div>';
   }
 
+  // Store-only "What can you publish?" on-ramps — rendered inside Get started (zero state) so new
+  // developers see what to bring before the steps. Styles: store-portal.css (.pkgdisc / .pkgrow).
+  function storeOnrampsHTML() {
+    return '<details class="pkgdisc"><summary>' +
+      '<span class="pkgdisc__ico"><iconify-icon icon="fluent:box-multiple-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+      '<span class="pkgdisc__label">What can you publish? <span>Find the right fit for what you\u2019re building or already have.</span></span>' +
+      '<iconify-icon class="pkgdisc__chev" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+      '</summary><div class="pkgdisc__body">' +
+        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:cube-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkgrow__t"><span class="pkgrow__name">Packaged app · MSIX <span class="pkgrow__rec">Recommended</span></span>' +
+          '<p class="pkgrow__desc"><b>Building a new app?</b> Package it as MSIX (or APPX/UWP) for the cleanest install and automatic updates.</p></div></div>' +
+        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:desktop-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkgrow__t"><span class="pkgrow__name">Desktop app · Win32</span>' +
+          '<p class="pkgrow__desc"><b>Already have an .exe or .msi installer?</b> Publish it as-is, or convert to MSIX for automatic updates.</p></div></div>' +
+        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkgrow__t"><span class="pkgrow__name">Web app · PWA</span>' +
+          '<p class="pkgrow__desc"><b>Have a website?</b> Turn it into an installable app — nothing to rebuild.</p></div></div>' +
+        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:xbox-controller-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkgrow__t"><span class="pkgrow__name">Game · GDK</span>' +
+          '<p class="pkgrow__desc"><b>Building a game?</b> Use the Microsoft Game Development Kit to reach players on Windows and Xbox.</p></div></div>' +
+        '<a class="pkgdisc__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
+          '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
+      '</div></details>';
+  }
+
   function renderSummary() {
     var el = $("overviewSummary");
     if (!el) return;
@@ -233,10 +258,9 @@
       if (!state.apps.length) {                          // fresh portal: guide to the first app, not links to empty views
         el.innerHTML =
           '<div class="block__head block__head--sub"><div><h2>Get started</h2></div></div>' +
+          storeOnrampsHTML() +
           '<div class="gsteps">' +
-            gstep(1, "Create your app", "Reserve a name and default language — it takes a minute.",
-              '<fluent-button class="gstep__cta" appearance="secondary" data-newapp>' +
-                '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create your first app</fluent-button>') +
+            gstep(1, "Reserve your app name", "Pick a name and default language — it takes a minute.") +
             gstep(2, "Add packages &amp; listing", "Upload your build and write your Store listing with screenshots.") +
             gstep(3, "Submit &amp; go live", "Pass certification and reach customers across Windows.") +
           '</div>';
@@ -468,9 +492,10 @@
   }
   // Once any app is published, the header's primary CTA becomes "Create new app".
   function updateAppsHeader() {
-    if (STORE) {                                          // Store variant: always offer "Create new app"
+    if (STORE) {                                          // Store variant: header CTA to add another app
       var cb = $("createAppBtn"), ac = $("addCertBtn"), rs = document.querySelector("#apps [data-rescan]");
-      if (cb) { cb.hidden = false; cb.setAttribute("appearance", "primary"); }
+      // Empty state already carries the primary CTA in its card — hide the redundant header button there.
+      if (cb) { cb.hidden = (state.apps.length === 0 && !scanning); cb.setAttribute("appearance", "primary"); }
       if (ac) ac.hidden = true;
       if (rs) rs.hidden = true;
       return;
@@ -502,7 +527,7 @@
           '<p class="muted">Create an app to reserve its name, add your packages and store listing, ' +
             'and publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
           '<fluent-button appearance="primary" data-newapp>' +
-            '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create new app</fluent-button>' +
+            '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
         '</div>';
         return;
       }

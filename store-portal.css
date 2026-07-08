@@ -4,10 +4,9 @@
    (loaded only by store-portal.html) and reuses the same tokens.
    ===================================================================== */
 
-/* Overview zero state — "Get started" numbered steps */
-.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.gstep { display: flex; gap: 14px; align-items: flex-start; padding: 20px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+/* Overview zero state — "Get started" numbered steps (flat & informational, not clickable tiles) */
+.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 28px; }
+.gstep { display: flex; gap: 12px; align-items: flex-start; }
 .gstep__n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
   font-weight: 700; font-size: 14px; background: rgba(40,153,245,.16); color: var(--brand-soft);
   border: 1px solid rgba(40,153,245,.4); }
@@ -15,6 +14,32 @@
 .gstep__t strong { font-size: 15px; color: var(--text); }
 .gstep__t .muted { font-size: 13px; color: var(--text-2); }
 .gstep__cta { margin-top: 8px; align-self: flex-start; }
+
+/* Overview — collapsible "What can you publish?" (progressive disclosure keeps the page light) */
+.pkgdisc { margin: 20px 0 24px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); }
+.pkgdisc summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 13px 16px; }
+.pkgdisc summary::-webkit-details-marker { display: none; }
+.pkgdisc summary:focus-visible { outline: 2px solid var(--brand-soft); outline-offset: -2px; border-radius: var(--r-lg); }
+.pkgdisc__ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px;
+  background: rgba(40,153,245,.14); color: var(--brand-soft); }
+.pkgdisc__label { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+.pkgdisc__label span { font-weight: 400; color: var(--text-3); }
+.pkgdisc__chev { flex: none; color: var(--text-3); transition: transform .15s ease; }
+.pkgdisc[open] .pkgdisc__chev { transform: rotate(180deg); }
+.pkgdisc__body { padding: 2px 12px 8px; border-top: 1px solid var(--border); }
+.pkgrow { display: flex; gap: 12px; align-items: flex-start; padding: 11px 4px; }
+.pkgrow + .pkgrow { border-top: 1px solid var(--border); }
+.pkgrow__ico { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(255,255,255,.05); color: var(--text-2); margin-top: 1px; }
+.pkgrow__t { min-width: 0; }
+.pkgrow__name { font-size: 13.5px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; }
+.pkgrow__rec { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 999px; background: rgba(40,153,245,.16); color: var(--brand-soft); }
+.pkgrow__desc { margin: 2px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-3); }
+.pkgrow__desc b { font-weight: 600; color: var(--text-2); }
+.pkgdisc__more { display: inline-flex; align-items: center; gap: 5px; margin: 10px 4px 2px; padding: 4px 0;
+  font-size: 12.5px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
+.pkgdisc__more:hover { text-decoration: underline; }
 
 /* Apps table row actions + delete confirmation */
 .rowactions { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
