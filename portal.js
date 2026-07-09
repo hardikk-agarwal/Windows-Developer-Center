@@ -1451,7 +1451,7 @@
   /* ---------------- Publish to Store → reserve name, then the full v4 flow ----------------
      Step 1: "Publish to Store" opens the reserve-name dialog (app name + default language).
      Step 2: "Create app" reserves it, marks the app in-progress in the table, and hands off
-     to the embedded v4 publishing flow (publishing/publish.html). Created apps can be
+     to the embedded v4 publishing flow (publishing/publish-v2.html). Created apps can be
      re-opened later by clicking their row. On submit, tdp-bridge.js writes the result back
      so the table shows "In Store". */
   var publishId = null;
@@ -1542,7 +1542,7 @@
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
-    location.href = "publishing/publish.html?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
+    location.href = "publishing/publish-v2.html?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
   }
 
   var STORE_MSA = { name: "Priya Nair", email: "priya.nair@outlook.com", initials: "PN" };
