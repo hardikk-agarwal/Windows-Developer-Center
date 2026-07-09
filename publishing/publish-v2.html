@@ -353,6 +353,8 @@
   .schedule-sub__label { flex: 0 0 90px; font-size: var(--font-size-base-200); color: var(--fg-2); font-weight: var(--font-weight-semibold); }
   .schedule-sub + .schedule-sub { margin-top: var(--sp-8); }
   .price-paid-row .reach-row__hint { flex-basis: 100%; margin: 2px 0 0; }
+  /* Easy-mode paid apps: the "see & customize local prices" action sits on its own line under the hint. */
+  .price-paid-row .price-convert-btn { margin-top: var(--sp-2); }
   .markets-choose-row { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; margin-top: var(--sp-4); }
   .audience-link-row { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; margin-top: var(--sp-8); }
   .audience-link-row__field { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 1 1 auto; min-width: 0; padding: var(--sp-8) var(--sp-12); background: color-mix(in srgb, var(--fg-1) 5%, transparent); border: 1px solid var(--stroke-2); border-radius: var(--r-2); }
@@ -1039,14 +1041,14 @@
   #lang-dialog .lang-dialog__note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
   #lang-dialog .markets-dialog__search { margin: 0 0 var(--sp-12); display: block; width: 100%; min-width: 100%; box-sizing: border-box; }
   #lang-dialog .markets-dialog__search::part(root), #lang-dialog .markets-dialog__search::part(control) { width: 100%; min-width: 100%; box-sizing: border-box; }
-  #lang-dialog .lang-dialog__toolbar { margin: var(--sp-4) 0 var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-3); }
+  #lang-dialog .lang-dialog__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-3); }
   #lang-dialog .lang-dialog__list { max-height: 320px; overflow-y: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-4); padding: var(--sp-4) 0; }
   #lang-dialog .lang-row { display: grid; grid-template-columns: 18px 1fr auto 64px; align-items: center; gap: var(--sp-12); padding: var(--sp-8) var(--sp-12); cursor: pointer; user-select: none; }
   #lang-dialog .lang-row:hover:not(.lang-row--locked) { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
   #lang-dialog .lang-row--locked { cursor: default; opacity: .85; }
   #lang-dialog .lang-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; margin: 0; }
   #lang-dialog .lang-row--locked input[type="checkbox"] { cursor: not-allowed; }
-  #lang-dialog .lang-row__name { font-size: var(--font-size-base-300); color: var(--fg-1); min-width: 0; }
+  #lang-dialog .lang-row__name { font-size: var(--font-size-base-300); color: var(--fg-1); min-width: 0; display: inline-flex; align-items: center; gap: var(--sp-8); }
   #lang-dialog .lang-row__code { justify-self: end; font-size: var(--font-size-base-200); color: var(--fg-3); }
   #lang-dialog .lang-row__tag { justify-self: start; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
   #lang-dialog .lang-row__tag--default { color: var(--fg-3); }
@@ -1059,9 +1061,29 @@
   #lang-dialog .lang-dialog__opt fluent-switch { flex: 0 0 auto; margin-top: 2px; }
   #lang-dialog .lang-dialog__opt-title { display: block; font-size: var(--font-size-base-300); color: var(--fg-1); font-weight: var(--font-weight-semibold); }
   #lang-dialog .lang-dialog__opt-hint { display: block; font-size: var(--font-size-base-200); color: var(--fg-3); margin-top: 2px; line-height: 1.45; }
-  /* "Set default" action shown on added, non-default rows in Manage languages. */
-  #lang-dialog .lang-row__setdef { justify-self: start; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--brand); background: none; border: 0; padding: 1px 6px; border-radius: var(--r-4); cursor: pointer; white-space: nowrap; }
-  #lang-dialog .lang-row__setdef:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  /* Inline status chip beside a language name (pending add/remove or translating). */
+  #lang-dialog .lang-row__st { font-size: 10.5px; font-weight: var(--font-weight-semibold); padding: 1px 6px; border-radius: 999px; white-space: nowrap; line-height: 1.5; display: inline-flex; align-items: center; gap: 3px; }
+  #lang-dialog .lang-row__st iconify-icon { flex: 0 0 auto; }
+  #lang-dialog .lang-row__st--new { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  #lang-dialog .lang-row__st--removing { color: var(--status-danger); background: color-mix(in srgb, var(--status-danger) 12%, transparent); }
+  #lang-dialog .lang-row__st--translating { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  /* Small muted "in your package" icon next to the name (no text pill). */
+  #lang-dialog .lang-row__pkg { color: var(--fg-4); flex: 0 0 auto; }
+  /* Default control (col 3): a clear filled "Default" pill marks the current default; other added
+     languages show a quiet "Set default" link that brightens on hover — no heavy buttons. */
+  #lang-dialog .lang-row__def { justify-self: end; display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); white-space: nowrap; }
+  #lang-dialog .lang-row__def--on { color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); padding: 2px 9px; border-radius: 999px; }
+  #lang-dialog .lang-row__def--on iconify-icon { color: var(--brand); flex: 0 0 auto; }
+  #lang-dialog button.lang-row__def--set { color: var(--fg-3); background: none; border: 0; padding: 2px 6px; border-radius: var(--r-4); cursor: pointer; }
+  #lang-dialog button.lang-row__def--set iconify-icon { flex: 0 0 auto; opacity: .6; }
+  #lang-dialog button.lang-row__def--set:hover { color: var(--brand); }
+  #lang-dialog button.lang-row__def--set:hover iconify-icon { opacity: 1; }
+  /* Compact toolbar action: add every not-yet-added package language at once. Package languages are
+     surfaced in the list itself — grouped at the top (after the default), each marked "In package". */
+  #lang-dialog .lang-pkgadd { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--brand); background: none; border: 0; padding: 2px 4px; border-radius: var(--r-4); cursor: pointer; white-space: nowrap; }
+  #lang-dialog .lang-pkgadd[hidden] { display: none; }
+  #lang-dialog .lang-pkgadd:hover { text-decoration: underline; }
+  #lang-dialog .lang-pkgadd iconify-icon { color: var(--brand); flex: 0 0 auto; }
   /* Shared-field edit warning overlay (editing a cross-language field in a non-default locale). */
   .shared-warn { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); padding: var(--sp-16); }
   .shared-warn[hidden] { display: none; }
@@ -1231,6 +1253,10 @@
   .ez-store-hero__iarc.is-empty .iarc-badge,
   .ez-store-hero__iarc.is-empty .ez-iarc-text { display: none; }
   .ez-store-hero__iarc.is-empty .ez-iarc-empty { display: flex; }
+  /* Age rating shows only in the listing Preview (and the final listing), not on the
+     always-on editing view. The Preview builder clones #ez-live and drops its id, so this
+     rule hides the block in-place while the preview still renders it (zero state or badge). */
+  #ez-live .ez-store-hero__iarc { display: none !important; }
   /* No divider under the hero (it fades in); a hairline only between sections. */
   /* Store-style content cards (Screenshots, Description) — mirror apps.microsoft.com PDP. */
   .ez-store-content { display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-16) var(--sp-20) var(--sp-24); }
@@ -2711,7 +2737,7 @@
           <div class="ez-step__headtools">
             <!-- One dropdown handles both jobs: its first item opens the add/remove
                  dialog, and the added languages follow so you can switch between them. -->
-            <div class="ez-step__lang adv-only" aria-label="Listing language">
+            <div class="ez-step__lang" aria-label="Listing language">
               <fluent-menu id="lang-menu">
                 <fluent-menu-button slot="trigger" appearance="secondary" id="lang-menu-btn">
                   <iconify-icon slot="start" icon="fluent:local-language-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -2741,7 +2767,7 @@
         </div>
 
         <!-- Shown while the active locale's auto-translation is still running. -->
-        <div class="lang-translating-banner adv-only" id="lang-translating-banner" hidden>
+        <div class="lang-translating-banner" id="lang-translating-banner" hidden>
           <fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>
           <span>Translating to <strong data-lang-name>—</strong> from <strong>English</strong>… this updates automatically when ready.</span>
         </div>
@@ -3074,12 +3100,14 @@
               <label for="price-amount" class="price-paid-row__label">Base price</label>
               <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="text" inputmode="decimal" value="4.99"></fluent-text-input>
               <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
+              <!-- Easy-mode (paid apps): preview the auto-converted local prices and override any
+                   market. Opens the same per-market dialog, surfaced outside "More options". -->
+              <fluent-button type="button" appearance="transparent" class="link-btn--ai price-convert-btn" id="price-overrides-btn">
+                <iconify-icon slot="start" icon="fluent:globe-clock-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+                <span id="price-overrides-label">See &amp; customize local prices</span>
+              </fluent-button>
             </div>
             <div class="price-advanced" id="price-advanced" hidden>
-              <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="price-overrides-btn">
-                <iconify-icon slot="start" icon="fluent:globe-clock-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-                <span id="price-overrides-label">Customize per-market prices</span>
-              </fluent-button>
               <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="price-schedule-btn">
                 <iconify-icon slot="start" icon="fluent:calendar-clock-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
                 <span id="price-schedule-label">Schedule a price change</span>
@@ -3997,13 +4025,16 @@
 
     <p class="lang-dialog__note">
       <iconify-icon icon="fluent:info-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Customers see your listing in their language if you've added it; otherwise they see your default language. Use “Set default” to change which language is the default.
+      Customers see your listing in their own language when available, otherwise your default. Change it anytime with Set default.
     </p>
 
     <fluent-text-input id="lang-search" class="markets-dialog__search" placeholder="Search languages…">
       <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
     </fluent-text-input>
-    <div class="lang-dialog__toolbar"><span id="lang-count">1 of 24 added</span></div>
+    <div class="lang-dialog__toolbar">
+      <span id="lang-count">1 of 24 added</span>
+      <button type="button" class="lang-pkgadd" id="lang-pkg-addall" hidden></button>
+    </div>
     <div class="lang-dialog__list" id="lang-list" role="list"></div>
 
     <label class="lang-dialog__opt">
@@ -4783,9 +4814,8 @@
   function setMode(m) {
     mode = (m === 'advanced') ? 'advanced' : 'easy';
     applyModeChrome();
-    // Easy mode is single-language: snap the editing language back to the default
-    // so the shared fields never show a non-default locale's translated copy.
-    if (mode === 'easy' && typeof window.__langResetToDefault === 'function') window.__langResetToDefault();
+    // Language management is available in Easy mode too, so keep the active editing
+    // locale as-is when switching modes (no snap back to the default language).
     if (mode === 'advanced' && typeof setActiveSection === 'function') setActiveSection('step-package');
     if (mode === 'advanced' && typeof window.__langSync === 'function') window.__langSync();
     updateGate();
@@ -5592,7 +5622,7 @@
     const bar = $('wz-more-bar'); if (!bar) return;
     const isListing = (cur === 'step-listing');
     const cfg = isListing
-      ? { icon: 'fluent:sparkle-20-filled', title: 'Make your listing stand out', tag: '', tags: ['Cover image', 'Trailer', 'Feature highlights', 'More languages'] }
+      ? { icon: 'fluent:sparkle-20-filled', title: 'Make your listing stand out', tag: '', tags: ['Cover image', 'Trailer', 'Feature highlights'] }
       : { icon: 'fluent:options-20-filled', title: 'Advanced pricing & availability', tag: 'Advanced', tags: ['Per-market prices', 'Free trials', 'Release scheduling'] };
     bar.dataset.step = cur;
     const ico = $('wz-more-ico'); if (ico) ico.setAttribute('icon', cfg.icon);
@@ -5644,8 +5674,7 @@
       step.classList.toggle('is-more', on);
       wzSetEnhanceExpanded(cur, on);
       if (cur === 'step-listing') {
-        if (on && typeof window.__langSync === 'function') window.__langSync();
-        else if (!on && typeof window.__langResetToDefault === 'function') window.__langResetToDefault();
+        if (typeof window.__langSync === 'function') window.__langSync();
         if (typeof renderShots === 'function') renderShots();
       }
       if (typeof ezRenderPreview === 'function') ezRenderPreview();
@@ -9053,7 +9082,8 @@
       $('price-trial-row').hidden = !storePaid;
       $('price-default-hint').hidden = paid;
       const oc = Object.keys(adv.price.overrides || {}).length;
-      $('price-overrides-label').textContent = oc ? ('Per-market prices (' + oc + ')') : 'Customize per-market prices';
+      const pol = $('price-overrides-label');
+      if (pol) pol.textContent = oc ? ('Local prices \u00b7 ' + oc + ' customized') : 'See & customize local prices';
       $('price-schedule-label').textContent = adv.price.schedule ? ('Price change on ' + adv.price.schedule.date) : 'Schedule a price change';
       try { window.__renderSales?.(); } catch (e) {}
       applyTrial();
@@ -10146,9 +10176,18 @@ function openPriceScheduleDialog() {
     })();
     window.__advEnsureSharedEdit = ensureSharedEdit;
 
-    // Change which added language is the default (base) language. Only added locales qualify.
+    // Change which added language is the default (base) language. Added locales qualify — and a
+    // just-checked (pending) language is materialized first so you can make it default right away.
     function setDefaultLocale(code) {
-      if (!code || code === DEFAULT_LOCALE || !L.locales[code]) return;
+      if (!code || code === DEFAULT_LOCALE) return;
+      if (langDraft) {
+        if (langDraft.removed.has(code)) return;                 // don't default a language being removed
+        if (langDraft.added.has(code) && !L.locales[code]) {     // commit the pending add so it can be the default
+          L.locales[code] = langDraft.added.get(code);
+          langDraft.added.delete(code);
+        }
+      }
+      if (!L.locales[code]) return;
       captureActiveLocale();          // keep the current editing buffers safe first
       // The outgoing default must remain an added language with its content intact.
       if (!L.locales[DEFAULT_LOCALE]) L.locales[DEFAULT_LOCALE] = emptyLangBucket();
@@ -10709,49 +10748,85 @@ function openPriceScheduleDialog() {
     const langDialog = $('lang-dialog'), langList = $('lang-list'), langSearch = $('lang-search');
     const langCount = $('lang-count'), langManageBtn = $('lang-manage-btn'), langSaveBtn = $('lang-save-btn'), langDupTgl = $('lang-duplicate-toggle');
     let langDraft = null; // { added: Map<code,bucket>, removed: Set<code> }
+    let langOrder = null; // stable row order captured on open (so checking a box / changing default doesn't reshuffle)
     function isAddedNow(c) {
       if (c === DEFAULT_LOCALE) return true;
       if (langDraft) { if (langDraft.added.has(c)) return true; if (langDraft.removed.has(c)) return false; }
       return !!L.locales[c];
     }
     function updateLangCount() { if (langCount) langCount.textContent = SUPPORTED_LOCALES.filter(l => isAddedNow(l.code)).length + ' of ' + SUPPORTED_LOCALES.length + ' added'; }
-    function renderLangList(filter) {
-      if (!langList) return;
-      const q = (filter || '').trim().toLowerCase();
-      const sorted = SUPPORTED_LOCALES.slice().sort((a, b) => {
+    // Languages the uploaded package(s) declare — MSIX manifest langs and Win32 declared langs both
+    // live on pkg.langs. Keep only codes that are valid Store-listing locales.
+    function packageLangCodes() {
+      const set = new Set();
+      (packages || []).forEach(p => (p.langs || []).forEach(c => set.add(c)));
+      return Array.from(set).filter(c => SUPPORTED_LOCALES.some(l => l.code === c));
+    }
+    // Compact toolbar action: add every not-yet-added package language at once. Package languages
+    // are surfaced in the list itself (grouped at the top, each marked "In package").
+    function updatePkgAddAll() {
+      const btn = $('lang-pkg-addall'); if (!btn) return;
+      const notAdded = packageLangCodes().filter(c => !isAddedNow(c));
+      if (!notAdded.length) { btn.hidden = true; btn.innerHTML = ''; btn.onclick = null; return; }
+      btn.hidden = false;
+      btn.innerHTML = '<iconify-icon icon="fluent:box-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Add all ' + notAdded.length + ' from your package';
+      btn.onclick = () => { packageLangCodes().filter(c => !isAddedNow(c)).forEach(c => toggleLocale(c, true)); };
+    }
+    // Capture a stable row order when the dialog opens: default first, then package languages, then
+    // any other added languages, then the rest (alphabetical within each group). Keeping this fixed
+    // for the session means checking a box or changing the default never reshuffles the rows.
+    function computeLangOrder() {
+      const pkgSet = new Set(packageLangCodes());
+      langOrder = SUPPORTED_LOCALES.slice().sort((a, b) => {
         if (a.code === DEFAULT_LOCALE) return -1;
         if (b.code === DEFAULT_LOCALE) return 1;
+        const Ap = pkgSet.has(a.code), Bp = pkgSet.has(b.code);
+        if (Ap !== Bp) return Ap ? -1 : 1;
         const A = isAddedNow(a.code), B = isAddedNow(b.code);
         if (A !== B) return A ? -1 : 1;
         return a.name.localeCompare(b.name);
-      });
-      const list = q ? sorted.filter(l => l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q)) : sorted;
-      if (!list.length) { langList.innerHTML = '<div class="lang-dialog__empty">No languages match "' + esc(q) + '".</div>'; return; }
+      }).map(l => l.code);
+    }
+    function renderLangList(filter) {
+      if (!langList) return;
+      if (!langOrder) computeLangOrder();
+      const pkgSet = new Set(packageLangCodes());
+      const byCode = {}; SUPPORTED_LOCALES.forEach(l => { byCode[l.code] = l; });
+      const ordered = langOrder.map(c => byCode[c]).filter(Boolean);
+      const q = (filter || '').trim().toLowerCase();
+      const list = q ? ordered.filter(l => l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q)) : ordered;
+      if (!list.length) { langList.innerHTML = '<div class="lang-dialog__empty">No languages match "' + esc(q) + '".</div>'; updatePkgAddAll(); return; }
       langList.innerHTML = list.map(l => {
         const isDef = l.code === DEFAULT_LOCALE;
         const pAdd = langDraft && langDraft.added.has(l.code);
         const pRem = langDraft && langDraft.removed.has(l.code);
         const tr = langTranslating.has(l.code);
         const on = isAddedNow(l.code);
+        const inPkg = pkgSet.has(l.code);
         const cls = 'lang-row' + (isDef ? ' lang-row--locked' : '') + (pRem ? ' lang-row--pending-remove' : '') + (tr ? ' lang-row--translating' : '');
-        let tag;
-        if (tr) tag = '<span class="lang-row__tag lang-row__tag--translating"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating…</span>';
-        else if (isDef) tag = '<span class="lang-row__tag lang-row__tag--default">default</span>';
-        else if (pAdd) tag = '<span class="lang-row__tag lang-row__tag--new">new</span>';
-        else if (pRem) tag = '<span class="lang-row__tag lang-row__tag--removing">removing</span>';
-        else if (on) tag = '<button type="button" class="lang-row__setdef" data-setdef="' + l.code + '">Set default</button>';
-        else tag = '<span class="lang-row__tag"></span>';
+        // Package languages get a small muted icon by the name (no text pill).
+        const pkgIco = inPkg ? '<iconify-icon class="lang-row__pkg" icon="fluent:box-16-regular" width="13" height="13" title="In your package" aria-label="In your package"></iconify-icon>' : '';
+        // Pending / translating feedback stays as a small chip.
+        let st = '';
+        if (tr) st = '<span class="lang-row__st lang-row__st--translating"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating…</span>';
+        else if (pAdd) st = '<span class="lang-row__st lang-row__st--new">New</span>';
+        else if (pRem) st = '<span class="lang-row__st lang-row__st--removing">Removing</span>';
+        // Default control: a clear "Default" pill for the current default; a quiet "Set default" for other added langs.
+        let action = '<span></span>';
+        if (isDef) action = '<span class="lang-row__def lang-row__def--on"><iconify-icon icon="fluent:star-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon>Default</span>';
+        else if (on && !pRem) action = '<button type="button" class="lang-row__def lang-row__def--set" data-setdef="' + l.code + '" title="Make this the default language"><iconify-icon icon="fluent:star-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Set default</button>';
         return '<label class="' + cls + '"><input type="checkbox" data-code="' + l.code + '" ' + (on ? 'checked' : '') + (isDef ? ' disabled' : '') + '/>' +
-          '<span class="lang-row__name">' + esc(l.name) + '</span>' + tag +
+          '<span class="lang-row__name">' + esc(l.name) + pkgIco + st + '</span>' + action +
           '<span class="lang-row__code">' + l.code + '</span></label>';
       }).join('');
       langList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', () => toggleLocale(cb.dataset.code, cb.checked)));
-      langList.querySelectorAll('.lang-row__setdef').forEach(btn => btn.addEventListener('click', (e) => {
+      langList.querySelectorAll('.lang-row__def--set').forEach(btn => btn.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
         setDefaultLocale(btn.dataset.setdef);
         renderLangList(langSearch ? langSearch.value : '');
       }));
       updateLangCount();
+      updatePkgAddAll();
     }
     async function translateInto(bucket, src, code) {
       const ai = (typeof window !== 'undefined') && window.AI;
@@ -10803,6 +10878,7 @@ function openPriceScheduleDialog() {
       if (!langDialog) return;
       captureActiveLocale(); // so the default bucket is current for translation source
       langDraft = { added: new Map(), removed: new Set() };
+      langOrder = null; // recompute the (then-fixed) row order for this session
       if (langSearch) langSearch.value = '';
       if (langDupTgl) langDupTgl.checked = true;
       renderLangList('');
@@ -10811,7 +10887,7 @@ function openPriceScheduleDialog() {
       try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
       setTimeout(() => { try { langSearch && langSearch.focus(); } catch (e) {} }, 50);
     }
-    function closeLangDialog() { langDraft = null; try { langDialog.hide(); } catch (e) {} try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {} }
+    function closeLangDialog() { langDraft = null; langOrder = null; try { langDialog.hide(); } catch (e) {} try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {} }
     if (langManageBtn) langManageBtn.addEventListener('click', openLangDialog);
     if (langDialog) langDialog.querySelectorAll('[data-lang-dialog-close]').forEach(el => el.addEventListener('click', closeLangDialog));
     if (langSearch) langSearch.addEventListener('input', (e) => renderLangList(e.target.value));
