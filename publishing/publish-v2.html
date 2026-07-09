@@ -102,6 +102,14 @@
   .ez-step { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-24); margin-bottom: var(--sp-16); }
   .ez-step__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; }
   .ez-step__action { margin-left: auto; flex: 0 0 auto; }
+  /* Listing step head: group the language switcher with the Autofill action so they sit
+     together on the right — the language dropdown to the left of the Autofill button. */
+  .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); }
+  .ez-step__headtools .ez-step__action { margin-left: 0; }
+  .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
+  /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
+     — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
+  #lang-menu-list { min-width: 224px; }
   /* "Autofill with AI" — a distinct, prominent AI action so developers actually spot it.
      This Fluent build paints the button surface on the host element (it exposes no "control"
      part), so the gradient/glow go on the host, with !important to beat the component styles. */
@@ -175,6 +183,7 @@
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed > *:not(.ez-step__head) { display: none; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__head { margin-bottom: 0; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__action { display: none; }
+  #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__headtools { display: none; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__expand { display: inline-flex; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed.ez-step--done .ez-step__sub { display: none; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed.ez-step--done .ez-step__summary { display: block; }
@@ -923,6 +932,9 @@
   .ez-pkg-langcell { white-space: nowrap; }
   .ez-pkg-langmore { color: var(--fg-3); }
   .ez-pkg-muted { color: var(--fg-4); }
+  .ez-arch-info { color: var(--fg-3); cursor: help; vertical-align: -2px; margin-left: 4px; }
+  .ez-arch-info:hover, .ez-arch-info:focus-visible { color: var(--brand); }
+  .ez-arch-info:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
   .ez-val { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-200); white-space: nowrap; }
   .ez-val--idle { color: var(--fg-4); }
   .ez-val--running { color: var(--fg-2); }
@@ -1939,7 +1951,7 @@
   .wz-more__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .wz-more__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
   .wz-more__hint { font-size: 12px; color: var(--fg-3); }
-  #flow-wrap.is-wizard #step-listing.is-more .listing-langs-control.adv-only { display: flex !important; }
+  #flow-wrap.is-wizard #step-listing.is-more .ez-step__lang.adv-only { display: inline-flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-card-section.adv-only { display: block !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only { display: inline-flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-hero-empty.adv-only:not([hidden]) { display: flex !important; }
@@ -2205,6 +2217,7 @@
      Continue is secondary until the step is complete, then primary (set in JS). */
   #flow-wrap.is-wizard .wz-forward { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-24); }
   #flow-wrap.is-wizard .wz-forward #wz-continue { margin-left: auto; }
+  #flow-wrap.is-wizard .wz-forward #wz-submit-foot { margin-left: auto; }
   #flow-wrap.is-wizard .wz-forward fluent-button[hidden] { display: none !important; }
   #flow-wrap.is-wizard .wz-banner__action .ez-gate--ready::before {
     content: ''; flex: 0 0 auto;
@@ -2544,7 +2557,7 @@
     </div>
 
     <!-- Preview: opens the read-only, customer-facing Store listing (with an Edit CTA) — anytime. -->
-    <fluent-button type="button" class="wz-preview-btn" id="wz-preview-open" appearance="secondary" size="large">
+    <fluent-button type="button" class="wz-preview-btn" id="wz-preview-open" appearance="subtle" size="large">
       <iconify-icon slot="start" icon="fluent:eye-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
       Preview listing
     </fluent-button>
@@ -2569,7 +2582,7 @@
           <button type="button" class="ez-rail__item" data-section="step-rating">Age rating<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-reach">Reach &amp; price<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
         </div>
-        <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="secondary" size="small">
+        <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="subtle" size="small">
           <iconify-icon slot="start" icon="fluent:eye-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
           Preview listing
         </fluent-button>
@@ -2601,7 +2614,7 @@
            card, outside it. Reference-only one-liner that opens the identity dialog. -->
       <p class="manifest-identity-prompt adv-only" id="ez-pkg-identity-banner">
         <iconify-icon icon="fluent:document-bullet-list-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-        Building an MSIX package? Get the identity values for your AppxManifest.xml.
+        Building an MSIX package? Get the identity details to add to your package, so it matches your Store listing.
         <span class="manifest-identity-prompt__actions">
           <button type="button" class="link-btn" id="build-guide-btn">How to build a package</button>
           <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
@@ -2695,10 +2708,23 @@
             <p class="ez-step__sub">Click any field on your live Store listing to edit it.</p>
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
-          <fluent-button id="ai-autofill-open" class="ez-step__action ez-ai-btn" appearance="secondary">
-            <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Autofill with AI
-          </fluent-button>
+          <div class="ez-step__headtools">
+            <!-- One dropdown handles both jobs: its first item opens the add/remove
+                 dialog, and the added languages follow so you can switch between them. -->
+            <div class="ez-step__lang adv-only" aria-label="Listing language">
+              <fluent-menu id="lang-menu">
+                <fluent-menu-button slot="trigger" appearance="secondary" id="lang-menu-btn">
+                  <iconify-icon slot="start" icon="fluent:local-language-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  <span id="lang-menu-label">English (United States)</span>
+                </fluent-menu-button>
+                <fluent-menu-list id="lang-menu-list"></fluent-menu-list>
+              </fluent-menu>
+            </div>
+            <fluent-button id="ai-autofill-open" class="ez-step__action ez-ai-btn" appearance="secondary">
+              <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Autofill with AI
+            </fluent-button>
+          </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           <div class="fre-coach" id="ai-autofill-hint" role="status" hidden>
             <div class="fre-coach__body">
@@ -2712,23 +2738,6 @@
               <button type="button" class="fre-coach__btn" id="ai-hint-dismiss">Got it</button>
             </div>
           </div>
-        </div>
-
-        <!-- Multi-language (Advanced): pick the editing language; Manage opens the
-             add/remove dialog. Per-language fields are description, short description,
-             and features; category/subcategory/privacy/keywords are default-only. -->
-        <div class="listing-langs-control adv-only" aria-label="Listing language">
-          <fluent-menu id="lang-menu">
-            <fluent-menu-button slot="trigger" appearance="secondary" id="lang-menu-btn">
-              <iconify-icon slot="start" icon="fluent:local-language-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              <span id="lang-menu-label">English (United States)</span>
-            </fluent-menu-button>
-            <fluent-menu-list id="lang-menu-list"></fluent-menu-list>
-          </fluent-menu>
-          <fluent-button appearance="secondary" id="lang-manage-btn">
-            <iconify-icon slot="start" icon="fluent:translate-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-            Manage languages
-          </fluent-button>
         </div>
 
         <!-- Shown while the active locale's auto-translation is still running. -->
@@ -3160,6 +3169,12 @@
         <fluent-button id="wz-continue" appearance="secondary" size="medium">
           <span id="wz-continue-label">Continue</span>
           <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+        </fluent-button>
+        <!-- On the last step (Reach & price), the footer also offers Submit for review —
+             disabled until every section is complete (mirrors the header action). -->
+        <fluent-button id="wz-submit-foot" appearance="primary" size="medium" hidden disabled>
+          <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+          Submit for review
         </fluent-button>
       </div>
     </div>
@@ -5433,6 +5448,15 @@
         cont.setAttribute('appearance', wzStepComplete(WZ_STEPS[wzIndex]) ? 'primary' : 'secondary');
       }
     }
+    // On the last step (Reach & price), the footer also carries Submit for review —
+    // disabled until every section is complete (mirrors the header action).
+    const footSubmit = $('wz-submit-foot');
+    if (footSubmit) {
+      footSubmit.hidden = !isLast;
+      footSubmit.disabled = incomplete.length > 0;
+      if (incomplete.length) footSubmit.title = 'Finish ' + wzListJoin(incomplete) + ' to submit for review.';
+      else footSubmit.removeAttribute('title');
+    }
   }
   function wzListJoin(arr) {
     if (arr.length <= 1) return arr.join('');
@@ -6471,6 +6495,15 @@
     const ordered = packages.filter(p => !p._pending).sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
     const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : ((pkg.kind === 'pwa' || pkg.fromPwa) ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
     const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—');
+    // "Neutral" runs on every CPU architecture — flag it with an info icon so developers aren't
+    // unsure whether it covers their users' devices (it covers all of them).
+    const NEUTRAL_ARCH_TIP = 'Neutral runs on all architectures — x86, x64, and Arm64. One neutral package covers every Windows device.';
+    const archCellHtml = pkg => {
+      const label = archOf(pkg);
+      const isNeutral = String(label).toLowerCase().split(/,\s*/).includes('neutral');
+      if (!isNeutral) return esc(label);
+      return esc(label) + ' <iconify-icon class="ez-arch-info" icon="fluent:info-16-regular" width="14" height="14" role="img" tabindex="0" aria-label="' + esc(NEUTRAL_ARCH_TIP) + '" data-tooltip="' + esc(NEUTRAL_ARCH_TIP) + '"></iconify-icon>';
+    };
     const verOf  = pkg => pkg.version ? 'v' + pkg.version : '—';
     const deviceOf = pkg => (pkg.devices && pkg.devices.length) ? pkg.devices.join(', ') : (pkg.win32 ? 'Desktop' : (pkg.kind === 'pwa' ? 'Web' : '—'));
     // Win32 table cells: a compact language summary, and the validation status (clickable when done).
@@ -6580,8 +6613,8 @@
       let html = '<table class="ez-pkg-table"><thead><tr>' + headCols + '</tr></thead><tbody>';
       ordered.forEach(pkg => {
         const midCols = win32Mode
-          ? '<td>' + esc(archOf(pkg)) + '</td><td>' + langCellOf(pkg) + '</td><td class="ez-pkg-td--val">' + validationCell(pkg) + '</td>'
-          : '<td>' + esc(verOf(pkg)) + '</td><td>' + esc(archOf(pkg)) + '</td><td>' + esc(deviceOf(pkg)) + '</td>';
+          ? '<td>' + archCellHtml(pkg) + '</td><td>' + langCellOf(pkg) + '</td><td class="ez-pkg-td--val">' + validationCell(pkg) + '</td>'
+          : '<td>' + esc(verOf(pkg)) + '</td><td>' + archCellHtml(pkg) + '</td><td>' + esc(deviceOf(pkg)) + '</td>';
         const nameCell = '<td class="ez-pkg-td--name"><span class="ez-pkg-namewrap">' + (appBrandLogo ? '<img class="ez-pkg-logo" src="' + appBrandLogo + '" alt="" width="20" height="20" />' : '<iconify-icon icon="' + iconOf(pkg) + '" width="20" height="20" aria-hidden="true"></iconify-icon>') + '<span class="ez-pkg-nametext"><span class="ez-pkg-name" title="' + esc(pkg.filename) + '">' + esc(pkg.filename) + '</span>' + (pkg.fromPwa && pkg.url ? '<span class="ez-pkg-sub" title="' + esc(pkg.url) + '">' + esc(hostnameOf(pkg.url)) + '</span>' : '') + '</span></span></td>';
         const removeBtn = '<fluent-button class="ez-pkg-remove" appearance="transparent" size="small" data-remove="' + pkg.id + '" aria-label="Remove ' + esc(pkg.filename) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>';
         if (win32Mode) {
@@ -8481,7 +8514,9 @@
     el.setAttribute('role', 'button');
     const open = () => {
       if (el.classList.contains('live-edit--active')) return;
-      const current = input.value || '';
+      // Seed the editor with the AI-derived text currently shown in the field when the stored value is
+      // empty, so clicking to edit lets you tweak what's shown instead of starting from a blank field.
+      const current = input.value || (opts && typeof opts.fallback === 'function' ? (opts.fallback() || '') : '');
       const ed = document.createElement(opts && opts.multiline ? 'textarea' : 'input');
       ed.className = 'live-edit-input';
       ed.value = current;
@@ -8817,7 +8852,7 @@
     announce('Submission withdrawn. Back to draft.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
-  $('submit').addEventListener('click', () => {
+  function openSubmitFlow() {
     if ($('submit').disabled) return;
     // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which
     // would otherwise show a stuck spinner when the dialog is reopened (e.g. after Edit submission).
@@ -8840,7 +8875,9 @@
     syncPublishHoldUI();
     renderTestCreds();
     try { submitDlg.show(); } catch (e) {}
-  });
+  }
+  $('submit').addEventListener('click', openSubmitFlow);
+  if ($('wz-submit-foot')) $('wz-submit-foot').addEventListener('click', openSubmitFlow);
   function syncPublishHoldUI() {
     if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
     const ph = adv.publishHold;
@@ -10141,7 +10178,7 @@ function openPriceScheduleDialog() {
     const fShort = $('f-short');
     if (fShort && typeof makeInlineEditable === 'function') {
       fShort.value = L.shortDesc || '';
-      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 270, placeholder: 'Leave blank to auto-generate from your description' });
+      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 270, placeholder: 'Leave blank to auto-generate from your description', fallback: () => { const d = ((fDesc && fDesc.value) || '').trim(); return d ? deriveShort(d) : ''; } });
       fShort.addEventListener('input', () => { L.shortDesc = (fShort.value || '').trim(); persistAdvanced(); ezRenderPreview(); });
     }
 
@@ -10243,13 +10280,17 @@ function openPriceScheduleDialog() {
         catch (e) { console.warn('[ai] privacy generation failed:', e.message); announce('Could not draft a privacy policy.'); return null; }
       };
       const fillDialog = async () => { if (dlgText) dlgText.value = ''; if (dlgLoad) dlgLoad.hidden = false; const t = await runGen(); if (dlgLoad) dlgLoad.hidden = true; if (t && dlgText) dlgText.value = t; };
-      if (dlg) dlg.querySelectorAll('[data-privacy-dialog-close]').forEach(el => el.addEventListener('click', () => { try { dlg.hide(); } catch (e) {} }));
+      // fluent-dialog show()/hide() are unreliable here (esp. nested over the privacy editor) — drive the
+      // inner native <dialog> directly as a fallback. Same approach as openBuildGuide().
+      const showDlg = () => { if (!dlg) return; try { dlg.show(); } catch (e) {} try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {} };
+      const hideDlg = () => { if (!dlg) return; try { dlg.hide(); } catch (e) {} try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {} };
+      if (dlg) dlg.querySelectorAll('[data-privacy-dialog-close]').forEach(el => el.addEventListener('click', hideDlg));
       const regen = $('privacy-regenerate'); if (regen) regen.addEventListener('click', fillDialog);
       const copy = $('privacy-copy'); if (copy) copy.addEventListener('click', async () => { const t = (dlgText && dlgText.value) || ''; if (!t) return; try { await navigator.clipboard.writeText(t); } catch (e) { try { dlgText.select(); document.execCommand('copy'); } catch (e2) {} } const o = copy.innerHTML; copy.innerHTML = '<iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Copied'; setTimeout(() => { copy.innerHTML = o; }, 1500); });
       const dl = $('privacy-download'); if (dl) dl.addEventListener('click', () => { const t = (dlgText && dlgText.value) || ''; if (!t) return; const blob = new Blob([t], { type: 'text/plain' }); const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = 'privacy-policy.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); });
       if (genBtn) genBtn.addEventListener('click', async () => {
         if (localeLocked()) return;
-        if (getPrivacyMode() === 'url') { if (dlg) { try { dlg.show(); } catch (e) {} } await fillDialog(); return; }
+        if (getPrivacyMode() === 'url') { showDlg(); await fillDialog(); return; }
         const o = genBtn.innerHTML; genBtn.disabled = true; genBtn.innerHTML = '<fluent-spinner size="extra-small"></fluent-spinner> Drafting…';
         try { const t = await runGen(); if (t && privacyTextInline) { privacyTextInline.value = t; L.privacyText = t; persistAdvanced(); updateGate(); } }
         finally { genBtn.disabled = false; genBtn.innerHTML = o; }
@@ -10626,11 +10667,21 @@ function openPriceScheduleDialog() {
       const codes = addedLocales();
       if (langMenuLabel) langMenuLabel.textContent = localeShortNameOf(L.activeLocale) + (L.activeLocale === DEFAULT_LOCALE ? ' (default)' : '');
       if (!langMenuList) return;
-      langMenuList.innerHTML = codes.map(c =>
+      // First item opens the add/remove dialog; the added languages follow — so this one
+      // dropdown both switches the editing language and manages the language set.
+      const manageItem =
+        '<fluent-menu-item data-lang-manage>' +
+        '<iconify-icon slot="start" icon="fluent:translate-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        'Add or manage languages\u2026' +
+        '</fluent-menu-item>' +
+        '<fluent-divider role="separator" aria-hidden="true"></fluent-divider>';
+      langMenuList.innerHTML = manageItem + codes.map(c =>
         '<fluent-menu-item data-code="' + c + '"' + (c === L.activeLocale ? ' aria-checked="true"' : '') + '>' +
         esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + '</fluent-menu-item>'
       ).join('');
-      langMenuList.querySelectorAll('fluent-menu-item').forEach(it => it.addEventListener('click', () => switchLocale(it.dataset.code)));
+      const manageEl = langMenuList.querySelector('[data-lang-manage]');
+      if (manageEl) manageEl.addEventListener('click', () => openLangDialog());
+      langMenuList.querySelectorAll('fluent-menu-item[data-code]').forEach(it => it.addEventListener('click', () => switchLocale(it.dataset.code)));
     }
     function updateLockUI() {
       const locked = localeLocked();
@@ -10756,9 +10807,11 @@ function openPriceScheduleDialog() {
       if (langDupTgl) langDupTgl.checked = true;
       renderLangList('');
       try { langDialog.show(); } catch (e) {}
+      // fluent-dialog show() doesn't reliably open the inner native <dialog> — drive it directly.
+      try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
       setTimeout(() => { try { langSearch && langSearch.focus(); } catch (e) {} }, 50);
     }
-    function closeLangDialog() { langDraft = null; try { langDialog.hide(); } catch (e) {} }
+    function closeLangDialog() { langDraft = null; try { langDialog.hide(); } catch (e) {} try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {} }
     if (langManageBtn) langManageBtn.addEventListener('click', openLangDialog);
     if (langDialog) langDialog.querySelectorAll('[data-lang-dialog-close]').forEach(el => el.addEventListener('click', closeLangDialog));
     if (langSearch) langSearch.addEventListener('input', (e) => renderLangList(e.target.value));
@@ -10777,6 +10830,7 @@ function openPriceScheduleDialog() {
       loadActiveLocale();
       renderLangSelector(); updateLockUI(); updateTranslatingBanner(); ezRenderPreview();
       try { langDialog.hide(); } catch (e) {}
+      try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {}
       if (added.length) announce('Now editing ' + localeShortNameOf(L.activeLocale) + '.');
       else if (activeRemoved) announce('Now editing ' + localeShortNameOf(L.activeLocale) + '.');
     });

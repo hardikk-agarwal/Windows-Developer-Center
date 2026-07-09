@@ -102,6 +102,14 @@
   .ez-step { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-24); margin-bottom: var(--sp-16); }
   .ez-step__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; }
   .ez-step__action { margin-left: auto; flex: 0 0 auto; }
+  /* Listing step head: group the language switcher with the Autofill action so they sit
+     together on the right — the language dropdown to the left of the Autofill button. */
+  .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); }
+  .ez-step__headtools .ez-step__action { margin-left: 0; }
+  .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
+  /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
+     — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
+  #lang-menu-list { min-width: 224px; }
   /* "Autofill with AI" — a distinct, prominent AI action so developers actually spot it.
      This Fluent build paints the button surface on the host element (it exposes no "control"
      part), so the gradient/glow go on the host, with !important to beat the component styles. */
@@ -175,6 +183,7 @@
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed > *:not(.ez-step__head) { display: none; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__head { margin-bottom: 0; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__action { display: none; }
+  #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__headtools { display: none; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed .ez-step__expand { display: inline-flex; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed.ez-step--done .ez-step__sub { display: none; }
   #flow-wrap[data-mode="easy"] .ez-step.is-collapsed.ez-step--done .ez-step__summary { display: block; }
@@ -399,6 +408,10 @@
     #flow-wrap.is-wizard[data-mode="easy"] #submit-rail { display: none; }
     #flow-wrap.is-wizard[data-mode="easy"] #submit-checklist { display: block; }
   }
+  /* The checklist now lives on the header step tabs (per-step count badges), so the floating
+     readiness rail and the header "Checklist" dropdown are retired. */
+  #flow-wrap.is-wizard #submit-rail,
+  #flow-wrap.is-wizard #submit-checklist { display: none !important; }
   .submit-rail__spine { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--sp-6) var(--sp-4); background: var(--layer); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-full); box-shadow: var(--shadow-8); transition: opacity var(--dur-3) var(--ease-out), filter var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-3) var(--ease-out); }
   .ck-spine__node { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: transparent; border: 0; color: var(--fg-2); cursor: pointer; padding: 0; transition: transform var(--dur-1) var(--ease-out), background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
   .ck-spine__node:not([disabled]):hover { background: color-mix(in srgb, var(--fg-1) 9%, transparent); color: var(--fg-1); }
@@ -717,7 +730,12 @@
   /* The clone is for viewing only: kill leftover edit/CTA affordances. */
   .lpv-card .ez-store-hero__icon,
   .lpv-card .ez-store-cta { pointer-events: none; cursor: default; }
-  .lpv-card .ez-store-hero__icon { box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .lpv-card .ez-store-hero__icon { border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  /* Read-only zero states: a customer never sees "Click to…" edit prompts. Missing
+     content reads as a calm, muted "not added yet" placeholder instead. */
+  .lpv-card .lpv-empty { color: var(--fg-4); font-style: italic; }
+  .lpv-card .lpv-shots-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6); width: 100%; min-height: 132px; padding: var(--sp-20); border: 1px dashed var(--stroke-2); border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 3%, transparent); color: var(--fg-4); font-size: var(--font-size-base-200); text-align: center; }
+  .lpv-card .lpv-shots-empty iconify-icon { color: var(--fg-4); }
 
   /* ===== Manifest identity: banner above the upload card + its dialog ===== */
   .manifest-identity-prompt { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; margin: 0 0 var(--sp-16); padding: var(--sp-8) var(--sp-12); background: color-mix(in srgb, var(--brand) 5%, transparent); border: 1px solid color-mix(in srgb, var(--brand) 16%, transparent); border-radius: var(--r-4); font-size: var(--font-size-base-200); color: var(--fg-2); }
@@ -887,6 +905,9 @@
   .ez-pkg-langcell { white-space: nowrap; }
   .ez-pkg-langmore { color: var(--fg-3); }
   .ez-pkg-muted { color: var(--fg-4); }
+  .ez-arch-info { color: var(--fg-3); cursor: help; vertical-align: -2px; margin-left: 4px; }
+  .ez-arch-info:hover, .ez-arch-info:focus-visible { color: var(--brand); }
+  .ez-arch-info:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
   .ez-val { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-200); white-space: nowrap; }
   .ez-val--idle { color: var(--fg-4); }
   .ez-val--running { color: var(--fg-2); }
@@ -1894,16 +1915,36 @@
   .price-sale-item__text { flex: 1 1 auto; min-width: 0; }
   .price-sale-item__remove { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; background: transparent; border: 0; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; }
   .price-sale-item__remove:hover { background: var(--hover, color-mix(in srgb, var(--fg-1) 10%, transparent)); color: var(--fg-1); }
-  /* "More options" per-step toggle (wizard only) — reveals the advanced Listing / Reach
-     fields on demand. Off by default; only shown on the Listing and Reach & price steps. */
-  #flow-wrap.is-wizard #wz-more-bar { display: flex; align-items: center; margin: 0 0 var(--sp-16); position: relative; }
+  /* Enhance / Advanced disclosure — the header names exactly what's inside (chips) and
+     differentiates Listing (optional enhancements that grab attention) from Reach & price
+     (advanced / pro controls); expanding reveals + highlights those fields. */
+  :root { --accent-purple: #8b5cf6; }
+  #flow-wrap.is-wizard #wz-more-bar { display: block; margin: var(--sp-16) 0 0; }
   #wz-more-bar[hidden] { display: none !important; }
-  /* Advanced-options coachmark reuses the shared .fre-coach / .fre-coach--left styles above. */
-  .wz-more__toggle { display: inline-flex; align-items: center; gap: var(--sp-12); cursor: pointer; }
-  .wz-more__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .wz-more__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
-  .wz-more__hint { font-size: 12px; color: var(--fg-3); }
-  #flow-wrap.is-wizard #step-listing.is-more .listing-langs-control.adv-only { display: flex !important; }
+  /* Simple, quiet "show more" footer at the bottom of the step: one row — small icon,
+     bold label, muted list of what's inside, chevron. Dashed border = optional/expandable. */
+  .wz-enhance__head { display: flex; align-items: center; gap: var(--sp-10); width: 100%; text-align: left; padding: var(--sp-12) var(--sp-16); background: transparent; border: 1px dashed var(--stroke-2); border-radius: var(--r-10); cursor: pointer; font: inherit; color: var(--fg-2); transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .wz-enhance__head:hover { border-color: var(--stroke-1); background: color-mix(in srgb, var(--fg-1) 4%, transparent); color: var(--fg-1); }
+  .wz-enhance__head:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+  .wz-enhance__ico { flex: 0 0 auto; color: var(--brand); }
+  .wz-enhance__label { flex: 0 0 auto; font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .wz-enhance__why { flex: 1 1 auto; min-width: 0; font-size: 12px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wz-enhance__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  #wz-more-bar.is-open .wz-enhance__chev { transform: rotate(180deg); }
+  #wz-more-bar.is-open .wz-enhance__head { border-style: solid; border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 5%, transparent); color: var(--fg-1); }
+  /* Reach & price reads as advanced / pro (cooler purple accent). */
+  #wz-more-bar[data-step="step-reach"] .wz-enhance__ico { color: var(--accent-purple, var(--brand)); }
+  #wz-more-bar[data-step="step-reach"].is-open .wz-enhance__head { border-color: color-mix(in srgb, var(--accent-purple, var(--brand)) 40%, var(--stroke-2)); background: color-mix(in srgb, var(--accent-purple, var(--brand)) 5%, transparent); }
+  /* Reveal highlight: pulse the newly shown fields so the change is visible. */
+  .wz-reveal { border-radius: var(--r-8); scroll-margin-top: 96px; animation: wzRevealPulse 1.5s var(--ease-out); }
+  @keyframes wzRevealPulse { 0%, 12% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent), 0 0 0 7px color-mix(in srgb, var(--brand) 16%, transparent); } 100% { box-shadow: 0 0 0 2px transparent, 0 0 0 7px transparent; } }
+  /* First-run nudge: a one-time attention pulse on the disclosure header (accent-aware). */
+  .wz-enhance--intro { animation: wzEnhanceIntro 2.1s var(--ease-out) 1; }
+  @keyframes wzEnhanceIntro { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 34%, transparent); border-color: color-mix(in srgb, var(--brand) 55%, var(--stroke-2)); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  #wz-more-bar[data-step="step-reach"] .wz-enhance--intro { animation-name: wzEnhanceIntroReach; }
+  @keyframes wzEnhanceIntroReach { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple, var(--brand)) 34%, transparent); border-color: color-mix(in srgb, var(--accent-purple, var(--brand)) 55%, var(--stroke-2)); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  @media (prefers-reduced-motion: reduce) { .wz-enhance__chev { transition: none; } .wz-reveal, .wz-enhance--intro { animation: none; } }
+  #flow-wrap.is-wizard #step-listing.is-more .ez-step__lang.adv-only { display: inline-flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-card-section.adv-only { display: block !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only { display: inline-flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-hero-empty.adv-only:not([hidden]) { display: flex !important; }
@@ -1939,6 +1980,37 @@
   .wz-stepind.is-done .wz-stepind__dot { color: var(--status-success); }
   .wz-stepind.is-locked .wz-stepind__dot { color: var(--fg-3); }
   .wz-stepind:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  /* Thin vertical divider between adjacent step tabs — a subtle segmented look. */
+  .wz-stepind { position: relative; }
+  .wz-stepind + .wz-stepind::before { content: ''; position: absolute; left: calc(var(--sp-4) * -0.5); top: 50%; transform: translateY(-50%); width: 1px; height: 18px; background: var(--stroke-2); }
+  /* Per-step checklist count on the tab: how many required items are still left in that section. */
+  .wz-stepind__badge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 5px; margin-left: var(--sp-2); border-radius: var(--r-full); background: color-mix(in srgb, var(--fg-1) 14%, transparent); color: var(--fg-1); font-size: 10.5px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .wz-stepind.is-current .wz-stepind__badge { background: color-mix(in srgb, var(--brand) 22%, transparent); color: var(--brand); }
+  /* Hover (or focus) a step tab to peek its checklist — the items in that section. */
+  .wz-tab-cklist { position: fixed; z-index: 90; min-width: 240px; max-width: 340px; padding: var(--sp-10) var(--sp-8) var(--sp-8); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: var(--shadow-16, 0 12px 32px rgba(0,0,0,.45)); animation: aiHintIn .14s var(--ease-out) both; }
+  .wz-tab-cklist[hidden] { display: none; }
+  .wz-tab-cklist__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8); font-size: 12px; font-weight: 700; color: var(--fg-1); margin: 0 var(--sp-4) var(--sp-6); }
+  .wz-tab-cklist__count { font-size: 10.5px; font-weight: 600; color: var(--status-warning); white-space: nowrap; }
+  .wz-tab-cklist__count.is-done { color: var(--status-success); }
+  .wz-tab-cklist__list { display: flex; flex-direction: column; gap: 1px; }
+  .wz-tab-cklist__list[hidden] { display: none; }
+  .wz-tab-cklist__row { display: flex; align-items: center; gap: var(--sp-8); width: 100%; padding: 5px var(--sp-6); margin: 0; font: inherit; font-size: 12.5px; color: var(--fg-2); text-align: left; background: none; border: 0; border-radius: var(--r-4); cursor: pointer; }
+  .wz-tab-cklist__row:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  .wz-tab-cklist__row:hover .wz-tab-cklist__lbl { color: var(--fg-1); }
+  .wz-tab-cklist__row:focus-visible { outline: 2px solid var(--brand); outline-offset: -1px; }
+  .wz-tab-cklist__ico { flex: 0 0 auto; }
+  .wz-tab-cklist__ico.is-done { color: var(--status-success); }
+  .wz-tab-cklist__ico.is-todo { color: var(--fg-4); }
+  .wz-tab-cklist__row.is-done .wz-tab-cklist__lbl { color: var(--fg-3); }
+  .wz-tab-cklist__lbl { flex: 1 1 auto; min-width: 0; }
+  .wz-tab-cklist__val { flex: 0 0 auto; color: var(--fg-3); font-size: 11.5px; }
+  .wz-tab-cklist__go { flex: 0 0 auto; color: var(--fg-4); opacity: 0; transition: opacity var(--dur-1) var(--ease-out); }
+  .wz-tab-cklist__row:hover .wz-tab-cklist__go, .wz-tab-cklist__row:focus-visible .wz-tab-cklist__go { opacity: 1; }
+  .wz-tab-cklist__optbtn { display: flex; align-items: center; gap: var(--sp-6); width: 100%; margin: var(--sp-4) 0 0; padding: 6px var(--sp-6) 2px; font: inherit; font-size: 11.5px; font-weight: 600; color: var(--fg-3); text-align: left; background: none; border: 0; border-top: 1px solid var(--stroke-3); border-radius: 0; cursor: pointer; }
+  .wz-tab-cklist__optbtn:hover { color: var(--fg-1); }
+  .wz-tab-cklist__optchev { flex: 0 0 auto; color: var(--fg-4); transition: transform var(--dur-2) var(--ease-out); }
+  .wz-tab-cklist__optbtn.is-open .wz-tab-cklist__optchev { transform: rotate(90deg); }
+  .wz-tab-cklist__optn { margin-left: auto; font-size: 10px; font-weight: 700; color: var(--fg-4); font-variant-numeric: tabular-nums; }
   .wz-nav { display: flex; gap: var(--sp-12); flex: 0 0 auto; }
   /* ---- Package step: dashed drop box (upload) + "or" + URL block ---- */
   .ez-pkg-add { display: flex; flex-direction: column; }
@@ -2123,7 +2195,6 @@
     margin-bottom: -1px;
   }
   #flow-wrap.is-wizard .wz-stepind.is-current {
-    background: color-mix(in srgb, var(--brand) 12%, transparent);
     color: var(--fg-1);
     border-bottom-color: var(--brand);
   }
@@ -2160,6 +2231,10 @@
     flex: 0 0 auto; margin-left: auto;
   }
   #flow-wrap.is-wizard .wz-banner__action[hidden] { display: none !important; }
+  /* Header actions: a read-only "Preview listing" sits to the left of the primary commit action. */
+  #flow-wrap.is-wizard .wz-headactions { display: flex; align-items: center; gap: var(--sp-12); margin-left: auto; flex: 0 0 auto; }
+  #flow-wrap.is-wizard .wz-headactions .wz-banner__action { margin-left: 0; }
+  @media (max-width: 720px) { #flow-wrap.is-wizard .wz-headactions { margin-left: 0; flex-wrap: wrap; } }
   #flow-wrap.is-wizard .wz-banner__action .ez-gate {
     display: inline-flex; align-items: center; gap: var(--sp-6);
     font-size: 12px; line-height: 16px; color: var(--fg-3);
@@ -2169,6 +2244,7 @@
      Continue is secondary until the step is complete, then primary (set in JS). */
   #flow-wrap.is-wizard .wz-forward { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-24); }
   #flow-wrap.is-wizard .wz-forward #wz-continue { margin-left: auto; }
+  #flow-wrap.is-wizard .wz-forward #wz-submit-foot { margin-left: auto; }
   #flow-wrap.is-wizard .wz-forward fluent-button[hidden] { display: none !important; }
   #flow-wrap.is-wizard .wz-banner__action .ez-gate--ready::before {
     content: ''; flex: 0 0 auto;
@@ -2313,13 +2389,19 @@
             </div>
           </div>
         </div>
-        <!-- Primary commit action lives in the header (top-right) — no footer command bar.
-             Keeps id="submit-bar" so the submit/withdraw show-hide logic still targets it. -->
-        <div class="wz-banner__action" id="submit-bar">
-          <fluent-button id="submit" appearance="primary" size="large" disabled>
-            <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Submit for review
+        <!-- Header actions: a read-only "Preview listing" sits to the left of the primary
+             commit action. Keeps id="submit-bar" so the submit/withdraw logic still targets it. -->
+        <div class="wz-headactions">
+          <fluent-button type="button" class="wz-preview-btn" id="wz-preview-open" appearance="subtle" size="large" disabled>
+            <iconify-icon slot="start" icon="fluent:eye-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+            Preview listing
           </fluent-button>
+          <div class="wz-banner__action" id="submit-bar">
+            <fluent-button id="submit" appearance="primary" size="large" disabled>
+              <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Submit for review
+            </fluent-button>
+          </div>
         </div>
         <div class="ez-mode" role="group" aria-label="Publishing mode">
           <button type="button" class="ez-mode__opt ez-mode__opt--active" data-mode="easy" aria-pressed="true" title="Only the required fields">
@@ -2359,7 +2441,7 @@
           <button type="button" class="ez-rail__item" data-section="step-rating">Age rating<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-reach">Reach &amp; price<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
         </div>
-        <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="secondary" size="small">
+        <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="subtle" size="small">
           <iconify-icon slot="start" icon="fluent:eye-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
           Preview listing
         </fluent-button>
@@ -2368,33 +2450,22 @@
 
       <!-- "More fields" (Listing) / "More options" (Reach) toggle — sits above the step
            card, below the progress. Shown only on the Listing and Reach & price steps. -->
-      <div class="wz-more-bar" id="wz-more-bar" hidden>
-        <label class="wz-more__toggle" for="wz-more-switch">
-          <fluent-switch id="wz-more-switch" aria-label="Advanced options"></fluent-switch>
-          <span class="wz-more__text">
-            <strong class="wz-more__title" id="wz-more-title">Show advanced options</strong>
-            <span class="wz-more__hint" id="wz-more-hint">Languages, trailer, features, and system requirements.</span>
-          </span>
-        </label>
-        <div class="fre-coach fre-coach--left" id="wz-adv-hint" role="status" hidden>
-          <div class="fre-coach__body">
-            <iconify-icon class="fre-coach__ico" icon="fluent:options-16-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
-            <div class="fre-coach__text">
-              <strong id="wz-adv-hint-title">More options here</strong>
-              <span id="wz-adv-hint-body">Turn this on to unlock more.</span>
-            </div>
-          </div>
-          <div class="fre-coach__foot">
-            <button type="button" class="fre-coach__btn" id="wz-adv-hint-dismiss">Got it</button>
-          </div>
-        </div>
+      <!-- Self-describing "enhance / advanced" disclosure (Listing & Reach). The header names
+           exactly what's inside as chips; expanding reveals + highlights those fields. -->
+      <div class="wz-enhance" id="wz-more-bar" hidden>
+        <button type="button" class="wz-enhance__head" id="wz-more-toggle" aria-expanded="false">
+          <iconify-icon class="wz-enhance__ico" id="wz-more-ico" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
+          <span class="wz-enhance__label" id="wz-more-title">More ways to stand out</span>
+          <span class="wz-enhance__why" id="wz-more-why">Cover image, trailer, feature highlights, more languages</span>
+          <iconify-icon class="wz-enhance__chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+        </button>
       </div>
 
       <!-- Identity reference (Advanced, Package tab only): sits ABOVE the package
            card, outside it. Reference-only one-liner that opens the identity dialog. -->
       <p class="manifest-identity-prompt adv-only" id="ez-pkg-identity-banner">
         <iconify-icon icon="fluent:document-bullet-list-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-        Building an MSIX package? Get the identity values for your AppxManifest.xml.
+        Building an MSIX package? Get the identity details to add to your package, so it matches your Store listing.
         <span class="manifest-identity-prompt__actions">
           <button type="button" class="link-btn" id="build-guide-btn">How to build a package</button>
           <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
@@ -2459,10 +2530,23 @@
             <p class="ez-step__sub">Click any field on your live Store listing to edit it.</p>
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
-          <fluent-button id="ai-autofill-open" class="ez-step__action ez-ai-btn" appearance="secondary">
-            <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Autofill with AI
-          </fluent-button>
+          <div class="ez-step__headtools">
+            <!-- One dropdown handles both jobs: its first item opens the add/remove
+                 dialog, and the added languages follow so you can switch between them. -->
+            <div class="ez-step__lang adv-only" aria-label="Listing language">
+              <fluent-menu id="lang-menu">
+                <fluent-menu-button slot="trigger" appearance="secondary" id="lang-menu-btn">
+                  <iconify-icon slot="start" icon="fluent:local-language-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  <span id="lang-menu-label">English (United States)</span>
+                </fluent-menu-button>
+                <fluent-menu-list id="lang-menu-list"></fluent-menu-list>
+              </fluent-menu>
+            </div>
+            <fluent-button id="ai-autofill-open" class="ez-step__action ez-ai-btn" appearance="secondary">
+              <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Autofill with AI
+            </fluent-button>
+          </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           <div class="fre-coach" id="ai-autofill-hint" role="status" hidden>
             <div class="fre-coach__body">
@@ -2478,22 +2562,10 @@
           </div>
         </div>
 
-        <!-- Multi-language (Advanced): pick the editing language; Manage opens the
-             add/remove dialog. Per-language fields are description, short description,
-             and features; category/subcategory/privacy/keywords are default-only. -->
-        <div class="listing-langs-control adv-only" aria-label="Listing language">
-          <fluent-menu id="lang-menu">
-            <fluent-menu-button slot="trigger" appearance="secondary" id="lang-menu-btn">
-              <iconify-icon slot="start" icon="fluent:local-language-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              <span id="lang-menu-label">English (United States)</span>
-            </fluent-menu-button>
-            <fluent-menu-list id="lang-menu-list"></fluent-menu-list>
-          </fluent-menu>
-          <fluent-button appearance="secondary" id="lang-manage-btn">
-            <iconify-icon slot="start" icon="fluent:translate-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-            Manage languages
-          </fluent-button>
-        </div>
+        <!-- Multi-language: the editing-language dropdown now lives in the step header
+             (its first menu item opens the add/remove dialog), so there's no separate
+             control here. Per-language fields are description, short description, and
+             features; category/subcategory/privacy/keywords are default-only. -->
 
         <!-- Shown while the active locale's auto-translation is still running. -->
         <div class="lang-translating-banner adv-only" id="lang-translating-banner" hidden>
@@ -2924,6 +2996,12 @@
         <fluent-button id="wz-continue" appearance="secondary" size="medium">
           <span id="wz-continue-label">Continue</span>
           <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+        </fluent-button>
+        <!-- On the last step (Reach & price), the footer also offers Submit for review —
+             disabled until every section is complete (mirrors the header action). -->
+        <fluent-button id="wz-submit-foot" appearance="primary" size="medium" hidden disabled>
+          <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+          Submit for review
         </fluent-button>
       </div>
     </div>
@@ -4628,10 +4706,66 @@
     clone.querySelectorAll(
       '.ez-hero-media__remove, .ez-trailer-add-btn, input[type="file"], ' +
       '.ez-pv-shot__del, .ez-pv-shot-add, .ez-shots-arrow, ' +
-      '.ez-store-features-empty, .ez-hero-empty'
+      '.ez-store-features-empty, .ez-hero-empty, .ez-ai-chip'
     ).forEach(n => n.remove());
-    // Hide optional sections that have no content (Features / Sys req / Info / Screenshots).
-    clone.querySelectorAll('.ez-store-features, .ez-store-sysreq, .ez-info-grid, .ez-store-shots').forEach(list => {
+    // Neutralize the click-to-edit "Additional information" cells (privacy policy,
+    // license terms, etc.). Unset "Add …" prompts are dropped (a customer sees nothing
+    // there); set values stay as plain, non-interactive text.
+    clone.querySelectorAll('.ez-info-val').forEach(cell => {
+      if (cell.classList.contains('ez-info-val--empty')) {
+        const line = cell.closest('.ez-info-item__line');
+        (line || cell).remove();
+      } else {
+        cell.removeAttribute('role');
+        cell.removeAttribute('tabindex');
+        cell.style.pointerEvents = 'none';
+        cell.style.cursor = 'default';
+      }
+    });
+    // Drop any required-mark stars left dangling next to a removed "Add …" prompt.
+    clone.querySelectorAll('.ez-info-item__value .field-mark--req, .ez-info-item__value .ez-info-req-star').forEach(n => n.remove());
+    // Remove "Additional information" rows that no longer carry a value.
+    clone.querySelectorAll('.ez-info-item').forEach(item => {
+      const val = item.querySelector('.ez-info-item__value');
+      if (val && !val.textContent.trim()) item.remove();
+    });
+    // Clear every "empty & required" edit marker (the red "*", dashed icon frame, etc.)
+    // so nothing in the read-only view nags like an editor field.
+    clone.querySelectorAll('[data-empty-required]').forEach(n => n.removeAttribute('data-empty-required'));
+    clone.querySelectorAll('.live-edit-empty').forEach(n => n.classList.remove('live-edit-empty'));
+    // Required-field asterisks ("Screenshots *", "Description *") are an editor
+    // affordance — a customer never sees them, so drop every required mark.
+    clone.querySelectorAll('.field-mark').forEach(n => n.remove());
+    // System requirements are auto-derived from the package (OS, architecture) and
+    // aren't part of the wizard's edit view. Drop them so the preview reflects what the
+    // developer actually authors rather than a section they can't touch.
+    const sysreqList = clone.querySelector('.ez-store-sysreq');
+    if (sysreqList) { const sec = sysreqList.closest('.ez-card-section'); if (sec) sec.remove(); }
+    // ---- Read-only zero states: a customer never sees "Click to pick a category" /
+    // "Click to write your description". Missing content is hidden (optional) or shown
+    // as a calm, muted placeholder (required core fields) — never as an edit prompt. ----
+    if (!state.category) { const c = clone.querySelector('.ez-store-hero__cat'); if (c) c.remove(); }
+    if (!((adv.listing.shortDesc || '').trim()) && !state.desc) {
+      const s = clone.querySelector('.ez-store-hero__desc'); if (s) s.remove();
+    }
+    if (!state.desc) {
+      const d = clone.querySelector('.ez-store-desc');
+      if (d) { d.textContent = 'No description added yet.'; d.classList.add('lpv-empty'); }
+    }
+    if (!state.rating) {
+      const ie = clone.querySelector('.ez-store-hero__iarc .ez-iarc-empty span:last-child');
+      if (ie) ie.textContent = 'Not yet rated';
+    }
+    // Screenshots (required): keep the section but swap an empty/edit gallery for a
+    // muted "no screenshots yet" tile so the preview reads intentionally.
+    const shotsGrid = clone.querySelector('.ez-store-shots');
+    if (shotsGrid && !shotsGrid.querySelector('.ez-pv-shot')) {
+      shotsGrid.innerHTML = '<div class="lpv-shots-empty"><iconify-icon icon="fluent:image-20-regular" width="24" height="24" aria-hidden="true"></iconify-icon><span>No screenshots added yet</span></div>';
+    }
+    // Hide optional sections that have no content (Features / Info). Screenshots are
+    // handled just above (kept with a placeholder) and System requirements are dropped
+    // outright, so neither appears in this list.
+    clone.querySelectorAll('.ez-store-features, .ez-info-grid').forEach(list => {
       if (!list.children.length) { const sec = list.closest('.ez-card-section'); if (sec) sec.remove(); }
     });
     // Remove the click-to-edit hover affordance from text fields.
@@ -4664,6 +4798,7 @@
     if (listingPreviewBody) listingPreviewBody.innerHTML = ''; // stop any cloned video, free DOM
   }
   if ($('ez-preview-open')) $('ez-preview-open').addEventListener('click', openListingPreview);
+  if ($('wz-preview-open')) $('wz-preview-open').addEventListener('click', openListingPreview);
   if (listingPreviewDlg) listingPreviewDlg.querySelectorAll('[data-listing-preview-close]').forEach(b => b.addEventListener('click', closeListingPreview));
   // "Edit listing" leaves the read-only preview and opens the Store listing tab to edit.
   if ($('lpv-edit-listing')) $('lpv-edit-listing').addEventListener('click', () => { closeListingPreview(); setActiveSection('step-listing'); });
@@ -4988,17 +5123,17 @@
       s.classList.toggle('is-wz-active', id === cur);
       s.classList.add('is-open'); s.classList.remove('is-collapsed');
     });
-    // "More fields / More options" bar above the card — only on Listing & Reach.
+    // Enhance / advanced disclosure — a quiet "show more" footer at the BOTTOM of the step's
+    // content. Expanding it scrolls the newly revealed fields into view (see wzRevealFeedback).
     const moreBar = $('wz-more-bar');
     if (moreBar) {
       const showBar = (cur === 'step-listing' || cur === 'step-reach');
       moreBar.hidden = !showBar;
       if (showBar) {
-        moreBar.dataset.step = cur;
-        const isListing = (cur === 'step-listing');
-        const t = $('wz-more-title'); if (t) t.textContent = 'Show advanced options';
-        const h = $('wz-more-hint'); if (h) h.textContent = isListing ? 'Add languages, a trailer, features, and system requirements.' : 'Set per-market prices, free trials, and release scheduling.';
-        const sw = $('wz-more-switch'); if (sw) sw.checked = $(cur).classList.contains('is-more');
+        let anchor = $(cur);
+        if (cur === 'step-listing') { const ex = $('listing-extras-card'); if (ex) anchor = ex; }
+        if (anchor && anchor.nextElementSibling !== moreBar) anchor.insertAdjacentElement('afterend', moreBar);
+        if (typeof wzRenderEnhanceBar === 'function') wzRenderEnhanceBar(cur);
       }
     }
     // Detached privacy + search-keywords card: only on the Listing step.
@@ -5038,13 +5173,24 @@
       // Guidance: locked tabs explain the prerequisite on hover (and on click, below).
       if (locked) el.setAttribute('title', 'Add your app package first to unlock this section.');
       else el.removeAttribute('title');
-      // Status indicator: lock when gated; otherwise empty ○ / half ◐ / green ✓ by progress.
+      // Status indicator: lock when gated; green ✓ when complete; half ◐ while in progress;
+      // otherwise the step's own icon (Package / listing / rating / price) — clearer than a bare ○.
       const icon = locked ? 'fluent:lock-closed-16-regular'
         : status === 'complete' ? 'fluent:checkmark-circle-20-filled'
         : status === 'in-progress' ? 'fluent:circle-half-fill-20-regular'
-        : 'fluent:circle-20-regular';
+        : (el.dataset.icon || 'fluent:circle-20-regular');
       const dot = el.querySelector('.wz-stepind__dot');
       if (dot) dot.innerHTML = '<iconify-icon icon="' + icon + '" width="18" height="18" aria-hidden="true"></iconify-icon>';
+      // Checklist on the tab itself: a small badge with the number of required items still
+      // left in this section (hidden once the section is complete, or while it's locked).
+      const leftN = ckSection(id).filter(it => ckRequired(it) && !ckDone(it)).length;
+      let badge = el.querySelector('.wz-stepind__badge');
+      if (!locked && status !== 'complete' && leftN > 0) {
+        if (!badge) { badge = document.createElement('span'); badge.className = 'wz-stepind__badge'; badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
+        badge.textContent = leftN;
+      } else if (badge) {
+        badge.remove();
+      }
     });
     // The tabs are the navigation; the footer carries overall readiness + the single
     // primary action (Submit for review), enabled only when every section is complete.
@@ -5061,6 +5207,15 @@
       if (incomplete.length) submit.title = 'Finish ' + wzListJoin(incomplete) + ' to submit for review.';
       else submit.removeAttribute('title');
     }
+    // Preview mirrors the listing's own gate: there's nothing meaningful to preview —
+    // and the "Edit listing" CTA would land on a locked step — until the package is in.
+    const previewBtn = $('wz-preview-open');
+    if (previewBtn) {
+      const canPreview = wzStepComplete('step-package');
+      previewBtn.disabled = !canPreview;
+      if (canPreview) previewBtn.removeAttribute('title');
+      else previewBtn.title = 'Add your app package first to preview your listing.';
+    }
     // Step nav under the active step. Back: every step after the first (subtle; tabs also go back).
     // Continue: every step except the last (Submit is the action there); gated on the package step;
     // primary only once THIS step is complete, so finishing a step lights up the way forward.
@@ -5074,6 +5229,15 @@
         cont.disabled = (wzIndex === 0 && !wzStepComplete('step-package'));
         cont.setAttribute('appearance', wzStepComplete(WZ_STEPS[wzIndex]) ? 'primary' : 'secondary');
       }
+    }
+    // On the last step (Reach & price), the footer also carries Submit for review —
+    // disabled until every section is complete (mirrors the header action).
+    const footSubmit = $('wz-submit-foot');
+    if (footSubmit) {
+      footSubmit.hidden = !isLast;
+      footSubmit.disabled = incomplete.length > 0;
+      if (incomplete.length) footSubmit.title = 'Finish ' + wzListJoin(incomplete) + ' to submit for review.';
+      else footSubmit.removeAttribute('title');
     }
   }
   function wzListJoin(arr) {
@@ -5124,21 +5288,156 @@
     else announce('Add your app package first to unlock ' + (WZ_SECTION_NAMES[el.dataset.wz] || 'this section') + '.');
   }));
 
+  // ---- Hover (or focus) a step tab to peek its checklist: the items in that section with
+  // their done/left status. The tabs already navigate on click; this reveals the detail. ----
+  (function wzTabChecklistPeek() {
+    const steps = document.getElementById('wz-steps');
+    if (!steps) return;
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+    const pop = document.createElement('div');
+    pop.className = 'wz-tab-cklist'; pop.setAttribute('role', 'tooltip'); pop.hidden = true;
+    document.body.appendChild(pop);
+    let hideTimer = null, curTab = null;
+    function itemRow(it) {
+      const done = ckDone(it), hasVal = typeof it.value === 'function', idx = CHECKLIST_ITEMS.indexOf(it);
+      const ico = done
+        ? '<iconify-icon class="wz-tab-cklist__ico is-done" icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>'
+        : '<iconify-icon class="wz-tab-cklist__ico is-todo" icon="fluent:circle-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>';
+      let val = '';
+      try { if (hasVal) val = '<span class="wz-tab-cklist__val">' + esc(it.value()) + '</span>'; } catch (_) {}
+      return '<button type="button" class="wz-tab-cklist__row' + (done ? ' is-done' : '') + '" data-ck="' + idx + '">' +
+        ico + '<span class="wz-tab-cklist__lbl">' + esc(it.label) + '</span>' + val +
+        '<iconify-icon class="wz-tab-cklist__go" icon="fluent:chevron-right-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>' +
+        '</button>';
+    }
+    function build(id) {
+      const items = ckSection(id);
+      if (!items.length) return '';
+      // Core rows are required items + the value facets (Markets / Audience / Price);
+      // optional enhancements fold into a collapsed accordion below.
+      const main = items.filter(it => ckRequired(it) || typeof it.value === 'function');
+      const opt = items.filter(it => !ckRequired(it) && typeof it.value !== 'function');
+      const leftN = items.filter(it => ckRequired(it) && !ckDone(it)).length;
+      let html = '<div class="wz-tab-cklist__head"><span>' + esc(WZ_SECTION_NAMES[id] || '') + '</span>' +
+        '<span class="wz-tab-cklist__count' + (leftN ? '' : ' is-done') + '">' + (leftN ? (leftN + ' left') : 'All done') + '</span></div>';
+      if (main.length) html += '<div class="wz-tab-cklist__list">' + main.map(itemRow).join('') + '</div>';
+      if (opt.length) {
+        const optDone = opt.filter(ckDone).length;
+        html += '<button type="button" class="wz-tab-cklist__optbtn" data-ck-optbtn aria-expanded="false">' +
+          '<iconify-icon class="wz-tab-cklist__optchev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+          '<span>Optional</span><span class="wz-tab-cklist__optn">' + optDone + '/' + opt.length + '</span></button>' +
+          '<div class="wz-tab-cklist__list wz-tab-cklist__optlist" hidden>' + opt.map(itemRow).join('') + '</div>';
+      }
+      return html;
+    }
+    function place(tab) {
+      const r = tab.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+      let left = r.left; if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+      let top = r.bottom + 8; if (top + ph > window.innerHeight - 8) top = Math.max(8, r.top - ph - 8);
+      pop.style.left = Math.max(8, left) + 'px'; pop.style.top = top + 'px';
+    }
+    function show(tab) {
+      if (!tab || tab.classList.contains('is-locked')) return; // locked tabs already show the "add package" hint
+      const html = build(tab.dataset.wz);
+      if (!html) return;
+      curTab = tab; pop.innerHTML = html; pop.hidden = false; place(tab);
+    }
+    function hide() { pop.hidden = true; curTab = null; }
+    steps.querySelectorAll('.wz-stepind').forEach(tab => {
+      tab.addEventListener('mouseenter', () => { clearTimeout(hideTimer); show(tab); });
+      tab.addEventListener('mouseleave', () => { hideTimer = setTimeout(hide, 160); });
+      tab.addEventListener('focus', () => show(tab));
+      tab.addEventListener('blur', () => { hideTimer = setTimeout(hide, 160); });
+    });
+    pop.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    pop.addEventListener('mouseleave', () => { hideTimer = setTimeout(hide, 160); });
+    // Toggle the Optional accordion; jump to a field from any row.
+    pop.addEventListener('click', (e) => {
+      const optBtn = e.target.closest('[data-ck-optbtn]');
+      if (optBtn) {
+        const list = pop.querySelector('.wz-tab-cklist__optlist');
+        if (list) {
+          const opening = list.hasAttribute('hidden');
+          if (opening) list.removeAttribute('hidden'); else list.setAttribute('hidden', '');
+          optBtn.setAttribute('aria-expanded', String(opening));
+          optBtn.classList.toggle('is-open', opening);
+          if (curTab) place(curTab);
+        }
+        return;
+      }
+      const row = e.target.closest('.wz-tab-cklist__row[data-ck]');
+      if (row) { const it = CHECKLIST_ITEMS[parseInt(row.getAttribute('data-ck'), 10)]; hide(); ckJumpTo(it); }
+    });
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('resize', hide);
+  })();
+
   // "More fields" (Listing) / "More options" (Reach) — one bar above the card reveals the
   // advanced fields for the current step. The fields already exist (advanced mode); this
   // just unhides them and runs the same language sync the full advanced mode would.
+  // "More fields" (Listing) / "More options" (Reach) — a self-describing disclosure above the
+  // card: the header names what's inside (chips) and differentiates Listing (make it stand out)
+  // from Reach & price (advanced / pro); expanding reveals + highlights those fields.
+  let wzEnhanceSeen = {};
+  function wzRenderEnhanceBar(cur) {
+    const bar = $('wz-more-bar'); if (!bar) return;
+    const isListing = (cur === 'step-listing');
+    const cfg = isListing
+      ? { icon: 'fluent:sparkle-20-filled', title: 'More ways to stand out', why: 'Cover image, trailer, feature highlights, more languages' }
+      : { icon: 'fluent:options-20-filled', title: 'Advanced pricing & availability', why: 'Per-market prices, free trials, release scheduling' };
+    bar.dataset.step = cur;
+    const ico = $('wz-more-ico'); if (ico) ico.setAttribute('icon', cfg.icon);
+    const t = $('wz-more-title'); if (t) t.textContent = cfg.title;
+    const why = $('wz-more-why'); if (why) why.textContent = cfg.why;
+    wzSetEnhanceExpanded(cur, $(cur).classList.contains('is-more'));
+    // First-run nudge: a one-time subtle pulse so the disclosure is noticed on this step.
+    if (!wzEnhanceSeen[cur]) {
+      wzEnhanceSeen[cur] = true;
+      const head = bar.querySelector('.wz-enhance__head');
+      if (head && !(typeof reduceMotion === 'function' && reduceMotion())) {
+        head.classList.remove('wz-enhance--intro'); void head.offsetWidth; head.classList.add('wz-enhance--intro');
+        setTimeout(function () { head.classList.remove('wz-enhance--intro'); }, 2200);
+      }
+    }
+  }
+  function wzSetEnhanceExpanded(cur, on) {
+    const bar = $('wz-more-bar'); if (!bar) return;
+    bar.classList.toggle('is-open', on);
+    const btn = $('wz-more-toggle');
+    if (btn) { btn.setAttribute('aria-expanded', on ? 'true' : 'false'); if (cur) btn.setAttribute('aria-controls', cur); }
+  }
+  function wzRevealFeedback(cur) {
+    const SEL = {
+      'step-listing': '.ez-step__lang.adv-only, .ez-hero-empty.adv-only, .ez-trailer-add-btn.adv-only, .ez-card-section.adv-only',
+      'step-reach': '#price-advanced, #price-trial-row, .reach-row--schedule'
+    };
+    const step = $(cur), sel = SEL[cur]; if (!step || !sel) return;
+    let els = [];
+    try { els = Array.prototype.slice.call(step.querySelectorAll(sel)); } catch (e) {}
+    els = els.filter(el => el && el.offsetParent !== null);
+    if (!els.length) return;
+    const reduce = (typeof reduceMotion === 'function' && reduceMotion());
+    if (!reduce) els.forEach(el => { el.classList.remove('wz-reveal'); void el.offsetWidth; el.classList.add('wz-reveal'); setTimeout(() => el.classList.remove('wz-reveal'), 1600); });
+    try {
+      const y = els[0].getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, y), behavior: reduce ? 'auto' : 'smooth' });
+    } catch (e) {}
+  }
   (function wireWzMore() {
-    const bar = $('wz-more-bar'), sw = $('wz-more-switch'); if (!bar || !sw) return;
-    sw.addEventListener('change', () => {
+    const bar = $('wz-more-bar'); if (!bar) return;
+    const btn = $('wz-more-toggle'); if (!btn) return;
+    btn.addEventListener('click', () => {
       const cur = bar.dataset.step, step = $(cur); if (!step) return;
-      const on = !!sw.checked;
+      const on = !step.classList.contains('is-more');
       step.classList.toggle('is-more', on);
+      wzSetEnhanceExpanded(cur, on);
       if (cur === 'step-listing') {
         if (on && typeof window.__langSync === 'function') window.__langSync();
         else if (!on && typeof window.__langResetToDefault === 'function') window.__langResetToDefault();
         if (typeof renderShots === 'function') renderShots();
       }
       if (typeof ezRenderPreview === 'function') ezRenderPreview();
+      if (on) wzRevealFeedback(cur);
     });
   })();
 
@@ -5984,6 +6283,15 @@
     const ordered = packages.filter(p => !p._pending).sort((a, b) => { const x = verKey(a.version), y = verKey(b.version); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
     const iconOf = pkg => pkg.win32 ? 'fluent:window-apps-20-filled' : ((pkg.kind === 'pwa' || pkg.fromPwa) ? 'fluent:globe-20-filled' : 'fluent:box-20-filled');
     const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '—');
+    // "Neutral" runs on every CPU architecture — flag it with an info icon so developers aren't
+    // unsure whether it covers their users' devices (it covers all of them).
+    const NEUTRAL_ARCH_TIP = 'Neutral runs on all architectures — x86, x64, and Arm64. One neutral package covers every Windows device.';
+    const archCellHtml = pkg => {
+      const label = archOf(pkg);
+      const isNeutral = String(label).toLowerCase().split(/,\s*/).includes('neutral');
+      if (!isNeutral) return esc(label);
+      return esc(label) + ' <iconify-icon class="ez-arch-info" icon="fluent:info-16-regular" width="14" height="14" role="img" tabindex="0" aria-label="' + esc(NEUTRAL_ARCH_TIP) + '" data-tooltip="' + esc(NEUTRAL_ARCH_TIP) + '"></iconify-icon>';
+    };
     const verOf  = pkg => pkg.version ? 'v' + pkg.version : '—';
     const deviceOf = pkg => (pkg.devices && pkg.devices.length) ? pkg.devices.join(', ') : (pkg.win32 ? 'Desktop' : (pkg.kind === 'pwa' ? 'Web' : '—'));
     // Win32 table cells: a compact language summary, and the validation status (clickable when done).
@@ -6093,8 +6401,8 @@
       let html = '<table class="ez-pkg-table"><thead><tr>' + headCols + '</tr></thead><tbody>';
       ordered.forEach(pkg => {
         const midCols = win32Mode
-          ? '<td>' + esc(archOf(pkg)) + '</td><td>' + langCellOf(pkg) + '</td><td class="ez-pkg-td--val">' + validationCell(pkg) + '</td>'
-          : '<td>' + esc(verOf(pkg)) + '</td><td>' + esc(archOf(pkg)) + '</td><td>' + esc(deviceOf(pkg)) + '</td>';
+          ? '<td>' + archCellHtml(pkg) + '</td><td>' + langCellOf(pkg) + '</td><td class="ez-pkg-td--val">' + validationCell(pkg) + '</td>'
+          : '<td>' + esc(verOf(pkg)) + '</td><td>' + archCellHtml(pkg) + '</td><td>' + esc(deviceOf(pkg)) + '</td>';
         const nameCell = '<td class="ez-pkg-td--name"><span class="ez-pkg-namewrap">' + (appBrandLogo ? '<img class="ez-pkg-logo" src="' + appBrandLogo + '" alt="" width="20" height="20" />' : '<iconify-icon icon="' + iconOf(pkg) + '" width="20" height="20" aria-hidden="true"></iconify-icon>') + '<span class="ez-pkg-nametext"><span class="ez-pkg-name" title="' + esc(pkg.filename) + '">' + esc(pkg.filename) + '</span>' + (pkg.fromPwa && pkg.url ? '<span class="ez-pkg-sub" title="' + esc(pkg.url) + '">' + esc(hostnameOf(pkg.url)) + '</span>' : '') + '</span></span></td>';
         const removeBtn = '<fluent-button class="ez-pkg-remove" appearance="transparent" size="small" data-remove="' + pkg.id + '" aria-label="Remove ' + esc(pkg.filename) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>';
         if (win32Mode) {
@@ -7243,9 +7551,7 @@
     function maybeAi() {
       if (!aiHint || seen(AKEY)) return;
       if (!step || step.offsetParent === null) return;   // only when the listing step is actually visible
-      // The Advanced-options coachmark goes first on the listing step; wait while it's still
-      // showable (bar visible) and hasn't been dismissed yet.
-      if (bar && !bar.hidden && bar.offsetParent !== null && curStep() === 'step-listing' && !seen(LKEY)) { aiHint.hidden = true; return; }
+      if (curStep() !== 'step-listing') { aiHint.hidden = true; return; }   // listing step only
       if (state && state.desc) { mark(AKEY); aiHint.hidden = true; return; }  // nothing to draft
       aiHint.hidden = false;
     }
@@ -7997,7 +8303,9 @@
     el.setAttribute('role', 'button');
     const open = () => {
       if (el.classList.contains('live-edit--active')) return;
-      const current = input.value || '';
+      // Seed the editor with the AI-derived text currently shown in the field when the stored value is
+      // empty, so clicking to edit lets you tweak what's shown instead of starting from a blank field.
+      const current = input.value || (opts && typeof opts.fallback === 'function' ? (opts.fallback() || '') : '');
       const ed = document.createElement(opts && opts.multiline ? 'textarea' : 'input');
       ed.className = 'live-edit-input';
       ed.value = current;
@@ -8333,7 +8641,7 @@
     announce('Submission withdrawn. Back to draft.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
-  $('submit').addEventListener('click', () => {
+  function openSubmitFlow() {
     if ($('submit').disabled) return;
     // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which
     // would otherwise show a stuck spinner when the dialog is reopened (e.g. after Edit submission).
@@ -8356,7 +8664,9 @@
     syncPublishHoldUI();
     renderTestCreds();
     try { submitDlg.show(); } catch (e) {}
-  });
+  }
+  $('submit').addEventListener('click', openSubmitFlow);
+  if ($('wz-submit-foot')) $('wz-submit-foot').addEventListener('click', openSubmitFlow);
   function syncPublishHoldUI() {
     if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
     const ph = adv.publishHold;
@@ -9657,7 +9967,7 @@ function openPriceScheduleDialog() {
     const fShort = $('f-short');
     if (fShort && typeof makeInlineEditable === 'function') {
       fShort.value = L.shortDesc || '';
-      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 270, placeholder: 'Leave blank to auto-generate from your description' });
+      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 270, placeholder: 'Leave blank to auto-generate from your description', fallback: () => { const d = ((fDesc && fDesc.value) || '').trim(); return d ? deriveShort(d) : ''; } });
       fShort.addEventListener('input', () => { L.shortDesc = (fShort.value || '').trim(); persistAdvanced(); ezRenderPreview(); });
     }
 
@@ -10142,11 +10452,21 @@ function openPriceScheduleDialog() {
       const codes = addedLocales();
       if (langMenuLabel) langMenuLabel.textContent = localeShortNameOf(L.activeLocale) + (L.activeLocale === DEFAULT_LOCALE ? ' (default)' : '');
       if (!langMenuList) return;
-      langMenuList.innerHTML = codes.map(c =>
+      // First item opens the add/remove dialog; the added languages follow — so this one
+      // dropdown both switches the editing language and manages the language set.
+      const manageItem =
+        '<fluent-menu-item data-lang-manage>' +
+        '<iconify-icon slot="start" icon="fluent:translate-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        'Add or manage languages\u2026' +
+        '</fluent-menu-item>' +
+        '<fluent-divider role="separator" aria-hidden="true"></fluent-divider>';
+      langMenuList.innerHTML = manageItem + codes.map(c =>
         '<fluent-menu-item data-code="' + c + '"' + (c === L.activeLocale ? ' aria-checked="true"' : '') + '>' +
         esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + '</fluent-menu-item>'
       ).join('');
-      langMenuList.querySelectorAll('fluent-menu-item').forEach(it => it.addEventListener('click', () => switchLocale(it.dataset.code)));
+      const manageEl = langMenuList.querySelector('[data-lang-manage]');
+      if (manageEl) manageEl.addEventListener('click', () => openLangDialog());
+      langMenuList.querySelectorAll('fluent-menu-item[data-code]').forEach(it => it.addEventListener('click', () => switchLocale(it.dataset.code)));
     }
     function updateLockUI() {
       const locked = localeLocked();
@@ -10272,9 +10592,11 @@ function openPriceScheduleDialog() {
       if (langDupTgl) langDupTgl.checked = true;
       renderLangList('');
       try { langDialog.show(); } catch (e) {}
+      // fluent-dialog show() doesn't reliably open the inner native <dialog> — drive it directly.
+      try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
       setTimeout(() => { try { langSearch && langSearch.focus(); } catch (e) {} }, 50);
     }
-    function closeLangDialog() { langDraft = null; try { langDialog.hide(); } catch (e) {} }
+    function closeLangDialog() { langDraft = null; try { langDialog.hide(); } catch (e) {} try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {} }
     if (langManageBtn) langManageBtn.addEventListener('click', openLangDialog);
     if (langDialog) langDialog.querySelectorAll('[data-lang-dialog-close]').forEach(el => el.addEventListener('click', closeLangDialog));
     if (langSearch) langSearch.addEventListener('input', (e) => renderLangList(e.target.value));
@@ -10293,6 +10615,7 @@ function openPriceScheduleDialog() {
       loadActiveLocale();
       renderLangSelector(); updateLockUI(); updateTranslatingBanner(); ezRenderPreview();
       try { langDialog.hide(); } catch (e) {}
+      try { const inner = langDialog.shadowRoot && langDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {}
       if (added.length) announce('Now editing ' + localeShortNameOf(L.activeLocale) + '.');
       else if (activeRemoved) announce('Now editing ' + localeShortNameOf(L.activeLocale) + '.');
     });
