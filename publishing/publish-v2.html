@@ -386,10 +386,10 @@
   .declarations__title { font-family: var(--font-display); font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-4); }
   .declarations__sub { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0; line-height: 1.5; }
   .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-  .declarations__item { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-12); align-items: center; padding: var(--sp-8) 0; }
+  .declarations__item { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-12); align-items: center; padding: var(--sp-6) 0; }
   .declarations__item fluent-switch { flex: 0 0 auto; }
   .declarations__copy { min-width: 0; }
-  .declarations__label { display: block; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); cursor: pointer; }
+  .declarations__label { display: block; font-size: 13px; font-weight: 500; color: var(--fg-1); cursor: pointer; }
 
   /* ===== Advanced listing — PDP-integrated sections + search-terms metadata ===== */
   /* Listing extras: privacy + search terms below the live card. Full-bleed to match the
@@ -1287,14 +1287,14 @@
   #submit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
   .ez-iarc-id-line { font-size: 13px; color: var(--fg-3); margin: var(--sp-16) 0 0; }
   /* ===== Submit-for-review dialog ===== */
-  #submit-dialog .ez-sd__section + .ez-sd__section { margin-top: var(--sp-20); padding-top: var(--sp-16); border-top: 1px solid var(--stroke-3); }
-  #submit-dialog .ez-sd__title { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-8); }
+  #submit-dialog .ez-sd__section + .ez-sd__section { margin-top: var(--sp-20); }
+  #submit-dialog .ez-sd__title { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 var(--sp-8); }
   #submit-dialog .ez-sd__hint { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-10); line-height: 1.45; }
-  /* Two label/value pairs per row so the summary stays compact (6 fields → 3 rows). */
-  #submit-dialog .ez-sd__summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--sp-8) var(--sp-20); margin: 0; align-items: baseline; }
-  #submit-dialog .ez-sd__summary dt { color: var(--fg-3); font-size: 12.5px; white-space: nowrap; }
-  #submit-dialog .ez-sd__summary dd { margin: 0; color: var(--fg-1); font-size: 12.5px; font-weight: 600; }
-  @media (max-width: 520px) { #submit-dialog .ez-sd__summary { grid-template-columns: auto minmax(0, 1fr); } }
+  /* Compact recap: a wrapping row of icon + value chips (the full label is in each chip's tooltip). */
+  #submit-dialog .ez-sd__summary { display: flex; flex-wrap: wrap; gap: var(--sp-6) var(--sp-8); margin: 0; }
+  #submit-dialog .ez-sd__chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--subtle); color: var(--fg-1); font-size: 12.5px; font-weight: 500; white-space: nowrap; max-width: 100%; }
+  #submit-dialog .ez-sd__chip iconify-icon { flex: 0 0 auto; color: var(--fg-3); }
+  #submit-dialog .ez-sd__chip span { overflow: hidden; text-overflow: ellipsis; }
   #submit-dialog .ez-sd__hold { display: flex; align-items: flex-start; gap: var(--sp-12); }
   #submit-dialog .ez-sd__hold fluent-switch { flex: 0 0 auto; margin-top: 2px; }
   #submit-dialog .ez-sd__hold strong { display: block; font-size: 13px; color: var(--fg-1); }
@@ -1304,16 +1304,32 @@
   /* Advanced settings — collapsible. Same style as other dialog collapsibles
      (top divider + chevron summary, no boxed card). */
   #submit-dialog .ez-sd__adv[hidden] { display: none; }
-  #submit-dialog .ez-sd__adv { margin-top: var(--sp-20); padding-top: var(--sp-16); border-top: 1px solid var(--stroke-3); }
+  #submit-dialog .ez-sd__adv { margin-top: var(--sp-20); }
   #submit-dialog .ez-sd__adv-head { display: flex; align-items: center; gap: var(--sp-8); cursor: pointer; list-style: none; font-size: 13px; font-weight: 600; color: var(--fg-1); user-select: none; }
   #submit-dialog .ez-sd__adv-head::-webkit-details-marker { display: none; }
   #submit-dialog .ez-sd__adv-chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
   #submit-dialog .ez-sd__adv[open] .ez-sd__adv-chev { transform: rotate(90deg); }
   #submit-dialog .ez-sd__adv-body { margin-top: var(--sp-12); }
-  #submit-dialog .ez-sd__adv-body > div + div { margin-top: var(--sp-16); padding-top: var(--sp-16); border-top: 1px solid var(--stroke-3); }
   #submit-dialog .ez-sd__adv-head-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   #submit-dialog .ez-sd__adv-sub { font-size: 11.5px; font-weight: 400; color: var(--fg-3); white-space: normal; }
   #submit-dialog .ez-sd__opt { font-weight: 400; font-size: 12px; color: var(--fg-3); }
+  /* Advanced-settings items: each optional area collapses to a one-line summary row (chevron + icon +
+     title + current value / optional tag), so nothing overwhelms until you open it. */
+  #submit-dialog .ez-sd__sub[hidden] { display: none; }
+  #submit-dialog .ez-sd__sub + .ez-sd__sub { border-top: 1px solid var(--stroke-3); }
+  #submit-dialog .ez-sd__sub-head { display: flex; align-items: center; gap: var(--sp-8); cursor: pointer; list-style: none; padding: var(--sp-8) 0; user-select: none; }
+  #submit-dialog .ez-sd__sub-head::-webkit-details-marker { display: none; }
+  #submit-dialog .ez-sd__sub-chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  #submit-dialog .ez-sd__sub[open] .ez-sd__sub-chev { transform: rotate(90deg); }
+  #submit-dialog .ez-sd__sub-ico { flex: 0 0 auto; color: var(--brand); }
+  #submit-dialog .ez-sd__sub-title { font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  #submit-dialog .ez-sd__sub-head .ez-sd__opt { margin-left: auto; }
+  #submit-dialog .ez-sd__sub-val { margin-left: auto; font-size: 12px; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+  #submit-dialog .ez-sd__sub-body { margin: var(--sp-2) 0 var(--sp-10) var(--sp-24); }
+  /* Two labelled sub-fields inside the Release row (Go live / Stop offering). */
+  #submit-dialog .ez-sd__field + .ez-sd__field { margin-top: var(--sp-12); }
+  #submit-dialog .ez-sd__field-label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-2); margin: 0 0 var(--sp-2); }
+  #submit-dialog .ez-sd__field-note { font-size: 11.5px; color: var(--fg-3); margin: var(--sp-4) 0 0; }
   #submit-dialog .ez-sd__creds-list { display: flex; flex-direction: column; gap: var(--sp-8); margin-top: var(--sp-8); }
   #submit-dialog .ez-sd__cred-row { display: flex; align-items: center; gap: var(--sp-8); }
   #submit-dialog .ez-sd__cred-row fluent-text-input { display: block; min-width: 0; }
@@ -1951,8 +1967,7 @@
   #flow-wrap.is-wizard .ez-defaults-card { display: none !important; }
   #flow-wrap.is-wizard #ez-rail { display: none !important; }
   /* Reach & price (step 4) is trimmed in the wizard to markets + audience + price;
-     scheduling, per-market price, and free trials stay behind "More options". */
-  #flow-wrap.is-wizard #step-reach:not(.is-more) .reach-row--schedule,
+     per-market price and free trials stay behind "More options". */
   #flow-wrap.is-wizard #step-reach:not(.is-more) #price-advanced,
   #flow-wrap.is-wizard #step-reach:not(.is-more) #price-trial-row { display: none !important; }
   /* Win32 (exe/msi/url) submissions can't be limited to a private group — only
@@ -2559,7 +2574,7 @@
           <button type="button" class="ez-mode__opt ez-mode__opt--active" data-mode="easy" aria-pressed="true" title="Only the required fields">
             <iconify-icon icon="fluent:flash-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon> Easy
           </button>
-          <button type="button" class="ez-mode__opt" data-mode="advanced" id="go-advanced" aria-pressed="false" title="More pricing and listing options: set a price, free trials, specific markets, release scheduling, extra languages, trailers, system requirements">
+          <button type="button" class="ez-mode__opt" data-mode="advanced" id="go-advanced" aria-pressed="false" title="More pricing and listing options: set a price, free trials, specific markets, extra languages, trailers, system requirements">
             <iconify-icon icon="fluent:options-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Advanced
           </button>
         </div>
@@ -3145,35 +3160,6 @@
               <p class="reach-row__hint" id="price-trial-hint">No trial. Customers buy the full app.</p>
             </div>
             <p class="reach-row__hint" id="price-default-hint">Free apps install at no cost in every market.</p>
-          </div>
-
-          <!-- Schedule -->
-          <div class="reach-row reach-row--schedule">
-            <div class="reach-row__head">
-              <iconify-icon icon="fluent:calendar-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-              <strong>Schedule</strong>
-            </div>
-            <div class="schedule-sub">
-              <span class="schedule-sub__label">Release</span>
-              <div class="seg" role="radiogroup" aria-label="Release schedule" data-choice="schedule-release">
-                <button class="seg__opt seg__opt--active" data-value="now" type="button">When approved</button>
-                <button class="seg__opt" data-value="date" type="button">Pick date</button>
-              </div>
-              <div class="schedule-date-row" id="schedule-release-date-row" hidden>
-                <fluent-text-input id="schedule-release-date" type="date"></fluent-text-input>
-              </div>
-            </div>
-            <div class="schedule-sub">
-              <span class="schedule-sub__label">End sales</span>
-              <div class="seg" role="radiogroup" aria-label="End sales schedule" data-choice="schedule-end">
-                <button class="seg__opt seg__opt--active" data-value="never" type="button">Never</button>
-                <button class="seg__opt" data-value="date" type="button">Pick date</button>
-              </div>
-              <div class="schedule-date-row" id="schedule-end-date-row" hidden>
-                <fluent-text-input id="schedule-end-date" type="date"></fluent-text-input>
-              </div>
-            </div>
-            <p class="reach-row__hint" id="schedule-default-hint">Release sets when buyers can first install. End sales blocks new buyers; existing customers keep access.</p>
           </div>
         </div>
       </section>
@@ -4417,7 +4403,7 @@
 
     <section class="ez-sd__section">
       <h3 class="ez-sd__title">What you're submitting</h3>
-      <dl class="ez-sd__summary" id="submit-summary"></dl>
+      <div class="ez-sd__summary" id="submit-summary"></div>
     </section>
 
     <section class="ez-sd__section">
@@ -4446,7 +4432,7 @@
       </ul>
     </section>
 
-    <!-- Advanced settings: optional extras — certification-team access (all types) + release timing (MSIX).
+    <!-- Advanced settings: optional extras — release (go-live + stop offering) and certification-team access.
          The summary previews the contents (set in JS) so it's clear what's inside without expanding. -->
     <details class="ez-sd__adv" id="ez-submit-adv">
       <summary class="ez-sd__adv-head">
@@ -4457,24 +4443,45 @@
         </span>
       </summary>
       <div class="ez-sd__adv-body">
-        <!-- For the certification team: test sign-in credentials + notes (optional, all package types). -->
-        <div class="ez-sd__creds" id="submit-creds">
-          <span class="ez-sd__label">For the certification team <span class="ez-sd__opt">optional</span></span>
-          <p class="ez-sd__hint">Add a test sign-in or notes, if the cert team needs them to review your app.</p>
-          <div class="ez-sd__creds-list" id="submit-creds-list"></div>
-          <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
-            <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add test credential
-          </button>
-          <fluent-textarea id="submit-notes" rows="3" class="ez-sd__cert-notes" placeholder="Known limitations or anything else the cert team should know"></fluent-textarea>
-        </div>
-        <!-- Release timing (MSIX only) -->
-        <div id="submit-hold-opts">
-          <span class="ez-sd__label">Release timing</span>
-          <p class="ez-sd__hint">When should it go live after it passes certification?</p>
-          <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="auto" checked /><span>Publish as soon as it passes certification</span></label>
-          <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="manual" /><span>Don't publish until I select Publish</span></label>
-          <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="date" /><span>Start publishing on</span><fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
-        </div>
+        <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
+        <details class="ez-sd__sub" id="submit-creds">
+          <summary class="ez-sd__sub-head">
+            <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            <iconify-icon class="ez-sd__sub-ico" icon="fluent:key-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+            <span class="ez-sd__sub-title">Test sign-in &amp; notes for reviewers</span>
+            <span class="ez-sd__opt">optional</span>
+          </summary>
+          <div class="ez-sd__sub-body">
+            <div class="ez-sd__creds-list" id="submit-creds-list"></div>
+            <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
+              <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add test credential
+            </button>
+            <fluent-textarea id="submit-notes" rows="2" class="ez-sd__cert-notes" placeholder="Notes for reviewers (optional)"></fluent-textarea>
+          </div>
+        </details>
+        <!-- Release: go-live (after cert) + when to stop offering. Collapsed; the summary shows the choice. -->
+        <details class="ez-sd__sub" id="submit-hold-opts">
+          <summary class="ez-sd__sub-head">
+            <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            <iconify-icon class="ez-sd__sub-ico" icon="fluent:calendar-clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+            <span class="ez-sd__sub-title">Release</span>
+            <span class="ez-sd__sub-val" id="hold-summary">Live when approved</span>
+          </summary>
+          <div class="ez-sd__sub-body">
+            <div class="ez-sd__field">
+              <span class="ez-sd__field-label">Go live</span>
+              <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="auto" checked /><span>As soon as it’s approved</span></label>
+              <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="manual" /><span>I’ll publish it manually</span></label>
+              <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="date" /><span>On a date</span><fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
+            </div>
+            <div class="ez-sd__field">
+              <span class="ez-sd__field-label">Stop offering to new customers</span>
+              <label class="ez-sd__radio"><input type="radio" name="release-end" value="never" checked /><span>Keep it available</span></label>
+              <label class="ez-sd__radio"><input type="radio" name="release-end" value="date" /><span>On a date</span><fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
+              <p class="ez-sd__field-note">Existing customers keep access after this date.</p>
+            </div>
+          </div>
+        </details>
       </div>
     </details>
 
@@ -5179,7 +5186,7 @@
     audience: { mode: 'public', groups: [] },
     price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, schedule: null, sales: [] },
     trial: { mode: 'none', duration: '7' },
-    schedule: { release: { mode: 'now', date: '' }, end: { mode: 'never', date: '' } },
+    schedule: { end: { mode: 'never', date: '' } },
     // Submit-time publishing hold (MSIX only): 'auto' = publish on cert pass,
     // 'manual' = wait for the dev to click Publish, 'date' = hold until a date.
     publishHold: { mode: 'auto', date: '' },
@@ -5209,17 +5216,15 @@
     const markets = adv.markets.mode === 'all'
       ? 'All 240 markets'
       : (adv.markets.selected.length + ' market' + (adv.markets.selected.length === 1 ? '' : 's'));
-    const release = (adv.schedule.release.mode === 'date' && adv.schedule.release.date)
-      ? ('publishes ' + adv.schedule.release.date) : 'publishes on approval';
     const aud = adv.audience.mode === 'link' ? 'direct link' : (adv.audience.mode === 'private' ? 'private' : null);
-    return [price, markets, release].concat(aud ? [aud] : []).join(' · ');
+    return [price, markets].concat(aud ? [aud] : []).join(' · ');
   }
   // Keep the Easy "defaults" line in sync with the effective adv values, so a
   // paid/limited config done in Advanced still reads correctly back in Easy.
   function refreshDefaultsLine() {
     const el = document.querySelector('.ez-defaults-line__text');
     if (!el) return;
-    const isDefault = adv.price.mode === 'free' && adv.markets.mode === 'all' && adv.audience.mode === 'public' && adv.schedule.release.mode === 'now';
+    const isDefault = adv.price.mode === 'free' && adv.markets.mode === 'all' && adv.audience.mode === 'public';
     const lead = isDefault ? 'Defaults set for you' : 'Set for publishing';
     el.innerHTML = lead + ': <strong>' + advSummary().split(' · ').join('</strong> · <strong>') + '</strong>. To change pricing, scheduling, audience, or markets, switch to Advanced mode.';
   }
@@ -5352,7 +5357,7 @@
     if (id === 'step-listing') return !!(state.desc || state.category || state.shots.length ||
       (adv.listing.privacyUrl || '').trim() || (adv.listing.privacyText || '').trim() || (adv.listing.keywords && adv.listing.keywords.length));
     if (id === 'step-rating')  return !!adv.iarcId || (typeof contentAnswers !== 'undefined' && typeof DEFAULT_ANSWERS !== 'undefined' && Object.keys(contentAnswers).some(k => contentAnswers[k] !== DEFAULT_ANSWERS[k]));
-    if (id === 'step-reach')   return reachVisited || adv.price.mode !== 'free' || adv.audience.mode !== 'public' || adv.markets.mode !== 'all' || adv.trial.mode !== 'none' || adv.schedule.release.mode !== 'now' || adv.schedule.end.mode !== 'never';
+    if (id === 'step-reach')   return reachVisited || adv.price.mode !== 'free' || adv.audience.mode !== 'public' || adv.markets.mode !== 'all' || adv.trial.mode !== 'none';
     return false;
   }
   function wzStepStatus(id) {
@@ -5623,7 +5628,7 @@
     const isListing = (cur === 'step-listing');
     const cfg = isListing
       ? { icon: 'fluent:sparkle-20-filled', title: 'Make your listing stand out', tag: '', tags: ['Cover image', 'Trailer', 'Feature highlights'] }
-      : { icon: 'fluent:options-20-filled', title: 'Advanced pricing & availability', tag: 'Advanced', tags: ['Per-market prices', 'Free trials', 'Release scheduling'] };
+      : { icon: 'fluent:options-20-filled', title: 'Advanced pricing & availability', tag: 'Advanced', tags: ['Per-market prices', 'Free trials'] };
     bar.dataset.step = cur;
     const ico = $('wz-more-ico'); if (ico) ico.setAttribute('icon', cfg.icon);
     const t = $('wz-more-title'); if (t) t.textContent = cfg.title;
@@ -5651,7 +5656,7 @@
   function wzRevealFeedback(cur) {
     const SEL = {
       'step-listing': '.listing-langs-control.adv-only, .ez-hero-empty.adv-only, #ez-trailer-add, #ez-features-section',
-      'step-reach': '#price-advanced, #price-trial-row, .reach-row--schedule'
+      'step-reach': '#price-advanced, #price-trial-row'
     };
     const step = $(cur), sel = SEL[cur]; if (!step || !sel) return;
     let els = [];
@@ -7801,7 +7806,7 @@
     function advCfg() {
       const s = curStep();
       if (s === 'step-listing') return { key: LKEY, title: 'More ways to stand out', body: 'Turn this on for extra languages, a trailer, feature highlights, and system requirements.' };
-      if (s === 'step-reach') return { key: RKEY, title: 'Fine-tune your release', body: 'Turn this on for per-market prices, free trials, and release scheduling.' };
+      if (s === 'step-reach') return { key: RKEY, title: 'Fine-tune your release', body: 'Turn this on for per-market prices and free trials.' };
       return null;
     }
     function dismissAdv() { const c = advCfg(); if (c) mark(c.key); if (advHint) advHint.hidden = true; maybeAi(); }
@@ -8829,13 +8834,17 @@
     const audienceVal = adv.audience.mode === 'public' ? 'Public'
       : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group');
     const rows = [
-      ['Architecture', archVal],
-      ['Languages', langVal],
-      ['Price', priceVal],
-      ['Markets', marketsVal],
-      ['Audience', audienceVal]
+      ['Architecture', archVal, 'fluent:developer-board-20-regular'],
+      ['Languages', langVal, 'fluent:local-language-20-regular'],
+      ['Price', priceVal, 'fluent:tag-20-regular'],
+      ['Markets', marketsVal, 'fluent:globe-20-regular'],
+      ['Audience', audienceVal, 'fluent:people-20-regular']
     ];
-    dl.innerHTML = rows.map(x => '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>').join('');
+    dl.innerHTML = rows.map(x =>
+      '<span class="ez-sd__chip" title="' + x[0] + ': ' + esc(x[1]) + '">' +
+        '<iconify-icon icon="' + x[2] + '" width="15" height="15" aria-hidden="true"></iconify-icon>' +
+        '<span>' + esc(x[1]) + '</span>' +
+      '</span>').join('');
   }
   function doSubmit() {
     const cbtn = $('submit-confirm-btn');
@@ -8893,26 +8902,44 @@
     const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
     if (commerceItem) commerceItem.hidden = isWin32;
     if (driversItem) driversItem.hidden = !isWin32;
-    // Advanced settings: optional extras — cert-team access (all types) + release timing (MSIX only).
-    // Visible for both; the summary subtitle previews what's inside so it's clear without expanding.
+    // Advanced settings: optional extras — release (go-live + stop offering) and cert-team access.
+    // Visible for all types; the summary subtitle previews what's inside so it's clear without expanding.
     const advExpander = $('ez-submit-adv'); if (advExpander) advExpander.hidden = false;
-    const holdOpts = $('submit-hold-opts'); if (holdOpts) holdOpts.hidden = isWin32;
     const advSub = $('submit-adv-sub');
-    if (advSub) advSub.textContent = isWin32
-      ? 'Test sign-in & notes for the cert team'
-      : 'Release timing · test sign-in & notes for the cert team';
+    if (advSub) advSub.textContent = 'Release, test sign-in & notes for reviewers';
     syncPublishHoldUI();
     renderTestCreds();
+    // Open the cert-team area only if it already has content (otherwise it stays a tidy one-liner).
+    const credsSub = $('submit-creds');
+    if (credsSub) credsSub.open = !!((Array.isArray(adv.testCredentials) && adv.testCredentials.length) || ($('submit-notes') && ($('submit-notes').value || '').trim()));
     try { submitDlg.show(); } catch (e) {}
   }
   $('submit').addEventListener('click', openSubmitFlow);
   if ($('wz-submit-foot')) $('wz-submit-foot').addEventListener('click', openSubmitFlow);
+  function releaseSummary() {
+    const ph = adv.publishHold || { mode: 'auto', date: '' };
+    const end = (adv.schedule && adv.schedule.end) || { mode: 'never', date: '' };
+    const go = ph.mode === 'manual' ? 'Publish manually'
+      : ph.mode === 'date' ? (ph.date ? ('Live ' + ph.date) : 'Live on a date')
+      : 'Live when approved';
+    const stop = (end.mode === 'date' && end.date) ? (' \u00b7 ends ' + end.date) : '';
+    return go + stop;
+  }
+  function updateHoldSummary() {
+    const sum = $('hold-summary'); if (sum) sum.textContent = releaseSummary();
+  }
   function syncPublishHoldUI() {
     if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
-    const ph = adv.publishHold;
+    if (!adv.schedule) adv.schedule = { end: { mode: 'never', date: '' } };
+    if (!adv.schedule.end) adv.schedule.end = { mode: 'never', date: '' };
+    const ph = adv.publishHold, end = adv.schedule.end;
     document.querySelectorAll('input[name="publish-hold"]').forEach(r => { r.checked = (r.value === ph.mode); });
     const dateEl = $('publish-hold-date');
     if (dateEl) { dateEl.value = ph.date || ''; dateEl.disabled = ph.mode !== 'date'; }
+    document.querySelectorAll('input[name="release-end"]').forEach(r => { r.checked = (r.value === end.mode); });
+    const endEl = $('release-end-date');
+    if (endEl) { endEl.value = end.date || ''; endEl.disabled = end.mode !== 'date'; }
+    updateHoldSummary();
   }
   (function wirePublishHold() {
     document.querySelectorAll('input[name="publish-hold"]').forEach(r => r.addEventListener('change', () => {
@@ -8920,10 +8947,22 @@
       if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
       adv.publishHold.mode = r.value;
       const dateEl = $('publish-hold-date'); if (dateEl) dateEl.disabled = r.value !== 'date';
+      updateHoldSummary();
       persistAdvanced();
     }));
     const dateEl = $('publish-hold-date');
-    if (dateEl) dateEl.addEventListener('input', () => { if (adv.publishHold) adv.publishHold.date = dateEl.value || ''; persistAdvanced(); });
+    if (dateEl) dateEl.addEventListener('input', () => { if (adv.publishHold) adv.publishHold.date = dateEl.value || ''; updateHoldSummary(); persistAdvanced(); });
+    document.querySelectorAll('input[name="release-end"]').forEach(r => r.addEventListener('change', () => {
+      if (!r.checked) return;
+      if (!adv.schedule) adv.schedule = { end: { mode: 'never', date: '' } };
+      if (!adv.schedule.end) adv.schedule.end = { mode: 'never', date: '' };
+      adv.schedule.end.mode = r.value;
+      const endEl = $('release-end-date'); if (endEl) endEl.disabled = r.value !== 'date';
+      updateHoldSummary();
+      persistAdvanced();
+    }));
+    const endEl = $('release-end-date');
+    if (endEl) endEl.addEventListener('input', () => { if (adv.schedule && adv.schedule.end) adv.schedule.end.date = endEl.value || ''; updateHoldSummary(); persistAdvanced(); });
   })();
   // Certification test credentials — repeatable name/value pairs for the cert team.
   function renderTestCreds() {
@@ -9089,13 +9128,6 @@
       applyTrial();
     }
 
-    function applySchedule() {
-      setSeg('schedule-release', adv.schedule.release.mode);
-      setSeg('schedule-end', adv.schedule.end.mode);
-      $('schedule-release-date-row').hidden = adv.schedule.release.mode !== 'date';
-      $('schedule-end-date-row').hidden = adv.schedule.end.mode !== 'date';
-    }
-
     reach.querySelectorAll('.seg[data-choice]').forEach(seg => {
       const choice = seg.dataset.choice;
       seg.querySelectorAll('.seg__opt').forEach(opt => {
@@ -9105,20 +9137,15 @@
           else if (choice === 'audience') { adv.audience.mode = v; applyAudience(); }
           else if (choice === 'price') { adv.price.mode = v; applyPrice(); }
           else if (choice === 'trial') { adv.trial.mode = v; applyTrial(); }
-          else if (choice === 'schedule-release') { adv.schedule.release.mode = v; applySchedule(); }
-          else if (choice === 'schedule-end') { adv.schedule.end.mode = v; applySchedule(); }
           persistAdvanced(); updateGate();
         });
       });
     });
 
     const curEl = $('price-currency'), amtEl = $('price-amount'), durEl = $('price-trial-duration');
-    const relEl = $('schedule-release-date'), endEl = $('schedule-end-date');
     if (curEl) curEl.addEventListener('change', () => { adv.price.currency = curEl.value || 'USD'; persistAdvanced(); updateGate(); });
     if (amtEl) amtEl.addEventListener('input', () => { adv.price.amount = parseFloat(amtEl.value) || 0; persistAdvanced(); updateGate(); });
     if (durEl) durEl.addEventListener('change', () => { adv.trial.duration = durEl.value || '7'; applyTrial(); persistAdvanced(); });
-    if (relEl) relEl.addEventListener('change', () => { adv.schedule.release.date = relEl.value; persistAdvanced(); updateGate(); });
-    if (endEl) endEl.addEventListener('change', () => { adv.schedule.end.date = endEl.value; persistAdvanced(); });
 
     const copyBtn = $('audience-link-copy');
     if (copyBtn) copyBtn.addEventListener('click', () => {
@@ -9135,10 +9162,8 @@
     if (curEl) curEl.value = adv.price.currency;
     if (amtEl) amtEl.value = adv.price.amount;
     if (durEl) durEl.value = adv.trial.duration;
-    if (relEl) relEl.value = adv.schedule.release.date || '';
-    if (endEl) endEl.value = adv.schedule.end.date || '';
 
-    applyMarkets(); applyAudience(); applyPrice(); applySchedule();
+    applyMarkets(); applyAudience(); applyPrice();
 
     // Let the dialogs refresh the reach UI after saving selections.
     window.__reachRefresh = { markets: applyMarkets, groups: renderGroupChips, price: applyPrice, audience: applyAudience };

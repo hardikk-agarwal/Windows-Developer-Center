@@ -287,8 +287,8 @@
         stat = document.getElementById("accountStatus");
     if (av) av.textContent = acct.initials || "—";
     if (nm) nm.textContent = acct.name || "Your organization";
-    if (PORTAL_FILE === "store-portal.html") {            // match the Store developer portal chrome
-      var bsub = document.querySelector(".brand__sub"); if (bsub) bsub.textContent = "Store Developer";
+    if (PORTAL_FILE === "store-portal.html") {            // opened from the Store portal
+      // Header brand stays unified as "Windows Developer Portal" (set by wdp-header.js) — one portal.
       document.querySelectorAll('a[href^="../portal.html"]').forEach(function (a) {
         a.setAttribute("href", a.getAttribute("href").replace("../portal.html", "../store-portal.html"));
       });
