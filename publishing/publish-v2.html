@@ -291,6 +291,8 @@
   .pkg-help__txt { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--fg-1); line-height: 1.4; }
   .pkg-help__txt strong { font-weight: 600; }
   .pkg-help__path { font-size: 12px; color: var(--fg-3); line-height: 1.4; }
+  .pkg-help__foot { display: flex; align-items: flex-start; gap: 6px; margin: var(--sp-10) 0 0; padding-top: var(--sp-10); border-top: 1px solid var(--stroke-3); font-size: 11.5px; line-height: 1.45; color: var(--fg-3); }
+  .pkg-help__foot iconify-icon { flex: 0 0 auto; margin-top: 1px; color: var(--brand); }
   /* The step card has a transform (stacking context), so the dropdown's z-index is
      trapped inside it and the later "Continue" nav paints on top. While the dropdown is
      open, lift the whole step above that nav. */
@@ -300,6 +302,9 @@
   .pkgd-msix-tip { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-16); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 7%, var(--canvas-tint)); font-size: 12.5px; line-height: 1.45; color: var(--fg-2); }
   .pkgd-msix-tip iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
   .pkgd-msix-tip strong { color: var(--fg-1); font-weight: 600; }
+  .pkgd-msix-tip__body { min-width: 0; }
+  .pkgd-msix-tip__title { display: block; margin-bottom: var(--sp-4); }
+  .pkgd-msix-tip__line { margin: 0; color: var(--fg-2); }
   .ez-add-pkg { margin-top: var(--sp-12); }
   .ez-add-pkg[hidden] { display: none !important; }
   .ez-package__caps { display: flex; align-items: center; gap: var(--sp-4); margin-top: var(--sp-4); font-size: 12px; line-height: 1.4; color: var(--status-warning); }
@@ -348,13 +353,17 @@
   .seg__opt + .seg__opt { border-left: 1px solid var(--stroke-2); }
   .seg__opt:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
   .seg__opt--active, .seg__opt[aria-checked="true"] { background: var(--brand-bg); color: var(--fg-on-brand); }
-  .price-paid-row, .schedule-date-row { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-4); flex-wrap: wrap; }
+  .schedule-date-row { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-4); flex-wrap: wrap; }
+  /* Base price block: label above the currency + amount, auto-convert hint beneath. */
+  .price-paid-row { margin-top: var(--sp-4); }
+  .price-field { display: flex; flex-direction: column; gap: var(--sp-6); }
+  .price-field__label { font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); }
+  .price-field__inputs { display: flex; align-items: center; gap: var(--sp-10); flex-wrap: wrap; }
+  .price-field__inputs #price-amount { width: 132px; }
+  .price-field .reach-row__hint { margin-top: var(--sp-2); }
   .schedule-sub { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; margin-top: var(--sp-4); }
   .schedule-sub__label { flex: 0 0 90px; font-size: var(--font-size-base-200); color: var(--fg-2); font-weight: var(--font-weight-semibold); }
   .schedule-sub + .schedule-sub { margin-top: var(--sp-8); }
-  .price-paid-row .reach-row__hint { flex-basis: 100%; margin: 2px 0 0; }
-  /* Easy-mode paid apps: the "see & customize local prices" action sits on its own line under the hint. */
-  .price-paid-row .price-convert-btn { margin-top: var(--sp-2); }
   .markets-choose-row { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; margin-top: var(--sp-4); }
   .audience-link-row { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; margin-top: var(--sp-8); }
   .audience-link-row__field { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 1 1 auto; min-width: 0; padding: var(--sp-8) var(--sp-12); background: color-mix(in srgb, var(--fg-1) 5%, transparent); border: 1px solid var(--stroke-2); border-radius: var(--r-2); }
@@ -362,13 +371,19 @@
   .audience-link-row__url { flex: 1 1 auto; min-width: 0; font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace; font-size: var(--font-size-base-200); color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: transparent; }
   .markets-choose-row .market-chip { display: inline-flex; align-items: center; gap: var(--sp-4); padding: 2px var(--sp-8); border: 1px solid var(--stroke-2); border-radius: 999px; font-size: var(--font-size-base-200); color: var(--fg-2); background: var(--subtle); }
   .markets-choose-row .market-chip iconify-icon { color: var(--fg-3); }
-  .price-currency-dropdown { width: 96px; flex: 0 0 auto; }
-  .price-paid-row__label { flex: 0 0 auto; font-size: var(--font-size-base-200); color: var(--fg-2); font-weight: var(--font-weight-semibold); }
+  /* Native <select> for currency — avoids the fluent-dropdown popup's overflow (which overlapped the
+     amount field and swallowed clicks) and its mis-positioned open list; the OS renders the option
+     list natively, on top and correctly placed. */
+  .price-currency-select { box-sizing: border-box; width: 96px; height: 32px; flex: 0 0 auto; padding: 0 var(--sp-8); font: inherit; font-size: var(--font-size-base-200); color: var(--fg-1); background: var(--layer); border: 1px solid var(--stroke-1); border-radius: var(--r-4); cursor: pointer; }
+  .price-currency-select:hover { border-color: color-mix(in srgb, var(--fg-1) 28%, var(--stroke-1)); }
+  .price-currency-select:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
   .price-win32-note { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 32%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--subtle)); font-size: var(--font-size-base-200); line-height: 1.45; color: var(--fg-2); max-width: 520px; }
   .price-win32-note[hidden] { display: none; }
   .price-win32-note > iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
-  .price-advanced { display: flex; flex-wrap: wrap; gap: var(--sp-16); margin-top: var(--sp-8); }
-  .price-advanced .link-btn { white-space: nowrap; }
+  .price-advanced { margin-top: var(--sp-12); }
+  .price-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8) var(--sp-20); }
+  .price-tool-btn { white-space: nowrap; }
+  .price-sale-wrap { display: inline-flex; align-items: center; }
   .price-trial-row { margin-top: var(--sp-16); padding-top: var(--sp-12); border-top: 1px dashed var(--stroke-3); display: flex; flex-direction: column; gap: var(--sp-8); }
   .price-trial-row__head { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-300); }
   .price-trial-row__head iconify-icon { color: var(--fg-3); }
@@ -833,6 +848,8 @@
   .build-guide__subnote a:hover { text-decoration: underline; }
   /* ===== "Package your website" (PWA → MSIX) dialog ===== */
   #pwa-pkg-dialog::part(control), #pwa-pkg-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  .pwapkg__intro { margin: 0 0 var(--sp-12); font-size: 13px; color: var(--fg-2); line-height: 1.5; }
+  .pwapkg__intro strong { color: var(--fg-1); font-weight: 600; }
   .pwapkg__preview { display: block; text-decoration: none; border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--subtle); }
   .pwapkg__preview-hero { height: 128px; background-size: cover; background-position: center top; background-color: var(--canvas-tint); }
   .pwapkg__preview-hero[hidden] { display: none; }
@@ -847,6 +864,7 @@
   .pwapkg__checks li iconify-icon, .pwapkg__checks li fluent-spinner { flex: 0 0 auto; }
   .pwapkg__check--ok iconify-icon { color: var(--status-success); }
   .pwapkg__check--warn iconify-icon { color: var(--status-warning, #e0a23a); }
+  .pwapkg__check--info iconify-icon { color: var(--brand); }
   .pwapkg__check--pending { color: var(--fg-2); }
   .pwapkg__check-detail { font-weight: 400; color: var(--fg-3); }
   /* Auto-draft toast — "Drafted from your site", with Undo (fixed, always visible regardless of step) */
@@ -1011,8 +1029,15 @@
   .pkgd-mono { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; color: var(--fg-1); font-weight: var(--font-weight-semibold); }
   .pkgd-hint { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-12) 0 0; font-size: var(--font-size-base-200); color: var(--status-warning); }
   .pkgd-hint iconify-icon { flex: 0 0 auto; }
-  /* Cap the body so the dialog stays compact — title + footer pinned, fields scroll. */
-  .pkgd-scroll { max-height: 58vh; overflow-y: auto; }
+  /* Cap the body so the dialog stays compact — title + footer pinned, fields scroll.
+     Fill the available dialog height (reserve ~150px for the title + pinned footer) so it
+     only scrolls when the viewport is genuinely short, not prematurely. Thin, themed
+     scrollbar so it doesn't clash with the dark chrome. */
+  .pkgd-scroll { max-height: calc(92vh - 150px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--fg-1) 22%, transparent) transparent; }
+  .pkgd-scroll::-webkit-scrollbar { width: 8px; }
+  .pkgd-scroll::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--fg-1) 20%, transparent); border-radius: 8px; }
+  .pkgd-scroll::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--fg-1) 32%, transparent); }
+  .pkgd-scroll::-webkit-scrollbar-track { background: transparent; }
 
   /* ===== Add-another-package chooser ===== */
   #add-method-dialog, #add-method-dialog::part(control), #add-method-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
@@ -1067,6 +1092,8 @@
   #lang-dialog .lang-row__st--new { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
   #lang-dialog .lang-row__st--removing { color: var(--status-danger); background: color-mix(in srgb, var(--status-danger) 12%, transparent); }
   #lang-dialog .lang-row__st--translating { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  #lang-dialog .lang-row__st--ok { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 12%, transparent); }
+  #lang-dialog .lang-row__st--warn { color: var(--status-warning, #e0a23a); background: color-mix(in srgb, var(--status-warning, #e0a23a) 14%, transparent); }
   /* Small muted "in your package" icon next to the name (no text pill). */
   #lang-dialog .lang-row__pkg { color: var(--fg-4); flex: 0 0 auto; }
   /* Default control (col 3): a clear filled "Default" pill marks the current default; other added
@@ -1301,17 +1328,9 @@
   #submit-dialog .ez-sd__hold .ez-sd__hint { margin: 2px 0 0; }
   #submit-dialog .ez-sd__notes { margin-top: var(--sp-16); }
   #submit-dialog .ez-sd__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-2); }
-  /* Advanced settings — collapsible. Same style as other dialog collapsibles
-     (top divider + chevron summary, no boxed card). */
-  #submit-dialog .ez-sd__adv[hidden] { display: none; }
-  #submit-dialog .ez-sd__adv { margin-top: var(--sp-20); }
-  #submit-dialog .ez-sd__adv-head { display: flex; align-items: center; gap: var(--sp-8); cursor: pointer; list-style: none; font-size: 13px; font-weight: 600; color: var(--fg-1); user-select: none; }
-  #submit-dialog .ez-sd__adv-head::-webkit-details-marker { display: none; }
-  #submit-dialog .ez-sd__adv-chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
-  #submit-dialog .ez-sd__adv[open] .ez-sd__adv-chev { transform: rotate(90deg); }
-  #submit-dialog .ez-sd__adv-body { margin-top: var(--sp-12); }
-  #submit-dialog .ez-sd__adv-head-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  #submit-dialog .ez-sd__adv-sub { font-size: 11.5px; font-weight: 400; color: var(--fg-3); white-space: normal; }
+  /* Optional extras (test sign-in & notes, release) shown directly — no "Advanced settings" wrapper.
+     A top divider + top margin separates them from Disclosures, matching the between-item dividers. */
+  #submit-dialog .ez-sd__subs { margin-top: var(--sp-20); border-top: 1px solid var(--stroke-3); }
   #submit-dialog .ez-sd__opt { font-weight: 400; font-size: 12px; color: var(--fg-3); }
   /* Advanced-settings items: each optional area collapses to a one-line summary row (chevron + icon +
      title + current value / optional tag), so nothing overwhelms until you open it. */
@@ -1966,17 +1985,17 @@
   .ez-mode { display: none !important; }                 /* no easy/advanced toggle in the wizard */
   #flow-wrap.is-wizard .ez-defaults-card { display: none !important; }
   #flow-wrap.is-wizard #ez-rail { display: none !important; }
-  /* Reach & price (step 4) is trimmed in the wizard to markets + audience + price;
-     per-market price and free trials stay behind "More options". */
-  #flow-wrap.is-wizard #step-reach:not(.is-more) #price-advanced,
-  #flow-wrap.is-wizard #step-reach:not(.is-more) #price-trial-row { display: none !important; }
+  /* Reach & price (step 4): advanced pricing (per-market prices, price scheduling, sales) and free
+     trials now show inline in easy mode — no "More options" disclosure. applyPrice() gates them via
+     the [hidden] attribute (storePaid = paid && !win32), so they appear only for Store-paid MSIX/PWA
+     apps; Win32 (exe/msi/url) submissions don't support Store pricing, so they never see them. */
   /* Win32 (exe/msi/url) submissions can't be limited to a private group — only
      Public or Direct link. Hide the Private audience option for them. */
   #flow-wrap.has-win32-pkg [data-choice="audience"] [data-value="private"] { display: none !important; }
   /* Sale pricing is an MSIX-only Store feature — hide it for Win32 submissions. */
   #flow-wrap.has-win32-pkg #price-sale-wrap { display: none !important; }
   .price-sales { display: flex; flex-direction: column; gap: var(--sp-6); }
-  .price-sales:not(:empty) { margin-bottom: var(--sp-6); }
+  .price-sales:not(:empty) { margin-top: var(--sp-10); }
   .price-sale-item { display: flex; align-items: center; gap: var(--sp-8); padding: var(--sp-6) var(--sp-8); border: 1px solid var(--stroke-2); border-radius: var(--r-6); background: var(--subtle); font-size: 12.5px; color: var(--fg-2); cursor: pointer; }
   .price-sale-item:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 6%, var(--subtle)); }
   .price-sale-item > iconify-icon { flex: 0 0 auto; color: var(--brand); }
@@ -2465,9 +2484,12 @@
   #wz-more-bar[data-step="step-reach"] .wz-enhance__tag { color: var(--accent-purple, var(--brand)); background: color-mix(in srgb, var(--accent-purple, var(--brand)) 14%, transparent); border-color: color-mix(in srgb, var(--accent-purple, var(--brand)) 30%, transparent); }
   #wz-more-bar[data-step="step-reach"].is-open .wz-enhance__head { border-color: color-mix(in srgb, var(--accent-purple, var(--brand)) 42%, var(--stroke-2)); background: color-mix(in srgb, var(--accent-purple, var(--brand)) 6%, var(--layer)); }
   #wz-more-bar[data-step="step-reach"] .wz-enhance__chip::before { background: color-mix(in srgb, var(--accent-purple, var(--brand)) 70%, transparent); }
-  /* Reveal highlight: pulse the newly shown fields so the change is visible. */
-  .wz-reveal { border-radius: var(--r-8); scroll-margin-top: 96px; animation: wzRevealPulse 1.5s var(--ease-out); }
-  @keyframes wzRevealPulse { 0%, 12% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent), 0 0 0 7px color-mix(in srgb, var(--brand) 16%, transparent); } 100% { box-shadow: 0 0 0 2px transparent, 0 0 0 7px transparent; } }
+  /* Reveal highlight: each optional field flashes a soft brand glow the FIRST time it scrolls into
+     view (driven by wzRevealFeedback's scroll watcher), then fades — so every extra you revealed is
+     easy to spot as you reach it, even the ones that were below the fold on reveal. Pure blurred
+     glow (no ring / forced border-radius) so it's safe on the pill-shaped buttons too. */
+  @keyframes wzRevealHi { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 26px color-mix(in srgb, var(--brand) 50%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .wz-reveal { scroll-margin-top: 96px; animation: wzRevealHi 2s var(--ease-out); }
   /* First-run nudge: a one-time attention pulse on the disclosure header (accent-aware). */
   .wz-enhance--intro { animation: wzEnhanceIntro 2.1s var(--ease-out) 1; }
   @keyframes wzEnhanceIntro { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 34%, transparent); border-color: color-mix(in srgb, var(--brand) 55%, var(--stroke-2)); } 100% { box-shadow: 0 0 0 0 transparent; } }
@@ -2684,25 +2706,26 @@
               <iconify-icon class="pkg-help__chev" icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             </button>
             <div class="pkg-help__panel" id="pkg-help-panel" hidden>
-              <p class="pkg-help__lead">Bring what you already have — here’s how each reaches the Store, and what you get.</p>
+              <p class="pkg-help__lead">Pick the type of product you have.</p>
               <ul class="pkg-help__list">
                 <li class="pkg-help__row" data-pkg-help="packaged" role="button" tabindex="0">
                   <span class="pkg-help__ic"><iconify-icon icon="fluent:box-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>A packaged app — MSIX, APPX or UWP</strong><span class="pkg-help__path">Submit as-is. Cleanest install and automatic updates.</span></span>
+                  <span class="pkg-help__txt"><strong>Any app packaged as MSIX</strong><span class="pkg-help__path">MSIX or .msixbundle, from any framework</span></span>
                 </li>
                 <li class="pkg-help__row" data-pkg-help="win32" role="button" tabindex="0">
                   <span class="pkg-help__ic"><iconify-icon icon="fluent:desktop-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>A desktop installer — .exe or .msi</strong><span class="pkg-help__path">Ships as-is, or convert to MSIX for automatic updates &amp; clean uninstall.</span></span>
+                  <span class="pkg-help__txt"><strong>A .msi / .exe installer</strong><span class="pkg-help__path">Classic Win32 setup — convert to MSIX, or ship as-is</span></span>
                 </li>
                 <li class="pkg-help__row" data-pkg-help="web" role="button" tabindex="0">
                   <span class="pkg-help__ic"><iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>A website or web app</strong><span class="pkg-help__path">We package your site into an installable app — nothing to build.</span></span>
+                  <span class="pkg-help__txt"><strong>A live website</strong><span class="pkg-help__path">Web app or PWA — we package it as MSIX</span></span>
                 </li>
                 <li class="pkg-help__row" data-pkg-help="source" role="button" tabindex="0">
                   <span class="pkg-help__ic"><iconify-icon icon="fluent:code-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>Just source code, no package yet</strong><span class="pkg-help__path">See how to build a Store-ready package.</span></span>
+                  <span class="pkg-help__txt"><strong>Just source code, no package yet</strong><span class="pkg-help__path">No build yet — we’ll show you how</span></span>
                 </li>
               </ul>
+              <p class="pkg-help__foot"><iconify-icon icon="fluent:info-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon><span>MSIX adds free hosting, code signing &amp; auto-updates from Microsoft.</span></p>
             </div>
           </div>
         </div>
@@ -3088,53 +3111,56 @@
               <span>You handle pricing and payment through your own commerce — customers buy or license directly in your app. The Store lists it as a paid app but doesn’t process the transaction.</span>
             </div>
             <div class="price-paid-row" id="price-paid-row" hidden>
-              <fluent-dropdown id="price-currency" class="price-currency-dropdown">
-                <fluent-listbox>
-                  <fluent-option value="USD" selected>USD</fluent-option>
-                  <fluent-option value="EUR">EUR</fluent-option>
-                  <fluent-option value="GBP">GBP</fluent-option>
-                  <fluent-option value="JPY">JPY</fluent-option>
-                  <fluent-option value="CAD">CAD</fluent-option>
-                  <fluent-option value="AUD">AUD</fluent-option>
-                  <fluent-option value="NZD">NZD</fluent-option>
-                  <fluent-option value="INR">INR</fluent-option>
-                  <fluent-option value="BRL">BRL</fluent-option>
-                  <fluent-option value="MXN">MXN</fluent-option>
-                  <fluent-option value="CHF">CHF</fluent-option>
-                  <fluent-option value="SEK">SEK</fluent-option>
-                  <fluent-option value="NOK">NOK</fluent-option>
-                  <fluent-option value="DKK">DKK</fluent-option>
-                  <fluent-option value="SGD">SGD</fluent-option>
-                  <fluent-option value="HKD">HKD</fluent-option>
-                  <fluent-option value="CNY">CNY</fluent-option>
-                  <fluent-option value="KRW">KRW</fluent-option>
-                  <fluent-option value="ZAR">ZAR</fluent-option>
-                  <fluent-option value="AED">AED</fluent-option>
-                </fluent-listbox>
-              </fluent-dropdown>
-              <label for="price-amount" class="price-paid-row__label">Base price</label>
-              <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="text" inputmode="decimal" value="4.99"></fluent-text-input>
-              <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
-              <!-- Easy-mode (paid apps): preview the auto-converted local prices and override any
-                   market. Opens the same per-market dialog, surfaced outside "More options". -->
-              <fluent-button type="button" appearance="transparent" class="link-btn--ai price-convert-btn" id="price-overrides-btn">
-                <iconify-icon slot="start" icon="fluent:globe-clock-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-                <span id="price-overrides-label">See &amp; customize local prices</span>
-              </fluent-button>
-            </div>
-            <div class="price-advanced" id="price-advanced" hidden>
-              <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="price-schedule-btn">
-                <iconify-icon slot="start" icon="fluent:calendar-clock-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-                <span id="price-schedule-label">Schedule a price change</span>
-              </fluent-button>
-              <!-- Sale pricing: MSIX-only (hidden for Win32), Advanced + Paid only. Multiple sales supported. -->
-              <div class="price-sale-wrap" id="price-sale-wrap">
-                <div class="price-sales" id="price-sales"></div>
-                <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="price-sale-btn">
-                  <iconify-icon slot="start" icon="fluent:tag-multiple-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-                  <span>Add a sale price</span>
-                </fluent-button>
+              <div class="price-field">
+                <label for="price-amount" class="price-field__label">Base price</label>
+                <div class="price-field__inputs">
+                  <select id="price-currency" class="price-currency-select" aria-label="Currency">
+                    <option value="USD" selected>USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="JPY">JPY</option>
+                    <option value="CAD">CAD</option>
+                    <option value="AUD">AUD</option>
+                    <option value="NZD">NZD</option>
+                    <option value="INR">INR</option>
+                    <option value="BRL">BRL</option>
+                    <option value="MXN">MXN</option>
+                    <option value="CHF">CHF</option>
+                    <option value="SEK">SEK</option>
+                    <option value="NOK">NOK</option>
+                    <option value="DKK">DKK</option>
+                    <option value="SGD">SGD</option>
+                    <option value="HKD">HKD</option>
+                    <option value="CNY">CNY</option>
+                    <option value="KRW">KRW</option>
+                    <option value="ZAR">ZAR</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="text" inputmode="decimal" value="4.99"></fluent-text-input>
+                </div>
+                <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
               </div>
+            </div>
+            <!-- Pricing tools (paid MSIX/PWA): per-market overrides, scheduled changes, and sales —
+                 one consistent row; sale chips render below. Sales stay hidden for Win32. -->
+            <div class="price-advanced" id="price-advanced" hidden>
+              <div class="price-tools">
+                <fluent-button type="button" appearance="transparent" class="link-btn--ai price-tool-btn" id="price-overrides-btn">
+                  <iconify-icon slot="start" icon="fluent:globe-clock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  <span id="price-overrides-label">See &amp; customize local prices</span>
+                </fluent-button>
+                <fluent-button type="button" appearance="transparent" class="link-btn--ai price-tool-btn" id="price-schedule-btn">
+                  <iconify-icon slot="start" icon="fluent:calendar-clock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  <span id="price-schedule-label">Schedule a price change</span>
+                </fluent-button>
+                <div class="price-sale-wrap" id="price-sale-wrap">
+                  <fluent-button type="button" appearance="transparent" class="link-btn--ai price-tool-btn" id="price-sale-btn">
+                    <iconify-icon slot="start" icon="fluent:tag-multiple-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                    <span>Add a sale price</span>
+                  </fluent-button>
+                </div>
+              </div>
+              <div class="price-sales" id="price-sales"></div>
             </div>
             <div class="price-trial-row" id="price-trial-row" hidden>
               <div class="price-trial-row__head">
@@ -3387,9 +3413,11 @@
       </div>
     </a>
 
+    <p class="pwapkg__intro" id="pwa-pkg-intro">We’ll wrap your website in an <strong>MSIX</strong> so customers can install it from the Store like any app — nothing to build.</p>
+
     <div class="pwapkg__scan" id="pwa-pkg-scan" hidden>
       <fluent-spinner size="small" aria-hidden="true"></fluent-spinner>
-      <span>Reading your web manifest and service worker…</span>
+      <span>Checking your site…</span>
     </div>
 
     <div id="pwa-pkg-body" hidden></div>
@@ -3945,7 +3973,7 @@
     </fluent-button>
 
     <p class="build-guide__intro">
-      Package your app as an <strong>MSIX</strong> (.msix / .msixbundle), then drop it in the box above. Pick how you build:
+      Package your app as an <strong>MSIX</strong> (.msix / .msixbundle) and drop it in the box above. Already have a <strong>.exe / .msi</strong> installer? Bring it as-is, or convert it to MSIX after upload. To build an MSIX, pick how:
     </p>
 
     <div class="build-guide__tabs" role="tablist" aria-label="Choose how you build">
@@ -4186,8 +4214,11 @@
 
     <p class="pkgd-hint" id="pkgd-hint" hidden></p>
     <div class="pkgd-msix-tip">
-      <iconify-icon icon="fluent:arrow-sync-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-      <span><strong>Optional — convert to MSIX</strong> for automatic updates and a cleaner install &amp; uninstall. Or <strong>Confirm</strong> to keep your installer as-is.</span>
+      <iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+      <div class="pkgd-msix-tip__body">
+        <strong class="pkgd-msix-tip__title">Convert to MSIX?</strong>
+        <p class="pkgd-msix-tip__line">Free hosting &amp; code signing · Automatic updates · Runs on more devices · Private &amp; staged releases. Or <strong>Confirm</strong> to keep your installer as-is.</p>
+      </div>
     </div>
     </div>
     <fluent-button slot="action" appearance="secondary" data-pkgd-cancel>Cancel</fluent-button>
@@ -4432,58 +4463,49 @@
       </ul>
     </section>
 
-    <!-- Advanced settings: optional extras — release (go-live + stop offering) and certification-team access.
-         The summary previews the contents (set in JS) so it's clear what's inside without expanding. -->
-    <details class="ez-sd__adv" id="ez-submit-adv">
-      <summary class="ez-sd__adv-head">
-        <iconify-icon class="ez-sd__adv-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-        <span class="ez-sd__adv-head-text">
-          <span class="ez-sd__adv-title">Advanced settings</span>
-          <span class="ez-sd__adv-sub" id="submit-adv-sub"></span>
-        </span>
-      </summary>
-      <div class="ez-sd__adv-body">
-        <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
-        <details class="ez-sd__sub" id="submit-creds">
-          <summary class="ez-sd__sub-head">
-            <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            <iconify-icon class="ez-sd__sub-ico" icon="fluent:key-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-            <span class="ez-sd__sub-title">Test sign-in &amp; notes for reviewers</span>
-            <span class="ez-sd__opt">optional</span>
-          </summary>
-          <div class="ez-sd__sub-body">
-            <div class="ez-sd__creds-list" id="submit-creds-list"></div>
-            <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
-              <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add test credential
-            </button>
-            <fluent-textarea id="submit-notes" rows="2" class="ez-sd__cert-notes" placeholder="Notes for reviewers (optional)"></fluent-textarea>
+    <!-- Optional extras, surfaced directly (no "Advanced settings" wrapper): test sign-in & notes for
+         reviewers, and release (go-live + stop offering). Each collapses to a one-line summary row. -->
+    <div class="ez-sd__subs">
+      <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
+      <details class="ez-sd__sub" id="submit-creds">
+        <summary class="ez-sd__sub-head">
+          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+          <iconify-icon class="ez-sd__sub-ico" icon="fluent:key-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+          <span class="ez-sd__sub-title">Test sign-in &amp; notes for reviewers</span>
+          <span class="ez-sd__opt">optional</span>
+        </summary>
+        <div class="ez-sd__sub-body">
+          <div class="ez-sd__creds-list" id="submit-creds-list"></div>
+          <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
+            <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add test credential
+          </button>
+          <fluent-textarea id="submit-notes" rows="2" class="ez-sd__cert-notes" placeholder="Notes for reviewers (optional)"></fluent-textarea>
+        </div>
+      </details>
+      <!-- Release: go-live (after cert) + when to stop offering. Collapsed; the summary shows the choice. -->
+      <details class="ez-sd__sub" id="submit-hold-opts">
+        <summary class="ez-sd__sub-head">
+          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+          <iconify-icon class="ez-sd__sub-ico" icon="fluent:calendar-clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+          <span class="ez-sd__sub-title">Release</span>
+          <span class="ez-sd__sub-val" id="hold-summary">Live when approved</span>
+        </summary>
+        <div class="ez-sd__sub-body">
+          <div class="ez-sd__field">
+            <span class="ez-sd__field-label">Go live</span>
+            <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="auto" checked /><span>As soon as it’s approved</span></label>
+            <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="manual" /><span>I’ll publish it manually</span></label>
+            <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="date" /><span>On a date</span><fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
           </div>
-        </details>
-        <!-- Release: go-live (after cert) + when to stop offering. Collapsed; the summary shows the choice. -->
-        <details class="ez-sd__sub" id="submit-hold-opts">
-          <summary class="ez-sd__sub-head">
-            <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            <iconify-icon class="ez-sd__sub-ico" icon="fluent:calendar-clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-            <span class="ez-sd__sub-title">Release</span>
-            <span class="ez-sd__sub-val" id="hold-summary">Live when approved</span>
-          </summary>
-          <div class="ez-sd__sub-body">
-            <div class="ez-sd__field">
-              <span class="ez-sd__field-label">Go live</span>
-              <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="auto" checked /><span>As soon as it’s approved</span></label>
-              <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="manual" /><span>I’ll publish it manually</span></label>
-              <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="date" /><span>On a date</span><fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
-            </div>
-            <div class="ez-sd__field">
-              <span class="ez-sd__field-label">Stop offering to new customers</span>
-              <label class="ez-sd__radio"><input type="radio" name="release-end" value="never" checked /><span>Keep it available</span></label>
-              <label class="ez-sd__radio"><input type="radio" name="release-end" value="date" /><span>On a date</span><fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
-              <p class="ez-sd__field-note">Existing customers keep access after this date.</p>
-            </div>
+          <div class="ez-sd__field">
+            <span class="ez-sd__field-label">Stop offering to new customers</span>
+            <label class="ez-sd__radio"><input type="radio" name="release-end" value="never" checked /><span>Keep it available</span></label>
+            <label class="ez-sd__radio"><input type="radio" name="release-end" value="date" /><span>On a date</span><fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
+            <p class="ez-sd__field-note">Existing customers keep access after this date.</p>
           </div>
-        </details>
-      </div>
-    </details>
+        </div>
+      </details>
+    </div>
 
     <fluent-button slot="action" appearance="secondary" data-submit-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="submit-confirm-btn">
@@ -5384,10 +5406,12 @@
       s.classList.toggle('is-wz-active', id === cur);
       s.classList.add('is-open'); s.classList.remove('is-collapsed');
     });
-    // "More fields / More options" bar above the card — only on Listing & Reach.
+    // "More fields" enhance bar above the card — Listing only. Reach & price shows its advanced
+    // pricing inline (no banner): MSIX/PWA get the full pricing controls right in easy mode, and
+    // Win32 apps don't support Store pricing at all, so there's nothing to gate behind a disclosure.
     const moreBar = $('wz-more-bar');
     if (moreBar) {
-      const showBar = (cur === 'step-listing' || cur === 'step-reach');
+      const showBar = (cur === 'step-listing');
       moreBar.hidden = !showBar;
       if (showBar) {
         wzRenderEnhanceBar(cur);
@@ -5571,9 +5595,10 @@
       const rowHtml = (it) => {
         const done = ckDone(it), req = ckRequired(it), idx = CHECKLIST_ITEMS.indexOf(it);
         let val = ''; try { val = it.value ? (it.value() || '') : ''; } catch (_) {}
+        let vTitle = ''; try { vTitle = it.valueTitle ? (it.valueTitle() || '') : ''; } catch (_) {}
         const ico = done ? 'fluent:checkmark-circle-16-filled' : (req ? 'fluent:circle-16-regular' : 'fluent:add-circle-16-regular');
         const cls = done ? 'is-done' : (req ? 'is-todo' : 'is-opt');
-        const trail = val ? '<span class="wz-mini__val">' + val + '</span>' : '';
+        const trail = val ? '<span class="wz-mini__val"' + (vTitle ? ' title="' + vTitle.replace(/"/g, '&quot;') + '"' : '') + '>' + val + '</span>' : '';
         return '<li><button type="button" class="wz-mini__item ' + cls + '" data-ck="' + idx + '">' +
           '<iconify-icon class="wz-mini__ico" icon="' + ico + '" width="15" height="15" aria-hidden="true"></iconify-icon>' +
           '<span class="wz-mini__lbl">' + it.label + '</span>' + trail + '</button></li>';
@@ -5625,10 +5650,8 @@
   let wzEnhanceSeen = {};   // first run per step (per load) — pulse the disclosure once so it's noticed
   function wzRenderEnhanceBar(cur) {
     const bar = $('wz-more-bar'); if (!bar) return;
-    const isListing = (cur === 'step-listing');
-    const cfg = isListing
-      ? { icon: 'fluent:sparkle-20-filled', title: 'Make your listing stand out', tag: '', tags: ['Cover image', 'Trailer', 'Feature highlights'] }
-      : { icon: 'fluent:options-20-filled', title: 'Advanced pricing & availability', tag: 'Advanced', tags: ['Per-market prices', 'Free trials'] };
+    // Listing-only now — Reach & price shows its advanced pricing inline (no enhance bar).
+    const cfg = { icon: 'fluent:sparkle-20-filled', title: 'Make your listing stand out', tag: '', tags: ['Cover image', 'Trailer', 'Feature highlights'] };
     bar.dataset.step = cur;
     const ico = $('wz-more-ico'); if (ico) ico.setAttribute('icon', cfg.icon);
     const t = $('wz-more-title'); if (t) t.textContent = cfg.title;
@@ -5653,22 +5676,40 @@
     if (btn) { btn.setAttribute('aria-expanded', on ? 'true' : 'false'); if (cur) btn.setAttribute('aria-controls', cur); }
     const st = $('wz-more-state'); if (st) st.textContent = on ? 'Hide' : 'Show';
   }
+  let wzRevealCleanup = null;
+  // Highlight each optional field the FIRST time it scrolls into view (soft brand glow, then fade) —
+  // so every extra revealed by "Make your listing stand out" is easy to spot as you reach it,
+  // including the ones below the fold on reveal. Watches the editor's scroll container (the fields
+  // live inside <main>, which is what scrolls) plus the window; the check reads getBoundingClientRect
+  // directly (only a handful of fields, and it self-detaches once they've all been seen).
   function wzRevealFeedback(cur) {
-    const SEL = {
-      'step-listing': '.listing-langs-control.adv-only, .ez-hero-empty.adv-only, #ez-trailer-add, #ez-features-section',
-      'step-reach': '#price-advanced, #price-trial-row'
-    };
-    const step = $(cur), sel = SEL[cur]; if (!step || !sel) return;
+    if (wzRevealCleanup) { try { wzRevealCleanup(); } catch (e) {} wzRevealCleanup = null; }
+    if (cur !== 'step-listing') return;
+    const step = $(cur); if (!step) return;
+    if (typeof reduceMotion === 'function' && reduceMotion()) return;   // respect reduced motion
     let els = [];
-    try { els = Array.prototype.slice.call(step.querySelectorAll(sel)); } catch (e) {}
-    els = els.filter(el => el && el.offsetParent !== null);
+    try { els = Array.prototype.slice.call(step.querySelectorAll('.ez-hero-empty.adv-only, #ez-trailer-add, #ez-features-section, #ez-info-section')); } catch (e) {}
+    els = els.filter(el => el);
     if (!els.length) return;
-    const reduce = (typeof reduceMotion === 'function' && reduceMotion());
-    if (!reduce) els.forEach(el => { el.classList.remove('wz-reveal'); void el.offsetWidth; el.classList.add('wz-reveal'); setTimeout(() => el.classList.remove('wz-reveal'), 1600); });
-    try {
-      const y = els[0].getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top: Math.max(0, y), behavior: reduce ? 'auto' : 'smooth' });
-    } catch (e) {}
+    const pending = new Set(els);
+    const scroller = step.closest('main');
+    const flash = (el) => { el.classList.remove('wz-reveal'); void el.offsetWidth; el.classList.add('wz-reveal'); setTimeout(() => el.classList.remove('wz-reveal'), 2000); };
+    function teardown() {
+      if (scroller) scroller.removeEventListener('scroll', check);
+      window.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+      wzRevealCleanup = null;
+    }
+    function check() {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      pending.forEach(el => { const r = el.getBoundingClientRect(); if (r.top < vh * 0.92 && r.bottom > 0) { pending.delete(el); flash(el); } });
+      if (!pending.size) teardown();
+    }
+    if (scroller) scroller.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check, { passive: true });
+    wzRevealCleanup = teardown;
+    check();   // flash whatever is already on screen right after the reveal
   }
   (function wireWzMore() {
     const bar = $('wz-more-bar'); if (!bar) return;
@@ -5684,6 +5725,7 @@
       }
       if (typeof ezRenderPreview === 'function') ezRenderPreview();
       if (on) wzRevealFeedback(cur);
+      else if (wzRevealCleanup) { try { wzRevealCleanup(); } catch (e) {} wzRevealCleanup = null; }
     });
   })();
 
@@ -5739,18 +5781,61 @@
       ? (adv.listing.privacyText || '').trim().length > 0
       : (adv.listing.privacyUrl || '').trim().length > 0;
   }
+  // Added languages still missing a given mandatory field (array of display names). ONE source of
+  // truth for every listing item's per-language status — scales to any field and any number of
+  // languages. Description is per-locale; shared fields (name/logo/screenshots/category) resolve to
+  // one value for every language, so they list all added languages until set, then clear at once.
+  // Codes of the added languages still missing a given mandatory field. ONE source of truth for
+  // every listing item's per-language status — scales to any field and any number of languages.
+  // Description is per-locale; shared fields (name/logo/screenshots/category) resolve to one value
+  // for every language, so they list all added languages until set, then clear at once.
+  function missLocaleCodes(filledForLocale) {
+    try {
+      const added = (typeof window.__advAddedLocales === 'function') ? window.__advAddedLocales() : [];
+      if (added.length <= 1) return [];
+      return added.filter(c => !filledForLocale(c));
+    } catch (_) { return []; }
+  }
+  const _locShort = c => (typeof window.__advLocaleShortName === 'function') ? window.__advLocaleShortName(c) : c;
+  const _locFull = c => (typeof window.__advLocaleName === 'function') ? window.__advLocaleName(c) : c;
+  // Compact row label: short names when 1–2 missing AND their short names are distinct (e.g. "Missing
+  // in English, Chinese"); otherwise a count so the row never overflows and never reads ambiguously.
+  // Regional variants like Chinese (Simplified)/(Traditional) share the short name "Chinese", so we
+  // collapse those to "Missing in N languages" and let the tooltip spell them out in full.
+  function missLocaleNames(filledForLocale) {
+    const codes = missLocaleCodes(filledForLocale);
+    if (!codes.length) return '';
+    const shorts = codes.map(_locShort);
+    const distinct = new Set(shorts).size === shorts.length;
+    return (codes.length <= 2 && distinct) ? 'Missing in ' + shorts.join(', ') : 'Missing in ' + codes.length + ' languages';
+  }
+  // Full list for the row's hover tooltip — full names with region so it's unambiguous even for
+  // regional variants, keeping the exact languages behind "Missing in N languages" discoverable.
+  function missLocaleNamesFull(filledForLocale) {
+    const codes = missLocaleCodes(filledForLocale);
+    return codes.length ? 'Missing in ' + codes.map(_locFull).join(', ') : '';
+  }
   const CHECKLIST_ITEMS = [
     // Package
     { section: 'step-package', label: 'App package', required: true, done: () => !!state.pkg },
     { section: 'step-package', label: 'Restricted-capability reasons', applies: () => collectRestrictedCapabilities().length > 0, required: true, done: () => hasAllCapabilityReasons() },
     // Store listing — required
-    { section: 'step-listing', label: 'App name', required: true, done: () => !!state.name, focus: '#ez-pv-name' },
-    { section: 'step-listing', label: 'Description', required: true, done: () => !!state.desc, focus: '#ez-pv-desc' },
-    { section: 'step-listing', label: 'Category', required: true, done: () => !!state.category, focus: '#ez-pv-category' },
-    { section: 'step-listing', label: 'App logo', required: true, done: () => !!(userIconDataUrl || pkgIconDataUrl), focus: '#ez-pv-icon' },
-    { section: 'step-listing', label: 'At least one screenshot', required: true, done: () => state.shots.length > 0, focus: '#ez-pv-shots' },
-    { section: 'step-listing', label: 'Privacy policy', required: () => privacyRequired(), done: hasPrivacyContent, focus: '#ez-info-privacy' },
-    { section: 'step-listing', label: 'License terms', required: () => licenseRequired(), done: () => (adv.listing.licenseTerms || '').trim().length > 0, focus: '#ez-info-license' },
+    { section: 'step-listing', label: 'App name', required: true, done: () => !!state.name, value: () => missLocaleNames(() => !!state.name), valueTitle: () => missLocaleNamesFull(() => !!state.name), focus: '#ez-pv-name' },
+    { section: 'step-listing', label: 'Description', required: true,
+      done: () => (typeof window.__advIncompleteLocales !== 'function') || window.__advIncompleteLocales().length === 0,
+      value: () => missLocaleNames(c => (typeof window.__advLocaleDescFilled === 'function') ? window.__advLocaleDescFilled(c) : !!state.desc),
+      valueTitle: () => missLocaleNamesFull(c => (typeof window.__advLocaleDescFilled === 'function') ? window.__advLocaleDescFilled(c) : !!state.desc),
+      focus: '#ez-pv-desc',
+      onJump: () => { try { if (typeof window.__advIncompleteLocales === 'function' && typeof window.__advSwitchToLocale === 'function') { const inc = window.__advIncompleteLocales(); if (inc.length) window.__advSwitchToLocale(inc[0]); } } catch (_) {} } },
+    { section: 'step-listing', label: 'Category', required: true, done: () => !!state.category, value: () => missLocaleNames(() => !!state.category), valueTitle: () => missLocaleNamesFull(() => !!state.category), focus: '#ez-pv-category' },
+    { section: 'step-listing', label: 'App logo', required: true, done: () => !!(userIconDataUrl || pkgIconDataUrl), value: () => missLocaleNames(() => !!(userIconDataUrl || pkgIconDataUrl)), valueTitle: () => missLocaleNamesFull(() => !!(userIconDataUrl || pkgIconDataUrl)), focus: '#ez-pv-icon' },
+    { section: 'step-listing', label: 'At least one screenshot', required: true, done: () => state.shots.length > 0, value: () => missLocaleNames(() => state.shots.length > 0), valueTitle: () => missLocaleNamesFull(() => state.shots.length > 0), focus: '#ez-pv-shots' },
+    { section: 'step-listing', label: 'Privacy policy', required: () => privacyRequired(), done: hasPrivacyContent,
+      value: () => privacyRequired() ? missLocaleNames(() => hasPrivacyContent()) : '',
+      valueTitle: () => privacyRequired() ? missLocaleNamesFull(() => hasPrivacyContent()) : '', focus: '#ez-info-privacy' },
+    { section: 'step-listing', label: 'License terms', required: () => licenseRequired(), done: () => (adv.listing.licenseTerms || '').trim().length > 0,
+      value: () => licenseRequired() ? missLocaleNames(() => (adv.listing.licenseTerms || '').trim().length > 0) : '',
+      valueTitle: () => licenseRequired() ? missLocaleNamesFull(() => (adv.listing.licenseTerms || '').trim().length > 0) : '', focus: '#ez-info-license' },
     // Store listing — optional enhancements
     { section: 'step-listing', label: 'Short description', required: false, done: () => (adv.listing.shortDesc || '').trim().length > 0, focus: '#ez-pv-short' },
     { section: 'step-listing', label: 'Cover image or trailer', required: false, done: () => !!adv.listing.hero || (adv.listing.trailers && adv.listing.trailers.length > 0), focus: '#ez-hero-add' },
@@ -5830,10 +5915,12 @@
     // Every row jumps to its section (and field, if it has a focus selector).
     let val = '';
     try { val = it.value ? (it.value() || '') : ''; } catch (_) { val = ''; }
+    let vTitle = '';
+    try { vTitle = it.valueTitle ? (it.valueTitle() || '') : ''; } catch (_) { vTitle = ''; }
     return '<li><button type="button" class="ez-checklist__item ez-checklist__item--' + (done ? 'done' : 'todo') + '" data-ck="' + idx + '">' +
       '<iconify-icon class="ez-checklist__icon" icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
       '<span class="ez-checklist__label">' + it.label + '</span>' +
-      (val ? '<span class="ez-checklist__value">' + val + '</span>' : '') +
+      (val ? '<span class="ez-checklist__value"' + (vTitle ? ' title="' + vTitle.replace(/"/g, '&quot;') + '"' : '') + '>' + val + '</span>' : '') +
       '</button></li>';
   }
   // Submit-readiness checklist: a per-section accordion. Each section shows its
@@ -5981,6 +6068,7 @@
       else if (typeof setActiveSection === 'function') setActiveSection(it.section);
     } catch (_) {}
     if (it.focus) setTimeout(() => { const el = document.querySelector(it.focus); if (el) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {} try { el.click(); } catch (_) {} } }, 140);
+    if (typeof it.onJump === 'function') setTimeout(() => { try { it.onJump(); } catch (_) {} }, 160);
   }
   document.addEventListener('click', (e) => {
     const tgl = e.target.closest('#submit-checklist-toggle');
@@ -7465,25 +7553,28 @@
     const appName = (mf && mf.name) || '';
     // Real checks, driven by what we actually read from the site (PWA Builder–style) — no auto-pass.
     const row = (state, label, detail) => {
+      const icon = state === 'ok' ? 'fluent:checkmark-circle-16-filled'
+        : state === 'info' ? 'fluent:info-16-filled'
+        : 'fluent:warning-16-filled';
       const mark = state === 'pending'
         ? '<fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner>'
-        : '<iconify-icon icon="' + (state === 'ok' ? 'fluent:checkmark-circle-16-filled' : 'fluent:warning-16-filled') + '" width="16" height="16" aria-hidden="true"></iconify-icon>';
+        : '<iconify-icon icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>';
       return '<li class="pwapkg__check pwapkg__check--' + state + '">' + mark +
         '<span>' + esc(label) + (detail ? ' <span class="pwapkg__check-detail">' + esc(detail) + '</span>' : '') + '</span></li>';
     };
     const rows = [
       loading ? row('pending', 'Web app manifest', 'Checking…')
         : hasManifest ? row('ok', 'Web app manifest', 'Found')
-        : row('warn', 'Web app manifest', 'None found — we’ll generate one'),
-      row(https ? 'ok' : 'warn', 'Served over HTTPS', https ? '' : 'HTTPS recommended'),
+        : row('info', 'Web app manifest', 'None yet — we’ll generate one'),
+      row(https ? 'ok' : 'warn', 'Served over HTTPS', https ? '' : 'Recommended before you publish'),
       loading ? row('pending', 'App name & icon', 'Reading…')
         : (appName || iconCount) ? row('ok', 'App name & icon', [appName, iconCount ? (iconCount + (iconCount === 1 ? ' icon' : ' icons')) : ''].filter(Boolean).join(' · '))
-        : row('warn', 'App name & icon', 'Using your app name')
+        : row('info', 'App name & icon', 'We’ll use your Store app name')
     ];
     body.innerHTML =
       '<ul class="pwapkg__checks">' + rows.join('') + '</ul>' +
       '<div class="pwapkg__identity">' +
-        '<span class="pwapkg__identity-label">Identity — applied automatically</span>' +
+        '<span class="pwapkg__identity-label">Store identity — filled in for you</span>' +
         '<dl class="pwapkg__identity-rows">' +
           '<dt>Package</dt><dd title="' + esc(id.identityName) + '">' + esc(id.identityName) + '</dd>' +
           '<dt>Publisher</dt><dd>' + esc(id.publisherDisplay) + '</dd>' +
@@ -7716,7 +7807,9 @@
       ? (fDesc.value || '')
       : ((adv.listing.locales[def] && adv.listing.locales[def].description) || '');
     const descLen = defDesc.trim().length;
-    state.desc = descLen >= 20;
+    // Complete only when the default meets the 20-char minimum AND every added language has a
+    // description — so the step gate matches the per-language checklist.
+    state.desc = descLen >= 20 && ((typeof window.__advIncompleteLocales !== 'function') || window.__advIncompleteLocales().length === 0);
     // Make the 20-char minimum explicit: error only once they've started typing (1–19 chars).
     const dErr = $('ez-pv-desc-error');
     if (dErr) {
@@ -8902,11 +8995,7 @@
     const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
     if (commerceItem) commerceItem.hidden = isWin32;
     if (driversItem) driversItem.hidden = !isWin32;
-    // Advanced settings: optional extras — release (go-live + stop offering) and cert-team access.
-    // Visible for all types; the summary subtitle previews what's inside so it's clear without expanding.
-    const advExpander = $('ez-submit-adv'); if (advExpander) advExpander.hidden = false;
-    const advSub = $('submit-adv-sub');
-    if (advSub) advSub.textContent = 'Release, test sign-in & notes for reviewers';
+    // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
     syncPublishHoldUI();
     renderTestCreds();
     // Open the cert-team area only if it already has content (otherwise it stays a tidy one-liner).
@@ -10723,7 +10812,26 @@ function openPriceScheduleDialog() {
       updateLockUI();
       updateTranslatingBanner();
       ezRenderPreview();
+      if (typeof updateGate === 'function') updateGate();
     }
+
+    // ----- Per-language completeness (submit checklist + Manage-languages status) -----
+    // Description is the only MANDATORY localized field; name, logo, screenshots and category
+    // are shared across every language, so they're satisfied once for all. A locale is
+    // "complete" when its description is non-empty (added locales are auto-translated on add).
+    function localeDescFilled(code) {
+      const active = L.activeLocale || DEFAULT_LOCALE;
+      if (code === active) return !!(fDesc && (fDesc.value || '').trim());
+      const b = L.locales[code];
+      return !!(b && (b.description || '').trim());
+    }
+    window.__advAddedLocales = function () { return addedLocales(); };
+    window.__advLocaleShortName = function (c) { return localeShortNameOf(c); };
+    window.__advLocaleName = function (c) { return localeNameOf(c); };
+    window.__advLocaleDescFilled = localeDescFilled;
+    window.__advIncompleteLocales = function () { return addedLocales().filter(function (c) { return !localeDescFilled(c); }); };
+    window.__advOpenLangManage = function () { try { openLangDialog(); } catch (e) {} };
+    window.__advSwitchToLocale = function (code) { try { if (code) switchLocale(code); } catch (e) {} };
 
     // ----- Editing-language menu (Fluent menu) -----
     const langMenuList = $('lang-menu-list'), langMenuLabel = $('lang-menu-label');
@@ -10836,6 +10944,9 @@ function openPriceScheduleDialog() {
         if (tr) st = '<span class="lang-row__st lang-row__st--translating"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating…</span>';
         else if (pAdd) st = '<span class="lang-row__st lang-row__st--new">New</span>';
         else if (pRem) st = '<span class="lang-row__st lang-row__st--removing">Removing</span>';
+        else if (on && !isDef) st = localeDescFilled(l.code)
+          ? '<span class="lang-row__st lang-row__st--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="12" height="12" aria-hidden="true"></iconify-icon>Complete</span>'
+          : '<span class="lang-row__st lang-row__st--warn"><iconify-icon icon="fluent:warning-16-filled" width="12" height="12" aria-hidden="true"></iconify-icon>Add description</span>';
         // Default control: a clear "Default" pill for the current default; a quiet "Set default" for other added langs.
         let action = '<span></span>';
         if (isDef) action = '<span class="lang-row__def lang-row__def--on"><iconify-icon icon="fluent:star-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon>Default</span>';
