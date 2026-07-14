@@ -71,7 +71,7 @@
   // A published app shows a live-app management hub — NOT the certification timeline.
   var LIVE_GROUPS = [
     { title: "Updates", cards: [
-      ["fluent:arrow-upload-20-regular", "Update your app", "Submit a new package or version.", "#"],
+      ["fluent:arrow-upload-20-regular", "Update your app", "Submit a new package or version.", "#", "update"],
       ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#"]
     ] },
     { title: "Insights & growth", cards: [
@@ -84,7 +84,8 @@
     ] }
   ];
   function liveCard(c) {
-    return '<a class="live-row" href="' + c[3] + '"><span class="live-card__ico"><iconify-icon icon="' + c[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+    var act = c[4] ? ' data-live-action="' + c[4] + '"' : '';
+    return '<a class="live-row" href="' + c[3] + '"' + act + '><span class="live-card__ico"><iconify-icon icon="' + c[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
       '<span class="live-card__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
       '<iconify-icon class="live-card__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></a>';
   }
@@ -254,6 +255,8 @@
     if (res && !res.__wired) {
       res.__wired = true;
       res.addEventListener("click", function (e) {
+        var upd = e.target.closest('[data-live-action="update"]');
+        if (upd) { e.preventDefault(); if (typeof window.startAppUpdate === "function") window.startAppUpdate(); return; }
         var report = e.target.closest("[data-cert-report]");
         if (report) { e.preventDefault(); window.open("cert-report.html?id=" + encodeURIComponent(id), "_blank", "noopener"); return; }
         var edit = e.target.closest("[data-edit]");

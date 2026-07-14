@@ -9061,6 +9061,19 @@
     announce('Submission withdrawn. Back to draft.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
+  // Update a published app: reopen the full editor with everything already filled (the same-session
+  // package / listing / reach state is still in memory), so the developer can change anything and
+  // resubmit. The live version stays published until the update clears certification.
+  window.startAppUpdate = function () {
+    const pill = $('app-status');
+    if (pill) { pill.textContent = 'Updating'; pill.className = 'status-pill status-pill--in-review'; }
+    $('state-done').hidden = true;
+    $('editor').hidden = false;
+    $('submit-bar').hidden = false;
+    try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
+    announce('Update started \u2014 change anything you need, then submit for review again.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
   function openSubmitFlow() {
     if ($('submit').disabled) return;
     // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which
