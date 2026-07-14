@@ -1219,6 +1219,22 @@
   .ez-ckcert__fix { display: block; font-size: 12px; color: var(--fg-2); margin-top: 1px; }
   .ez-ckcert__fix b { color: var(--fg-1); font-weight: 600; }
   .ez-ckcert__go:hover .ez-ckcert__label { text-decoration: underline; }
+  /* Visible in-editor certification fix tracker (#cert-fixbar) — the failed-submission "what to fix". */
+  .cert-fixbar { margin: 0 0 var(--sp-20); padding: var(--sp-16) var(--sp-20); border: 1px solid color-mix(in srgb, var(--status-danger) 30%, var(--stroke-2)); border-radius: var(--r-12); background: color-mix(in srgb, var(--status-danger) 6%, var(--layer)); }
+  .cert-fixbar[hidden] { display: none; }
+  .cert-fixbar.is-done { border-color: color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); background: color-mix(in srgb, var(--status-success) 6%, var(--layer)); }
+  .cert-fixbar__head { display: flex; align-items: center; gap: var(--sp-12); }
+  .cert-fixbar__icon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--r-8); background: color-mix(in srgb, var(--status-danger) 16%, transparent); color: var(--status-danger); }
+  .cert-fixbar__icon.is-done { background: color-mix(in srgb, var(--status-success) 16%, transparent); color: var(--status-success); }
+  .cert-fixbar__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .cert-fixbar__title { font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .cert-fixbar__sub { font-size: 12.5px; color: var(--fg-3); }
+  .cert-fixbar__report { appearance: none; border: 0; background: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--brand); cursor: pointer; text-decoration: underline; }
+  .cert-fixbar__count { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--fg-2); white-space: nowrap; align-self: flex-start; }
+  .cert-fixbar__bar { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg-1) 12%, transparent); margin: var(--sp-12) 0; overflow: hidden; }
+  .cert-fixbar__bar span { display: block; height: 100%; background: var(--status-danger); border-radius: 2px; transition: width var(--dur-3) var(--ease-out); }
+  .cert-fixbar.is-done .cert-fixbar__bar span { background: var(--status-success); }
+  .cert-fixbar__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
   /* Small banner at the top of the checklist panel while resolving certification issues. */
   .ck-certnote { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-8); padding: var(--sp-8) var(--sp-10); font-size: 12px; line-height: 16px; color: var(--fg-2); background: color-mix(in srgb, var(--status-danger) 8%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 22%, transparent); border-radius: var(--r-6); }
   .ck-certnote iconify-icon { color: var(--status-danger); flex: 0 0 auto; margin-top: 1px; }
@@ -2441,9 +2457,27 @@
   #flow-wrap.wz-v2.is-wizard .wz-preview-btn { width: 100%; }
   #flow-wrap.wz-v2.is-wizard .wz-preview-btn::part(control) { width: 100%; }
 
-  /* Submitted state: collapse the grid + hide the rail so the in-review view owns the page. */
+  /* Submitted (in-review / published): collapse the grid and turn the left rail into a full-width
+     APP HEADER CARD on top — app identity on the left + a contextual action on the right (Withdraw
+     while in review, View in Store once published). Steps, preview, submit, the mode toggle and the
+     now-empty editor body are hidden. (The wizard itself keeps its left rail.) */
   #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) { display: block; }
-  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .wz-banner { display: none; }
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .wz-banner { position: static; z-index: auto; margin: 0 0 var(--sp-20); }
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .ez-head__row { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--sp-16); flex-wrap: wrap; }
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .wz-steps,
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .wz-preview-btn,
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) #submit-bar,
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .ez-mode,
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .ez-body { display: none; }
+  /* Header action area (right of the identity) — only in the submitted view; buttons toggled by state. */
+  #flow-wrap.wz-v2 #wz-head-actions { display: none; }
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) #wz-head-actions { display: flex; gap: var(--sp-8); flex: 0 0 auto; }
+  /* Withdraw now lives in the header, so drop the body "Need to make changes?" strip. */
+  #flow-wrap.wz-v2 #cert-actions { display: none; }
+  /* No rail in the submitted view, so it doesn't need the wizard's full 1360px. Narrow the whole
+     wrap to a comfortable reading column — since #flow-wrap is margin:0 auto, the back link, header
+     card and status content sit together as ONE horizontally-centered column (~880px of content). */
+  #flow-wrap.wz-v2:has(#editor[hidden]) { max-width: 928px; }
 
   /* Responsive: stack rail above content; steps go horizontal again. */
   @media (max-width: 980px) {
@@ -2595,6 +2629,25 @@
             <iconify-icon icon="fluent:options-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Advanced
           </button>
         </div>
+        <!-- Contextual header actions (submitted view only): Withdraw while in review, View in Store once published. -->
+        <div class="wz-head-actions" id="wz-head-actions">
+          <fluent-button appearance="secondary" id="head-withdraw-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Withdraw submission
+          </fluent-button>
+          <fluent-button appearance="primary" id="head-viewstore-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:open-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            View in Store
+          </fluent-button>
+          <fluent-button appearance="primary" id="head-report-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:document-bullet-list-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            See report
+          </fluent-button>
+          <fluent-button appearance="secondary" id="head-editfix-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Edit &amp; fix
+          </fluent-button>
+        </div>
       </div>
     </div>
 
@@ -2646,6 +2699,10 @@
         </fluent-button>
       </nav>
     <div id="editor">
+
+      <!-- Certification fix tracker — visible only while resolving a failed submission
+           (certFixActive). Lists each issue with jump-to-field + mark-fixed + progress. -->
+      <div id="cert-fixbar" class="cert-fixbar" hidden></div>
 
       <!-- "More fields" (Listing) / "More options" (Reach) toggle — sits above the step
            card, below the progress. Shown only on the Listing and Reach & price steps. -->
@@ -3267,15 +3324,15 @@
           <div class="cert-stage cert-stage--done">
             <span class="cert-stage__bullet"><iconify-icon icon="fluent:checkmark-20-regular" width="14" height="14"></iconify-icon></span>
             <div class="cert-stage__body">
-              <p class="cert-stage__title">Submission received</p>
-              <p class="cert-stage__desc">Your package and metadata are validated.</p>
+              <p class="cert-stage__title">Submission</p>
+              <p class="cert-stage__desc">Your package and details were received.</p>
             </div>
             <span class="cert-stage__time">Just now</span>
           </div>
           <div class="cert-stage cert-stage--current">
             <span class="cert-stage__bullet"><fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner></span>
             <div class="cert-stage__body">
-              <p class="cert-stage__title">Automated checks</p>
+              <p class="cert-stage__title">Pre-processing</p>
               <p class="cert-stage__desc">Malware scan, certificate validation, manifest review.</p>
             </div>
             <span class="cert-stage__time">~10 min</span>
@@ -3283,7 +3340,7 @@
           <div class="cert-stage">
             <span class="cert-stage__bullet">3</span>
             <div class="cert-stage__body">
-              <p class="cert-stage__title">Policy review</p>
+              <p class="cert-stage__title">Certification</p>
               <p class="cert-stage__desc">Manual review against Store policies and age rating.</p>
             </div>
             <span class="cert-stage__time">~1 day</span>
@@ -3291,7 +3348,7 @@
           <div class="cert-stage">
             <span class="cert-stage__bullet">4</span>
             <div class="cert-stage__body">
-              <p class="cert-stage__title">Final approval</p>
+              <p class="cert-stage__title">Publishing</p>
               <p class="cert-stage__desc">Sign-off and rollout to Microsoft Store.</p>
             </div>
             <span class="cert-stage__time">~3 hours</span>
@@ -5870,7 +5927,7 @@
     if (!certFixInjected) {
       (window.CERT_ISSUES || []).forEach(function (ci, i) {
         CHECKLIST_ITEMS.push({
-          section: ci.section, label: ci.title, certFix: ci, certIdx: i,
+          section: ci.section, label: ci.title, certFix: ci, certIdx: i, focus: ci.focus,
           required: true, applies: () => certFixActive, done: () => !!certFixed[i]
         });
       });
@@ -5884,6 +5941,7 @@
       if (panel && panel.hidden) { panel.hidden = false; if (wrap) wrap.classList.add('is-open'); if (tog) tog.setAttribute('aria-expanded', 'true'); }
     } catch (_) {}
     try { renderChecklists(); } catch (_) {}
+    try { const fb = document.getElementById('cert-fixbar'); if (fb) setTimeout(() => { try { fb.scrollIntoView({ behavior: (typeof reduceMotion === 'function' && reduceMotion()) ? 'auto' : 'smooth', block: 'start' }); } catch (_) {} }, 220); } catch (_) {}
   };
 
   // ---- Submit-readiness checklist (renders from CHECKLIST_ITEMS) -------------
@@ -6046,6 +6104,31 @@
     const railSpine = document.getElementById('submit-rail-spine');
     if (railSpine) railSpine.innerHTML = spineHtml;
     ckSpinePrev = ckSpineNext;
+    renderCertFixbar();
+  }
+  // Visible in-editor certification fix tracker (v2's #submit-checklist is hidden, so the folded
+  // cert issues need a home the developer actually sees). Reuses ckItemRow (mark-fixed + jump) so it
+  // stays in sync with certFixed / the submit gate; leads with "N of M fixed" + a progress bar.
+  function renderCertFixbar() {
+    const bar = document.getElementById('cert-fixbar');
+    if (!bar) return;
+    if (!certFixActive) { bar.hidden = true; bar.innerHTML = ''; bar.classList.remove('is-done'); return; }
+    const items = CHECKLIST_ITEMS.filter(it => it.certFix);
+    const tot = items.length, fixed = items.filter(ckDone).length, left = tot - fixed, done = left === 0;
+    const pct = tot ? Math.round(fixed / tot * 100) : 0;
+    bar.classList.toggle('is-done', done);
+    bar.innerHTML =
+      '<div class="cert-fixbar__head">' +
+        '<span class="cert-fixbar__icon' + (done ? ' is-done' : '') + '"><iconify-icon icon="' + (done ? 'fluent:checkmark-circle-20-filled' : 'fluent:wrench-screwdriver-20-regular') + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="cert-fixbar__text">' +
+          '<strong class="cert-fixbar__title">' + (done ? 'All issues fixed \u2014 resubmit when ready' : ('Fix ' + tot + ' ' + (tot === 1 ? 'issue' : 'issues') + ' from certification')) + '</strong>' +
+          '<span class="cert-fixbar__sub">' + (done ? 'Your changes are ready \u2014 use Submit for review on the left. ' : 'Update each item, then mark it fixed. ') + '<button type="button" class="cert-fixbar__report" data-cert-report-link>See full report</button></span>' +
+        '</span>' +
+        '<span class="cert-fixbar__count">' + fixed + ' of ' + tot + ' fixed</span>' +
+      '</div>' +
+      '<div class="cert-fixbar__bar"><span style="width:' + pct + '%"></span></div>' +
+      '<ul class="cert-fixbar__list">' + items.map(ckItemRow).join('') + '</ul>';
+    bar.hidden = false;
   }
   function ckClosePanel() {
     const wrap = document.getElementById('submit-checklist'), panel = document.getElementById('submit-checklist-panel'), tog = document.getElementById('submit-checklist-toggle');
@@ -6085,6 +6168,8 @@
     }
     const ckfix = e.target.closest('[data-ckfix]');
     if (ckfix) { const ci = parseInt(ckfix.getAttribute('data-ckfix'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
+    const rptLink = e.target.closest('[data-cert-report-link]');
+    if (rptLink) { try { window.open('cert-report.html?id=' + encodeURIComponent(appId || ''), '_blank', 'noopener'); } catch (_) {} return; }
     const row = e.target.closest('.ez-checklist__item[data-ck], .ez-ckcert__go[data-ck]');
     if (row) { const it = CHECKLIST_ITEMS[parseInt(row.getAttribute('data-ck'), 10)]; ckClosePanel(); ckJumpTo(it); return; }
     if (!e.target.closest('#submit-checklist')) ckClosePanel();
@@ -9093,6 +9178,9 @@
   if (submitDlg) submitDlg.querySelectorAll('[data-submit-close]').forEach(b => b.addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} }));
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
   if ($('withdraw-btn')) $('withdraw-btn').addEventListener('click', withdrawSubmission);
+  // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store (published) is a demo stub.
+  if ($('head-withdraw-btn')) $('head-withdraw-btn').addEventListener('click', withdrawSubmission);
+  if ($('head-viewstore-btn')) $('head-viewstore-btn').addEventListener('click', () => announce('Opening your Store listing…'));
 
   // -------------------------------------------------------------
   // Notification audience (in-review): who gets the cert pass/fail email.

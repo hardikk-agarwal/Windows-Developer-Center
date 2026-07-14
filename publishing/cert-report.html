@@ -15,6 +15,9 @@
 <link rel="stylesheet" href="styles.css">
 <style>
   body { margin: 0; background: var(--canvas, #0f1218); color: var(--fg-1); font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  /* styles.css sets html,body{height:100%;overflow:hidden} for the app-shell pages (inner scroll);
+     this standalone report is a normal top-to-bottom document, so restore default page scrolling. */
+  html, body { height: auto; overflow: visible; }
 
   .rep-appbar { display: flex; align-items: center; gap: var(--sp-12); height: 48px; padding: 0 var(--sp-24); border-bottom: 1px solid var(--stroke-2); background: var(--layer); position: sticky; top: 0; z-index: 5; }
   .rep-appbar .brand { display: inline-flex; align-items: center; gap: var(--sp-8); text-decoration: none; color: var(--fg-1); font-weight: 600; font-size: 14px; }

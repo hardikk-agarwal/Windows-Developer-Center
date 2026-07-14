@@ -12,7 +12,7 @@ window.CERT_ISSUES = [
     problem: "The name in your listing is different from the name Windows shows once the app is installed.",
     fix: "Use the same product name in your listing that appears on the device.",
     policy: "10.1.1.1",
-    section: "step-listing"
+    section: "step-listing", focus: "#ez-pv-name"
   },
   {
     icon: "fluent:image-20-regular",
@@ -20,7 +20,7 @@ window.CERT_ISSUES = [
     problem: "The images in your listing aren\u2019t direct screenshots taken from the running product.",
     fix: "Replace them with actual screenshots captured from your app.",
     policy: "10.1.1.3",
-    section: "step-listing"
+    section: "step-listing", focus: "#ez-pv-shots"
   },
   {
     icon: "fluent:text-description-20-regular",
@@ -28,7 +28,7 @@ window.CERT_ISSUES = [
     problem: "The description is only the app title or a few words, so it doesn\u2019t explain what the app does.",
     fix: "Add a couple of clear sentences about what your app does and its main features.",
     policy: "10.1.4.3",
-    section: "step-listing"
+    section: "step-listing", focus: "#ez-pv-desc"
   },
   {
     icon: "fluent:shield-keyhole-20-regular",
@@ -36,6 +36,6 @@ window.CERT_ISSUES = [
     problem: "The privacy policy URL opens a page that doesn\u2019t actually display a privacy policy.",
     fix: "Point the link to a page that clearly shows your app\u2019s privacy policy.",
     policy: "10.5.1",
-    section: "step-listing"
+    section: "step-listing", focus: "#ez-info-privacy"
   }
 ];

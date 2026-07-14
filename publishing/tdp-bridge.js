@@ -114,25 +114,19 @@
     var n = CERT_ISSUES.length;
     var word = n === 1 ? "issue" : "issues";
     var stages =
-      stageHTML("done", "check", "Submission received", "Your package and metadata are validated.", '<span class="cert-stage__time">Done</span>') +
-      stageHTML("done", "check", "Automated checks", "Malware scan, certificate validation, manifest review.", '<span class="cert-stage__time">Passed</span>') +
-      stageHTML("fail", "x", "Policy review", n + " " + word + " found during manual review against Store policies.", '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Action needed</span>') +
-      stageHTML("blocked", "4", "Final approval", "Resumes once you\u2019ve fixed the issues and resubmitted.", '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
+      stageHTML("done", "check", "Submission", "Your package and details were received.", '<span class="cert-stage__time">Done</span>') +
+      stageHTML("done", "check", "Pre-processing", "Malware scan, certificate validation, manifest review.", '<span class="cert-stage__time">Passed</span>') +
+      stageHTML("fail", "x", "Certification", "Manual review against Store policies and age rating.", '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>') +
+      stageHTML("blocked", "4", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted.", '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
     return '<div class="cert-card cert-card--fail">' +
       '<div class="cert-card__head">' +
         '<span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
         '<div>' +
           '<h2 class="cert-card__title">Certification didn\u2019t pass</h2>' +
-          '<p class="cert-card__sub">We reviewed <strong>' + esc(name) + '</strong> and found ' + n + ' ' + word + ' during policy review. Open the report for the details, then edit &amp; fix.</p>' +
+          '<p class="cert-card__sub">We reviewed <strong>' + esc(name) + '</strong> and found ' + n + ' ' + word + ' during certification. Open the report for the details, then edit &amp; fix.</p>' +
         '</div>' +
       '</div>' +
       '<div class="cert-stages">' + stages + '</div>' +
-      '<div class="cert-failbar">' +
-        '<iconify-icon icon="fluent:warning-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>' +
-        '<span><strong>' + n + ' ' + (n === 1 ? "issue needs" : "issues need") + ' your attention</strong> before your app can go live.</span>' +
-        '<fluent-button appearance="primary" size="small" data-cert-report><iconify-icon slot="start" icon="fluent:document-bullet-list-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>See report</fluent-button>' +
-        '<fluent-button appearance="secondary" size="small" data-edit><iconify-icon slot="start" icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Edit &amp; fix</fluent-button>' +
-      '</div>' +
     '</div>';
   }
 
@@ -147,7 +141,6 @@
         '<strong class="cert-pass__title">Certification passed</strong>' +
         '<span class="cert-pass__sub"><strong>' + esc(appName()) + '</strong> is now live in the Microsoft Store.</span>' +
       '</div>' +
-      '<fluent-button appearance="primary" size="small"><iconify-icon slot="start" icon="fluent:open-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View in Store</fluent-button>' +
     '</div>' +
     '<div class="live-hub">' + groups + '</div>';
   }
@@ -165,6 +158,14 @@
   // The submission-notification banner is only relevant while a submission is pending;
   // hide it once the app is published. (Class selector beats [hidden], so toggle display.)
   function setNotify(show) { var n = document.querySelector("#state-done .notify-banner"); if (n) n.style.display = show ? "" : "none"; }
+  // App-header card's contextual action: Withdraw while in review, View in Store once published.
+  function setHeadActions(view) {
+    var w = $id("head-withdraw-btn"), v = $id("head-viewstore-btn"), r = $id("head-report-btn"), e = $id("head-editfix-btn");
+    if (w) w.hidden = (view !== "progress");
+    if (v) v.hidden = (view !== "passed");
+    if (r) r.hidden = (view !== "failed");
+    if (e) e.hidden = (view !== "failed");
+  }
   function setMsStatus(status) {
     try { var ms = readJSON(MS_KEY, []); var i = (Array.isArray(ms) ? ms : []).map(function (a) { return a.id; }).indexOf(id); if (i >= 0) { ms[i].status = status; localStorage.setItem(MS_KEY, JSON.stringify(ms)); } } catch (e) {}
   }
@@ -182,6 +183,7 @@
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
     setPill("In review", "in-review");
     setNotify(true);
+    setHeadActions("progress");
     setSwitch("progress");
   }
   function showPassed() {
@@ -194,6 +196,7 @@
     setPill("Published", "published");
     setMsStatus("published"); setPortalStore(true, "published");
     setNotify(false);   // published: the submission-notification banner no longer applies
+    setHeadActions("passed");
     setSwitch("passed");
   }
   function showFailed() {
@@ -206,6 +209,7 @@
     setPill("Action needed", "rejected");
     setMsStatus("rejected"); setPortalStore(false, "rejected");
     setNotify(true);
+    setHeadActions("failed");
     setSwitch("failed");
   }
   function resolveTo(view) { clearCertTimer(); if (view === "passed") showPassed(); else if (view === "failed") showFailed(); else showProgress(); }
@@ -258,6 +262,11 @@
         if (fix) { e.preventDefault(); goEditAndFix(fix.getAttribute("data-fix")); }
       });
     }
+    // Failed-state header actions (they live in the app-header card, not the cert body).
+    var hr = $id("head-report-btn");
+    if (hr && !hr.__wired) { hr.__wired = true; hr.addEventListener("click", function () { window.open("cert-report.html?id=" + encodeURIComponent(id), "_blank", "noopener"); }); }
+    var he = $id("head-editfix-btn");
+    if (he && !he.__wired) { he.__wired = true; he.addEventListener("click", function () { goEditAndFix("step-listing"); }); }
   }
 
   // doSubmit() reveals #state-done (hidden = false) once the app is submitted.
