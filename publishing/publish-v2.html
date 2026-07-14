@@ -1320,6 +1320,17 @@
   .ez-ai-dialog__input { width: 100%; min-width: 100%; box-sizing: border-box; }
   #ai-autofill-dialog fluent-text-input::part(root),
   #ai-autofill-dialog fluent-text-input::part(control) { width: 100%; min-width: 100%; box-sizing: border-box; }
+
+  /* ---- What's new in this version (listing section + prompt dialog) ---- */
+  .ez-whatsnew-text { white-space: pre-line; cursor: pointer; border-radius: var(--r-4); transition: background-color var(--dur-2) var(--ease-out); }
+  .ez-whatsnew-text[hidden] { display: none; }
+  .ez-whatsnew-text:hover { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .ez-whatsnew-draftrow { display: flex; justify-content: flex-end; margin-top: var(--sp-8); }
+  #whatsnew-dialog fluent-textarea, #whatsnew-dialog fluent-textarea::part(control) { width: 100%; box-sizing: border-box; }
+  #whatsnew-dialog fluent-textarea::part(control) { min-height: 104px; }
+  .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
+  .ez-whatsnew-note[hidden] { display: none; }
+  .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
   /* Close (title-action) button is icon-only, not Fluent's wide default. */
   #ai-autofill-dialog fluent-button[slot="title-action"],
   #rating-dialog fluent-button[slot="title-action"],
@@ -2983,6 +2994,24 @@
               </div>
             </section>
 
+            <!-- What's new in this version (Advanced) — release notes for the current package.
+                 Prompted after adding a package in the update flow; editable here any time. -->
+            <section class="ez-card-section adv-only" id="ez-whatsnew-section">
+              <div class="ez-card-section__head">
+                <h4 class="ez-card-section__title">What's new in this version</h4>
+                <button type="button" class="ez-ai-chip" id="whatsnew-ai-chip">
+                  <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span class="ez-ai-chip__label">Draft with AI</span>
+                </button>
+              </div>
+              <div class="ez-card-section__body">
+                <p class="ez-store-desc ez-whatsnew-text" id="ez-pv-whatsnew" hidden></p>
+                <button type="button" class="ez-store-features-empty" id="ez-whatsnew-add">
+                  <iconify-icon icon="fluent:add-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+                  <span>Add what's new in this version (optional)</span>
+                </button>
+              </div>
+            </section>
+
             <!-- System requirements — hidden from the listing (read from the package, not author-editable). -->
             <section class="ez-card-section adv-only" id="ez-sysreq-section">
               <div class="ez-card-section__head">
@@ -3516,6 +3545,35 @@
       <iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       <span id="ai-autofill-label">Autofill</span>
     </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- What's new in this version — prompted after a new package is added in the update flow;
+     also opened from the listing's "What's new" section. Optional; can draft with AI or skip. -->
+<fluent-dialog id="whatsnew-dialog" modal-type="modal" aria-labelledby="whatsnew-title">
+  <fluent-dialog-body>
+    <span slot="title" id="whatsnew-title">
+      <iconify-icon icon="fluent:megaphone-loud-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px; color: var(--brand);"></iconify-icon>
+      What's new in this version?
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-whatsnew-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <div class="ez-whatsnew-note" id="whatsnew-update-note" hidden>
+      <iconify-icon icon="fluent:checkmark-circle-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>
+      <span>Your new package is added. Add a quick note about what changed in this version.</span>
+    </div>
+    <p class="ez-ai-dialog__intro">Tell customers what changed &mdash; new features, improvements, or fixes. This appears in your Store listing under <strong>&ldquo;What&rsquo;s new in this version.&rdquo;</strong> It&rsquo;s optional &mdash; you can also add or edit it later from your listing.</p>
+    <fluent-textarea id="whatsnew-input" class="ez-ai-dialog__input" rows="5" placeholder="e.g. Added dark mode, faster startup, and fixed a sync bug."></fluent-textarea>
+    <div class="ez-whatsnew-draftrow">
+      <button type="button" class="ez-ai-chip" id="whatsnew-draft">
+        <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Draft with AI</span>
+      </button>
+    </div>
+
+    <fluent-button slot="action" appearance="secondary" data-whatsnew-close>Write later</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="whatsnew-save">Save</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -5266,7 +5324,7 @@
     testCredentials: [],
     declarations: { genAi: false, externalCommerce: false, drivers: false },
     iarcId: '',
-    listing: { shortDesc: '', features: '', keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
+    listing: { shortDesc: '', features: '', whatsNew: '', keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
       // Support info (EU DSA contact details). mode 'account' = use account-level
       // details; 'custom' = per-app details below. Not localized (shared contact info).
       support: { mode: 'account', address1: '', address2: '', city: '', zip: '', state: '', country: 'US', website: '', phone: '', email: '' },
@@ -5280,6 +5338,11 @@
   // so the in-page Easy<->Advanced toggle is lossless, but a hard refresh starts
   // fresh at the defaults (no localStorage hydration).
   const adv = ADV_DEFAULTS();
+  // Update-flow state (session-only): set when a published app is being updated, so that adding a
+  // NEW package prompts once for "What's new in this version" (a listing field shown in Advanced).
+  let inUpdateFlow = false;
+  let whatsNewPrompted = false;
+  let updateBaselineIds = new Set();
   function persistAdvanced() { /* intentionally session-only — a hard refresh resets Advanced settings */ }
   // One-line summary of the effective reach & price settings (used by the gate
   // and the Easy defaults line). Reads `adv`, so it reflects any overrides.
@@ -6978,6 +7041,7 @@
     if (window.__reachRefresh && window.__reachRefresh.price) window.__reachRefresh.price();
     state.pkg = packages.some(p => !p._pending);
     updateGate();
+    maybePromptWhatsNew();   // update flow: after a NEW package is added, prompt "What's new in this version"
   }
 
   // ---- Restricted capabilities justification dialog (Easy + Advanced) ----
@@ -8139,6 +8203,82 @@
     function heuristic(field, action, tone, cur) { return field === 'features' ? featHeuristic(action, tone, cur) : descHeuristic(action, tone, cur); }
   })();
 
+  // ---- "What's new in this version": listing section + update-flow prompt dialog -------------
+  // In the update flow the two jobs are (1) add a new package and (2) refresh the listing. After a
+  // new package is added we surface this prompt so release notes get written while the change is
+  // fresh; it also lives as an editable listing section (Advanced) so it can be done/edited later.
+  function renderWhatsNew() {
+    const txt = (adv.listing.whatsNew || '').trim();
+    const p = $('ez-pv-whatsnew'), add = $('ez-whatsnew-add');
+    if (!p || !add) return;
+    if (txt) { p.textContent = txt; p.hidden = false; add.hidden = true; }
+    else { p.textContent = ''; p.hidden = true; add.hidden = false; }
+  }
+  function openWhatsNewDialog(fromUpdate) {
+    const ta = $('whatsnew-input');
+    if (ta) ta.value = adv.listing.whatsNew || '';
+    const note = $('whatsnew-update-note');
+    if (note) note.hidden = !fromUpdate;
+    try { $('whatsnew-dialog').show(); } catch (e) {}
+    setTimeout(function () { try { if (ta) ta.focus(); } catch (e) {} }, 60);
+  }
+  function saveWhatsNew() {
+    const ta = $('whatsnew-input');
+    adv.listing.whatsNew = ta ? (ta.value || '').trim() : '';
+    renderWhatsNew();
+    try { $('whatsnew-dialog').hide(); } catch (e) {}
+    if (typeof announce === 'function') announce(adv.listing.whatsNew ? "What's new saved to your listing." : "You can add what's new later from your listing.");
+  }
+  // Generate release notes with AI when configured; otherwise a sensible local draft. Shared by the
+  // dialog's "Draft with AI" and the listing section chip.
+  async function genWhatsNew(cur) {
+    const nm = (typeof app !== 'undefined' && app && app.name) || 'the app';
+    const sys = 'You write concise, friendly Microsoft Store release notes for the \u201cWhat\u2019s new in this version\u201d section. Return 2\u20134 short lines of plain text, one change per line, no bullet characters, no preamble or quotes.';
+    const user = cur
+      ? ('Improve and tighten these release notes, keeping the meaning:\n' + cur)
+      : ('Write release notes for a new version of "' + nm + '". Cover typical update themes: a new feature or two, a performance improvement, and bug fixes.');
+    let out = '';
+    if (window.AI && window.AI.enabled && typeof window.AI.transformText === 'function') {
+      try { out = await window.AI.transformText({ system: sys, user: user, maxTokens: 300 }); } catch (e) {}
+    }
+    if (!out) out = cur || 'Added new features based on your feedback.\nImproved performance and faster startup.\nFixed bugs and improved overall stability.';
+    return String(out).trim();
+  }
+  async function whatsNewDialogDraft() {
+    const chip = $('whatsnew-draft'), ta = $('whatsnew-input'); if (!ta) return;
+    if (chip) chip.classList.add('is-busy');
+    ta.value = await genWhatsNew((ta.value || '').trim());
+    if (chip) chip.classList.remove('is-busy');
+    if (typeof announce === 'function') announce('Release notes drafted with AI.');
+  }
+  async function whatsNewSectionDraft() {
+    const chip = $('whatsnew-ai-chip'); if (chip) chip.classList.add('is-busy');
+    adv.listing.whatsNew = await genWhatsNew((adv.listing.whatsNew || '').trim());
+    renderWhatsNew();
+    if (chip) chip.classList.remove('is-busy');
+    if (typeof announce === 'function') announce("What's new drafted with AI.");
+  }
+  // Fires from renderPackages() at the end of every render. Guards ensure it triggers exactly once,
+  // only in the update flow, only for a genuinely NEW committed package (win32 still pending waits).
+  function maybePromptWhatsNew() {
+    if (!inUpdateFlow || whatsNewPrompted) return;
+    if (packages.some(function (p) { return p.win32 && p._pending; })) return;   // still confirming installer details
+    const hasNew = packages.some(function (p) { return !p._pending && !updateBaselineIds.has(p.id); });
+    if (!hasNew) return;
+    whatsNewPrompted = true;
+    setTimeout(function () { openWhatsNewDialog(true); }, 360);   // let any closing add-package dialog finish
+  }
+  (function wireWhatsNew() {
+    const dlg = $('whatsnew-dialog');
+    if (dlg) dlg.querySelectorAll('[data-whatsnew-close]').forEach(function (b) { b.addEventListener('click', function () { try { dlg.hide(); } catch (e) {} }); });
+    if ($('whatsnew-save')) $('whatsnew-save').addEventListener('click', saveWhatsNew);
+    if ($('whatsnew-draft')) $('whatsnew-draft').addEventListener('click', function (e) { e.preventDefault(); whatsNewDialogDraft(); });
+    if ($('ez-whatsnew-add')) $('ez-whatsnew-add').addEventListener('click', function () { openWhatsNewDialog(false); });
+    if ($('ez-pv-whatsnew')) $('ez-pv-whatsnew').addEventListener('click', function () { openWhatsNewDialog(false); });
+    if ($('whatsnew-ai-chip')) $('whatsnew-ai-chip').addEventListener('click', function (e) { e.stopPropagation(); whatsNewSectionDraft(); });
+    renderWhatsNew();
+  })();
+
   // Autofill the listing with AI (or a clean heuristic draft).
   // Listing autofill — shared by the "Autofill with AI" button and the automatic
   // draft-from-site after a PWA is packaged. `auto` skips the dialog button/close chrome.
@@ -9055,6 +9195,7 @@
     } catch (e) {}
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Draft'; pill.className = 'status-pill status-pill--draft'; }
+    inUpdateFlow = false;   // leaving the update flow
     $('state-done').hidden = true;
     $('editor').hidden = false;
     $('submit-bar').hidden = false;
@@ -9067,6 +9208,10 @@
   window.startAppUpdate = function () {
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Updating'; pill.className = 'status-pill status-pill--in-review'; }
+    // Entering the update flow: adding a NEW package will prompt once for "What's new in this version".
+    inUpdateFlow = true;
+    whatsNewPrompted = false;
+    try { updateBaselineIds = new Set(packages.map(function (p) { return p.id; })); } catch (e) { updateBaselineIds = new Set(); }
     $('state-done').hidden = true;
     $('editor').hidden = false;
     $('submit-bar').hidden = false;
