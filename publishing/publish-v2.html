@@ -1322,12 +1322,19 @@
   #ai-autofill-dialog fluent-text-input::part(control) { width: 100%; min-width: 100%; box-sizing: border-box; }
 
   /* ---- What's new in this version (listing section + prompt dialog) ---- */
-  .ez-whatsnew-text { white-space: pre-line; cursor: pointer; border-radius: var(--r-4); transition: background-color var(--dur-2) var(--ease-out); }
+  /* Update-flow-only: hidden in the new-app publish flow. 3 ids beat the adv-only reveal !important. */
+  #flow-wrap:not(.is-update-flow) #step-listing #ez-whatsnew-section { display: none !important; }
+  .ez-whatsnew-text { margin: 0; padding: 2px 4px; font-size: 13px; line-height: 1.45; color: var(--fg-2); white-space: pre-line; cursor: pointer; border-radius: var(--r-4); transition: background-color var(--dur-2) var(--ease-out); }
   .ez-whatsnew-text[hidden] { display: none; }
   .ez-whatsnew-text:hover { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .ez-whatsnew-empty { display: inline-flex; align-items: center; gap: var(--sp-8); width: 100%; background: transparent; border: 1px dashed color-mix(in srgb, var(--brand) 35%, transparent); border-radius: var(--r-4); padding: var(--sp-12); color: var(--fg-3); cursor: pointer; font: inherit; font-size: 13px; text-align: left; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .ez-whatsnew-empty:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); border-color: color-mix(in srgb, var(--brand) 55%, transparent); }
+  .ez-whatsnew-empty iconify-icon { color: color-mix(in srgb, var(--brand) 70%, var(--fg-3)); flex: 0 0 auto; }
+  .ez-whatsnew-empty[hidden] { display: none; }
   .ez-whatsnew-draftrow { display: flex; justify-content: flex-end; margin-top: var(--sp-8); }
-  #whatsnew-dialog fluent-textarea, #whatsnew-dialog fluent-textarea::part(control) { width: 100%; box-sizing: border-box; }
-  #whatsnew-dialog fluent-textarea::part(control) { min-height: 104px; }
+  #whatsnew-dialog fluent-textarea { width: 100%; }
+  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; }
+  #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; box-sizing: border-box; resize: vertical; }
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
   .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
@@ -2994,9 +3001,9 @@
               </div>
             </section>
 
-            <!-- What's new in this version (Advanced) — release notes for the current package.
-                 Prompted after adding a package in the update flow; editable here any time. -->
-            <section class="ez-card-section adv-only" id="ez-whatsnew-section">
+            <!-- What's new in this version (Advanced, UPDATE flow only) — release notes for the
+                 current package. Prompted after adding a package in the update flow; editable here. -->
+            <section class="ez-card-section adv-only ez-whatsnew-sec" id="ez-whatsnew-section">
               <div class="ez-card-section__head">
                 <h4 class="ez-card-section__title">What's new in this version</h4>
                 <button type="button" class="ez-ai-chip" id="whatsnew-ai-chip">
@@ -3004,8 +3011,8 @@
                 </button>
               </div>
               <div class="ez-card-section__body">
-                <p class="ez-store-desc ez-whatsnew-text" id="ez-pv-whatsnew" hidden></p>
-                <button type="button" class="ez-store-features-empty" id="ez-whatsnew-add">
+                <p class="ez-whatsnew-text" id="ez-pv-whatsnew" hidden></p>
+                <button type="button" class="ez-whatsnew-empty" id="ez-whatsnew-add">
                   <iconify-icon icon="fluent:add-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
                   <span>Add what's new in this version (optional)</span>
                 </button>
@@ -5049,7 +5056,7 @@
     clone.querySelectorAll(
       '.ez-hero-media__remove, .ez-trailer-add-btn, input[type="file"], ' +
       '.ez-pv-shot__del, .ez-pv-shot-add, .ez-shots-arrow, ' +
-      '.ez-store-features-empty, .ez-hero-empty, .ez-ai-chip'
+      '.ez-store-features-empty, .ez-whatsnew-empty, .ez-hero-empty, .ez-ai-chip'
     ).forEach(n => n.remove());
     // Neutralize the click-to-edit "Additional information" cells (privacy policy,
     // license terms, etc.). Unset "Add …" prompts are dropped (a customer sees nothing
@@ -5111,6 +5118,8 @@
     clone.querySelectorAll('.ez-store-features, .ez-info-grid').forEach(list => {
       if (!list.children.length) { const sec = list.closest('.ez-card-section'); if (sec) sec.remove(); }
     });
+    // What's new (update-only): drop the section entirely when there are no release notes.
+    if (!(adv.listing.whatsNew || '').trim()) { const wn = clone.querySelector('.ez-whatsnew-sec'); if (wn) wn.remove(); }
     // Remove the click-to-edit hover affordance from text fields.
     clone.querySelectorAll('.live-edit-target').forEach(n => n.classList.remove('live-edit-target'));
     // The app-icon stays visible (it shows the uploaded icon) but is no longer an
@@ -9196,6 +9205,7 @@
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Draft'; pill.className = 'status-pill status-pill--draft'; }
     inUpdateFlow = false;   // leaving the update flow
+    try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
     $('state-done').hidden = true;
     $('editor').hidden = false;
     $('submit-bar').hidden = false;
@@ -9211,6 +9221,7 @@
     // Entering the update flow: adding a NEW package will prompt once for "What's new in this version".
     inUpdateFlow = true;
     whatsNewPrompted = false;
+    try { document.getElementById('flow-wrap').classList.add('is-update-flow'); } catch (e) {}
     try { updateBaselineIds = new Set(packages.map(function (p) { return p.id; })); } catch (e) { updateBaselineIds = new Set(); }
     $('state-done').hidden = true;
     $('editor').hidden = false;
