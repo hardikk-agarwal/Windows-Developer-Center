@@ -401,9 +401,9 @@
   .declarations__title { font-family: var(--font-display); font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-4); }
   .declarations__sub { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0; line-height: 1.5; }
   .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-  .declarations__item { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-12); align-items: center; padding: var(--sp-6) 0; }
-  .declarations__item fluent-switch { flex: 0 0 auto; }
-  .declarations__copy { min-width: 0; }
+  .declarations__item { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-6) 0; }
+  .declarations__item fluent-switch { flex: 0 0 auto; order: 2; }
+  .declarations__copy { min-width: 0; flex: 1 1 auto; order: 1; }
   .declarations__label { display: block; font-size: 13px; font-weight: 500; color: var(--fg-1); cursor: pointer; }
 
   /* ===== Advanced listing — PDP-integrated sections + search-terms metadata ===== */
@@ -1328,22 +1328,17 @@
   #submit-dialog .ez-sd__hold .ez-sd__hint { margin: 2px 0 0; }
   #submit-dialog .ez-sd__notes { margin-top: var(--sp-16); }
   #submit-dialog .ez-sd__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-2); }
-  /* Optional extras (test sign-in & notes, release) shown directly — no "Advanced settings" wrapper.
-     A top divider + top margin separates them from Disclosures, matching the between-item dividers. */
-  #submit-dialog .ez-sd__subs { margin-top: var(--sp-20); border-top: 1px solid var(--stroke-3); }
-  #submit-dialog .ez-sd__opt { font-weight: 400; font-size: 12px; color: var(--fg-3); }
-  /* Advanced-settings items: each optional area collapses to a one-line summary row (chevron + icon +
-     title + current value / optional tag), so nothing overwhelms until you open it. */
+  /* Optional submission settings live in their own "Options" section (its own heading). Each is one
+     consistent row: title on the LEFT, current-state value + chevron on the RIGHT — same left-to-right
+     reading as the Disclosures rows (label left, control right). */
   #submit-dialog .ez-sd__sub[hidden] { display: none; }
   #submit-dialog .ez-sd__sub + .ez-sd__sub { border-top: 1px solid var(--stroke-3); }
   #submit-dialog .ez-sd__sub-head { display: flex; align-items: center; gap: var(--sp-8); cursor: pointer; list-style: none; padding: var(--sp-8) 0; user-select: none; }
   #submit-dialog .ez-sd__sub-head::-webkit-details-marker { display: none; }
-  #submit-dialog .ez-sd__sub-chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
-  #submit-dialog .ez-sd__sub[open] .ez-sd__sub-chev { transform: rotate(90deg); }
-  #submit-dialog .ez-sd__sub-ico { flex: 0 0 auto; color: var(--brand); }
   #submit-dialog .ez-sd__sub-title { font-size: 13px; font-weight: 600; color: var(--fg-1); }
-  #submit-dialog .ez-sd__sub-head .ez-sd__opt { margin-left: auto; }
-  #submit-dialog .ez-sd__sub-val { margin-left: auto; font-size: 12px; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+  #submit-dialog .ez-sd__sub-val { margin-left: auto; font-size: 12px; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+  #submit-dialog .ez-sd__sub-chev { flex: 0 0 auto; margin-left: var(--sp-8); color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  #submit-dialog .ez-sd__sub[open] .ez-sd__sub-chev { transform: rotate(90deg); }
   #submit-dialog .ez-sd__sub-body { margin: var(--sp-2) 0 var(--sp-10) var(--sp-24); }
   /* Two labelled sub-fields inside the Release row (Go live / Stop offering). */
   #submit-dialog .ez-sd__field + .ez-sd__field { margin-top: var(--sp-12); }
@@ -4463,16 +4458,15 @@
       </ul>
     </section>
 
-    <!-- Optional extras, surfaced directly (no "Advanced settings" wrapper): test sign-in & notes for
-         reviewers, and release (go-live + stop offering). Each collapses to a one-line summary row. -->
-    <div class="ez-sd__subs">
+    <!-- Optional submission settings — under their own heading so they don't read as Disclosures. -->
+    <section class="ez-sd__section">
+      <h3 class="ez-sd__title">Review &amp; release</h3>
       <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
       <details class="ez-sd__sub" id="submit-creds">
         <summary class="ez-sd__sub-head">
-          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-          <iconify-icon class="ez-sd__sub-ico" icon="fluent:key-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
           <span class="ez-sd__sub-title">Test sign-in &amp; notes for reviewers</span>
-          <span class="ez-sd__opt">optional</span>
+          <span class="ez-sd__sub-val" id="creds-summary">None</span>
+          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
         </summary>
         <div class="ez-sd__sub-body">
           <div class="ez-sd__creds-list" id="submit-creds-list"></div>
@@ -4485,10 +4479,9 @@
       <!-- Release: go-live (after cert) + when to stop offering. Collapsed; the summary shows the choice. -->
       <details class="ez-sd__sub" id="submit-hold-opts">
         <summary class="ez-sd__sub-head">
-          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-          <iconify-icon class="ez-sd__sub-ico" icon="fluent:calendar-clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
           <span class="ez-sd__sub-title">Release</span>
           <span class="ez-sd__sub-val" id="hold-summary">Live when approved</span>
+          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
         </summary>
         <div class="ez-sd__sub-body">
           <div class="ez-sd__field">
@@ -4505,7 +4498,7 @@
           </div>
         </div>
       </details>
-    </div>
+    </section>
 
     <fluent-button slot="action" appearance="secondary" data-submit-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="submit-confirm-btn">
@@ -9017,6 +9010,13 @@
   function updateHoldSummary() {
     const sum = $('hold-summary'); if (sum) sum.textContent = releaseSummary();
   }
+  // Test sign-in row shows its current state (like Release shows the go-live choice) — no "optional" tag.
+  function updateCredsSummary() {
+    const sum = $('creds-summary'); if (!sum) return;
+    const n = Array.isArray(adv.testCredentials) ? adv.testCredentials.filter(c => (c.name || '').trim() || (c.value || '').trim()).length : 0;
+    const hasNotes = ($('submit-notes') && ($('submit-notes').value || '').trim().length > 0);
+    sum.textContent = n ? (n + ' credential' + (n > 1 ? 's' : '')) : (hasNotes ? 'Notes added' : 'None');
+  }
   function syncPublishHoldUI() {
     if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
     if (!adv.schedule) adv.schedule = { end: { mode: 'never', date: '' } };
@@ -9065,6 +9065,7 @@
         '<button type="button" class="ez-sd__cred-del" data-cred-del="' + i + '" aria-label="Remove credential"><iconify-icon icon="fluent:dismiss-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
       '</div>'
     ).join('');
+    updateCredsSummary();
   }
   (function wireTestCreds() {
     const addBtn = $('submit-creds-add'), list = $('submit-creds-list');
@@ -9083,9 +9084,11 @@
         const inp = e.target.closest('[data-cred-field]'); if (!inp) return;
         const row = inp.closest('[data-cred-i]'); if (!row) return;
         const i = parseInt(row.getAttribute('data-cred-i'), 10);
-        if (adv.testCredentials[i]) { adv.testCredentials[i][inp.getAttribute('data-cred-field')] = inp.value || ''; persistAdvanced(); }
+        if (adv.testCredentials[i]) { adv.testCredentials[i][inp.getAttribute('data-cred-field')] = inp.value || ''; persistAdvanced(); updateCredsSummary(); }
       });
     }
+    const notesEl = $('submit-notes');
+    if (notesEl) notesEl.addEventListener('input', updateCredsSummary);
   })();
   if (submitDlg) submitDlg.querySelectorAll('[data-submit-close]').forEach(b => b.addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} }));
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
