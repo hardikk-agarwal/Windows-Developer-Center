@@ -357,6 +357,12 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .apptable .ratecell__star { color: #f7b955; font-size: 13px; line-height: 1; }
 .apptable .rowactions { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
 .apptable .row-chev { opacity: .5; flex: none; }
+/* Live-app metric cells (installs / crash rate / rating) open that app's analytics; the rest of the
+   row opens the app's page. On hover the metric text turns into a blue link — no box highlight. */
+.apptable--store td.metric-cell { cursor: pointer; }
+.apptable--store td.metric-cell:hover strong,
+.apptable--store td.metric-cell:hover .metric__row,
+.apptable--store td.metric-cell:hover .ratecell { color: var(--brand-soft); text-decoration: underline; text-underline-offset: 2px; }
 .spinner--xs { width: 11px; height: 11px; border-width: 2px; }
 
 /* segmented allow/block */

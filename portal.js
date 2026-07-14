@@ -713,14 +713,16 @@
       crash = '<span class="metric__row"><span class="health__dot is-' + dot + '"></span>' + ana.crashRate.toFixed(2) + '%</span>';
       rating = '<span class="ratecell"><span class="ratecell__star">★</span><strong>' + rat.avg.toFixed(1) + '</strong> <span class="muted">(' + fmtCompact(rat.total) + ')</span></span>';
     }
-    var openAttr = live ? ' data-analytics="' + a.id + '"' : ' data-openapp="' + a.id + '"';
-    var title = live ? "View analytics" : "Continue in the publishing flow";
-    return '<tr class="approw--open"' + openAttr + ' title="' + title + '">' +
+    // The row always opens the app's page in its current state (draft / in review / published).
+    // For LIVE apps the metric cells (installs, crash rate, rating) instead open that app's analytics.
+    var rowTitle = live ? "Open app \u2014 published" : inReview ? "Open app \u2014 in review" : rejected ? "Open app \u2014 needs attention" : "Open app \u2014 draft";
+    var metricAttr = live ? ' class="metric-cell" data-analytics="' + a.id + '" title="View analytics"' : '';
+    return '<tr class="approw--open" data-openapp="' + a.id + '" title="' + rowTitle + '">' +
       '<td><div class="cell-main">' + iconHTML + '<div><strong>' + esc(a.storeName || a.name) + '</strong>' + (a.size ? '<span class="muted">' + esc(a.size) + '</span>' : '') + '</div></div></td>' +
       '<td>' + pill + '</td>' +
-      '<td>' + installs + '</td>' +
-      '<td>' + crash + '</td>' +
-      '<td>' + rating + '</td>' +
+      '<td' + metricAttr + '>' + installs + '</td>' +
+      '<td' + metricAttr + '>' + crash + '</td>' +
+      '<td' + metricAttr + '>' + rating + '</td>' +
       '<td class="col-store"><span class="rowactions">' +
         (rejected ? '<button class="linkbtn" data-report="' + a.id + '" title="View certification report">View report</button>' : '') +
         '<button class="iconbtn iconbtn--danger" data-delapp="' + a.id + '" title="Delete app" aria-label="Delete app">' +
