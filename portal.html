@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>Windows Developer Program | Microsoft</title>
-  <link rel="stylesheet" href="portal.css" />
+  <link rel="stylesheet" href="portal.css?v=38" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
@@ -130,8 +130,12 @@
             <h2>Analytics</h2>
             <p class="muted">Crash &amp; hang analytics across all your users comes free with your verified status. Publish an app to the Store to unlock acquisition, usage, ratings &amp; reviews, and performance.</p>
           </div>
-          <select class="select" id="analyticsApp" aria-label="Select app"></select>
         </div>
+        <div class="ana-controls" id="anaControls" hidden>
+          <div class="appsel" id="anaAppSel"><!-- app selector w/ logo, rendered by portal.js --></div>
+          <div class="ana-controls__right" id="anaFilterBar"><!-- date range + filters, rendered by portal.js --></div>
+        </div>
+        <div class="ana-chips" id="anaChips" hidden><!-- active filter chips --></div>
         <div id="analyticsPanel"><!-- rendered by portal.js --></div>
       </section>
     </main>
@@ -176,6 +180,52 @@
       <fluent-button slot="action" data-srcclose>Done</fluent-button>
     </fluent-dialog-body>
   </fluent-dialog>
+
+  <!-- ===== Crash analytics — symbol uploader ===== -->
+  <fluent-dialog id="symDialog" aria-label="Upload symbols">
+    <fluent-dialog-body>
+      <span slot="title" id="symDialogTitle">Upload symbols</span>
+      <fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-sym-close>
+        <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+      </fluent-button>
+      <div id="symDialogBody"></div>
+    </fluent-dialog-body>
+  </fluent-dialog>
+
+  <!-- ===== Crash analytics — symbol upload history ===== -->
+  <fluent-dialog id="histDialog" aria-label="Symbol upload history">
+    <fluent-dialog-body>
+      <span slot="title">Symbol upload history<span class="dialog-titlesub muted" id="histDialogSub"></span></span>
+      <fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-hist-close>
+        <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+      </fluent-button>
+      <div id="histDialogBody"></div>
+    </fluent-dialog-body>
+  </fluent-dialog>
+
+  <!-- ===== Crash analytics — occurrence stack trace ===== -->
+  <fluent-dialog id="occDialog" aria-label="Occurrence stack trace">
+    <fluent-dialog-body>
+      <span slot="title">Occurrence stack trace<span class="dialog-titlesub muted" id="occDialogSub"></span></span>
+      <fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-occ-close>
+        <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+      </fluent-button>
+      <div id="occDialogBody"></div>
+    </fluent-dialog-body>
+  </fluent-dialog>
+
+  <!-- ===== Crash analytics — filters drawer ===== -->
+  <fluent-drawer id="filterDrawer" position="end" aria-label="Filters">
+    <fluent-drawer-body>
+      <span slot="title">Filters</span>
+      <fluent-button slot="close" appearance="transparent" icon-only aria-label="Close" data-filter-close>
+        <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+      </fluent-button>
+      <div id="filterDrawerBody"></div>
+      <fluent-button slot="footer" appearance="subtle" data-filter-clearall>Clear all</fluent-button>
+      <fluent-button slot="footer" appearance="primary" data-filter-apply>Apply filters</fluent-button>
+    </fluent-drawer-body>
+  </fluent-drawer>
 
   <!-- ============ PUBLISH TO STORE — reserve app name (step 1 of the flow) ============ -->
   <div class="modal" id="publishModal" hidden>
@@ -263,14 +313,15 @@
 
   <!-- Fluent 2 web components (real components + dark theme tokens) -->
   <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
+    import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition,
+      DrawerDefinition, DrawerBodyDefinition, CheckboxDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition,
+      BadgeDefinition, CounterBadgeDefinition, SpinnerDefinition, LinkDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
     import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
     setTheme(webDarkTheme);
-    ButtonDefinition.define(FluentDesignSystem.registry);
-    TextInputDefinition.define(FluentDesignSystem.registry);
-    DialogDefinition.define(FluentDesignSystem.registry);
-    DialogBodyDefinition.define(FluentDesignSystem.registry);
+    [ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition, DrawerDefinition, DrawerBodyDefinition,
+      CheckboxDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition, BadgeDefinition, CounterBadgeDefinition, SpinnerDefinition, LinkDefinition]
+      .forEach(function (d) { d.define(FluentDesignSystem.registry); });
   </script>
-  <script src="portal.js"></script>
+  <script src="portal.js?v=38"></script>
 </body>
 </html>

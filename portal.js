@@ -744,10 +744,21 @@
      per-failure drill-down), tabbed by analytics type. ALL figures here are generated
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0;
+  var anaSearch = "", anaType = "all", anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
+  var anaLogPage = 0, anaLogQuery = "";
+  // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
+  var anaRange = "7d", anaCustom = null, symUp = null, anaFilters = {};
+  var SYM_STATES = {
+    resolved:    { label: "Resolved",      cls: "ok",   ico: "fluent:checkmark-circle-16-filled" },
+    processing:  { label: "Processing",    cls: "info", ico: "fluent:arrow-sync-16-filled" },
+    notuploaded: { label: "Not uploaded",  cls: "idle", ico: "fluent:circle-16-regular" },
+    action:      { label: "Action needed", cls: "warn", ico: "fluent:warning-16-filled" }
+  };
+  var SYM_ERR = { code: "SYM_E_PDB_MISMATCH", msg: "The PDB signature (GUID/age) in this upload doesn\u2019t match the binaries you shipped for this version. Rebuild so the symbols match the exact binary, then re-upload the full package (.exe/.dll + .pdb)." };
   // Crash Health is available for every app; the Store analytics (acquisition,
   // usage, ratings) are LOCKED until the app is published to the Microsoft Store.
   var ANA_TABS = [
-    { key: "crashes",     label: "Health",            icon: "fluent:bug-20-regular", free: true },
+    { key: "crashes",     label: "Crash",             icon: "fluent:bug-20-regular", free: true },
     { key: "acquisition", label: "Acquisition",       icon: "fluent:arrow-download-20-regular", store: true },
     { key: "usage",       label: "Usage",             icon: "fluent:pulse-20-regular", store: true },
     { key: "ratings",     label: "Ratings & reviews", icon: "fluent:star-20-regular", store: true }
@@ -758,7 +769,7 @@
   function lockedAnalyticsHTML(app, tab) {
     return '<div class="ana-locked"><iconify-icon class="ana-locked__ico" icon="fluent:lock-closed-24-regular" width="34" height="34" aria-hidden="true"></iconify-icon>' +
       '<strong>' + esc(tab.label) + ' unlocks on the Microsoft Store</strong>' +
-      '<p class="muted">Crash <strong>Health</strong> is available for every app. ' + esc(tab.label) + ' — plus acquisition, usage and ratings — unlocks once you bring <strong>' + esc(app.name) + '</strong> to the Store.</p>' +
+      '<p class="muted">The <strong>Crash</strong> tab is available for every app. ' + esc(tab.label) + ' — plus acquisition, usage and ratings — unlocks once you bring <strong>' + esc(app.name) + '</strong> to the Store.</p>' +
       '<fluent-button appearance="primary" data-store="' + app.id + '"><iconify-icon slot="start" icon="fluent:rocket-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Publish to the Store</fluent-button></div>';
   }
 
@@ -795,37 +806,79 @@
   ];
 
   var anaCache = {};
+  var STACK_FNS = ["Renderer::PaintLayer", "Document::Save", "NetClient::OnResponse", "Heap::Allocate", "View::OnPaint", "Session::Tick", "Codec::DecodeFrame", "Db::Commit"];
   function anaData(app) {
     if (anaCache[app.id]) return anaCache[app.id];
     var rnd = anaRng(Math.abs(hashStr(app.id + "|" + app.name)) || 1);
     var exe = app.file || (app.name.replace(/\s+/g, "") + ".exe");
+    var base = exe.replace(/\.exe$/i, "");
     var crashes = Math.round(8e5 + rnd() * 4e6), hangs = Math.round(1e6 + rnd() * 3e6), crashRate = +(2 + rnd() * 5).toFixed(2);
     var days = 28, labels = [];
     for (var i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
     var series = [
       { name: "Crashes", color: "var(--brand)", values: wave(rnd, days, crashes / days * 9, crashes / days * 5).map(Math.round) },
-      { name: "Hangs", color: "#C239B3", values: wave(rnd, days, hangs / days * 2.6, hangs / days).map(Math.round) },
-      { name: "Memory failures", color: "#8661C5", values: wave(rnd, days, crashes / days * 0.5, crashes / days * 0.4).map(Math.round) }
+      { name: "Hangs", color: "var(--magenta)", values: wave(rnd, days, hangs / days * 2.6, hangs / days).map(Math.round) },
+      { name: "Memory failures", color: "var(--purple)", values: wave(rnd, days, crashes / days * 0.5, crashes / days * 0.4).map(Math.round) }
     ];
-    var dist = [], dv = 1.1e6 + rnd() * 4e5;
-    for (var v = 0; v < 10; v++) { dist.push({ label: "6.1." + (8 + ((rnd() * 6) | 0)) + ".0", value: Math.round(dv) }); dv *= (0.32 + rnd() * 0.4); }
+    // App versions, each with its own symbol status (symbols are per app + per version).
+    var nver = 4 + ((rnd() * 2) | 0), vmajor = 2 + ((rnd() * 4) | 0), vmin = 1 + ((rnd() * 6) | 0), verNums = [];
+    for (var vv = 0; vv < nver; vv++) verNums.push(vmajor + "." + vmin + "." + (nver - vv) + ".0");   // newest first
+    var symSeq = ["processing", "resolved", "resolved", "action", "notuploaded", "resolved"], soff = (rnd() * symSeq.length) | 0;
+    var vShare = 0.62, versions = verNums.map(function (vn, vi) {
+      var st = symSeq[(vi + soff) % symSeq.length];
+      var vf = Math.max(240, Math.round((crashes + hangs) * vShare * (0.5 + rnd() * 0.5))); vShare *= (0.42 + rnd() * 0.3);
+      return { ver: vn, failures: vf, sym: st };
+    });
+    if (!versions.some(function (v) { return v.sym === "action"; })) versions[Math.min(2, nver - 1)].sym = "action";
+    if (!versions.some(function (v) { return v.sym === "notuploaded"; })) versions[nver - 1].sym = "notuploaded";
+    if (versions[0].sym === "notuploaded") versions[0].sym = "processing";   // newest is being worked on
+    var symbolHealth = Math.round(versions.filter(function (v) { return v.sym === "resolved"; }).length / nver * 100);
+    var dist = versions.map(function (v) { return { label: v.ver, value: v.failures }; });
+    // Failure buckets \u2014 each tied to a version; resolved iff that version's symbols resolved.
     var failures = [], share = 0.5;
     for (var f = 0; f < 24; f++) {
       var k = FAIL_KINDS[f % FAIL_KINDS.length];
-      failures.push({ id: "f" + f, name: k.p + hexTok(rnd, 8) + "_" + exe.replace(/\.exe$/i, "") + ".exe" + k.s, type: k.t, hits: Math.max(2000, Math.round((crashes + hangs) * share * (0.7 + rnd() * 0.5))) });
+      var vp = versions[(rnd() * Math.min(3, nver)) | 0];
+      var resolved = vp.sym === "resolved";
+      var type = (f % 6 === 5) ? "Memory" : k.t;
+      var cm = k.p.match(/_([0-9a-fA-F]{8})_/), code = cm ? "0x" + cm[1].toUpperCase() : (type === "Hang" ? "Hang" : "0xC0000005");
+      var fn = STACK_FNS[(rnd() * STACK_FNS.length) | 0];
+      var name = resolved ? (base + "!" + fn) : (k.p + hexTok(rnd, 8) + "_" + base + ".exe" + k.s);
+      var fhits = Math.max(2000, Math.round((crashes + hangs) * share * (0.7 + rnd() * 0.5)));
+      var fIsNew = vp.ver === verNums[0] && rnd() < 0.5;
+      if (fIsNew) fhits = Math.round(fhits * (1.7 + rnd() * 1.3));   // spiking regressions climb fast — surface them
+      var fDelta = fIsNew ? (55 + rnd() * 260) : (-50 + rnd() * 120);
+      failures.push({ id: "f" + f, name: name, type: type, ver: vp.ver, resolved: resolved, code: code, fn: resolved ? fn : "!Unknown",
+        hits: fhits, devices: Math.max(1, Math.round(fhits * (0.10 + rnd() * 0.32))), dPct: +fDelta.toFixed(1), isNew: fIsNew,
+        trend: wave(rnd, 8, fhits / 8, fhits / 6).map(Math.round) });
       share *= (0.55 + rnd() * 0.3);
     }
     var sum = failures.reduce(function (m, x) { return m + x.hits; }, 0);
     failures.forEach(function (x) { x.pct = +(x.hits / sum * 100).toFixed(2); });
     failures.sort(function (a, b) { return b.hits - a.hits; });
-    return (anaCache[app.id] = { crashes: crashes, hangs: hangs, crashRate: crashRate, hits: { labels: labels, series: series }, dist: dist, failures: failures });
+    (function () {   // guarantee a visible regression on the newest build so "New"/spiking always surfaces
+      var nv = verNums[0], flagged = 0;
+      for (var fi = 0; fi < failures.length && flagged < 2; fi++) {
+        if (failures[fi].ver === nv) { failures[fi].isNew = true; if (failures[fi].dPct < 65) failures[fi].dPct = +(72 + fi * 9).toFixed(1); flagged++; }
+      }
+    })();
+    // Symbol upload history (per-app audit trail, visible to the whole team).
+    var users = ["alex@contoso.com", "priya@contoso.com", "sam@fabrikam.com"], hist = [], hn = 3 + ((rnd() * 3) | 0);
+    for (var hh = 0; hh < hn; hh++) {
+      var hv = versions[hh % nver];
+      hist.push({ id: "h" + hh, file: base.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + hv.ver + ".zip",
+        ver: hv.ver, status: hv.sym === "notuploaded" ? "action" : hv.sym, size: (18 + ((rnd() * 60) | 0)) + " MB",
+        by: pick(rnd, users), date: "05/" + pad2(17 - hh) + "/2026" });
+    }
+    return (anaCache[app.id] = { crashes: crashes, hangs: hangs, crashRate: crashRate, hits: { labels: labels, series: series },
+      dist: dist, failures: failures, versions: versions, symbolHealth: symbolHealth, history: hist, exe: exe, base: base });
   }
   function failureDetail(app, f) {
     var rnd = anaRng(Math.abs(hashStr(app.id + "|" + f.id)) || 1), days = 28, labels = [];
     for (var i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
     var series = [{ name: f.type + "s", color: "var(--brand)", values: wave(rnd, days, f.hits / days * 6, f.hits / days * 3).map(Math.round) }];
-    var log = [];
-    for (var r = 0; r < 8; r++) log.push({ date: "05/" + pad2(17 - ((rnd() * 6) | 0)) + "/2026 " + pad2(1 + ((rnd() * 9) | 0)) + ":" + pad2((rnd() * 59) | 0) + " AM", ver: "6.1." + (8 + ((rnd() * 6) | 0)) + ".0", dev: "PC", model: pick(rnd, DEV_MODELS), os: pick(rnd, OS_BUILDS) });
+    var DTYPE = ["Desktop", "Laptop", "Server", "Tablet", "Workstation"], log = [];
+    for (var r = 0; r < 26; r++) log.push({ id: "o" + r, date: pad2(6 + ((rnd() * 2) | 0)) + "/" + pad2(1 + ((rnd() * 27) | 0)) + "/2026 " + pad2(1 + ((rnd() * 11) | 0)) + ":" + pad2((rnd() * 59) | 0) + " " + (rnd() < 0.5 ? "AM" : "PM"), ver: f.ver, dev: pick(rnd, DTYPE), model: pick(rnd, DEV_MODELS), os: pick(rnd, OS_BUILDS) });
     return { hits: { labels: labels, series: series }, log: log, cpu: CPU_MIX };
   }
 
@@ -1195,52 +1248,430 @@
     return '<div class="table-wrap"><table class="atable"><thead><tr><th>' + headA + '</th><th class="num">Hits</th></tr></thead><tbody>' +
       rows.map(function (r) { return '<tr><td>' + esc(r.label) + '</td><td class="num">' + fmtComma(r.hits) + ' <span class="muted">(' + r.pct.toFixed(2) + '%)</span></td></tr>'; }).join("") + '</tbody></table></div>';
   }
+  function geoBars(rows) {
+    var mx = rows.reduce(function (m, r) { return Math.max(m, r.hits); }, 1);
+    return '<div class="geobars">' + rows.map(function (r) {
+      return '<div class="geobar"><span class="geobar__label">' + esc(r.label) + '</span>' +
+        '<span class="geobar__track"><span class="geobar__fill" style="width:' + (r.hits / mx * 100).toFixed(1) + '%"></span></span>' +
+        '<span class="geobar__val">' + fmtComma(r.hits) + ' <span class="muted">(' + r.pct.toFixed(2) + '%)</span></span></div>';
+    }).join("") + '</div>';
+  }
+  /* ===== Crash analytics: per-app crash overview (L1) + failure stack trace (L2) ===== */
+  function caDays() { return anaRange === "7d" ? 7 : (anaRange === "custom" && anaCustom) ? anaCustom.days : 30; }
+  function caView(app) {
+    var d = anaData(app), full = d.hits, n = full.labels.length, days = Math.min(caDays(), n);
+    function tail(a) { return a.slice(n - days); }
+    var series = full.series.map(function (s) { return { name: s.name, color: s.color, values: tail(s.values) }; });
+    function sum(a) { return a.reduce(function (m, v) { return m + v; }, 0); }
+    var cr = sum(series[0].values), hg = sum(series[1].values), mem = sum(series[2].values);
+    var ps = Math.max(0, n - 2 * days), pe = n - days;
+    function psum(a) { return a.slice(ps, pe).reduce(function (m, v) { return m + v; }, 0) || 1; }
+    function dp(c, p) { return +(((c - p) / p) * 100).toFixed(1); }
+    return { days: days, labels: tail(full.labels), series: series, total: cr + hg + mem, crashes: cr, hangs: hg, mem: mem,
+      dTotal: dp(cr + hg + mem, psum(full.series[0].values) + psum(full.series[1].values) + psum(full.series[2].values)),
+      dCrash: dp(cr, psum(full.series[0].values)), dHang: dp(hg, psum(full.series[1].values)), dMem: dp(mem, psum(full.series[2].values)) };
+  }
+  function applyCustomRange(from, to) {
+    if (!from || !to) { anaCustom = { days: 14, from: from, to: to }; return; }
+    var a = new Date(from), b = new Date(to), days = Math.max(1, Math.round((b - a) / 864e5) + 1);
+    var todayISO = new Date().toISOString().slice(0, 10);
+    anaCustom = { days: Math.min(30, days), from: from, to: to, tooRecent: from === todayISO && to === todayISO };
+  }
+  function deltaPill(delta) {   // fewer failures (down) = good
+    if (delta == null || !isFinite(delta) || delta === 0) return '<span class="delta delta--flat">\u2014</span>';
+    var down = delta < 0;
+    return '<span class="delta delta--' + (down ? "down" : "up") + '">' + (down ? "\u25BC" : "\u25B2") + " " + Math.abs(delta).toFixed(1) + '%</span>';
+  }
+  function countCard(label, val, sub, series, color, delta) {
+    return '<div class="sumcard"><span class="sumcard__label">' + label + '</span>' +
+      '<div class="sumcard__row"><strong class="sumcard__big">' + val + '</strong>' + deltaPill(delta) + '</div>' +
+      '<span class="sumcard__sub muted">' + sub + '</span>' + (series ? spark(series, color) : "") + '</div>';
+  }
+  function anaFilterHTML() {
+    var y = new Date(Date.now() - 864e5), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var refreshed = M[y.getMonth()] + " " + y.getDate() + ", " + y.getFullYear();
+    var ranges = [["7d", "Last 7 days"], ["30d", "Last 30 days"], ["custom", "Custom range"]];
+    var dateSel = '<fluent-dropdown id="anaRangeSel" appearance="outline" aria-label="Date range" placeholder="Date range"><fluent-listbox>' + ranges.map(function (r) { return '<fluent-option value="' + r[0] + '"' + (anaRange === r[0] ? " selected" : "") + '>' + r[1] + '</fluent-option>'; }).join("") + '</fluent-listbox></fluent-dropdown>';
+    var custom = anaRange === "custom" ? '<span class="cacustom"><input type="date" class="cadate" id="caFrom"' + (anaCustom && anaCustom.from ? ' value="' + anaCustom.from + '"' : "") + '><span class="muted">to</span><input type="date" class="cadate" id="caTo"' + (anaCustom && anaCustom.to ? ' value="' + anaCustom.to + '"' : "") + '><fluent-button size="small" appearance="primary" data-ca-apply="1">Apply</fluent-button></span>' : "";
+    var updated = '<span class="ca-updated" title="Crash data is aggregated from Windows with about 24 hours of latency by design, so the latest day shown is yesterday. Real-time data is not available for Win32 apps.">' +
+      '<iconify-icon icon="fluent:history-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Updated ' + refreshed + '</span>';
+    var fc = filterCount(), filtersBtn = '<fluent-button id="anaFiltersBtn" appearance="outline" data-ca-filters="1"><iconify-icon slot="start" icon="fluent:filter-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
+    return updated + dateSel + custom + filtersBtn;
+  }
+  function failLabel(f) {
+    if (f.fn && f.fn !== "!Unknown") return f.fn;
+    var m = f.name.match(/^(.*?)_(?:c[0-9a-fA-F]{7}|[0-9a-fA-F]{8})_/);
+    return m ? m[1] : f.name;
+  }
+  function aiInsightHTML(app) {
+    var d = anaData(app), v = caView(app);
+    var sorted = d.failures.slice().sort(function (a, b) { return b.hits - a.hits; });
+    var neu = sorted.filter(function (f) { return f.isNew; })[0], t = neu || sorted[0];
+    if (!t) return "";
+    var lbl = esc(failLabel(t)), ver = esc(t.ver), hits = fmtCompact(t.hits), dev = fmtCompact(t.devices);
+    var trend = "Failures are <strong>" + (v.dTotal <= 0 ? "down " : "up ") + Math.abs(v.dTotal).toFixed(1) + "%</strong> overall, but ";
+    var s = neu
+      ? trend + "<strong>" + lbl + "</strong> in <strong>" + ver + "</strong> is a new failure this release \u2014 already <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices and climbing fast. Investigate before it spreads."
+      : trend + "your biggest failure is <strong>" + lbl + "</strong> in <strong>" + ver + "</strong> at <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices. Fixing it clears the most crashes.";
+    return '<div class="ai-insight"><span class="ai-insight__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>AI insight</span>' +
+      '<p class="ai-insight__text">' + s + '</p>' +
+      '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-failure="' + t.id + '"><iconify-icon slot="start" icon="fluent:bug-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Investigate</fluent-button></div>';
+  }
+  function symPill(st) { var m = SYM_STATES[st] || SYM_STATES.notuploaded, cm = { ok: "success", info: "brand", idle: "warning", warn: "danger" }; return '<fluent-badge appearance="outline" color="' + (cm[m.cls] || "subtle") + '">' + m.label + '</fluent-badge>'; }
+  function ftypePill(t) { return '<span class="ftype-txt">' + esc(t) + '</span>'; }
+  function zeroStateHTML(app) {
+    return '<div class="ca-zero"><div class="ca-zero__hero"><iconify-icon icon="fluent:shield-checkmark-24-regular" width="40" height="40" aria-hidden="true"></iconify-icon>' +
+      '<h2>No crashes reported yet for ' + esc(app.name) + '</h2>' +
+      '<p class="muted">Analytics turn on once your app is installed on about <strong>100 devices</strong>. After that, crashes and hangs from Windows (Watson) show up here \u2014 with about 24 hours of latency.</p>' +
+      '<p class="ca-zero__tip muted"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Set your app\u2019s file and product version metadata so failures group correctly \u2014 builds with missing metadata are reported under \u201cUnknown\u201d.</p></div>' +
+      '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
+      '<h3>Upload your symbols before the first crash</h3>' +
+      '<p>Symbols are the heart of crash analytics \u2014 they turn raw memory offsets into readable stack traces with function names, files and line numbers. But they only resolve crashes that happen <strong>after</strong> they\u2019re uploaded; crashes that already happened stay unreadable. Upload <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your very first crash is actionable from day one.</p>' +
+      '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
+      '<fluent-link href="#" data-noop="1">What should I upload? \u2192</fluent-link></div></div></div>';
+  }
+  function latencyZeroHTML() {
+    return '<div class="ca-zero"><div class="ca-zero__hero"><iconify-icon icon="fluent:clock-24-regular" width="40" height="40" aria-hidden="true"></iconify-icon>' +
+      '<h2>No data for this window yet</h2>' +
+      '<p class="muted">Crash data lands with about 24 hours of latency, so a range ending today is still being collected. Pick a range that ends yesterday or earlier to see results.</p></div></div>';
+  }
+  function demoSwitchHTML() {
+    var states = [["live", "Live data"], ["newapp", "New app (no data)"]];
+    return '<div class="demoswitch" role="group" aria-label="Demo state"><span class="demoswitch__label"><iconify-icon icon="fluent:beaker-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Demo</span>' +
+      states.map(function (s) { return '<button class="demoswitch__b' + (anaDemoState === s[0] ? " is-on" : "") + '" data-demostate="' + s[0] + '">' + s[1] + '</button>'; }).join("") + '</div>';
+  }
+  function symStatusBar(app) {
+    var d = anaData(app), hp = d.symbolHealth, cls = hp >= 80 ? "ok" : hp >= 50 ? "warn" : "bad";
+    var rn = d.versions.filter(function (v) { return v.sym === "resolved"; }).length, nv = d.versions.length;
+    var unreadable = d.failures.filter(function (f) { return !f.resolved; }).reduce(function (m, f) { return m + f.hits; }, 0);
+    var detail = (rn === nv)
+      ? "All " + nv + " versions resolved \u00b7 stacks resolving normally"
+      : rn + " of " + nv + " versions resolved \u00b7 <strong>" + fmtCompact(unreadable) + "</strong> crashes can\u2019t show stack traces";
+    return '<button class="symstat symstat--' + cls + '" data-ca-scroll="ca-symsec" aria-label="Symbols coverage ' + hp + ' percent. Go to the symbols table.">' +
+      '<span class="ca-symring ca-symring--' + cls + '" style="--p:' + hp + '"><span>' + hp + '%</span></span>' +
+      '<span class="symstat__txt"><span class="symstat__label">Symbols coverage</span><span class="symstat__detail">' + detail + '</span></span>' +
+      '<span class="symstat__cta">Manage symbols <iconify-icon icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span></button>';
+  }
   function crashTab(app) {
     var d = anaData(app);
     if (anaFailure) return failureView(app, d);
-    var h = healthExtra(app, d), rateFmt = function (v) { return v.toFixed(2); };
+    if (anaDemoState === "newapp") return zeroStateHTML(app);
+    if (anaRange === "custom" && anaCustom && anaCustom.tooRecent) return latencyZeroHTML();
+    var v = caView(app), sub = anaRange === "7d" ? "Last 7 days" : anaRange === "custom" ? "Custom range" : "Last 30 days", h = healthExtra(app, d);
+    var totalSeries = v.series[0].values.map(function (x, i) { return x + v.series[1].values[i] + v.series[2].values[i]; });
     var cards = '<div class="sumrow sumrow--4">' +
-      sumCard("Crashes", fmtCompact(d.crashes), "Last 30 days", d.hits.series[0].values, "var(--brand)") +
-      sumCard("Hangs", fmtCompact(d.hangs), "Last 30 days", d.hits.series[1].values, "#C239B3") +
-      sumCard("Crash rate", h.crashRate.toFixed(3) + "%", "Last 30 days", h.crashRateSeries, "#5ad1cd") +
-      sumCard("Hang rate", h.hangRate.toFixed(3) + "%", "Last 30 days", h.hangRateSeries, "#f7b955") + '</div>';
-    return cards +
-      apanel("Failure count", chartLine({ series: d.hits.series, labels: d.hits.labels, area: true }) + chartLegend(d.hits.series)) +
-      apanel("Failure rate", chartLine({ series: [{ name: "Crash rate", color: "var(--brand)", values: h.crashRateSeries }, { name: "Hang rate", color: "#e3008c", values: h.hangRateSeries }], labels: d.hits.labels, yMin: 0, yMax: 0.15, fmt: rateFmt }) + legendDots([{ name: "Crash rate", color: "var(--brand)" }, { name: "Hang rate", color: "#e3008c" }])) +
-      apanel("Failure distribution", chartBars({ bars: d.dist }), "Crashes by app version") +
-      apanel("Failures", failuresTable(app, d)) +
-      '<div class="apanel-grid">' +
-        apanel("Package version", hitsTable("Package version", h.pkgVer.map(function (r) { return { label: r.ver, hits: r.hits, pct: r.pct }; }))) +
-        apanel("Geographical Failure Hits", hitsTable("Country/region", h.geo.map(function (r) { return { label: r.country, hits: r.hits, pct: r.pct }; }))) +
-      '</div>';
+      countCard("Total failures", fmtCompact(v.total), sub, totalSeries, "var(--brand)", v.dTotal) +
+      countCard("Crashes", fmtCompact(v.crashes), sub, v.series[0].values, "var(--brand)", v.dCrash) +
+      countCard("Hangs", fmtCompact(v.hangs), sub, v.series[1].values, "var(--magenta)", v.dHang) +
+      countCard("Memory failures", fmtCompact(v.mem), sub, v.series[2].values, "var(--purple)", v.dMem) + '</div>';
+    return aiInsightHTML(app) + symStatusBar(app) + cards +
+      apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs and memory failures across all your users") +
+      failuresPanel(app, d) +
+      symbolsPanel(app) +
+      apanel("Failures by version", chartBars({ bars: d.dist }), "Failures grouped by the app version they occurred on") +
+      apanel("Geographical failure hits", geoBars(h.geo.slice(0, 8).map(function (r) { return { label: r.country, hits: r.hits, pct: r.pct }; })), "Top regions by failure hits");
   }
-  function failuresTable(app, d) {
-    var per = 6, pages = Math.ceil(d.failures.length / per), pg = Math.max(0, Math.min(anaPage, pages - 1));
-    var rows = d.failures.slice(pg * per, pg * per + per).map(function (f) {
-      return '<tr class="failrow" data-failure="' + f.id + '"><td><span class="faillink">' + esc(f.name) + '</span></td>' +
-        '<td class="num">' + fmtComma(f.hits) + '</td><td class="num">' + f.pct.toFixed(2) + '%</td></tr>';
+  function symbolsPanel(app) {
+    var d = anaData(app), hp = d.symbolHealth, hcls = hp >= 80 ? "ok" : hp >= 50 ? "warn" : "bad";
+    var rn = d.versions.filter(function (v) { return v.sym === "resolved"; }).length;
+    var actionV = d.versions.filter(function (v) { return v.sym === "action"; })[0];
+    var health = '<span class="sympanel__health"><span class="ca-symdot ca-symdot--' + hcls + '"></span>' + hp + '% resolved \u00b7 ' + rn + ' of ' + d.versions.length + ' versions' +
+      (actionV ? ' \u00b7 <span class="sympanel__warn">action needed on ' + esc(actionV.ver) + '</span>' : "") + '</span>';
+    return '<section class="apanel" id="ca-symsec"><header class="apanel__head apanel__head--flex">' +
+      '<div class="sympanel__lead"><h3>Symbols</h3>' + health + '</div>' +
+      '<div class="sympanel__actions"><fluent-button appearance="outline" size="small" data-sym-history="1"><iconify-icon slot="start" icon="fluent:history-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>History</fluent-button>' +
+      '<fluent-button appearance="primary" size="small" class="ca-uploadbtn" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button></div>' +
+      '</header><p class="apanel__sub muted">Symbols are matched per app version. Uploading resolves stack traces for <strong>future</strong> crashes on that build \u2014 occurrences that already happened stay unresolved.</p>' +
+      '<div class="apanel__body">' + symbolsTable(app) + '</div></section>';
+  }
+  function failuresPanel(app, d) {
+    return '<section class="apanel" id="ca-failsec"><header class="apanel__head"><h3>Failures</h3>' +
+      '<iconify-icon class="apanel__i" icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></header>' +
+      '<p class="apanel__sub muted">Grouped by Watson failure bucket. Sorted by impact \u2014 select one to see its stack trace.</p>' +
+      '<div class="failctl"><fluent-text-input id="failSearch" appearance="outline" class="failsearch" placeholder="Search failures\u2026" value="' + esc(anaSearch) + '"><iconify-icon slot="start" icon="fluent:search-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></fluent-text-input>' + failSegHTML() + '</div>' +
+      '<div id="failTableHost">' + failTableInner(app) + '</div></section>';
+  }
+  function failSegHTML() {
+    var types = [["all", "All types"], ["Crash", "Crashes"], ["Hang", "Hangs"], ["Memory", "Memory failures"]];
+    return '<fluent-dropdown id="anaTypeSel" class="failtypesel" appearance="outline" aria-label="Filter by failure type"><fluent-listbox>' + types.map(function (t) {
+      return '<fluent-option value="' + t[0] + '"' + (anaType === t[0] ? " selected" : "") + '>' + t[1] + '</fluent-option>';
+    }).join("") + '</fluent-listbox></fluent-dropdown>';
+  }
+  function pagerHTML(pg, pages, attr, total, noun) {
+    if (pages <= 1) return "";
+    var nums = [];
+    if (pages <= 7) { for (var i = 0; i < pages; i++) nums.push(i); }
+    else {
+      nums.push(0);
+      var s = Math.max(1, pg - 1), e = Math.min(pages - 2, pg + 1);
+      if (s > 1) nums.push("\u2026");
+      for (var j = s; j <= e; j++) nums.push(j);
+      if (e < pages - 2) nums.push("\u2026");
+      nums.push(pages - 1);
+    }
+    var numHTML = nums.map(function (n) {
+      if (n === "\u2026") return '<span class="apager__ellipsis">\u2026</span>';
+      var cur = n === pg;
+      return '<button class="apager__n' + (cur ? " is-current" : "") + '" ' + attr + '="' + n + '"' + (cur ? ' aria-current="page"' : "") + '>' + (n + 1) + '</button>';
     }).join("");
-    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Failure name</th><th class="num">Hits</th><th class="num">Percentage</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-      '<div class="apager"><button class="apager__b" data-anapage="' + (pg - 1) + '"' + (pg <= 0 ? " disabled" : "") + ' aria-label="Previous"><iconify-icon icon="fluent:chevron-left-20-regular" width="16" height="16"></iconify-icon></button>' +
-      '<span class="muted">Page ' + (pg + 1) + ' of ' + pages + '</span>' +
-      '<button class="apager__b" data-anapage="' + (pg + 1) + '"' + (pg >= pages - 1 ? " disabled" : "") + ' aria-label="Next"><iconify-icon icon="fluent:chevron-right-20-regular" width="16" height="16"></iconify-icon></button></div>';
+    return '<div class="apager"><span class="apager__count">' + total + ' ' + noun + '</span>' +
+      '<button class="apager__b" ' + attr + '="' + (pg - 1) + '"' + (pg <= 0 ? " disabled" : "") + ' aria-label="Previous page"><iconify-icon icon="fluent:chevron-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>' +
+      '<div class="apager__nums">' + numHTML + '</div>' +
+      '<button class="apager__b" ' + attr + '="' + (pg + 1) + '"' + (pg >= pages - 1 ? " disabled" : "") + ' aria-label="Next page"><iconify-icon icon="fluent:chevron-right-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
+  }
+  function failTableInner(app) {
+    var d = anaData(app), list = d.failures.slice();
+    var vf = anaFilters.appver; if (vf && vf.length) list = list.filter(function (f) { return vf.indexOf(f.ver) >= 0; });
+    if (anaType !== "all") list = list.filter(function (f) { return f.type === anaType; });
+    if (anaSearch) { var q = anaSearch.toLowerCase(); list = list.filter(function (f) { return f.name.toLowerCase().indexOf(q) >= 0 || f.ver.toLowerCase().indexOf(q) >= 0; }); }
+    var key = anaSort.key, dir = anaSort.dir === "asc" ? 1 : -1;
+    list.sort(function (a, b) { return (a[key] - b[key]) * dir; });
+    var per = 6, pages = Math.max(1, Math.ceil(list.length / per)), pg = Math.max(0, Math.min(anaPage, pages - 1));
+    function sortTh(label, k) { var on = anaSort.key === k; return '<th class="num th-sort" data-anasort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (anaSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
+    var rows = list.slice(pg * per, pg * per + per).map(function (f) {
+      return '<tr class="failrow" data-failure="' + f.id + '" tabindex="0" role="button" aria-label="View ' + esc(f.name) + '">' +
+        '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
+        '<td>' + ftypePill(f.type) + '</td><td><span class="mono">' + esc(f.ver) + '</span></td>' +
+        '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>' +
+        '<td class="failtrend">' + deltaPill(f.dPct) + '</td>' +
+        '<td class="num">' + fmtComma(f.hits) + '</td><td class="num">' + fmtComma(f.devices) + '</td></tr>';
+    }).join("");
+    if (!list.length) rows = '<tr><td colspan="7" class="cellspan">No failures match your search or filters.</td></tr>';
+    return '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th><th>Version</th><th>Symbols</th><th>Trend</th>' + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      pagerHTML(pg, pages, "data-anapage", list.length, "failures");
+  }
+  function renderFailTableHost() { var h = $("failTableHost"); if (h) h.innerHTML = failTableInner(appById(analyticsAppId) || state.apps[0]); }
+  function symbolsTable(app) {
+    var d = anaData(app);
+    var unresolved = d.versions.filter(function (v) { return v.sym === "notuploaded" || v.sym === "action"; });
+    var reco = unresolved.slice().sort(function (a, b) { return b.failures - a.failures; })[0];
+    var rows = d.versions.map(function (v) {
+      var isReco = reco && v.ver === reco.ver;
+      var act = v.sym === "action" ? '<fluent-link data-sym-details="' + esc(v.ver) + '">View details</fluent-link>'
+        : v.sym === "processing" ? '<span class="muted">Validating\u2026</span>'
+        : v.sym === "notuploaded" ? '<fluent-link data-sym-upload="' + esc(v.ver) + '">Upload</fluent-link>'
+        : '<fluent-link data-sym-upload="' + esc(v.ver) + '">Re-upload</fluent-link>';
+      return '<tr data-ver="' + esc(v.ver) + '"' + (isReco ? ' class="symreco"' : "") + '><td><span class="mono">' + esc(v.ver) + '</span>' + (isReco ? ' <fluent-badge class="reco-badge" appearance="tint" color="brand" title="Uploading this version\u2019s symbols makes the most crashes readable">\u2605 Upload first</fluent-badge>' : "") + '</td><td class="num">' + fmtComma(v.failures) + '</td><td>' + symPill(v.sym) + '</td><td class="atable__act">' + act + '</td></tr>';
+    }).join("");
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>App version</th><th class="num">Failures</th><th>Symbol status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+  function symbolHistoryTable(app) {
+    var d = anaData(app);
+    if (!d.history.length) return '<div class="empty empty--sm"><strong>No uploads yet</strong><p class="muted">Upload symbols to start building your audit trail.</p></div>';
+    var rows = d.history.map(function (h) {
+      return '<tr><td><span class="symfile-cell"><iconify-icon icon="fluent:folder-zip-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span class="mono">' + esc(h.file) + '</span></span></td>' +
+        '<td><span class="mono">' + esc(h.ver) + '</span></td><td>' + symPill(h.status) + '</td>' +
+        '<td><div class="histby">' + esc(h.by) + '</div><div class="histby__date muted">' + esc(h.date) + '</div></td>' +
+        '<td class="atable__act"><fluent-link data-dl-sym="' + h.id + '"><iconify-icon icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Download</fluent-link></td></tr>';
+    }).join("");
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Symbol package</th><th>Version</th><th>Status</th><th>Uploaded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+  function srcFile(fn) { var b = (fn.split("::")[0] || fn).toLowerCase().replace(/[^a-z]/g, ""); return (b || "module") + ".cpp"; }
+  function stackFrames(app, f) {
+    var d = anaData(app);
+    var osTail = ["USER32!DispatchMessageW + 0x2d1", "KERNEL32!BaseThreadInitThunk + 0x14", "ntdll!RtlUserThreadStart + 0x21"];
+    if (f.resolved) return [
+      d.base + "!" + f.fn + "(RenderContext *)  [" + srcFile(f.fn) + ":" + (300 + (Math.abs(hashStr(f.id)) % 500)) + "]",
+      d.base + "!Compositor::Commit(void)  [compositor.cpp:158]",
+      d.base + "!ui::View::OnPaint(PaintArgs &)  [view.cpp:1032]"
+    ].concat(osTail);
+    var modOff = function (seed) { var r = anaRng(seed || 1); var v = 0x120000 + ((r() * 0xE00000) | 0); return "0x" + ("00000000" + v.toString(16)).slice(-8); };
+    return [d.base + ".exe + " + modOff(Math.abs(hashStr(f.id)) || 1), d.base + ".exe + " + modOff((Math.abs(hashStr(f.id)) + 7) || 1)].concat(osTail);
+  }
+  function frameParts(fr, base) {
+    var s = String(fr).trim(), loc = null;
+    var lm = s.match(/\s*\[([^\]]+)\]\s*$/);
+    if (lm) { loc = lm[1].trim(); s = s.slice(0, lm.index).trim(); }
+    var mod = s.split(/[!\s]/)[0].replace(/\.(exe|dll)$/i, "");
+    return { code: s, loc: loc, module: mod, app: !!base && mod.toLowerCase() === String(base).toLowerCase() };
+  }
+  function callerFn(code) { var s = String(code).split("!")[1] || String(code); return s.replace(/\s*\(.*\)\s*$/, ""); }
+  function topShare(list, key) {
+    var c = {}, n = list.length || 1, best = "", bc = 0;
+    list.forEach(function (r) { var v = r[key]; c[v] = (c[v] || 0) + 1; if (c[v] > bc) { bc = c[v]; best = v; } });
+    return { label: best, pct: Math.round(bc / n * 100) };
+  }
+  function crashCause(f) {
+    var c = (f.code || "").toUpperCase(), t = f.type;
+    if (t === "Hang") return { name: "an unresponsive UI thread \u2014 work is blocking the message pump", fix: "Move the long-running call off the UI thread (async/await or a background task) and add cancellation so the UI stays responsive." };
+    if (c.indexOf("C00000FD") >= 0) return { name: "a stack overflow \u2014 unbounded recursion or an oversized stack buffer", fix: "Add a base-case/depth guard to the recursive path and move large buffers to the heap." };
+    if (c.indexOf("C0000409") >= 0) return { name: "a fail-fast abort \u2014 the CRT detected stack/buffer corruption and terminated the process", fix: "Track down the out-of-bounds write feeding the corrupted buffer near the crash site; build with /GS and run under Application Verifier to catch it." };
+    if (c.indexOf("C0000374") >= 0) return { name: "heap corruption \u2014 a bad write damaged heap metadata", fix: "Audit buffer sizes and use-after-free around the failing allocation; PageHeap will halt at the offending write." };
+    if (t === "Memory" || c.indexOf("C06D") >= 0) return { name: "heap corruption or an invalid free near the failing allocation", fix: "Run the build under Application Verifier + PageHeap to catch the offending write, then audit buffer sizes and object ownership around the crash site." };
+    if (c.indexOf("C0000005") >= 0) return { name: "an access violation \u2014 a null or already-freed pointer was dereferenced", fix: "Null-check the pointer before use and confirm the object outlives this call; a use-after-free one frame up is the usual culprit." };
+    return { name: "an unhandled exception", fix: "Wrap the failing operation in structured exception handling and validate its inputs before the call." };
+  }
+  function crashInsightHTML(app, f, parts, env) {
+    var cause = crashCause(f), crash = parts[0] || { loc: "" }, caller = parts[1];
+    var where = (crash && crash.loc) ? '<span class="mono">' + esc(crash.loc) + '</span>' : '<span class="mono">' + esc(f.fn) + '</span>';
+    var callerTxt = caller ? ' It runs from <span class="mono">' + esc(callerFn(caller.code)) + '</span>' + (caller.loc ? ' (<span class="mono">' + esc(caller.loc) + '</span>)' : "") + ', so the bad state is often set there.' : "";
+    var envTxt = env ? ' Reproduce on <strong>' + esc(env.os.label) + '</strong> (' + env.os.pct + '% of hits)' + (env.dev.pct >= 40 ? ', mostly on <strong>' + esc(env.dev.label) + '</strong> devices' : "") + '.' : "";
+    return '<div class="crashai__head"><span class="crashai__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>AI analysis</span><span class="crashai__conf muted">Generated from the stack, exception code &amp; telemetry</span></div>' +
+      '<p><strong>Likely cause:</strong> ' + cause.name + ', consistent with <span class="mono">' + esc(f.code) + '</span> (' + esc(f.type) + ').</p>' +
+      '<p><strong>Where to look:</strong> start at ' + where + ', the crash site in <span class="mono">' + esc(f.fn) + '</span>.' + callerTxt + '</p>' +
+      '<p><strong>Suggested fix:</strong> ' + cause.fix + envTxt + '</p>' +
+      '<p class="crashai__note muted"><iconify-icon icon="fluent:info-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>AI-generated suggestion \u2014 verify against your source before shipping.</p>';
+  }
+  function stackBody(app, f) {
+    var frames = stackFrames(app, f), base = anaData(app).base;
+    var parts = frames.map(function (fr) { return frameParts(fr, base); });
+    var frameRow = function (i, p) {
+      var loc = p.loc ? '<button class="stk__loc mono" data-copy-loc="' + esc(p.loc) + '" title="Copy ' + esc(p.loc) + '">' + esc(p.loc) + '<iconify-icon icon="fluent:copy-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></button>' : "";
+      return '<div class="stk__frame stk__frame--' + (p.app ? "app" : "sys") + (i === 0 ? " is-crash" : "") + '"><span class="stk__idx">' + i + '</span><span class="stk__fn mono">' + esc(p.code) + '</span>' + loc + '</div>';
+    };
+    var appRows = "", sysRows = "", sysN = 0;
+    parts.forEach(function (p, i) { if (p.app) appRows += frameRow(i, p); else { sysRows += frameRow(i, p); sysN++; } });
+    var sysBlock = sysN ? '<details class="stk__sys"><summary class="stk__syssum"><iconify-icon class="stk__syschev" icon="fluent:chevron-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' + sysN + ' system frame' + (sysN > 1 ? "s" : "") + ' \u00b7 Windows runtime, not your code</summary><div>' + sysRows + '</div></details>' : "";
+    return { html: '<div class="stk__body">' + appRows + sysBlock + '</div>', parts: parts };
+  }
+  function stackTSV(app, f) {
+    var frames = stackFrames(app, f), base = anaData(app).base, lines = ["Frame\tImage\tFunction\tLocation"];
+    frames.forEach(function (fr, i) {
+      var p = frameParts(fr, base), image = p.module, fn = "", locv = p.loc || "", bang = p.code.indexOf("!");
+      if (bang >= 0) { fn = p.code.slice(bang + 1); var op = fn.indexOf(" + 0x"); if (op >= 0) { if (!locv) locv = fn.slice(op + 3); fn = fn.slice(0, op); } }
+      else { var pl = p.code.indexOf(" + "); if (pl >= 0 && !locv) locv = p.code.slice(pl + 3); }
+      lines.push(i + "\t" + image + "\t" + fn + "\t" + locv);
+    });
+    return lines.join("\n");
+  }
+  function stackTraceHTML(app, f, det) {
+    var env = det && det.log ? { os: topShare(det.log, "os"), dev: topShare(det.log, "dev") } : null;
+    var envHTML = env ? '<div class="stk__env"><iconify-icon icon="fluent:target-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Most affected: <strong>' + esc(env.os.label) + '</strong> (' + env.os.pct + '%) \u00b7 <strong>' + esc(env.dev.label) + '</strong> devices (' + env.dev.pct + '%)</div>' : "";
+    var sb = stackBody(app, f), bodyHTML = sb.html, parts = sb.parts;
+    var ctx = envHTML + '<p class="stk__rep muted">Representative stack for this failure \u2014 every occurrence shares this signature. Open a row in the failure log below to see that occurrence\u2019s stack.</p>';
+    if (f.resolved) {
+      return '<div class="stk stk--resolved"><div class="stk__head"><fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' +
+        '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
+        '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-crashai="' + f.id + '"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Explain this crash</fluent-button>' +
+        '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
+        '<fluent-button appearance="outline" size="small" data-dl-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download stack</fluent-button></span></div>' +
+        ctx + bodyHTML +
+        '<p class="stk__hint muted">Frame 0 is the crash site \u2014 <span class="mono">' + esc(f.fn) + '</span>. Click a <span class="mono">file:line</span> to copy it and jump to your source.</p>' +
+        '<div class="crashai" id="crashai-' + f.id + '" hidden>' + crashInsightHTML(app, f, parts, env) + '</div></div>';
+    }
+    return '<div class="stk stk--unresolved"><div class="stk__head"><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
+      '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
+      '<span class="stk__actions"><fluent-button appearance="primary" size="small" data-sym-upload="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
+      '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
+      '<fluent-button appearance="outline" size="small" data-dl-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download stack</fluent-button></span></div>' + ctx + bodyHTML +
+      '<p class="stk__hint muted">No symbols for <strong>' + esc(f.ver) + '</strong>, so your frames show as raw offsets \u2014 Windows frames resolve automatically. Upload symbols to name <strong>future</strong> crashes; past ones stay raw.</p></div>';
+  }
+  function occStackHTML(app, f, occ) {
+    var badge = f.resolved ? '<fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' : '<fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>';
+    return '<div class="occdlg__ctx"><iconify-icon icon="fluent:document-bullet-list-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span><strong>' + esc(occ.date) + '</strong> \u00b7 ' + esc(occ.dev) + ' \u00b7 ' + esc(occ.model) + ' \u00b7 <span class="mono">' + esc(occ.os) + '</span></span></div>' +
+      '<div class="occdlg__meta">' + badge + '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
+      '<fluent-button class="occdlg__dl" appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
+      '<fluent-button appearance="outline" size="small" data-dl-dump="' + esc(occ.id) + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Crash dump (.cab)</fluent-button></div>' +
+      '<div class="stk ' + (f.resolved ? "stk--resolved" : "stk--unresolved") + '">' + stackBody(app, f).html + '</div>' +
+      '<p class="occdlg__note muted">This occurrence shares the failure\u2019s signature \u2014 download its crash dump to debug this exact instance in your debugger.</p>';
+  }
+  function openOccStack(occId) {
+    var app = appById(analyticsAppId) || state.apps[0];
+    var f = app && anaData(app).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (!f) return;
+    var occ = failureDetail(app, f).log.filter(function (o) { return o.id === occId; })[0]; if (!occ) return;
+    var body = $("occDialogBody"), sub = $("occDialogSub"); if (!body) return;
+    if (sub) sub.textContent = " \u00b7 " + f.ver;
+    body.innerHTML = occStackHTML(app, f, occ);
+    var d = $("occDialog"); if (d) d.show();
+  }
+  function closeOccStack() { var d = $("occDialog"); if (d) d.hide(); }
+  function versionsForFailure(app, f) {
+    var d = anaData(app), tot = f.hits;
+    var main = { label: f.ver, hits: Math.round(tot * 0.86), pct: 86 };
+    var others = d.versions.filter(function (v) { return v.ver !== f.ver; }).slice(0, 2).map(function (v, i) { var p = i ? 4 : 10; return { label: v.ver, hits: Math.round(tot * p / 100), pct: p }; });
+    return [main].concat(others);
+  }
+  function impactedVersionsHTML(app, f) {
+    var rows = versionsForFailure(app, f).map(function (r) {
+      return '<tr><td><button class="linklike faillink" data-ver-filter="' + esc(r.label) + '" title="Show failures on ' + esc(r.label) + '">' + esc(r.label) + '</button></td>' +
+        '<td class="num">' + fmtComma(r.hits) + ' <span class="muted">(' + r.pct.toFixed(0) + '%)</span></td></tr>';
+    }).join("");
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>App version</th><th class="num">Hits</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   function failureView(app, d) {
     var f = d.failures.filter(function (x) { return x.id === anaFailure; })[0];
     if (!f) { anaFailure = null; return crashTab(app); }
     var det = failureDetail(app, f);
-    var logRows = det.log.map(function (r) {
-      return '<tr><td>' + esc(r.date) + '</td><td>' + esc(r.ver) + '</td><td>' + esc(r.dev) + '</td><td>' + esc(r.model) + '</td><td>' + esc(r.os) + '</td><td><span class="faillink">Stack trace</span></td></tr>';
-    }).join("");
     var cpuRows = det.cpu.map(function (c) { return '<tr><td>' + esc(c[0]) + '</td><td class="num">' + c[1].toFixed(1) + '%</td></tr>'; }).join("");
-    return '<button class="aback" data-anaback="1"><iconify-icon icon="fluent:chevron-left-20-regular" width="18" height="18"></iconify-icon>Back to failures</button>' +
-      '<div class="failhead"><span class="muted">Failure name</span><span class="mono failhead__name">' + esc(f.name) + '</span></div>' +
-      apanel("Failure Hits", chartLine({ series: det.hits.series, labels: det.hits.labels, area: true }) + chartLegend(det.hits.series)) +
-      apanel("Failure log", '<div class="table-wrap"><table class="atable"><thead><tr><th>Date</th><th>Package version</th><th>Device type</th><th>Device model</th><th>OS build</th><th>Links</th></tr></thead><tbody>' + logRows + '</tbody></table></div>') +
+    return '<button class="aback" data-anaback="1"><iconify-icon icon="fluent:chevron-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Back to overview</button>' +
+      '<div class="failhead"><div class="failhead__id"><span class="muted">Failure</span><span class="failhead__name mono">' + esc(f.name) + '</span></div>' +
+        '<div class="failhead__meta">' + ftypePill(f.type) + '<span class="mono muted">' + esc(f.ver) + '</span><span class="mono muted">' + esc(f.code) + '</span><strong>' + fmtComma(f.hits) + ' hits</strong></div></div>' +
+      '<div id="ca-stacksec">' + apanel("Stack trace", stackTraceHTML(app, f, det)) + '</div>' +
+      apanel("Failure hits", chartLine({ series: det.hits.series, labels: det.hits.labels, area: true }) + chartLegend(det.hits.series)) +
       '<div class="apanel-grid">' +
-        apanel("Stack prevalence", '<div class="empty empty--sm"><iconify-icon icon="fluent:branch-20-regular" width="30" height="30" aria-hidden="true" style="opacity:.45"></iconify-icon><strong>No data available</strong><p class="muted">Upload symbols to resolve stacks for this failure.</p></div>') +
-        apanel("Device configuration · CPU", '<table class="atable atable--sm"><thead><tr><th>CPU</th><th class="num">Share</th></tr></thead><tbody>' + cpuRows + '</tbody></table>') +
-      '</div>';
+        apanel("Impacted app versions", impactedVersionsHTML(app, f)) +
+        apanel("Device configuration \u00b7 CPU", '<table class="atable atable--sm"><thead><tr><th>CPU</th><th class="num">Share</th></tr></thead><tbody>' + cpuRows + '</tbody></table>') +
+      '</div>' +
+      failureLogPanel(app, f);
+  }
+  function failureLogPanel(app, f) {
+    return '<section class="apanel" id="ca-logsec"><header class="apanel__head"><h3>Failure log</h3>' +
+      '<iconify-icon class="apanel__i" icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></header>' +
+      '<p class="apanel__sub muted">Every reported occurrence from the last 30 days \u2014 open its stack trace or download the crash dump (.cab) to debug locally.</p>' +
+      '<div class="failctl"><fluent-text-input id="failLogSearch" appearance="outline" class="failsearch" placeholder="Search occurrences\u2026" value="' + esc(anaLogQuery) + '"><iconify-icon slot="start" icon="fluent:search-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></fluent-text-input></div>' +
+      '<div id="failLogHost">' + failLogInner(app, f) + '</div></section>';
+  }
+  function failLogInner(app, f) {
+    var det = failureDetail(app, f), list = det.log.slice();
+    if (anaLogQuery) { var q = anaLogQuery.toLowerCase(); list = list.filter(function (r) { return (r.model + " " + r.os + " " + r.ver + " " + r.dev + " " + r.date).toLowerCase().indexOf(q) >= 0; }); }
+    var per = 6, pages = Math.max(1, Math.ceil(list.length / per)), pg = Math.max(0, Math.min(anaLogPage, pages - 1));
+    var rows = list.slice(pg * per, pg * per + per).map(function (r) {
+      return '<tr><td>' + esc(r.date) + '</td><td><span class="mono">' + esc(r.ver) + '</span></td><td>' + esc(r.dev) + '</td><td>' + esc(r.model) + '</td><td><span class="mono">' + esc(r.os) + '</span></td>' +
+        '<td class="atable__act occ-links"><fluent-link data-occ-stack="' + r.id + '">Stack trace</fluent-link><fluent-link data-dl-dump="' + r.id + '">Crash dump</fluent-link></td></tr>';
+    }).join("");
+    if (!list.length) rows = '<tr><td colspan="6" class="cellspan">No occurrences match your search.</td></tr>';
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Date</th><th>Package version</th><th>Device type</th><th>Device model</th><th>OS build</th><th>Links</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      pagerHTML(pg, pages, "data-analogpage", list.length, "occurrences");
+  }
+  function renderFailLogHost() { var h = $("failLogHost"); if (!h) return; var app = appById(analyticsAppId) || state.apps[0], f = app && anaData(app).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (f) h.innerHTML = failLogInner(app, f); }
+  /* ----- Symbol uploader (Fluent dialog shell #symDialog) ----- */
+  function openSymUploader(app, ver) { symUp = { appId: app.id, ver: ver || "", phase: "pick", file: null }; renderSymUploader(); var d = $("symDialog"); if (d) d.show(); }
+  function openSymDetails(app, ver) { symUp = { appId: app.id, ver: ver || "", phase: "error", file: null }; renderSymUploader(); var d = $("symDialog"); if (d) d.show(); }
+  function closeSymUploader() { symUp = null; var d = $("symDialog"); if (d) d.hide(); }
+  function startSymValidate() {
+    if (!symUp || !symUp.file) return;
+    symUp.phase = "validating"; renderSymUploader();
+    var bad = /bad|corrupt|wrong|mismatch|nopdb/i.test(symUp.file);
+    setTimeout(function () {
+      if (!symUp) return;
+      if (bad) { symUp.phase = "error"; renderSymUploader(); return; }
+      var app = appById(symUp.appId); if (!app) return; var d = anaData(app);
+      var ver = symUp.ver || d.versions[0].ver, vo = d.versions.filter(function (v) { return v.ver === ver; })[0];
+      if (vo) vo.sym = "processing";
+      d.history.unshift({ id: "h" + Date.now(), file: symUp.file, ver: ver, status: "processing", size: "\u2014", by: "you@contoso.com", date: new Date().toLocaleDateString("en-US") });
+      d.symbolHealth = Math.round(d.versions.filter(function (v) { return v.sym === "resolved"; }).length / d.versions.length * 100);
+      symUp.phase = "done"; symUp.ver = ver; renderSymUploader(); renderAnalyticsPanel();
+    }, 1600);
+  }
+  function renderSymUploader() {
+    if (!symUp) return;
+    var app = appById(symUp.appId), body = $("symDialogBody"), titleEl = $("symDialogTitle"); if (!app || !body) return;
+    if (titleEl) titleEl.textContent = "Upload symbols" + (symUp.ver ? " \u00b7 " + symUp.ver : "");
+    var html;
+    if (symUp.phase === "pick") html = '<div class="symdrop" id="symDrop"><iconify-icon icon="fluent:folder-zip-24-regular" width="34" height="34" aria-hidden="true"></iconify-icon>' +
+      '<strong>Drop your symbol package (.zip) here</strong><span class="muted">or</span><fluent-button size="small" appearance="outline" id="symBrowse">Browse\u2026</fluent-button><input type="file" id="symFile" accept=".zip,.pdb" hidden>' +
+      (symUp.file ? '<div class="symfile"><iconify-icon icon="fluent:document-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' + esc(symUp.file) + '</div>' : "") + '</div>' +
+      '<div class="symguide"><strong>What to upload</strong><ul><li>Your full build output as a <b>.zip</b> \u2014 the app\u2019s <span class="mono">.exe</span>/<span class="mono">.dll</span> files <b>and</b> their matching <span class="mono">.pdb</span> symbols.</li>' +
+      '<li>We auto-detect the app and version from the binaries, so you don\u2019t have to sort them.</li>' +
+      '<li>A bare <span class="mono">.pdb</span> can\u2019t be matched \u2014 include the binaries it was built with.</li></ul>' +
+      '<fluent-link href="#" data-noop="1">Learn more about symbol packaging \u2192</fluent-link></div>' +
+      '<div class="symfoot"><fluent-button appearance="subtle" data-sym-close="1">Cancel</fluent-button><fluent-button appearance="primary" data-sym-start="1"' + (symUp.file ? "" : " disabled") + '>Upload &amp; validate</fluent-button></div>';
+    else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries. This usually takes a few minutes \u2014 you can close this and come back; we\u2019ll keep working.</p></div>';
+    else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols accepted for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed. Your <strong>future</strong> crashes will start showing resolved stack traces within the next <strong>24 hours</strong>. Crashes that already happened stay unresolved.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
+    else html = '<div class="symstate"><iconify-icon class="symstate__err" icon="fluent:error-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Action needed' + (symUp.ver ? " on " + esc(symUp.ver) : "") + '</strong><p class="muted">' + esc(SYM_ERR.msg) + '</p><div class="symerr"><span class="mono">' + SYM_ERR.code + '</span></div><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-retry="1">Upload again</fluent-button></div></div>';
+    body.innerHTML = html;
+    var br = $("symBrowse"), fi = $("symFile");
+    if (br && fi) br.addEventListener("click", function () { fi.click(); });
+    if (fi) fi.addEventListener("change", function () { symUp.file = (fi.files[0] && fi.files[0].name) || null; renderSymUploader(); });
+    var dz = $("symDrop");
+    if (dz) { dz.addEventListener("dragover", function (e) { e.preventDefault(); dz.classList.add("is-over"); });
+      dz.addEventListener("dragleave", function () { dz.classList.remove("is-over"); });
+      dz.addEventListener("drop", function (e) { e.preventDefault(); dz.classList.remove("is-over"); var fl = e.dataTransfer.files[0]; symUp.file = fl ? fl.name : "symbols.zip"; renderSymUploader(); }); }
+  }
+  function downloadText(name, text) {
+    try { var b = new Blob([text], { type: "text/plain" }), u = URL.createObjectURL(b), a = document.createElement("a");
+      a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.parentNode.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(u); }, 1000); } catch (e) {}
   }
 
   // WDP path: once at least one app is on the Store, nudge the developer to publish the
@@ -1270,19 +1701,103 @@
       : anaTab === "ratings" ? ratingsTab(app)
       : crashTab(app);
     panelEl.innerHTML = analyticsUpsell() + anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
+    var dsHost = document.getElementById("demoSwitchHost");
+    if (!dsHost) { dsHost = document.createElement("div"); dsHost.id = "demoSwitchHost"; document.body.appendChild(dsHost);
+      dsHost.addEventListener("click", function (e) { var dms = e.target.closest("[data-demostate]"); if (dms) { anaDemoState = dms.getAttribute("data-demostate"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); } }); }
+    dsHost.innerHTML = (anaTab === "crashes" && !anaFailure) ? demoSwitchHTML() : "";
+    var fsel = $("failSearch");
+    if (fsel) fsel.addEventListener("input", function () { anaSearch = fsel.value || ""; anaPage = 0; renderFailTableHost(); });
+    var tsel = $("anaTypeSel");
+    if (tsel) tsel.addEventListener("change", function () { if (!tsel.value) return; anaType = tsel.value; anaPage = 0; renderFailTableHost(); });
+    var lsel = $("failLogSearch");
+    if (lsel) lsel.addEventListener("input", function () { anaLogQuery = lsel.value || ""; anaLogPage = 0; renderFailLogHost(); });
   }
   function renderAnalytics() {
-    var sel = $("analyticsApp"), panelEl = $("analyticsPanel");
+    var panelEl = $("analyticsPanel"), controls = $("anaControls");
     // Store portal: analytics only exist for apps live in the Store (or brought in via cert).
     var liveApps = STORE ? state.apps.filter(function (a) { return a.store || a.discovered; }) : state.apps;
-    if (!liveApps.length) { sel.innerHTML = ""; sel.style.display = "none"; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
-    sel.style.display = "";
+    if (!liveApps.length) { if (controls) controls.hidden = true; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
+    if (controls) controls.hidden = false;
     if (!analyticsAppId || !liveApps.some(function (a) { return a.id === analyticsAppId; })) analyticsAppId = liveApps[0].id;
-    sel.innerHTML = liveApps.map(function (a) {
-      return '<option value="' + a.id + '"' + (a.id === analyticsAppId ? " selected" : "") + '>' + esc(a.name) + '</option>';
-    }).join("");
+    renderAppSelect(liveApps);
+    renderAnaFilter();
+    renderAnaChips();
     renderAnalyticsPanel();
   }
+  function renderAnaFilter() {
+    var el = $("anaFilterBar"); if (!el) return;
+    el.innerHTML = anaFilterHTML();
+    var rs = $("anaRangeSel");
+    if (rs) rs.addEventListener("change", function () { if (!rs.value) return; anaRange = rs.value; if (anaRange !== "custom") anaCustom = null; anaPage = 0; renderAnaFilter(); renderAnalyticsPanel(); });
+  }
+  function renderAppSelect(apps) {
+    var el = $("anaAppSel"); if (!el) return;
+    var cur = appById(analyticsAppId) || apps[0];
+    el.innerHTML = '<fluent-dropdown id="anaAppDd" appearance="outline" aria-label="Select app" placeholder="Select app"><fluent-listbox>' + apps.map(function (a) {
+      return '<fluent-option value="' + a.id + '"' + (a.id === cur.id ? " selected" : "") + '>' + appIcoImg(a) + '<span class="opt-name">' + esc(a.name) + '</span></fluent-option>';
+    }).join("") + '</fluent-listbox></fluent-dropdown>';
+    var dd = $("anaAppDd");
+    if (dd) {
+      dd.addEventListener("change", function () { var v = dd.value; if (!v || v === analyticsAppId) return; analyticsAppId = v; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; renderAnalytics(); });
+      // Fluent dropdown builds a text-only combobox trigger; inject the current app's logo into it.
+      var tries = 0;
+      (function injectAppLogo() {
+        var btn = dd.querySelector('button[role="combobox"]');
+        if (btn) { if (!btn.querySelector(".app-ico")) btn.insertAdjacentHTML("afterbegin", appIcoImg(cur)); return; }
+        if (tries++ < 20) setTimeout(injectAppLogo, 30);
+      })();
+    }
+  }
+  // ----- Analytics filters (page-level, shared across tabs) -----
+  var FILTER_CATS = [
+    { key: "market", label: "Market", values: ["United States", "India", "Nigeria", "United Kingdom", "Germany", "Brazil", "Japan", "Canada"] },
+    { key: "device", label: "Device type", values: ["Desktop", "Laptop", "Tablet", "Workstation", "All-in-one"] },
+    { key: "appver", label: "Application version", values: null },
+    { key: "osver", label: "OS version", values: ["Windows 11 24H2", "Windows 11 23H2", "Windows 10 22H2"] },
+    { key: "osrel", label: "OS release version", values: ["10.0.26100", "10.0.22631", "10.0.19045"] },
+    { key: "arch", label: "Architecture", values: ["x64", "arm64", "x86"] }
+  ];
+  function filterCount() { var n = 0, k; for (k in anaFilters) if (anaFilters.hasOwnProperty(k)) n += (anaFilters[k] || []).length; return n; }
+  function removeFilter(k, v) {
+    if (anaFilters[k]) { anaFilters[k] = anaFilters[k].filter(function (x) { return x !== v; }); if (!anaFilters[k].length) delete anaFilters[k]; }
+    renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel();
+  }
+  function renderAnaChips() {
+    var el = $("anaChips"); if (!el) return;
+    var chips = [];
+    FILTER_CATS.forEach(function (c) { (anaFilters[c.key] || []).forEach(function (v) {
+      chips.push('<span class="fchip">' + esc(c.label) + ': ' + esc(v) + '<button class="fchip__x" data-chip-rm="' + esc(c.key) + '|' + esc(v) + '" aria-label="Remove filter">\u00d7</button></span>');
+    }); });
+    if (!chips.length) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    el.innerHTML = chips.join("") + '<button class="fchip-clear" data-filters-clear="1">Clear all</button>';
+  }
+  function openFilterFlyout() {
+    var app = appById(analyticsAppId), body = $("filterDrawerBody"); if (!app || !body) return;
+    var appvers = anaData(app).versions.map(function (v) { return v.ver; });
+    body.innerHTML = FILTER_CATS.map(function (c) {
+      var vals = c.key === "appver" ? appvers : c.values, sel = (anaFilters[c.key] || []).length;
+      var opts = vals.map(function (v) { var on = (anaFilters[c.key] || []).indexOf(v) >= 0;
+        return '<label class="filtopt"><fluent-checkbox data-fk="' + esc(c.key) + '" value="' + esc(v) + '"' + (on ? " checked" : "") + '></fluent-checkbox><span class="filtopt__t">' + esc(v) + '</span></label>'; }).join("");
+      return '<details class="filtsec"' + (sel ? " open" : "") + '><summary>' + esc(c.label) + (sel ? ' <fluent-counter-badge count="' + sel + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</summary><div class="filtsec__body">' + opts + '</div></details>';
+    }).join("");
+    var d = $("filterDrawer"); if (d) d.show();
+  }
+  function closeFilterFlyout() { var d = $("filterDrawer"); if (d) d.hide(); }
+  function clearFilterDrawer() { var body = $("filterDrawerBody"); if (body) Array.prototype.forEach.call(body.querySelectorAll("fluent-checkbox"), function (cb) { cb.checked = false; }); }
+  function applyFiltersFromDrawer() {
+    var body = $("filterDrawerBody"), next = {};
+    if (body) Array.prototype.forEach.call(body.querySelectorAll("fluent-checkbox"), function (cb) { if (cb.checked) { var k = cb.getAttribute("data-fk"); (next[k] = next[k] || []).push(cb.getAttribute("value")); } });
+    anaFilters = next; closeFilterFlyout(); renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel();
+  }
+  // ----- Symbol upload history dialog (#histDialog) -----
+  function openSymHistory(app) {
+    var body = $("histDialogBody"), sub = $("histDialogSub"); if (!body) return;
+    if (sub) sub.textContent = " \u00b7 " + app.name;
+    body.innerHTML = '<p class="muted symmodal__lead">Every upload for this app, visible to your whole team \u2014 with the original package to re-download.</p>' + symbolHistoryTable(app);
+    var d = $("histDialog"); if (d) d.show();
+  }
+  function closeSymHistory() { var d = $("histDialog"); if (d) d.hide(); }
   function readDropdownValue(sel) {
     if (sel.value) return sel.value;
     var o = sel.querySelector('fluent-option[aria-selected="true"], fluent-option[selected]');
@@ -1648,6 +2163,13 @@
     var hero = $("appsHero");
     if (hero) { try { hero.hidden = localStorage.getItem("wdp.appsHero.dismissed") === "1"; } catch (_) { hero.hidden = false; } }
 
+    document.querySelector(".main").addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      var fr = e.target.closest && e.target.closest("[data-failure]");
+      if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      var ss = e.target.closest && e.target.closest("[data-anasort]");
+      if (ss) { e.preventDefault(); var sk = ss.getAttribute("data-anasort"); if (anaSort.key === sk) anaSort.dir = anaSort.dir === "asc" ? "desc" : "asc"; else { anaSort.key = sk; anaSort.dir = "desc"; } anaPage = 0; renderFailTableHost(); return; }
+    });
     document.querySelector(".main").addEventListener("click", function (e) {
       if (e.target.closest("[data-openmodal]")) { e.preventDefault();
         // Store: the certs section IS the entry for adding your first cert, so always open the
@@ -1670,7 +2192,7 @@
       var cont = e.target.closest("[data-continue]");
       if (cont) { openPublishFlow(cont.getAttribute("data-continue")); return; }
       var an = e.target.closest("[data-analytics]");
-      if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; goView("analytics"); renderAnalytics(); return; }
+      if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; goView("analytics"); renderAnalytics(); return; }
       var rc = e.target.closest("[data-removecert]");
       if (rc) { var cid = rc.getAttribute("data-removecert");
         state.certs = state.certs.filter(function (c) { return c.id !== cid; });
@@ -1680,18 +2202,85 @@
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
       var atab = e.target.closest("[data-anatab]");
-      if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); return; }
+      if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; renderAnalyticsPanel(); return; }
       var frow = e.target.closest("[data-failure]");
-      if (frow) { anaFailure = frow.getAttribute("data-failure"); window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaLogPage = 0; anaLogQuery = ""; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      var sj = e.target.closest("[data-sym-jump]");
+      if (sj) { var sjsec = document.getElementById("ca-symsec"); if (sjsec) sjsec.scrollIntoView({ behavior: "smooth", block: "start" }); var sjrow = document.querySelector('#ca-symsec tr[data-ver="' + sj.getAttribute("data-sym-jump") + '"]'); if (sjrow) { sjrow.classList.remove("symhi"); void sjrow.offsetWidth; sjrow.classList.add("symhi"); } return; }
       if (e.target.closest("[data-anaback]")) { anaFailure = null; renderAnalyticsPanel(); return; }
+      var ost = e.target.closest("[data-occ-stack]");
+      if (ost) { openOccStack(ost.getAttribute("data-occ-stack")); return; }
+      var ddp = e.target.closest("[data-dl-dump]");
+      if (ddp) { var adp = appById(analyticsAppId), ffd = adp && anaData(adp).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (ffd) { downloadText(ffd.name.replace(/[^a-z0-9]+/gi, "-").slice(0, 40) + "_" + ddp.getAttribute("data-dl-dump") + "_dump.txt", "Crash dump (demo placeholder)\nFailure: " + ffd.name + "\nOccurrence: " + ddp.getAttribute("data-dl-dump") + "\n\n(The real .cab minidump would download here so you can debug locally.)"); toast("Downloading crash dump", true); } return; }
+      var cloc = e.target.closest("[data-copy-loc]");
+      if (cloc) { var locv = cloc.getAttribute("data-copy-loc"); try { if (navigator.clipboard) navigator.clipboard.writeText(locv); } catch (e2) {} cloc.classList.add("is-copied"); setTimeout(function () { cloc.classList.remove("is-copied"); }, 1200); toast("Copied " + locv, true); return; }
+      var cai = e.target.closest("[data-crashai]");
+      if (cai) { var caic = document.getElementById("crashai-" + cai.getAttribute("data-crashai")); if (caic) { caic.hidden = false; caic.classList.add("crashai--in"); } cai.setAttribute("hidden", ""); return; }
+      var alp = e.target.closest("[data-analogpage]");
+      if (alp && !alp.hasAttribute("disabled")) { anaLogPage = +alp.getAttribute("data-analogpage"); renderFailLogHost(); return; }
       var apg = e.target.closest("[data-anapage]");
-      if (apg && !apg.hasAttribute("disabled")) { anaPage = +apg.getAttribute("data-anapage"); renderAnalyticsPanel(); return; }
+      if (apg && !apg.hasAttribute("disabled")) { anaPage = +apg.getAttribute("data-anapage"); renderFailTableHost(); return; }
+      var atype = e.target.closest("[data-anatype]");
+      if (atype) { anaType = atype.getAttribute("data-anatype"); anaPage = 0;
+        Array.prototype.forEach.call(document.querySelectorAll(".failseg [data-anatype]"), function (b) { b.setAttribute("appearance", b.getAttribute("data-anatype") === anaType ? "primary" : "subtle"); });
+        renderFailTableHost(); return; }
+      var asrt = e.target.closest("[data-anasort]");
+      if (asrt) { var sk = asrt.getAttribute("data-anasort"); if (anaSort.key === sk) anaSort.dir = anaSort.dir === "asc" ? "desc" : "asc"; else { anaSort.key = sk; anaSort.dir = "desc"; } anaPage = 0; renderFailTableHost(); return; }
+      var dvf = e.target.closest("[data-ver-filter]");
+      if (dvf) { anaFilters.appver = [dvf.getAttribute("data-ver-filter")]; anaFailure = null; anaPage = 0; renderAnaFilter(); renderAnaChips(); renderAnalyticsPanel(); window.scrollTo(0, 0); return; }
+      var dms = e.target.closest("[data-demostate]");
+      if (dms) { anaDemoState = dms.getAttribute("data-demostate"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); return; }
+      var crng = e.target.closest("[data-ca-range]");
+      if (crng) { anaRange = crng.getAttribute("data-ca-range"); if (anaRange !== "custom") anaCustom = null; anaPage = 0; renderAnaFilter(); renderAnalyticsPanel(); return; }
+      if (e.target.closest("[data-ca-apply]")) { var cf = $("caFrom"), ct = $("caTo"); applyCustomRange(cf && cf.value, ct && ct.value); renderAnaFilter(); renderAnalyticsPanel(); return; }
+      var cscl = e.target.closest("[data-ca-scroll]");
+      if (cscl) { var tgt = document.getElementById(cscl.getAttribute("data-ca-scroll")); if (tgt) tgt.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+      if (e.target.closest("[data-ca-upload]")) { var au = appById(analyticsAppId); if (au) openSymUploader(au, ""); return; }
+      if (e.target.closest("[data-ca-filters]")) { openFilterFlyout(); return; }
+      if (e.target.closest("[data-sym-history]")) { var auh = appById(analyticsAppId); if (auh) openSymHistory(auh); return; }
+      var chrm = e.target.closest("[data-chip-rm]"); if (chrm) { var pr = chrm.getAttribute("data-chip-rm").split("|"); removeFilter(pr[0], pr[1]); return; }
+      if (e.target.closest("[data-filters-clear]")) { anaFilters = {}; renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel(); return; }
+      var su = e.target.closest("[data-sym-upload]");
+      if (su) { var au2 = appById(analyticsAppId); if (au2) openSymUploader(au2, su.getAttribute("data-sym-upload")); return; }
+      var sd = e.target.closest("[data-sym-details]");
+      if (sd) { var au3 = appById(analyticsAppId); if (au3) openSymDetails(au3, sd.getAttribute("data-sym-details")); return; }
+      var cst = e.target.closest("[data-copy-stack]");
+      if (cst) { var ca = appById(analyticsAppId), cf = ca && anaData(ca).failures.filter(function (x) { return x.id === cst.getAttribute("data-copy-stack"); })[0]; if (cf) { try { if (navigator.clipboard) navigator.clipboard.writeText(stackTSV(ca, cf)); } catch (e3) {} toast("Stack trace copied", true); } return; }
+      var dst = e.target.closest("[data-dl-stack]");
+      if (dst) { var aa = appById(analyticsAppId), dd = aa && anaData(aa), fx = dd && dd.failures.filter(function (x) { return x.id === dst.getAttribute("data-dl-stack"); })[0];
+        if (fx) { downloadText((dd.base || "crash") + "_" + fx.id + "_stack.txt", "Failure: " + fx.name + "\nException: " + fx.code + " (" + fx.type + ")\nVersion: " + fx.ver + "\nHits: " + fx.hits + "\n\n" + stackFrames(aa, fx).map(function (s, i) { return "  " + i + "  " + s; }).join("\n")); toast("Stack trace downloaded", true); } return; }
+      var dsy = e.target.closest("[data-dl-sym]");
+      if (dsy) { var aa2 = appById(analyticsAppId), dd2 = aa2 && anaData(aa2), he = dd2 && dd2.history.filter(function (x) { return x.id === dsy.getAttribute("data-dl-sym"); })[0];
+        if (he) { downloadText(he.file + ".txt", "Symbol package: " + he.file + "\nVersion: " + he.ver + "\nUploaded by: " + he.by + " on " + he.date + "\nStatus: " + he.status + "\n\n(Demo placeholder \u2014 the original .zip would download here.)"); toast("Downloading " + he.file, true); } return; }
       var jump = e.target.closest("[data-jump]"); if (jump) { e.preventDefault(); goView(jump.getAttribute("data-jump")); }
     });
 
-    $("analyticsApp").addEventListener("change", function () {
-      var v = readDropdownValue($("analyticsApp"));
-      if (v) { analyticsAppId = v; anaFailure = null; anaPage = 0; renderAnalyticsPanel(); }
+    $("symDialog").addEventListener("click", function (e) {
+      if (e.target.closest("[data-sym-close]")) { closeSymUploader(); return; }
+      if (e.target.closest("[data-noop]")) { e.preventDefault(); return; }
+      if (e.target.closest("[data-sym-retry]")) { if (symUp) { symUp.phase = "pick"; renderSymUploader(); } return; }
+      if (e.target.closest("[data-sym-start]")) { startSymValidate(); return; }
+    });
+    $("histDialog").addEventListener("click", function (e) {
+      if (e.target.closest("[data-hist-close]")) { closeSymHistory(); return; }
+      var dl = e.target.closest("[data-dl-sym]");
+      if (dl) { var app = appById(analyticsAppId), he = app && anaData(app).history.filter(function (x) { return x.id === dl.getAttribute("data-dl-sym"); })[0];
+        if (he) { downloadText(he.file + ".txt", "Symbol package: " + he.file + "\nVersion: " + he.ver + "\nUploaded by: " + he.by + " on " + he.date + "\nStatus: " + he.status + "\n\n(Demo placeholder \u2014 the original .zip would download here.)"); toast("Downloading " + he.file, true); } return; }
+    });
+    $("filterDrawer").addEventListener("click", function (e) {
+      if (e.target.closest("[data-filter-close]")) { closeFilterFlyout(); return; }
+      if (e.target.closest("[data-filter-clearall]")) { clearFilterDrawer(); return; }
+      if (e.target.closest("[data-filter-apply]")) { applyFiltersFromDrawer(); return; }
+    });
+    var occD = $("occDialog");
+    if (occD) occD.addEventListener("click", function (e) {
+      if (e.target.closest("[data-occ-close]")) { closeOccStack(); return; }
+      var cs = e.target.closest("[data-copy-stack]");
+      if (cs) { var ca2 = appById(analyticsAppId), cf2 = ca2 && anaData(ca2).failures.filter(function (x) { return x.id === cs.getAttribute("data-copy-stack"); })[0]; if (cf2) { try { if (navigator.clipboard) navigator.clipboard.writeText(stackTSV(ca2, cf2)); } catch (e4) {} toast("Stack trace copied", true); } return; }
+      var cl = e.target.closest("[data-copy-loc]");
+      if (cl) { var lv = cl.getAttribute("data-copy-loc"); try { if (navigator.clipboard) navigator.clipboard.writeText(lv); } catch (e2) {} cl.classList.add("is-copied"); setTimeout(function () { cl.classList.remove("is-copied"); }, 1200); toast("Copied " + lv, true); return; }
+      var dd = e.target.closest("[data-dl-dump]");
+      if (dd) { var oa = appById(analyticsAppId), of = oa && anaData(oa).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (of) { downloadText(of.name.replace(/[^a-z0-9]+/gi, "-").slice(0, 40) + "_" + dd.getAttribute("data-dl-dump") + "_dump.txt", "Crash dump (demo placeholder)\nFailure: " + of.name + "\nOccurrence: " + dd.getAttribute("data-dl-dump") + "\n\n(The real .cab minidump would download here so you can debug locally.)"); toast("Downloading crash dump", true); } return; }
     });
 
     $("resetState").addEventListener("click", function (e) {
@@ -1715,6 +2304,7 @@
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
     document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === id); });
     if (id === "analytics") renderAnalytics();
+    else { var dsh0 = document.getElementById("demoSwitchHost"); if (dsh0) dsh0.innerHTML = ""; }
     window.scrollTo(0, 0);
   }
   function goView(id) { if (history.replaceState) history.replaceState(null, "", "#" + id); showView(id); }
