@@ -239,6 +239,81 @@ function handleWebManifest(req, res) {
     .catch(function () { sendJson(res, 200, { name: "", shortName: "", description: "", categories: [], themeColor: "", icons: [], screenshots: [], appleIcon: "", ogImage: "", hadManifest: false }); });
 }
 
+// ---------------------------------------------------------------------------
+// Azure AI proxy. Keeps the Foundry key server-side so AI works for every user
+// of a deployment WITHOUT shipping the key to git or the browser. Credentials
+// come from environment variables (preferred for hosting); locally they fall
+// back to the gitignored publishing/ai-config.js so dev "just works".
+// The client (ai-client.js) calls /api/ai/status to detect availability, then
+// POSTs to /api/ai/responses and /api/ai/images. Restart the server after
+// changing credentials.
+// ---------------------------------------------------------------------------
+function readAiCreds() {
+  var c = {
+    endpoint:      process.env.AZURE_AI_ENDPOINT       || "",
+    apiKey:        process.env.AZURE_AI_KEY             || "",
+    model:         process.env.AZURE_AI_MODEL           || "",
+    imageEndpoint: process.env.AZURE_AI_IMAGE_ENDPOINT  || "",
+    imageModel:    process.env.AZURE_AI_IMAGE_MODEL     || "",
+  };
+  if (!c.endpoint || !c.apiKey || !c.model) {
+    try {
+      var txt = fs.readFileSync(path.join(ROOT, "publishing", "ai-config.js"), "utf8");
+      var shim = {};
+      new Function("window", txt)(shim);            // ai-config.js only sets window.AI_CONFIG
+      var w = shim.AI_CONFIG || {};
+      c.endpoint      = c.endpoint      || w.endpoint      || "";
+      c.apiKey        = c.apiKey        || w.apiKey        || "";
+      c.model         = c.model         || w.model         || "";
+      c.imageEndpoint = c.imageEndpoint || w.imageEndpoint || "";
+      c.imageModel    = c.imageModel    || w.imageModel    || "";
+    } catch (e) { /* no local config — proxy stays disabled, client uses heuristics */ }
+  }
+  return c;
+}
+var AI_CREDS = readAiCreds();
+var AI_READY = !!(AI_CREDS.endpoint && AI_CREDS.apiKey && AI_CREDS.model);
+var AI_IMG_READY = !!(AI_CREDS.imageEndpoint && AI_CREDS.apiKey && AI_CREDS.imageModel);
+
+function readJsonBody(req) {
+  return new Promise(function (resolve, reject) {
+    var chunks = [], size = 0;
+    req.on("data", function (d) { size += d.length; if (size > (1 << 20)) { reject(new Error("body too large")); try { req.destroy(); } catch (e) {} } else chunks.push(d); });
+    req.on("end", function () { try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}")); } catch (e) { reject(new Error("bad json")); } });
+    req.on("error", reject);
+  });
+}
+
+function handleAiStatus(req, res) {
+  sendJson(res, 200, { enabled: AI_READY, imageEnabled: AI_IMG_READY });
+}
+
+// Forward a client request to Azure AI Foundry, injecting the server-held key
+// and model. Response is passed straight back so the client parses it as if it
+// had called Foundry directly.
+function proxyAi(req, res, kind) {
+  var ready    = kind === "image" ? AI_IMG_READY : AI_READY;
+  var endpoint = kind === "image" ? AI_CREDS.imageEndpoint : AI_CREDS.endpoint;
+  var model    = kind === "image" ? AI_CREDS.imageModel : AI_CREDS.model;
+  if (!ready) return sendJson(res, 503, { error: "AI not configured on server" });
+  readJsonBody(req).then(function (body) {
+    body.model = model;                              // server owns the model name
+    return fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-key": AI_CREDS.apiKey },
+      body: JSON.stringify(body),
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        res.writeHead(r.status, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+        res.end(t);
+      });
+    });
+  }).catch(function (e) {
+    var msg = String(e && e.message || e);
+    sendJson(res, msg === "bad json" ? 400 : 502, { error: msg });
+  });
+}
+
 function sendJson(res, code, obj) {
   var body = JSON.stringify(obj);
   res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" });
@@ -284,6 +359,9 @@ http.createServer(function (req, res) {
   if (req.method === "GET" && req.url.indexOf("/api/crash-analytics") === 0) return handleCrash(req, res);
   if (req.method === "GET" && req.url.indexOf("/api/link-preview") === 0) return handleLinkPreview(req, res);
   if (req.method === "GET" && req.url.indexOf("/api/web-manifest") === 0) return handleWebManifest(req, res);
+  if (req.method === "GET" && req.url.indexOf("/api/ai/status") === 0) return handleAiStatus(req, res);
+  if (req.method === "POST" && req.url.indexOf("/api/ai/responses") === 0) return proxyAi(req, res, "text");
+  if (req.method === "POST" && req.url.indexOf("/api/ai/images") === 0) return proxyAi(req, res, "image");
   if (req.method === "GET") return serveStatic(req, res);
   res.writeHead(405); res.end("Method not allowed");
 }).listen(PORT, "127.0.0.1", function () {

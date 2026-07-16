@@ -32,14 +32,15 @@ const AI_CONFIG = Object.freeze({
 });
 
 if (!AI_CONFIG.enabled) {
-  console.info('[ai-client] AI disabled — using keyword heuristics. To enable, create ai-config.js from ai-config.template.js.');
+  console.info('[ai-client] No embedded AI key — will check the server /api/ai proxy; falls back to keyword heuristics if neither is configured.');
 }
 
 // ---------------------------------------------------------------------------
 // Low-level Responses API call.
 // ---------------------------------------------------------------------------
 async function callResponses({ system, user, schema, maxOutputTokens = 4000, reasoningEffort = 'medium' }) {
-  if (!AI_CONFIG.enabled) throw new Error('AI disabled by config');
+  // AI runs either directly (browser has an embedded key) or via the same-origin
+  // /api/ai proxy (server holds the key). Callers gate on window.AI.enabled.
 
   // Responses API: `input` is a plain string (user message), `instructions`
   // carries the system-level guidance. (Array-of-messages form needs typed
@@ -70,12 +71,11 @@ async function callResponses({ system, user, schema, maxOutputTokens = 4000, rea
     };
   }
 
-  const res = await fetch(AI_CONFIG.endpoint, {
+  const res = await fetch(AI_CONFIG.enabled ? AI_CONFIG.endpoint : '/api/ai/responses', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': AI_CONFIG.apiKey,
-    },
+    headers: AI_CONFIG.enabled
+      ? { 'Content-Type': 'application/json', 'api-key': AI_CONFIG.apiKey }
+      : { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
@@ -250,16 +250,18 @@ async function aiGeneratePrivacyPolicy({ appName, shortDesc, fullDesc, category,
 // Returns a data URL ready to drop into <img src="...">.
 // ---------------------------------------------------------------------------
 async function aiGenerateImage({ prompt, size = '1024x1024' }) {
-  if (!AI_CONFIG.imageEnabled) throw new Error('Image AI disabled by config');
+  const direct = AI_CONFIG.imageEnabled;
   const body = JSON.stringify({
-    model: AI_CONFIG.imageModel,
+    model: AI_CONFIG.imageModel,   // '' in proxy mode; the server injects its own image model
     prompt,
     size,
     n: 1,
   });
-  const res = await fetch(AI_CONFIG.imageEndpoint, {
+  const res = await fetch(direct ? AI_CONFIG.imageEndpoint : '/api/ai/images', {
     method: 'POST',
-    headers: { 'api-key': AI_CONFIG.apiKey, 'Content-Type': 'application/json' },
+    headers: direct
+      ? { 'api-key': AI_CONFIG.apiKey, 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' },
     body,
   });
   if (!res.ok) {
@@ -304,3 +306,26 @@ window.AI = {
   generatePrivacyPolicy: aiGeneratePrivacyPolicy,
   transformText:         aiTransformText,
 };
+
+// When there's no embedded browser key, ask the server whether it can proxy AI
+// (key held in a server env var / local ai-config.js). This is how AI works for
+// everyone on a hosted deploy without shipping the key to git or the browser.
+// Callers read window.AI.enabled on interaction, which is after this resolves.
+(function probeServerAI() {
+  if (AI_CONFIG.enabled && AI_CONFIG.imageEnabled) return; // already fully enabled by a local key
+  try {
+    fetch('/api/ai/status', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (s) {
+        if (!s) return;
+        var changed = false;
+        if (!AI_CONFIG.enabled && s.enabled) { window.AI.enabled = true; changed = true; }
+        if (!AI_CONFIG.imageEnabled && s.imageEnabled) { window.AI.imageEnabled = true; changed = true; }
+        if (changed) {
+          console.info('[ai-client] AI enabled via server proxy.');
+          try { window.dispatchEvent(new CustomEvent('ai-ready', { detail: { enabled: window.AI.enabled, imageEnabled: window.AI.imageEnabled } })); } catch (e) {}
+        }
+      })
+      .catch(function () {});
+  } catch (e) {}
+})();

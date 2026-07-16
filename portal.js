@@ -745,6 +745,7 @@
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0;
   var anaSearch = "", anaType = "all", anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
+  var symSort = { key: "ver", dir: "desc" };
   var anaLogPage = 0, anaLogQuery = "";
   // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
   var anaRange = "7d", anaCustom = null, symUp = null, anaFilters = {};
@@ -807,8 +808,20 @@
 
   var anaCache = {};
   var STACK_FNS = ["Renderer::PaintLayer", "Document::Save", "NetClient::OnResponse", "Heap::Allocate", "View::OnPaint", "Session::Tick", "Codec::DecodeFrame", "Db::Commit"];
+  // Win32 vs MSIX: the whole symbols pipeline (upload, coverage %, "unresolved" stacks) is a
+  // Win32-only concern. MSIX/APPX packages already ship their symbols inside the package, so
+  // those apps always get rich, fully-resolved crash stacks — no symbol upload/coverage/
+  // unresolved UI at all. NOTE: apps discovered from a certificate are ALWAYS Win32; MSIX apps
+  // only arrive via the publish/Store packaging path (explicit packaging) or a .msix/.appx file.
+  function isMsix(app) {
+    if (!app) return false;
+    if (app.packaging != null) return /msix|appx|uwp|packaged/i.test(String(app.packaging));
+    if (typeof app.msix === "boolean") return app.msix;
+    return /\.(msix|msixbundle|appx|appxbundle)$/i.test(String(app.file || ""));
+  }
   function anaData(app) {
     if (anaCache[app.id]) return anaCache[app.id];
+    var msix = isMsix(app);
     var rnd = anaRng(Math.abs(hashStr(app.id + "|" + app.name)) || 1);
     var exe = app.file || (app.name.replace(/\s+/g, "") + ".exe");
     var base = exe.replace(/\.exe$/i, "");
@@ -825,21 +838,23 @@
     for (var vv = 0; vv < nver; vv++) verNums.push(vmajor + "." + vmin + "." + (nver - vv) + ".0");   // newest first
     var symSeq = ["processing", "resolved", "resolved", "action", "notuploaded", "resolved"], soff = (rnd() * symSeq.length) | 0;
     var vShare = 0.62, versions = verNums.map(function (vn, vi) {
-      var st = symSeq[(vi + soff) % symSeq.length];
+      var st = msix ? "resolved" : symSeq[(vi + soff) % symSeq.length];
       var vf = Math.max(240, Math.round((crashes + hangs) * vShare * (0.5 + rnd() * 0.5))); vShare *= (0.42 + rnd() * 0.3);
       return { ver: vn, failures: vf, sym: st };
     });
-    if (!versions.some(function (v) { return v.sym === "action"; })) versions[Math.min(2, nver - 1)].sym = "action";
-    if (!versions.some(function (v) { return v.sym === "notuploaded"; })) versions[nver - 1].sym = "notuploaded";
-    if (versions[0].sym === "notuploaded") versions[0].sym = "processing";   // newest is being worked on
-    var symbolHealth = Math.round(versions.filter(function (v) { return v.sym === "resolved"; }).length / nver * 100);
+    if (!msix) {   // symbol-status variety only matters for Win32; MSIX is always resolved
+      if (!versions.some(function (v) { return v.sym === "action"; })) versions[Math.min(2, nver - 1)].sym = "action";
+      if (!versions.some(function (v) { return v.sym === "notuploaded"; })) versions[nver - 1].sym = "notuploaded";
+      if (versions[0].sym === "notuploaded") versions[0].sym = "processing";   // newest is being worked on
+    }
+    var symbolHealth = msix ? 100 : Math.round(versions.filter(function (v) { return v.sym === "resolved"; }).length / nver * 100);
     var dist = versions.map(function (v) { return { label: v.ver, value: v.failures }; });
     // Failure buckets \u2014 each tied to a version; resolved iff that version's symbols resolved.
     var failures = [], share = 0.5;
     for (var f = 0; f < 24; f++) {
       var k = FAIL_KINDS[f % FAIL_KINDS.length];
       var vp = versions[(rnd() * Math.min(3, nver)) | 0];
-      var resolved = vp.sym === "resolved";
+      var resolved = msix || vp.sym === "resolved";
       var type = (f % 6 === 5) ? "Memory" : k.t;
       var cm = k.p.match(/_([0-9a-fA-F]{8})_/), code = cm ? "0x" + cm[1].toUpperCase() : (type === "Hang" ? "Hang" : "0xC0000005");
       var fn = STACK_FNS[(rnd() * STACK_FNS.length) | 0];
@@ -1293,64 +1308,85 @@
     var ranges = [["7d", "Last 7 days"], ["30d", "Last 30 days"], ["custom", "Custom range"]];
     var dateSel = '<fluent-dropdown id="anaRangeSel" appearance="outline" aria-label="Date range" placeholder="Date range"><fluent-listbox>' + ranges.map(function (r) { return '<fluent-option value="' + r[0] + '"' + (anaRange === r[0] ? " selected" : "") + '>' + r[1] + '</fluent-option>'; }).join("") + '</fluent-listbox></fluent-dropdown>';
     var custom = anaRange === "custom" ? '<span class="cacustom"><input type="date" class="cadate" id="caFrom"' + (anaCustom && anaCustom.from ? ' value="' + anaCustom.from + '"' : "") + '><span class="muted">to</span><input type="date" class="cadate" id="caTo"' + (anaCustom && anaCustom.to ? ' value="' + anaCustom.to + '"' : "") + '><fluent-button size="small" appearance="primary" data-ca-apply="1">Apply</fluent-button></span>' : "";
-    var updated = '<span class="ca-updated" title="Crash data is aggregated from Windows with about 24 hours of latency by design, so the latest day shown is yesterday. Real-time data is not available for Win32 apps.">' +
+    var updated = '<span class="ca-updated" title="Crash data is aggregated from Windows with about 4 hours of data delay by design, so the most recent hours may still be filling in. Real-time data is not available.">' +
       '<iconify-icon icon="fluent:history-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Updated ' + refreshed + '</span>';
     var fc = filterCount(), filtersBtn = '<fluent-button id="anaFiltersBtn" appearance="outline" data-ca-filters="1"><iconify-icon slot="start" icon="fluent:filter-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
-    return updated + dateSel + custom + filtersBtn;
+    return anaQuickFiltersHTML() + '<span class="anafb__end">' + updated + dateSel + custom + filtersBtn + '</span>';
+  }
+  // Quick filters surfaced outside the drawer. Only cross-tab dimensions (version, market,
+  // device) so the toolbar stays identical across every analytics tab; tab-specific filters
+  // (OS version, OS release, architecture) stay in the drawer. Single-select convenience.
+  function anaQuickFiltersHTML() {
+    var app = appById(analyticsAppId) || state.apps[0]; if (!app) return "";
+    var appvers = anaData(app).versions.map(function (v) { return v.ver; });
+    // The one surfaced quick filter is contextual — the dimension that leads THIS tab.
+    // Version drives crash/usage/ratings triage; acquisition is about where installs come
+    // from, so market leads there. Everything else stays in the Filters drawer.
+    var byTab = {
+      crashes: { key: "appver", all: "All versions", vals: appvers },
+      usage: { key: "appver", all: "All versions", vals: appvers },
+      ratings: { key: "appver", all: "All versions", vals: appvers },
+      acquisition: { key: "market", all: "All markets", vals: null }
+    };
+    var defs = [byTab[anaTab] || byTab.crashes];
+    return '<div class="anaqf-group">' + defs.map(function (q) {
+      var cat = FILTER_CATS.filter(function (c) { return c.key === q.key; })[0];
+      var vals = q.vals || (cat ? cat.values : []), sel = anaFilters[q.key] || [];
+      var opts = '<fluent-option value="__all"' + (sel.length === 0 ? " selected" : "") + '>' + esc(q.all) + '</fluent-option>';
+      if (sel.length > 1) opts += '<fluent-option value="__multi" selected>' + sel.length + ' selected</fluent-option>';
+      opts += vals.map(function (v) { return '<fluent-option value="' + esc(v) + '"' + (sel.length === 1 && sel[0] === v ? " selected" : "") + '>' + esc(v) + '</fluent-option>'; }).join("");
+      return '<fluent-dropdown class="anaqf" data-qf="' + q.key + '" appearance="outline" aria-label="' + esc(cat ? cat.label : q.key) + '"><fluent-listbox>' + opts + '</fluent-listbox></fluent-dropdown>';
+    }).join("") + '</div>';
   }
   function failLabel(f) {
     if (f.fn && f.fn !== "!Unknown") return f.fn;
     var m = f.name.match(/^(.*?)_(?:c[0-9a-fA-F]{7}|[0-9a-fA-F]{8})_/);
     return m ? m[1] : f.name;
   }
+  var aiDismissed = {};   // per-app: user dismissed the AI insight for this session
   function aiInsightHTML(app) {
-    var d = anaData(app), v = caView(app);
+    if (aiDismissed[app.id]) return "";
+    var d = anaData(app);
     var sorted = d.failures.slice().sort(function (a, b) { return b.hits - a.hits; });
     var neu = sorted.filter(function (f) { return f.isNew; })[0], t = neu || sorted[0];
     if (!t) return "";
     var lbl = esc(failLabel(t)), ver = esc(t.ver), hits = fmtCompact(t.hits), dev = fmtCompact(t.devices);
-    var trend = "Failures are <strong>" + (v.dTotal <= 0 ? "down " : "up ") + Math.abs(v.dTotal).toFixed(1) + "%</strong> overall, but ";
     var s = neu
-      ? trend + "<strong>" + lbl + "</strong> in <strong>" + ver + "</strong> is a new failure this release \u2014 already <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices and climbing fast. Investigate before it spreads."
-      : trend + "your biggest failure is <strong>" + lbl + "</strong> in <strong>" + ver + "</strong> at <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices. Fixing it clears the most crashes.";
+      ? "<strong>" + lbl + "</strong> in <strong>" + ver + "</strong> is a new failure this release \u2014 already <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices and climbing fast. Investigate before it spreads."
+      : "Your biggest failure is <strong>" + lbl + "</strong> in <strong>" + ver + "</strong> \u2014 <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices. Fixing it clears the most crashes.";
     return '<div class="ai-insight"><span class="ai-insight__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>AI insight</span>' +
       '<p class="ai-insight__text">' + s + '</p>' +
-      '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-failure="' + t.id + '"><iconify-icon slot="start" icon="fluent:bug-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Investigate</fluent-button></div>';
+      '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-failure="' + t.id + '"><iconify-icon slot="start" icon="fluent:bug-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Investigate</fluent-button>' +
+      '<button class="ai-insight__x" data-ai-dismiss="1" aria-label="Dismiss insight" title="Dismiss"><iconify-icon icon="fluent:dismiss-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
   }
   function symPill(st) { var m = SYM_STATES[st] || SYM_STATES.notuploaded, cm = { ok: "success", info: "brand", idle: "warning", warn: "danger" }; return '<fluent-badge appearance="outline" color="' + (cm[m.cls] || "subtle") + '">' + m.label + '</fluent-badge>'; }
   function ftypePill(t) { return '<span class="ftype-txt">' + esc(t) + '</span>'; }
   function zeroStateHTML(app) {
+    var msix = isMsix(app);
+    var nudge = msix
+      ? '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:box-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Packaged app</span>' +
+        '<h3>Stack traces resolve automatically</h3>' +
+        '<p><strong>' + esc(app.name) + '</strong> ships as an MSIX package, so its symbols travel inside the package \u2014 there\u2019s nothing to upload. Every crash and hang will show a fully resolved stack trace with function names, files and line numbers from the very first report.</p></div>'
+      : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
+        '<h3>Upload your symbols before the first crash</h3>' +
+        '<p>Symbols are the heart of crash analytics \u2014 they turn raw memory offsets into readable stack traces with function names, files and line numbers. But they only resolve crashes that happen <strong>after</strong> they\u2019re uploaded; crashes that already happened stay unreadable. Upload <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your very first crash is actionable from day one.</p>' +
+        '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
+        '<fluent-link href="#" data-noop="1">What should I upload? \u2192</fluent-link></div></div>';
     return '<div class="ca-zero"><div class="ca-zero__hero"><iconify-icon icon="fluent:shield-checkmark-24-regular" width="40" height="40" aria-hidden="true"></iconify-icon>' +
       '<h2>No crashes reported yet for ' + esc(app.name) + '</h2>' +
-      '<p class="muted">Analytics turn on once your app is installed on about <strong>100 devices</strong>. After that, crashes and hangs from Windows (Watson) show up here \u2014 with about 24 hours of latency.</p>' +
+      '<p class="muted">Analytics turn on once your app is installed on about <strong>100 devices</strong>. After that, crashes and hangs from Windows Error Reporting show up here \u2014 within about <strong>4 hours</strong>.</p>' +
       '<p class="ca-zero__tip muted"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Set your app\u2019s file and product version metadata so failures group correctly \u2014 builds with missing metadata are reported under \u201cUnknown\u201d.</p></div>' +
-      '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
-      '<h3>Upload your symbols before the first crash</h3>' +
-      '<p>Symbols are the heart of crash analytics \u2014 they turn raw memory offsets into readable stack traces with function names, files and line numbers. But they only resolve crashes that happen <strong>after</strong> they\u2019re uploaded; crashes that already happened stay unreadable. Upload <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your very first crash is actionable from day one.</p>' +
-      '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
-      '<fluent-link href="#" data-noop="1">What should I upload? \u2192</fluent-link></div></div></div>';
+      nudge + '</div>';
   }
   function latencyZeroHTML() {
     return '<div class="ca-zero"><div class="ca-zero__hero"><iconify-icon icon="fluent:clock-24-regular" width="40" height="40" aria-hidden="true"></iconify-icon>' +
       '<h2>No data for this window yet</h2>' +
-      '<p class="muted">Crash data lands with about 24 hours of latency, so a range ending today is still being collected. Pick a range that ends yesterday or earlier to see results.</p></div></div>';
+      '<p class="muted">Crash data lands with about 4 hours of delay, so the most recent hours are still being collected. Check back shortly or pick a range that ends earlier to see results.</p></div></div>';
   }
   function demoSwitchHTML() {
     var states = [["live", "Live data"], ["newapp", "New app (no data)"]];
     return '<div class="demoswitch" role="group" aria-label="Demo state"><span class="demoswitch__label"><iconify-icon icon="fluent:beaker-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Demo</span>' +
       states.map(function (s) { return '<button class="demoswitch__b' + (anaDemoState === s[0] ? " is-on" : "") + '" data-demostate="' + s[0] + '">' + s[1] + '</button>'; }).join("") + '</div>';
-  }
-  function symStatusBar(app) {
-    var d = anaData(app), hp = d.symbolHealth, cls = hp >= 80 ? "ok" : hp >= 50 ? "warn" : "bad";
-    var rn = d.versions.filter(function (v) { return v.sym === "resolved"; }).length, nv = d.versions.length;
-    var unreadable = d.failures.filter(function (f) { return !f.resolved; }).reduce(function (m, f) { return m + f.hits; }, 0);
-    var detail = (rn === nv)
-      ? "All " + nv + " versions resolved \u00b7 stacks resolving normally"
-      : rn + " of " + nv + " versions resolved \u00b7 <strong>" + fmtCompact(unreadable) + "</strong> crashes can\u2019t show stack traces";
-    return '<button class="symstat symstat--' + cls + '" data-ca-scroll="ca-symsec" aria-label="Symbols coverage ' + hp + ' percent. Go to the symbols table.">' +
-      '<span class="ca-symring ca-symring--' + cls + '" style="--p:' + hp + '"><span>' + hp + '%</span></span>' +
-      '<span class="symstat__txt"><span class="symstat__label">Symbols coverage</span><span class="symstat__detail">' + detail + '</span></span>' +
-      '<span class="symstat__cta">Manage symbols <iconify-icon icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span></button>';
   }
   function crashTab(app) {
     var d = anaData(app);
@@ -1364,30 +1400,43 @@
       countCard("Crashes", fmtCompact(v.crashes), sub, v.series[0].values, "var(--brand)", v.dCrash) +
       countCard("Hangs", fmtCompact(v.hangs), sub, v.series[1].values, "var(--magenta)", v.dHang) +
       countCard("Memory failures", fmtCompact(v.mem), sub, v.series[2].values, "var(--purple)", v.dMem) + '</div>';
-    return aiInsightHTML(app) + symStatusBar(app) + cards +
+    var msix = isMsix(app);
+    return aiInsightHTML(app) + (msix ? "" : symbolsPanel(app)) + cards +
       apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs and memory failures across all your users") +
       failuresPanel(app, d) +
-      symbolsPanel(app) +
       apanel("Failures by version", chartBars({ bars: d.dist }), "Failures grouped by the app version they occurred on") +
       apanel("Geographical failure hits", geoBars(h.geo.slice(0, 8).map(function (r) { return { label: r.country, hits: r.hits, pct: r.pct }; })), "Top regions by failure hits");
   }
   function symbolsPanel(app) {
     var d = anaData(app), hp = d.symbolHealth, hcls = hp >= 80 ? "ok" : hp >= 50 ? "warn" : "bad";
-    var rn = d.versions.filter(function (v) { return v.sym === "resolved"; }).length;
+    var rn = d.versions.filter(function (v) { return v.sym === "resolved"; }).length, nv = d.versions.length;
     var actionV = d.versions.filter(function (v) { return v.sym === "action"; })[0];
-    var health = '<span class="sympanel__health"><span class="ca-symdot ca-symdot--' + hcls + '"></span>' + hp + '% resolved \u00b7 ' + rn + ' of ' + d.versions.length + ' versions' +
-      (actionV ? ' \u00b7 <span class="sympanel__warn">action needed on ' + esc(actionV.ver) + '</span>' : "") + '</span>';
-    return '<section class="apanel" id="ca-symsec"><header class="apanel__head apanel__head--flex">' +
-      '<div class="sympanel__lead"><h3>Symbols</h3>' + health + '</div>' +
-      '<div class="sympanel__actions"><fluent-button appearance="outline" size="small" data-sym-history="1"><iconify-icon slot="start" icon="fluent:history-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>History</fluent-button>' +
-      '<fluent-button appearance="primary" size="small" class="ca-uploadbtn" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button></div>' +
-      '</header><p class="apanel__sub muted">Symbols are matched per app version. Uploading resolves stack traces for <strong>future</strong> crashes on that build \u2014 occurrences that already happened stay unresolved.</p>' +
-      '<div class="apanel__body">' + symbolsTable(app) + '</div></section>';
+    var unreadable = d.failures.filter(function (f) { return !f.resolved; }).reduce(function (m, f) { return m + f.hits; }, 0);
+    var detail = (rn === nv)
+      ? "All " + nv + " versions resolved \u00b7 stacks resolving normally"
+      : rn + " of " + nv + " versions resolved \u00b7 <strong>" + fmtCompact(unreadable) + "</strong> crashes can\u2019t show stack traces";
+    if (actionV) detail += " \u00b7 <span class=\"sympanel__warn\">action needed on " + esc(actionV.ver) + "</span>";
+    // Accordion: collapsed by default = coverage health at a glance (any "action needed" version
+    // is still surfaced in the header); expand to manage symbols in place, on demand.
+    return '<section class="apanel sympanel" id="ca-symsec">' +
+      '<details class="symacc">' +
+      '<summary class="symacc__sum">' +
+        '<span class="ca-symring ca-symring--' + hcls + '" style="--p:' + hp + '"><span>' + hp + '%</span></span>' +
+        '<span class="symacc__txt"><span class="symacc__label">Symbols coverage</span><span class="symacc__detail">' + detail + '</span></span>' +
+        '<span class="symacc__actions"><fluent-button appearance="outline" size="small" data-sym-history="1"><iconify-icon slot="start" icon="fluent:history-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>History</fluent-button>' +
+        '<fluent-button appearance="primary" size="small" class="ca-uploadbtn" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button></span>' +
+        '<iconify-icon class="symacc__chev" icon="fluent:chevron-down-16-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '</summary>' +
+      '<div class="symacc__body">' +
+        '<p class="apanel__sub muted symacc__hint">Symbols are matched per app version. Uploading resolves stack traces for <strong>future</strong> crashes on that build \u2014 occurrences that already happened stay unresolved.</p>' +
+        '<div id="symTableHost">' + symbolsTable(app) + '</div>' +
+      '</div>' +
+      '</details></section>';
   }
   function failuresPanel(app, d) {
     return '<section class="apanel" id="ca-failsec"><header class="apanel__head"><h3>Failures</h3>' +
       '<iconify-icon class="apanel__i" icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></header>' +
-      '<p class="apanel__sub muted">Grouped by Watson failure bucket. Sorted by impact \u2014 select one to see its stack trace.</p>' +
+      '<p class="apanel__sub muted">Grouped by failure signature. Sorted by impact \u2014 select one to see its stack trace.</p>' +
       '<div class="failctl"><fluent-text-input id="failSearch" appearance="outline" class="failsearch" placeholder="Search failures\u2026" value="' + esc(anaSearch) + '"><iconify-icon slot="start" icon="fluent:search-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></fluent-text-input>' + failSegHTML() + '</div>' +
       '<div id="failTableHost">' + failTableInner(app) + '</div></section>';
   }
@@ -1420,7 +1469,7 @@
       '<button class="apager__b" ' + attr + '="' + (pg + 1) + '"' + (pg >= pages - 1 ? " disabled" : "") + ' aria-label="Next page"><iconify-icon icon="fluent:chevron-right-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
   }
   function failTableInner(app) {
-    var d = anaData(app), list = d.failures.slice();
+    var d = anaData(app), msix = isMsix(app), list = d.failures.slice();
     var vf = anaFilters.appver; if (vf && vf.length) list = list.filter(function (f) { return vf.indexOf(f.ver) >= 0; });
     if (anaType !== "all") list = list.filter(function (f) { return f.type === anaType; });
     if (anaSearch) { var q = anaSearch.toLowerCase(); list = list.filter(function (f) { return f.name.toLowerCase().indexOf(q) >= 0 || f.ver.toLowerCase().indexOf(q) >= 0; }); }
@@ -1432,28 +1481,35 @@
       return '<tr class="failrow" data-failure="' + f.id + '" tabindex="0" role="button" aria-label="View ' + esc(f.name) + '">' +
         '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
         '<td>' + ftypePill(f.type) + '</td><td><span class="mono">' + esc(f.ver) + '</span></td>' +
-        '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>' +
-        '<td class="failtrend">' + deltaPill(f.dPct) + '</td>' +
+        (msix ? "" : '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>') +
         '<td class="num">' + fmtComma(f.hits) + '</td><td class="num">' + fmtComma(f.devices) + '</td></tr>';
     }).join("");
-    if (!list.length) rows = '<tr><td colspan="7" class="cellspan">No failures match your search or filters.</td></tr>';
-    return '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th><th>Version</th><th>Symbols</th><th>Trend</th>' + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    if (!list.length) rows = '<tr><td colspan="' + (msix ? 5 : 6) + '" class="cellspan">No failures match your search or filters.</td></tr>';
+    return '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th><th>Version</th>' + (msix ? "" : '<th>Symbols</th>') + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
       pagerHTML(pg, pages, "data-anapage", list.length, "failures");
   }
   function renderFailTableHost() { var h = $("failTableHost"); if (h) h.innerHTML = failTableInner(appById(analyticsAppId) || state.apps[0]); }
+  function renderSymTableHost() { var h = $("symTableHost"); if (h) h.innerHTML = symbolsTable(appById(analyticsAppId) || state.apps[0]); }
+  function cmpVer(a, b) {
+    var pa = String(a).split("."), pb = String(b).split("."), n = Math.max(pa.length, pb.length);
+    for (var i = 0; i < n; i++) { var na = parseInt(pa[i] || "0", 10), nb = parseInt(pb[i] || "0", 10); if (na !== nb) return na - nb; }
+    return 0;
+  }
   function symbolsTable(app) {
-    var d = anaData(app);
-    var unresolved = d.versions.filter(function (v) { return v.sym === "notuploaded" || v.sym === "action"; });
-    var reco = unresolved.slice().sort(function (a, b) { return b.failures - a.failures; })[0];
-    var rows = d.versions.map(function (v) {
-      var isReco = reco && v.ver === reco.ver;
+    var d = anaData(app), list = d.versions.slice(), dir = symSort.dir === "asc" ? 1 : -1;
+    var symRank = { action: 3, notuploaded: 2, processing: 1, resolved: 0 };
+    if (symSort.key === "ver") list.sort(function (a, b) { return cmpVer(a.ver, b.ver) * dir; });
+    else if (symSort.key === "sym") list.sort(function (a, b) { return ((symRank[a.sym] || 0) - (symRank[b.sym] || 0)) * dir || cmpVer(b.ver, a.ver); });
+    else list.sort(function (a, b) { return (a.failures - b.failures) * dir; });
+    function symTh(label, k, num) { var on = symSort.key === k; return '<th class="' + (num ? "num " : "") + 'th-sort" data-symsort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (symSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
+    var rows = list.map(function (v) {
       var act = v.sym === "action" ? '<fluent-link data-sym-details="' + esc(v.ver) + '">View details</fluent-link>'
         : v.sym === "processing" ? '<span class="muted">Validating\u2026</span>'
         : v.sym === "notuploaded" ? '<fluent-link data-sym-upload="' + esc(v.ver) + '">Upload</fluent-link>'
         : '<fluent-link data-sym-upload="' + esc(v.ver) + '">Re-upload</fluent-link>';
-      return '<tr data-ver="' + esc(v.ver) + '"' + (isReco ? ' class="symreco"' : "") + '><td><span class="mono">' + esc(v.ver) + '</span>' + (isReco ? ' <fluent-badge class="reco-badge" appearance="tint" color="brand" title="Uploading this version\u2019s symbols makes the most crashes readable">\u2605 Upload first</fluent-badge>' : "") + '</td><td class="num">' + fmtComma(v.failures) + '</td><td>' + symPill(v.sym) + '</td><td class="atable__act">' + act + '</td></tr>';
+      return '<tr data-ver="' + esc(v.ver) + '"><td><span class="mono">' + esc(v.ver) + '</span></td><td class="num">' + fmtComma(v.failures) + '</td><td>' + symPill(v.sym) + '</td><td class="atable__act">' + act + '</td></tr>';
     }).join("");
-    return '<div class="table-wrap"><table class="atable"><thead><tr><th>App version</th><th class="num">Failures</th><th>Symbol status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    return '<div class="table-wrap"><table class="atable atable--sym"><thead><tr>' + symTh("App version", "ver") + symTh("Failures", "failures", true) + symTh("Symbol status", "sym") + '<th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   function symbolHistoryTable(app) {
     var d = anaData(app);
@@ -1535,12 +1591,13 @@
     return lines.join("\n");
   }
   function stackTraceHTML(app, f, det) {
+    var msix = isMsix(app);
     var env = det && det.log ? { os: topShare(det.log, "os"), dev: topShare(det.log, "dev") } : null;
     var envHTML = env ? '<div class="stk__env"><iconify-icon icon="fluent:target-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Most affected: <strong>' + esc(env.os.label) + '</strong> (' + env.os.pct + '%) \u00b7 <strong>' + esc(env.dev.label) + '</strong> devices (' + env.dev.pct + '%)</div>' : "";
     var sb = stackBody(app, f), bodyHTML = sb.html, parts = sb.parts;
     var ctx = envHTML + '<p class="stk__rep muted">Representative stack for this failure \u2014 every occurrence shares this signature. Open a row in the failure log below to see that occurrence\u2019s stack.</p>';
     if (f.resolved) {
-      return '<div class="stk stk--resolved"><div class="stk__head"><fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' +
+      return '<div class="stk stk--resolved"><div class="stk__head"><fluent-badge appearance="outline" color="success">' + (msix ? "Full stack trace" : "Symbols resolved") + '</fluent-badge>' +
         '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
         '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-crashai="' + f.id + '"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Explain this crash</fluent-button>' +
         '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
@@ -1551,13 +1608,14 @@
     }
     return '<div class="stk stk--unresolved"><div class="stk__head"><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
       '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
-      '<span class="stk__actions"><fluent-button appearance="primary" size="small" data-sym-upload="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
+      '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-sym-manage="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:folder-zip-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Manage symbols</fluent-button>' +
       '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
       '<fluent-button appearance="outline" size="small" data-dl-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download stack</fluent-button></span></div>' + ctx + bodyHTML +
-      '<p class="stk__hint muted">No symbols for <strong>' + esc(f.ver) + '</strong>, so your frames show as raw offsets \u2014 Windows frames resolve automatically. Upload symbols to name <strong>future</strong> crashes; past ones stay raw.</p></div>';
+      '<p class="stk__hint muted">No symbols for <strong>' + esc(f.ver) + '</strong>, so these frames show as raw offsets \u2014 Windows frames resolve automatically. Uploading symbols can\u2019t fix this crash or any that already happened \u2014 it only names <strong>future</strong> ones. <button class="stk__link" data-sym-manage="' + esc(f.ver) + '">Manage symbols for ' + esc(f.ver) + '</button> to resolve future reports.</p></div>';
   }
   function occStackHTML(app, f, occ) {
-    var badge = f.resolved ? '<fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' : '<fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>';
+    var badge = isMsix(app) ? '<fluent-badge appearance="outline" color="success">Full stack trace</fluent-badge>'
+      : f.resolved ? '<fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' : '<fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>';
     return '<div class="occdlg__ctx"><iconify-icon icon="fluent:document-bullet-list-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span><strong>' + esc(occ.date) + '</strong> \u00b7 ' + esc(occ.dev) + ' \u00b7 ' + esc(occ.model) + ' \u00b7 <span class="mono">' + esc(occ.os) + '</span></span></div>' +
       '<div class="occdlg__meta">' + badge + '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
       '<fluent-button class="occdlg__dl" appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
@@ -1729,6 +1787,16 @@
     el.innerHTML = anaFilterHTML();
     var rs = $("anaRangeSel");
     if (rs) rs.addEventListener("change", function () { if (!rs.value) return; anaRange = rs.value; if (anaRange !== "custom") anaCustom = null; anaPage = 0; renderAnaFilter(); renderAnalyticsPanel(); });
+    Array.prototype.forEach.call(el.querySelectorAll(".anaqf"), function (dd) {
+      dd.addEventListener("change", function () {
+        var key = dd.getAttribute("data-qf"), val = dd.value;
+        if (!val || val === "__multi") return;
+        var cur = anaFilters[key] || [], next = val === "__all" ? [] : [val];
+        if (cur.length === next.length && cur.every(function (x, i) { return x === next[i]; })) return;
+        if (next.length) anaFilters[key] = next; else delete anaFilters[key];
+        anaPage = 0; renderAnaFilter(); renderAnaChips(); renderAnalyticsPanel();
+      });
+    });
   }
   function renderAppSelect(apps) {
     var el = $("anaAppSel"); if (!el) return;
@@ -2169,6 +2237,8 @@
       if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
       var ss = e.target.closest && e.target.closest("[data-anasort]");
       if (ss) { e.preventDefault(); var sk = ss.getAttribute("data-anasort"); if (anaSort.key === sk) anaSort.dir = anaSort.dir === "asc" ? "desc" : "asc"; else { anaSort.key = sk; anaSort.dir = "desc"; } anaPage = 0; renderFailTableHost(); return; }
+      var ssk2 = e.target.closest && e.target.closest("[data-symsort]");
+      if (ssk2) { e.preventDefault(); var sk2 = ssk2.getAttribute("data-symsort"); if (symSort.key === sk2) symSort.dir = symSort.dir === "asc" ? "desc" : "asc"; else { symSort.key = sk2; symSort.dir = "desc"; } renderSymTableHost(); return; }
     });
     document.querySelector(".main").addEventListener("click", function (e) {
       if (e.target.closest("[data-openmodal]")) { e.preventDefault();
@@ -2202,11 +2272,14 @@
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
       var atab = e.target.closest("[data-anatab]");
-      if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; renderAnalyticsPanel(); return; }
+      if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; renderAnaFilter(); renderAnalyticsPanel(); return; }
+      if (e.target.closest("[data-ai-dismiss]")) { aiDismissed[analyticsAppId] = true; renderAnalyticsPanel(); return; }
       var frow = e.target.closest("[data-failure]");
       if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaLogPage = 0; anaLogQuery = ""; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
       var sj = e.target.closest("[data-sym-jump]");
-      if (sj) { var sjsec = document.getElementById("ca-symsec"); if (sjsec) sjsec.scrollIntoView({ behavior: "smooth", block: "start" }); var sjrow = document.querySelector('#ca-symsec tr[data-ver="' + sj.getAttribute("data-sym-jump") + '"]'); if (sjrow) { sjrow.classList.remove("symhi"); void sjrow.offsetWidth; sjrow.classList.add("symhi"); } return; }
+      if (sj) { var sjsec = document.getElementById("ca-symsec"); var sjdet = sjsec && sjsec.querySelector("details.symacc"); if (sjdet) sjdet.open = true; if (sjsec) sjsec.scrollIntoView({ behavior: "smooth", block: "start" }); var sjrow = document.querySelector('#ca-symsec tr[data-ver="' + sj.getAttribute("data-sym-jump") + '"]'); if (sjrow) { sjrow.classList.remove("symhi"); void sjrow.offsetWidth; sjrow.classList.add("symhi"); } return; }
+      var smg = e.target.closest("[data-sym-manage]");
+      if (smg) { var smgv = smg.getAttribute("data-sym-manage"); anaFailure = null; renderAnalyticsPanel(); var smgsec = document.getElementById("ca-symsec"); var smgdet = smgsec && smgsec.querySelector("details.symacc"); if (smgdet) smgdet.open = true; if (smgsec) smgsec.scrollIntoView({ behavior: "smooth", block: "start" }); var smgrow = smgv && document.querySelector('#ca-symsec tr[data-ver="' + smgv + '"]'); if (smgrow) { smgrow.classList.remove("symhi"); void smgrow.offsetWidth; smgrow.classList.add("symhi"); } return; }
       if (e.target.closest("[data-anaback]")) { anaFailure = null; renderAnalyticsPanel(); return; }
       var ost = e.target.closest("[data-occ-stack]");
       if (ost) { openOccStack(ost.getAttribute("data-occ-stack")); return; }
@@ -2226,6 +2299,8 @@
         renderFailTableHost(); return; }
       var asrt = e.target.closest("[data-anasort]");
       if (asrt) { var sk = asrt.getAttribute("data-anasort"); if (anaSort.key === sk) anaSort.dir = anaSort.dir === "asc" ? "desc" : "asc"; else { anaSort.key = sk; anaSort.dir = "desc"; } anaPage = 0; renderFailTableHost(); return; }
+      var ssrt = e.target.closest("[data-symsort]");
+      if (ssrt) { var ssk = ssrt.getAttribute("data-symsort"); if (symSort.key === ssk) symSort.dir = symSort.dir === "asc" ? "desc" : "asc"; else { symSort.key = ssk; symSort.dir = "desc"; } renderSymTableHost(); return; }
       var dvf = e.target.closest("[data-ver-filter]");
       if (dvf) { anaFilters.appver = [dvf.getAttribute("data-ver-filter")]; anaFailure = null; anaPage = 0; renderAnaFilter(); renderAnaChips(); renderAnalyticsPanel(); window.scrollTo(0, 0); return; }
       var dms = e.target.closest("[data-demostate]");
@@ -2235,9 +2310,9 @@
       if (e.target.closest("[data-ca-apply]")) { var cf = $("caFrom"), ct = $("caTo"); applyCustomRange(cf && cf.value, ct && ct.value); renderAnaFilter(); renderAnalyticsPanel(); return; }
       var cscl = e.target.closest("[data-ca-scroll]");
       if (cscl) { var tgt = document.getElementById(cscl.getAttribute("data-ca-scroll")); if (tgt) tgt.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
-      if (e.target.closest("[data-ca-upload]")) { var au = appById(analyticsAppId); if (au) openSymUploader(au, ""); return; }
+      if (e.target.closest("[data-ca-upload]")) { e.preventDefault(); var au = appById(analyticsAppId); if (au) openSymUploader(au, ""); return; }
       if (e.target.closest("[data-ca-filters]")) { openFilterFlyout(); return; }
-      if (e.target.closest("[data-sym-history]")) { var auh = appById(analyticsAppId); if (auh) openSymHistory(auh); return; }
+      if (e.target.closest("[data-sym-history]")) { e.preventDefault(); var auh = appById(analyticsAppId); if (auh) openSymHistory(auh); return; }
       var chrm = e.target.closest("[data-chip-rm]"); if (chrm) { var pr = chrm.getAttribute("data-chip-rm").split("|"); removeFilter(pr[0], pr[1]); return; }
       if (e.target.closest("[data-filters-clear]")) { anaFilters = {}; renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel(); return; }
       var su = e.target.closest("[data-sym-upload]");
