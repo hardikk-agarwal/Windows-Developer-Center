@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="color-scheme" content="light dark" />
   <title>Microsoft Store Developer | Microsoft</title>
-  <link rel="stylesheet" href="portal.css" />
-  <link rel="stylesheet" href="store-portal.css" />
+  <script>
+    try {
+      var t = localStorage.getItem('msstore.theme');
+      if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+  </script>
+  <link rel="stylesheet" href="portal.css?v=61" />
+  <link rel="stylesheet" href="store-portal.css?v=61" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
@@ -18,6 +25,9 @@
     <a class="brand" href="store-developer.html" data-wdp-brand></a>
 
     <div class="appbar__right">
+      <button class="iconbtn" id="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+        <iconify-icon icon="fluent:weather-sunny-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+      </button>
       <div class="userchip">
         <span class="avatar" id="avatar">—</span>
         <span class="userchip__meta">
@@ -179,7 +189,7 @@
           </div>
         </div>
         <div class="empty">
-          <img src="assets/person.png" alt="" />
+          <img data-theme-image="person" src="assets/person.png" alt="" />
           <strong>No customer groups yet</strong>
           <p class="muted">Group your customers into segments — like insiders, lapsed users, or education licenses — then reach them with targeted sale pricing, promotions, and notifications.</p>
           <fluent-button appearance="primary">
@@ -323,8 +333,6 @@
   <!-- Fluent 2 web components (real components + dark theme tokens) -->
   <script type="module">
     import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
-    import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
-    setTheme(webDarkTheme);
     ButtonDefinition.define(FluentDesignSystem.registry);
     TextInputDefinition.define(FluentDesignSystem.registry);
     DialogDefinition.define(FluentDesignSystem.registry);
@@ -332,6 +340,7 @@
   </script>
   <!-- One engine, two doors: the Store portal is portal.js personalised for the Store path. -->
   <script>window.PORTAL_MODE = "store";</script>
-  <script src="portal.js"></script>
+  <script type="module" src="theme-fluent.js?v=61"></script>
+  <script src="portal.js?v=61"></script>
 </body>
 </html>

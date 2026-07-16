@@ -127,7 +127,7 @@
     function card(t, illo, title, p1) {
       return '<div class="acct-card' + (acctType === t ? ' is-selected' : '') + '" data-acct="' + t + '" role="button" tabindex="0" aria-pressed="' + (acctType === t) + '">' +
         '<iconify-icon class="acct-card__check" icon="fluent:checkmark-circle-16-filled" width="22" height="22" aria-hidden="true"></iconify-icon>' +
-        '<div class="acct-card__illo"><img src="assets/' + illo + '" alt="" /></div>' +
+        '<div class="acct-card__illo"><img data-theme-image="' + illo.replace(/\.png$/, '') + '" src="assets/' + illo + '" alt="" /></div>' +
         '<h3>' + title + '</h3><p>' + p1 + '</p><span class="acct-free">Free</span></div>';
     }
     return '<div class="acct-grid">' +
@@ -145,7 +145,7 @@
       return '<div class="pcmp__th' + (path === "store" ? " pcmp__th--accent" : "") + (sel ? " is-selected" : "") +
         '" data-path="' + path + '" role="button" tabindex="0" aria-pressed="' + sel + '">' +
         '<span class="pcmp__badge">' + (rec ? '<span class="pcmp__rec">Recommended</span>' : "") + '</span>' +
-        '<img src="assets/' + illo + '" alt="" />' +
+        '<img data-theme-image="' + illo.replace(/\.png$/, '') + '" src="assets/' + illo + '" alt="" />' +
         '<strong>' + title + '</strong><span class="pcmp__desc">' + desc + '</span>' +
         '<span class="pcmp__select"><span class="pcmp__radio"></span>' + (sel ? "Selected" : "Select") + '</span></div>';
     }
@@ -180,7 +180,7 @@
   // Phase 2 (Store path) — nudge to create the first app; same hand-off as the Store signup.
   function bodyStoreApp() {
     return '<div class="status-card wiz-hero">' +
-      '<img class="status-card__illo" src="assets/rocket.png" alt="" />' +
+      '<img class="status-card__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
       '<div class="status-card__body">' +
         '<span class="pill pill--ok"><span class="verified-dot"></span>Microsoft Store developer</span>' +
         '<h2>Bring your app to the Store</h2>' +
@@ -284,7 +284,7 @@
   // Completion = the portal's hero status-card banner + the accepted certificate.
   function bodyDone() {
     return '<div class="status-card wiz-hero">' +
-      '<img class="status-card__illo" src="assets/badge.png" alt="" />' +
+      '<img class="status-card__illo" data-theme-image="badge" src="assets/badge.png" alt="" />' +
       '<div class="status-card__body">' +
         '<span class="pill pill--ok"><span class="verified-dot"></span>Member</span>' +
         '<h2>Your account is ready</h2>' +

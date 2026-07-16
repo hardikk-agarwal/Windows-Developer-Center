@@ -151,7 +151,7 @@
     if (!state.verified) {
       el.innerHTML =
         '<div class="status-card status-card--off status-card--solo">' +
-          '<img class="status-card__illo" src="assets/trust.png" alt="" />' +
+          '<img class="status-card__illo" data-theme-image="trust" src="assets/trust.png" alt="" />' +
           '<div class="status-card__body">' +
             '<span class="pill pill--warn">Certificate needed</span>' +
             '<h2>Add a certificate to unlock your benefits</h2>' +
@@ -172,7 +172,7 @@
     el.innerHTML =
       '<div class="status-card status-card--hero' + (valid ? '' : ' status-card--off') + '">' +
         '<div class="status-card__top">' +
-          '<img class="status-card__illo" src="assets/' + (valid ? 'shield-person' : 'trust') + '.png" alt="" />' +
+          '<img class="status-card__illo" data-theme-image="' + (valid ? 'shield-person' : 'trust') + '" src="assets/' + (valid ? 'shield-person' : 'trust') + '.png" alt="" />' +
           '<div class="status-card__body">' +
             pill +
             '<h2>' + head + '</h2>' +
@@ -204,7 +204,7 @@
     el.innerHTML =
       '<div class="status-card status-card--hero">' +
         '<div class="status-card__top">' +
-          '<img class="status-card__illo" src="assets/rocket.png" alt="" />' +
+          '<img class="status-card__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
           '<div class="status-card__body">' +
             '<span class="pill pill--ok"><span class="verified-dot"></span>Microsoft Store developer</span>' +
             '<h2>Publish your apps to the Microsoft Store</h2>' +
@@ -450,14 +450,14 @@
     if (!state.certs.length) {
       wrap.innerHTML = STORE
         ? '<div class="empty">' +
-            '<img src="assets/shield-checkmark.png" alt="" />' +
+            '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>Not publishing to the Store?</strong>' +
             '<p class="muted">Add your code signing certificate to get crash analytics and distribution for the apps you’ve signed — no Store listing needed.</p>' +
             '<fluent-button appearance="outline" data-openmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>'
         : '<div class="empty">' +
-            '<img src="assets/shield-checkmark.png" alt="" />' +
+            '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>No certificates yet</strong>' +
             '<p class="muted">Add a code signing certificate by submitting a signed binary to confirm your publisher ' +
               'identity and unlock crash analytics for the apps you sign. Any app installed on this PC that uses it is then discovered automatically.</p>' +
@@ -522,7 +522,7 @@
       var above = state.apps.filter(inStorePipeline);
       if (!above.length && !below.length && !scanning) {
         wrap.innerHTML = '<div class="empty">' +
-          '<img src="assets/rocket.png" alt="" />' +
+          '<img data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
           '<strong>Publish your first app</strong>' +
           '<p class="muted">Create an app to reserve its name, add your packages and store listing, ' +
             'and publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
@@ -553,7 +553,7 @@
     var sk = scanning ? appSkeletonHTML(3) : "";
     if (!state.apps.length) {
       wrap.innerHTML = scanning ? (banner + sk) : ('<div class="empty">' +
-        '<img src="assets/rocket.png" alt="" />' +
+        '<img data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
         '<strong>No apps yet</strong>' +
         '<p class="muted">Apps signed by your certificates are discovered automatically. Add a ' +
           'certificate and any app installed on this PC that uses it appears here.</p>' +
@@ -775,7 +775,7 @@
   }
 
   function emptyAnalyticsHTML() {
-    return '<div class="empty"><img src="assets/data-trending.png" alt="" />' +
+    return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
       '<strong>No analytics yet</strong>' +
       '<p class="muted">' + (STORE
         ? 'Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings and performance.'
@@ -2330,19 +2330,19 @@
       var jump = e.target.closest("[data-jump]"); if (jump) { e.preventDefault(); goView(jump.getAttribute("data-jump")); }
     });
 
-    $("symDialog").addEventListener("click", function (e) {
+    var _symD = $("symDialog"); if (_symD) _symD.addEventListener("click", function (e) {
       if (e.target.closest("[data-sym-close]")) { closeSymUploader(); return; }
       if (e.target.closest("[data-noop]")) { e.preventDefault(); return; }
       if (e.target.closest("[data-sym-retry]")) { if (symUp) { symUp.phase = "pick"; renderSymUploader(); } return; }
       if (e.target.closest("[data-sym-start]")) { startSymValidate(); return; }
     });
-    $("histDialog").addEventListener("click", function (e) {
+    var _histD = $("histDialog"); if (_histD) _histD.addEventListener("click", function (e) {
       if (e.target.closest("[data-hist-close]")) { closeSymHistory(); return; }
       var dl = e.target.closest("[data-dl-sym]");
       if (dl) { var app = appById(analyticsAppId), he = app && anaData(app).history.filter(function (x) { return x.id === dl.getAttribute("data-dl-sym"); })[0];
         if (he) { downloadText(he.file + ".txt", "Symbol package: " + he.file + "\nVersion: " + he.ver + "\nUploaded by: " + he.by + " on " + he.date + "\nStatus: " + he.status + "\n\n(Demo placeholder \u2014 the original .zip would download here.)"); toast("Downloading " + he.file, true); } return; }
     });
-    $("filterDrawer").addEventListener("click", function (e) {
+    var _filtD = $("filterDrawer"); if (_filtD) _filtD.addEventListener("click", function (e) {
       if (e.target.closest("[data-filter-close]")) { closeFilterFlyout(); return; }
       if (e.target.closest("[data-filter-clearall]")) { clearFilterDrawer(); return; }
       if (e.target.closest("[data-filter-apply]")) { applyFiltersFromDrawer(); return; }
@@ -2358,7 +2358,7 @@
       if (dd) { var oa = appById(analyticsAppId), of = oa && anaData(oa).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (of) { downloadText(of.name.replace(/[^a-z0-9]+/gi, "-").slice(0, 40) + "_" + dd.getAttribute("data-dl-dump") + "_dump.txt", "Crash dump (demo placeholder)\nFailure: " + of.name + "\nOccurrence: " + dd.getAttribute("data-dl-dump") + "\n\n(The real .cab minidump would download here so you can debug locally.)"); toast("Downloading crash dump", true); } return; }
     });
 
-    $("resetState").addEventListener("click", function (e) {
+    var _rs = $("resetState"); if (_rs) _rs.addEventListener("click", function (e) {
       e.preventDefault();
       if (confirm("Clear all certificates, apps, and verification state?")) {
         localStorage.removeItem(KEY); state = load(); save(); renderAll(); showSignin();

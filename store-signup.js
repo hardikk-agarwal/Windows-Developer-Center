@@ -66,7 +66,7 @@
     function card(t, illo, title, p1) {
       return '<div class="acct-card' + (acctType === t ? ' is-selected' : '') + '" data-acct="' + t + '" role="button" tabindex="0" aria-pressed="' + (acctType === t) + '">' +
         '<iconify-icon class="acct-card__check" icon="fluent:checkmark-circle-16-filled" width="22" height="22" aria-hidden="true"></iconify-icon>' +
-        '<div class="acct-card__illo"><img src="assets/' + illo + '" alt="" /></div>' +
+        '<div class="acct-card__illo"><img data-theme-image="' + illo.replace(/\.png$/, '') + '" src="assets/' + illo + '" alt="" /></div>' +
         '<h3>' + title + '</h3><p>' + p1 + '</p><span class="acct-free">Free</span></div>';
     }
     return '<div class="acct-grid">' +
@@ -95,7 +95,7 @@
   // Phase 2 — nudge to create the first app (hero banner + CTA to the Store portal).
   function bodyFirstApp() {
     return '<div class="status-card wiz-hero">' +
-      '<img class="status-card__illo" src="assets/rocket.png" alt="" />' +
+      '<img class="status-card__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
       '<div class="status-card__body">' +
         '<span class="pill pill--ok"><span class="verified-dot"></span>Microsoft Store developer</span>' +
         '<h2>Bring your app to the Store</h2>' +

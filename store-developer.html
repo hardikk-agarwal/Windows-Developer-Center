@@ -4,10 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Publish your app to the Microsoft Store — reach more than a billion active Windows devices, keep up to 100% of your revenue, and grow with built-in analytics." />
-  <meta name="color-scheme" content="dark" />
+  <meta name="color-scheme" content="light dark" />
   <title>Microsoft Store Developer | Publish your app to a billion devices</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="store.css" />
+  <script>
+    try {
+      var t = localStorage.getItem('msstore.theme');
+      if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+  </script>
+  <link rel="stylesheet" href="styles.css?v=61" />
+  <link rel="stylesheet" href="store.css?v=61" />
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -30,6 +38,9 @@
       <div class="topbar__spacer"></div>
 
       <div class="topbar__actions">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+          <iconify-icon icon="fluent:weather-sunny-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        </button>
         <fluent-button appearance="subtle" data-action="portal">Sign in</fluent-button>
         <fluent-button appearance="primary" size="small" data-action="create">Create account</fluent-button>
       </div>
@@ -53,7 +64,7 @@
           </div>
         </div>
         <div class="hero__art" aria-hidden="true">
-          <img class="hero__illo" src="assets/rocket.png" alt="" width="256" height="256" loading="eager" />
+          <img class="hero__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" width="256" height="256" loading="eager" />
         </div>
       </div>
     </section>
@@ -123,7 +134,7 @@
 
       <div class="cardrow">
         <article class="card">
-          <div class="card__thumb thumb--a"><img class="thumb__illo" src="assets/share.png" alt="" loading="lazy" /></div>
+          <div class="card__thumb thumb--a"><img class="thumb__illo" data-theme-image="share" src="assets/share.png" alt="" loading="lazy" /></div>
           <div class="card__body">
             <span class="card__cat">Reach</span>
             <h3>Hundreds of millions of customers</h3>
@@ -131,7 +142,7 @@
           </div>
         </article>
         <article class="card">
-          <div class="card__thumb thumb--b"><img class="thumb__illo" src="assets/rewards.png" alt="" loading="lazy" /></div>
+          <div class="card__thumb thumb--b"><img class="thumb__illo" data-theme-image="rewards" src="assets/rewards.png" alt="" loading="lazy" /></div>
           <div class="card__body">
             <span class="card__cat">Revenue</span>
             <h3>Keep what you earn</h3>
@@ -139,7 +150,7 @@
           </div>
         </article>
         <article class="card">
-          <div class="card__thumb thumb--c"><img class="thumb__illo" src="assets/data-trending.png" alt="" loading="lazy" /></div>
+          <div class="card__thumb thumb--c"><img class="thumb__illo" data-theme-image="data-trending" src="assets/data-trending.png" alt="" loading="lazy" /></div>
           <div class="card__body">
             <span class="card__cat">Growth</span>
             <h3>Grow with insight</h3>
@@ -182,32 +193,32 @@
 
       <div class="bgrid">
         <article class="bcard bcard--feature">
-          <img class="bcard__illo" src="assets/share.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="share" src="assets/share.png" alt="" loading="lazy" />
           <h3>Reach a billion-device audience</h3>
           <p>One submission puts your app in front of customers on every Windows 10 and 11 device, worldwide.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/rewards.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="rewards" src="assets/rewards.png" alt="" loading="lazy" />
           <h3>Keep up to 100% of revenue</h3>
           <p>Bring your own commerce and Microsoft takes nothing — or use Microsoft's and keep 85% (88% for PC games).</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/arrow-download.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="arrow-download" src="assets/arrow-download.png" alt="" loading="lazy" />
           <h3>Effortless distribution &amp; updates</h3>
           <p>Microsoft hosts your packages on a global CDN and delivers automatic updates to every user.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/data-trending.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="data-trending" src="assets/data-trending.png" alt="" loading="lazy" />
           <h3>Built-in analytics</h3>
           <p>Track acquisitions, usage, health, and ratings &amp; reviews right from the developer portal.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/shield-checkmark.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" loading="lazy" />
           <h3>Trusted &amp; secure by default</h3>
           <p>Every app is certified and malware-scanned, so customers install with confidence.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/badge.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="badge" src="assets/badge.png" alt="" loading="lazy" />
           <h3>One identity, any app</h3>
           <p>A single developer account ships Win32, MSIX, .NET, PWA, or Electron — any framework that runs on Windows.</p>
         </article>
@@ -345,12 +356,11 @@
 
   <!-- Fluent 2 web components (real components + dark theme tokens) -->
   <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
-    import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
-    setTheme(webDarkTheme);
+    import { FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
     ButtonDefinition.define(FluentDesignSystem.registry);
   </script>
   <script>window.MKT_ROUTES = { create: "store-signup.html", portal: "store-portal.html#signin" };</script>
-  <script src="app.js"></script>
+  <script type="module" src="theme-fluent.js?v=61"></script>
+  <script src="app.js?v=61"></script>
 </body>
 </html>

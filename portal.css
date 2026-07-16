@@ -58,8 +58,8 @@ a { color: inherit; text-decoration: none; }
 .mono { font-family: var(--mono); font-size: 12.5px; color: var(--text-2); }
 code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); padding: 1px 6px; border-radius: 4px; }
 
-.skip-link { position: absolute; left: -999px; top: 0; z-index: 200; background: var(--brand);
-  color: #001; padding: 10px 16px; border-radius: var(--r-sm); }
+.skip-link { position: absolute; left: -999px; top: 0; z-index: 200; background: var(--brand-strong);
+  color: #fff; padding: 10px 16px; border-radius: var(--r-sm); }
 .skip-link:focus { left: 12px; top: 12px; }
 
 /* ---------- Buttons (Fluent 2) ---------- */
@@ -67,18 +67,18 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
   height: var(--bh); padding: 0 14px; border-radius: var(--r-sm); font: 600 14px/20px var(--font);
   border: 1px solid transparent; cursor: pointer; white-space: nowrap;
   transition: background .1s ease, border-color .1s ease, color .1s ease; }
-.btn:focus-visible { outline: 2px solid #fff; outline-offset: 1px; box-shadow: 0 0 0 3px var(--brand-strong); }
+.btn:focus-visible { outline: 2px solid var(--colorStrokeFocus2, #fff); outline-offset: 1px; box-shadow: 0 0 0 3px var(--brand-strong); }
 /* Fluent 2 disabled state — flat neutral tokens (not a faded brand color) */
 .btn:disabled, .btn[aria-disabled="true"] { cursor: not-allowed; box-shadow: none; }
-.btn--primary:disabled { background: #141414; border-color: #424242; color: #5c5c5c; }
-.btn--outline:disabled { background: transparent; border-color: #424242; color: #5c5c5c; }
-.btn--subtle:disabled { background: transparent; color: #5c5c5c; }
-.btn--danger:disabled { background: transparent; border-color: #424242; color: #5c5c5c; }
-.btn--primary { background: #115EA3; color: #fff; }
-.btn--primary:not(:disabled):hover { background: #0F6CBD; }
-.btn--primary:not(:disabled):active { background: #0C3B5E; }
-.btn--outline { background: transparent; color: var(--text); border-color: #666; }
-.btn--outline:not(:disabled):hover { background: var(--hover); border-color: #757575; }
+.btn--primary:disabled { background: var(--colorNeutralBackgroundDisabled, #141414); border-color: var(--colorNeutralStrokeDisabled, #424242); color: var(--colorNeutralForegroundDisabled, #5c5c5c); }
+.btn--outline:disabled { background: transparent; border-color: var(--colorNeutralStrokeDisabled, #424242); color: var(--colorNeutralForegroundDisabled, #5c5c5c); }
+.btn--subtle:disabled { background: transparent; color: var(--colorNeutralForegroundDisabled, #5c5c5c); }
+.btn--danger:disabled { background: transparent; border-color: var(--colorNeutralStrokeDisabled, #424242); color: var(--colorNeutralForegroundDisabled, #5c5c5c); }
+.btn--primary { background: var(--colorBrandBackground, #115EA3); color: #fff; }
+.btn--primary:not(:disabled):hover { background: var(--colorBrandBackgroundHover, #0F6CBD); }
+.btn--primary:not(:disabled):active { background: var(--colorBrandBackgroundPressed, #0C3B5E); }
+.btn--outline { background: transparent; color: var(--text); border-color: var(--colorNeutralStroke1, #666); }
+.btn--outline:not(:disabled):hover { background: var(--hover); border-color: var(--colorNeutralStroke1Hover, #757575); }
 .btn--subtle { background: transparent; color: var(--text-2); }
 .btn--subtle:hover { background: var(--hover); color: var(--text); }
 .btn--danger { background: transparent; color: var(--danger); border-color: rgba(240,85,107,.5); }
@@ -167,12 +167,21 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
   background: linear-gradient(135deg, #123a6b 0%, #0e1a30 60%); border: 1px solid var(--brand-strong);
   border-radius: var(--r-lg); padding: 26px 28px; box-shadow: var(--sh-card); }
 .status-card__illo { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 10px 22px rgba(0,0,0,.5)); }
-.status-card__body h2 { font-size: 22px; margin: 12px 0 8px; }
-.status-card__body .muted { color: #b9c6da; max-width: 520px; }
+.status-card__body h2 { font-size: 22px; margin: 12px 0 8px; color: var(--text); }
+.status-card__body .muted { color: var(--text-2); max-width: 520px; }
 .status-card__metrics { display: grid; grid-template-columns: repeat(2, auto); gap: 18px 28px; }
 .metric { display: flex; flex-direction: column; }
-.metric strong { font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
-.metric span { font-size: 12.5px; color: #9fb0c8; margin-top: 4px; }
+.metric strong { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+.metric span { font-size: 12.5px; color: var(--text-3); margin-top: 4px; }
+
+/* Hero uses a deep-blue gradient in DARK mode and a soft brand-tinted gradient in LIGHT mode.
+   Text + the outline button follow the theme tokens (var(--text) etc.), so they read correctly
+   in both — dark navy card → white text, light card → dark text. */
+[data-theme="light"] .status-card {
+  background: linear-gradient(135deg, #dbe9fb 0%, #eef4fd 62%);
+  border-color: var(--brand-tint-stroke);
+}
+[data-theme="light"] .status-card__illo { filter: drop-shadow(0 10px 22px rgba(15,60,120,.16)); }
 
 /* Hero status card — CTA on the right, metrics as a centered strip below (shared by both portals) */
 .status-card--hero { display: block; }
@@ -227,7 +236,7 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
   background: linear-gradient(90deg, transparent, var(--brand), transparent);
   background-size: 40% 100%; background-repeat: no-repeat; animation: barslide 1s linear infinite; }
 @keyframes barslide { from { background-position: -40% 0; } to { background-position: 140% 0; } }
-.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff;
+.spinner { width: 14px; height: 14px; border: 2px solid color-mix(in srgb, currentColor 30%, transparent); border-top-color: currentColor;
   border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .submit-row { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
@@ -556,7 +565,7 @@ fluent-badge[appearance="outline"][color="subtle"] { background-color: var(--sur
 .apager__n { min-width: 30px; height: 30px; padding: 0 9px; display: inline-grid; place-items: center; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-2); border-radius: var(--r-sm); cursor: pointer; font: 600 12.5px var(--font); }
 .apager__n:hover:not(.is-current) { background: var(--hover); color: var(--text); }
-.apager__n.is-current { background: var(--brand); border-color: var(--brand); color: #fff; cursor: default; }
+.apager__n.is-current { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; cursor: default; }
 .apager__ellipsis { color: var(--text-3); padding: 0 2px; }
 .aback { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 7px 8px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-2); border-radius: var(--r-sm); font: 600 13px var(--font); cursor: pointer; align-self: flex-start; }

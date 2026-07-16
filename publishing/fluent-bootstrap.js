@@ -58,6 +58,18 @@ new MutationObserver(applyFluentTheme).observe(document.documentElement, {
   attributeFilter: ['data-theme'],
 });
 
+// Follow the OS/browser colour scheme and switch live when it changes. A change to the
+// system setting takes over from a manual toggle choice, so the theme tracks the browser.
+const schemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+function onSchemeChange(e) {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+  var toggle = document.getElementById('theme-toggle');
+  if (toggle) toggle.checked = !e.matches;
+}
+if (schemeMedia.addEventListener) schemeMedia.addEventListener('change', onSchemeChange);
+else if (schemeMedia.addListener) schemeMedia.addListener(onSchemeChange);
+
 // Wire the topbar theme switch once the DOM (and Fluent component definitions) are ready.
 function wireToggle() {
   const toggle = document.getElementById('theme-toggle');

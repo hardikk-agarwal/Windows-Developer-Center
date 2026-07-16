@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="color-scheme" content="light dark" />
   <title>Create your developer account | Windows Developer Program</title>
-  <link rel="stylesheet" href="portal.css" />
-  <link rel="stylesheet" href="signup.css" />
+  <script>
+    try {
+      var t = localStorage.getItem('msstore.theme');
+      if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+  </script>
+  <link rel="stylesheet" href="portal.css?v=61" />
+  <link rel="stylesheet" href="signup.css?v=61" />
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
 <body>
@@ -60,6 +67,9 @@
         <span class="brand__sub">Windows Developer Program</span>
       </a>
       <div class="appbar__right">
+        <button class="iconbtn" id="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+          <iconify-icon icon="fluent:weather-sunny-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        </button>
         <span class="avatar" role="img" aria-label="Alex Taylor" title="Alex Taylor">AT</span>
       </div>
     </header>
@@ -139,11 +149,10 @@
   <!-- Fluent 2 web components (real components + dark theme tokens) -->
   <script type="module">
     import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
-    import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
-    setTheme(webDarkTheme);
     ButtonDefinition.define(FluentDesignSystem.registry);
     TextInputDefinition.define(FluentDesignSystem.registry);
   </script>
-  <script src="signup.js"></script>
+  <script type="module" src="theme-fluent.js?v=61"></script>
+  <script src="signup.js?v=61"></script>
 </body>
 </html>

@@ -4,9 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Join the Windows Developer Program to reach customers across more than a billion Windows devices, in the Microsoft Store or anywhere you distribute. You'll also get crash and health analytics, security protections, and a higher reputation that help your apps stand out." />
-  <meta name="color-scheme" content="dark" />
+  <meta name="color-scheme" content="light dark" />
   <title>Windows Developer Program | Microsoft Developer</title>
-  <link rel="stylesheet" href="styles.css" />
+  <script>
+    try {
+      var t = localStorage.getItem('msstore.theme');
+      if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+  </script>
+  <link rel="stylesheet" href="styles.css?v=61" />
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -29,6 +37,9 @@
       <div class="topbar__spacer"></div>
 
       <div class="topbar__actions">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+          <iconify-icon icon="fluent:weather-sunny-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        </button>
         <fluent-button appearance="subtle" size="small" data-action="portal">Go to the Developer Portal</fluent-button>
         <fluent-button appearance="primary" size="small" data-action="create">Create a developer account</fluent-button>
       </div>
@@ -54,7 +65,7 @@
           <ul class="valuestack">
             <li class="valuecard">
               <span class="valuecard__icon">
-                <img src="assets/data-trending.png" alt="" />
+                <img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />
               </span>
               <span class="valuecard__text">
                 <strong>Crash &amp; health analytics</strong>
@@ -63,7 +74,7 @@
             </li>
             <li class="valuecard">
               <span class="valuecard__icon">
-                <img src="assets/shield-checkmark.png" alt="" />
+                <img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />
               </span>
               <span class="valuecard__text">
                 <strong>Security protections</strong>
@@ -72,7 +83,7 @@
             </li>
             <li class="valuecard">
               <span class="valuecard__icon">
-                <img src="assets/rewards.png" alt="" />
+                <img data-theme-image="rewards" src="assets/rewards.png" alt="" />
               </span>
               <span class="valuecard__text">
                 <strong>Higher reputation</strong>
@@ -187,32 +198,32 @@
 
       <div class="bgrid">
         <article class="bcard bcard--feature">
-          <img class="bcard__illo" src="assets/shield-person.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="shield-person" src="assets/shield-person.png" alt="" loading="lazy" />
           <h3>Publisher identity &amp; integrity</h3>
           <p>Prove your apps are authentically yours — recognized across Windows.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/arrow-download.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="arrow-download" src="assets/arrow-download.png" alt="" loading="lazy" />
           <h3>Installs without warnings</h3>
           <p>No SmartScreen or SAC prompts for members — users install uninterrupted.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/data-trending.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="data-trending" src="assets/data-trending.png" alt="" loading="lazy" />
           <h3>Rich analytics, included</h3>
           <p>Crash and health diagnostics for Win32 — surfaced the moment you join.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/share.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="share" src="assets/share.png" alt="" loading="lazy" />
           <h3>Distribute anywhere you like</h3>
           <p>Ship in the Store or on your own — your reputation travels with you.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/rewards.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="rewards" src="assets/rewards.png" alt="" loading="lazy" />
           <h3>A reputation that follows you</h3>
           <p>Build it once — it follows every app and certificate you ship.</p>
         </article>
         <article class="bcard">
-          <img class="bcard__illo" src="assets/tickets.png" alt="" loading="lazy" />
+          <img class="bcard__illo" data-theme-image="tickets" src="assets/tickets.png" alt="" loading="lazy" />
           <h3>More reach &amp; growth ahead</h3>
           <p>Source attribution, early access, and more perks — <em>on the way</em>.</p>
         </article>
@@ -280,12 +291,11 @@
 
   <!-- Fluent 2 web components (real components + dark theme tokens) -->
   <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
-    import { webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
-    setTheme(webDarkTheme);
+    import { FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
     ButtonDefinition.define(FluentDesignSystem.registry);
   </script>
   <script>window.MKT_ROUTES = { create: "signup.html", portal: "portal.html#signin" };</script>
-  <script src="app.js"></script>
+  <script type="module" src="theme-fluent.js?v=61"></script>
+  <script src="app.js?v=61"></script>
 </body>
 </html>

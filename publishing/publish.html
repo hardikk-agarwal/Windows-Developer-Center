@@ -131,7 +131,7 @@
   }
   .ez-ai-btn:hover { background-position: 100% 50% !important; transform: translateY(-1px); box-shadow: 0 8px 22px -4px color-mix(in srgb, var(--brand-bg) 80%, transparent); animation: none; }
   .ez-ai-btn:active { transform: translateY(0); }
-  .ez-ai-btn:focus-visible { outline: 2px solid #fff !important; outline-offset: 2px; }
+  .ez-ai-btn:focus-visible { outline: 2px solid var(--fg-1) !important; outline-offset: 2px; }
   .ez-ai-btn iconify-icon { color: #fff !important; }
   @keyframes aiBreathe {
     0%, 100% { box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--brand-bg) 50%, transparent); }
@@ -651,6 +651,7 @@
      --brand/Fluent link blue didn't. Bright cyan (#60CDFF) on the dark preview; a darker blue on
      light surfaces. Scoped to #flow-wrap so it doesn't leak to the rest of the portal. */
   #flow-wrap { --store-link: #60CDFF; }
+  [data-theme="light"] #flow-wrap { --store-link: #005FB8; }
   .ez-info-item__value--link { color: var(--store-link); text-decoration: none; cursor: pointer; font-weight: 600; width: fit-content; }
   .ez-info-item__value--link:hover { text-decoration: underline; }
   .ez-info-item__value--link:focus-visible { outline: 2px solid var(--store-link); outline-offset: 2px; border-radius: 3px; }
@@ -1180,6 +1181,15 @@
   /* Subtle, real-Store-style tint: the logo's hue at a muted (--ez-sat) saturation, kept dark so it
      reads as a gentle wash that fades into the page rather than a vivid colour block. */
   .ez-store-hero { position: relative; padding: var(--sp-32) var(--sp-24) var(--sp-20); color: #fff; background-color: transparent; background-image: linear-gradient(180deg, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 21%) 0%, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 14%) 50%, var(--layer) 92%); }
+  /* Light theme — the per-app hero flips to a soft tint on a light Fluent surface with dark text. */
+  [data-theme="light"] .ez-store-hero { color: var(--fg-1); background-image: linear-gradient(180deg, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 91%) 0%, hsl(var(--ez-hue, 210), var(--ez-sat, 22%), 96%) 48%, var(--layer) 92%); }
+  [data-theme="light"] .ez-store-hero__name, [data-theme="light"] .ez-iarc-text strong { color: var(--fg-1); }
+  [data-theme="light"] .ez-store-hero__meta, [data-theme="light"] .ez-store-hero__desc { color: var(--fg-2); }
+  [data-theme="light"] .ez-iarc-text p, [data-theme="light"] .ez-iarc-empty span { color: var(--fg-3); }
+  [data-theme="light"] .ez-iarc-empty__badge { border-color: rgba(0,0,0,.28); background: rgba(0,0,0,.03); color: var(--fg-3); }
+  [data-theme="light"] .ez-store-cta--icon { background: rgba(0,0,0,.05); color: var(--fg-1); border-color: rgba(0,0,0,.12); }
+  [data-theme="light"] .ez-hero-empty { color: var(--fg-3); }
+  [data-theme="light"] .ez-hero-empty:hover { color: var(--fg-1); background: linear-gradient(to left, rgba(0,0,0,.05), transparent 82%); }
   .ez-store-hero__top { display: flex; align-items: flex-start; gap: var(--sp-16); }
   .ez-store-hero__icon { width: 72px; height: 72px; flex: 0 0 auto; border-radius: var(--r-12); background: linear-gradient(135deg, hsl(var(--ez-hue, 320), 80%, 60%), hsl(var(--ez-hue, 320), 70%, 40%)); background-size: cover; background-position: center; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
   .ez-store-hero__heading { min-width: 0; padding-top: 2px; }
@@ -2272,21 +2282,21 @@
      is collapsed to topbar + full-width main (no rail). */
   .app { grid-template-rows: 56px 1fr; grid-template-columns: 1fr; grid-template-areas: "topbar" "main"; }
   .appbar { grid-area: topbar; height: 56px; display: flex; align-items: center; gap: 20px; padding: 0 20px;
-    background: #07080d; border-bottom: 1px solid #272c3a; }
-  .brand { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: #fff; text-decoration: none; }
+    background: var(--layer); border-bottom: 1px solid var(--stroke-2); }
+  .brand { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--fg-1); text-decoration: none; }
   .brand__name { font-weight: 600; }
-  .brand__divider { width: 1px; height: 16px; background: #353c4d; }
-  .brand__sub { color: #c6cad6; font-weight: 600; }
+  .brand__divider { width: 1px; height: 16px; background: var(--stroke-1); }
+  .brand__sub { color: var(--fg-3); font-weight: 600; }
   .appbar__right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
   .iconbtn { position: relative; width: 36px; height: 36px; display: grid; place-items: center;
-    background: transparent; border: 0; border-radius: 4px; color: #c6cad6; cursor: pointer; }
-  .iconbtn:hover { background: rgba(255,255,255,.08); color: #fff; }
+    background: transparent; border: 0; border-radius: 4px; color: var(--fg-3); cursor: pointer; }
+  .iconbtn:hover { background: var(--subtle); color: var(--fg-1); }
   .userchip { display: flex; align-items: center; gap: 10px; }
   .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
     background: linear-gradient(135deg, #2886de, #115ea3); color: #fff; font-weight: 700; font-size: 13px; }
   .userchip__meta { display: none; }   /* header shows just the profile icon (name/status hidden, still updated by JS) */
-  .userchip__meta strong { font-size: 13px; color: #fff; }
-  .userchip__meta span { font-size: 11.5px; color: #8b909e; display: flex; align-items: center; gap: 5px; }
+  .userchip__meta strong { font-size: 13px; color: var(--fg-1); }
+  .userchip__meta span { font-size: 11.5px; color: var(--fg-3); display: flex; align-items: center; gap: 5px; }
   .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: #57c038; display: inline-block; }
   .verified-dot--off { background: #6b7080; }
   .verified-dot--warn { background: #ffb900; }
