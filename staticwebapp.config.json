@@ -1,0 +1,13 @@
+{
+  "routes": [
+    { "route": "/.auth/*" },
+    { "route": "/*", "allowedRoles": ["authenticated"] }
+  ],
+  "responseOverrides": {
+    "401": { "statusCode": 302, "redirect": "/.auth/login/aad" }
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/publishing/*", "*.{css,js,json,png,jpg,jpeg,svg,gif,webp,ico}"]
+  }
+}
