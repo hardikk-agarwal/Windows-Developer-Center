@@ -551,6 +551,7 @@ fluent-badge[appearance="outline"][color="subtle"] { background-color: var(--sur
 .ca-zero__hero iconify-icon { color: var(--ok); }
 .ca-zero__hero h2 { font-size: 20px; margin: 12px 0 6px; }
 .ca-zero__hero p { max-width: 560px; margin: 0 auto; font-size: 13.5px; }
+.ca-zero__art { width: 112px; height: 112px; object-fit: contain; }
 .ca-zero__nudge { max-width: 720px; margin: 0 auto; padding: 22px 24px; border: 1px solid var(--brand-tint-stroke); border-radius: var(--r-lg); background: linear-gradient(120deg, var(--brand-tint), transparent 70%), var(--surface); }
 .ca-zero__tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--brand-soft); }
 .ca-zero__nudge h3 { font-size: 16px; margin: 10px 0 8px; }
@@ -597,6 +598,8 @@ fluent-badge[appearance="outline"][color="subtle"] { background-color: var(--sur
 .stk__link { background: none; border: 0; padding: 0; color: var(--brand-soft); font: inherit; cursor: pointer; text-decoration: underline; }
 .stk__link:hover { color: var(--brand); }
 .ana-controls__right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+/* `hidden` attr must win over the flex display above (else element stays visible when hidden). */
+.ana-controls[hidden], .ana-controls__right[hidden] { display: none; }
 .anaqf-group { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .anaqf { min-width: 132px; max-width: 210px; }
 .anafb__end { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-left: auto; }

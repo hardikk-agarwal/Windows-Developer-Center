@@ -770,7 +770,7 @@
   function lockedAnalyticsHTML(app, tab) {
     return '<div class="ana-locked"><iconify-icon class="ana-locked__ico" icon="fluent:lock-closed-24-regular" width="34" height="34" aria-hidden="true"></iconify-icon>' +
       '<strong>' + esc(tab.label) + ' unlocks on the Microsoft Store</strong>' +
-      '<p class="muted">The <strong>Crash</strong> tab is available for every app. ' + esc(tab.label) + ' — plus acquisition, usage and ratings — unlocks once you bring <strong>' + esc(app.name) + '</strong> to the Store.</p>' +
+      '<p class="muted">The <strong>Crash</strong> tab is available for every app. ' + esc(tab.label) + ' — plus acquisition, usage, and ratings — unlocks once you bring <strong>' + esc(app.name) + '</strong> to the Store.</p>' +
       '<fluent-button appearance="primary" data-store="' + app.id + '"><iconify-icon slot="start" icon="fluent:rocket-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Publish to the Store</fluent-button></div>';
   }
 
@@ -778,7 +778,7 @@
     return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
       '<strong>No analytics yet</strong>' +
       '<p class="muted">' + (STORE
-        ? 'Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings and performance.'
+        ? 'Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings, and performance.'
         : 'Add a certificate so your apps appear here, then explore crash and hang analytics.') +
       '</p></div>';
   }
@@ -1366,16 +1366,15 @@
     var nudge = msix
       ? '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:box-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Packaged app</span>' +
         '<h3>Stack traces resolve automatically</h3>' +
-        '<p><strong>' + esc(app.name) + '</strong> ships as an MSIX package, so its symbols travel inside the package \u2014 there\u2019s nothing to upload. Every crash and hang will show a fully resolved stack trace with function names, files and line numbers from the very first report.</p></div>'
+        '<p><strong>' + esc(app.name) + '</strong> ships as an MSIX package, so its symbols are already inside \u2014 nothing to upload. Every crash shows a fully resolved stack trace from the first report.</p></div>'
       : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
         '<h3>Upload your symbols before the first crash</h3>' +
-        '<p>Symbols are the heart of crash analytics \u2014 they turn raw memory offsets into readable stack traces with function names, files and line numbers. But they only resolve crashes that happen <strong>after</strong> they\u2019re uploaded; crashes that already happened stay unreadable. Upload <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your very first crash is actionable from day one.</p>' +
+        '<p>Symbols turn raw crash data into readable stack traces with function names and line numbers \u2014 but only for crashes <strong>after</strong> you upload them. Add <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your first crash is actionable.</p>' +
         '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
         '<fluent-link href="#" data-noop="1">What should I upload? \u2192</fluent-link></div></div>';
-    return '<div class="ca-zero"><div class="ca-zero__hero"><iconify-icon icon="fluent:shield-checkmark-24-regular" width="40" height="40" aria-hidden="true"></iconify-icon>' +
+    return '<div class="ca-zero"><div class="ca-zero__hero"><img class="ca-zero__art" data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
       '<h2>No crashes reported yet for ' + esc(app.name) + '</h2>' +
-      '<p class="muted">Analytics turn on once your app is installed on about <strong>100 devices</strong>. After that, crashes and hangs from Windows Error Reporting show up here \u2014 within about <strong>4 hours</strong>.</p>' +
-      '<p class="ca-zero__tip muted"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Set your app\u2019s file and product version metadata so failures group correctly \u2014 builds with missing metadata are reported under \u201cUnknown\u201d.</p></div>' +
+      '<p class="muted">Crash and hang reports appear here once your app reaches about <strong>100 devices</strong> \u2014 usually within <strong>4 hours</strong>.</p></div>' +
       nudge + '</div>';
   }
   function latencyZeroHTML() {
@@ -1404,7 +1403,7 @@
     return aiInsightHTML(app) + cards + (msix ? "" : symbolsPanel(app)) +
       rootCausesPanel(app) +
       failuresPanel(app, d) +
-      apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs and memory failures across all your users") +
+      apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs, and memory failures across all your users") +
       apanel("Failures by version", chartBars({ bars: d.dist }), "Failures grouped by the app version they occurred on") +
       apanel("Geographical failure hits", geoBars(h.geo.slice(0, 8).map(function (r) { return { label: r.country, hits: r.hits, pct: r.pct }; })), "Top regions by failure hits");
   }
@@ -1817,6 +1816,9 @@
       : anaTab === "ratings" ? ratingsTab(app)
       : crashTab(app);
     panelEl.innerHTML = analyticsUpsell() + anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
+    // In the "new app / no data" crash zero state there's nothing to filter, so hide the version/date/Filters
+    // toolbar (the app picker stays). The latency state keeps filters so the date range can still be changed.
+    var _fb = $("anaFilterBar"); if (_fb) _fb.hidden = (anaTab === "crashes" && !anaFailure && anaDemoState === "newapp");
     var dsHost = document.getElementById("demoSwitchHost");
     if (!dsHost) { dsHost = document.createElement("div"); dsHost.id = "demoSwitchHost"; document.body.appendChild(dsHost);
       dsHost.addEventListener("click", function (e) { var dms = e.target.closest("[data-demostate]"); if (dms) { anaDemoState = dms.getAttribute("data-demostate"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); } }); }
@@ -2288,6 +2290,24 @@
     // Apps value banner (WDP path): show unless the developer dismissed it before.
     var hero = $("appsHero");
     if (hero) { try { hero.hidden = localStorage.getItem("wdp.appsHero.dismissed") === "1"; } catch (_) { hero.hidden = false; } }
+
+    // Sticky analytics header: Fluent dropdowns scroll the page to their in-flow position when they
+    // open/focus (which defeats the sticky offset). Capture the scroll position on pointerdown/keydown
+    // (these fire BEFORE the focus-induced scroll) and hold it briefly. Never re-capture mid-hold, or
+    // we'd lock in the already-scrolled position (focusin fires AFTER the scroll).
+    var anaCtl = $("anaControls");
+    if (anaCtl) {
+      var _lockY = null, _until = 0, _rafOn = false;
+      var _holdScroll = function () {
+        _rafOn = false;
+        if (_lockY == null) return;
+        if (Math.abs(window.scrollY - _lockY) > 1) window.scrollTo(0, _lockY);
+        if (performance.now() < _until) { _rafOn = true; requestAnimationFrame(_holdScroll); } else { _lockY = null; }
+      };
+      var _armHold = function () { if (_lockY == null) _lockY = window.scrollY; _until = performance.now() + 320; if (!_rafOn) { _rafOn = true; requestAnimationFrame(_holdScroll); } };
+      anaCtl.addEventListener("pointerdown", _armHold, true);
+      anaCtl.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "Enter" || e.key === "ArrowDown" || e.key === "ArrowUp") _armHold(); }, true);
+    }
 
     document.querySelector(".main").addEventListener("keydown", function (e) {
       if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
