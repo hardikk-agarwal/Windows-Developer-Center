@@ -779,7 +779,7 @@
       '<strong>No analytics yet</strong>' +
       '<p class="muted">' + (STORE
         ? 'Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings and performance.'
-        : 'Add a certificate so your apps appear here, then explore crashes, acquisition, usage, ratings and performance.') +
+        : 'Add a certificate so your apps appear here, then explore crash and hang analytics.') +
       '</p></div>';
   }
 
@@ -1356,7 +1356,7 @@
       : "Your biggest failure is <strong>" + lbl + "</strong> in <strong>" + ver + "</strong> \u2014 <strong>" + hits + "</strong> hits across <strong>" + dev + "</strong> devices. Fixing it clears the most crashes.";
     return '<div class="ai-insight"><span class="ai-insight__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>AI insight</span>' +
       '<p class="ai-insight__text">' + s + '</p>' +
-      '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-failure="' + t.id + '"><iconify-icon slot="start" icon="fluent:bug-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Investigate</fluent-button>' +
+      '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-failure="' + t.id + '"><iconify-icon slot="start" icon="fluent:bug-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Investigate failure</fluent-button>' +
       '<button class="ai-insight__x" data-ai-dismiss="1" aria-label="Dismiss insight" title="Dismiss"><iconify-icon icon="fluent:dismiss-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
   }
   function symPill(st) { var m = SYM_STATES[st] || SYM_STATES.notuploaded, cm = { ok: "success", info: "brand", idle: "warning", warn: "danger" }; return '<fluent-badge appearance="outline" color="' + (cm[m.cls] || "subtle") + '">' + m.label + '</fluent-badge>'; }
@@ -1593,7 +1593,7 @@
       (top.topVer ? ' \u2014 most on <span class="mono">' + esc(top.topVer) + '</span>' : "") + '.</p>';
     var rows = rc.list.slice(0, 5).map(function (g) {
       var meta = fmtCompact(g.hits) + ' hits \u00b7 ' + g.sigs + ' signature' + (g.sigs > 1 ? "s" : "") + (g.topVer ? ' \u00b7 top in ' + esc(g.topVer) : "");
-      var unres = (!msix && g.unresolved > 0) ? ' \u00b7 <span class="rootcause__unres" title="' + g.unresolved + ' signature' + (g.unresolved > 1 ? "s" : "") + ' need symbols to name the exact frame">' + g.unresolved + ' need symbols</span>' : "";
+      var unres = (!msix && g.unresolved > 0) ? ' \u00b7 <span class="rootcause__unres" title="' + g.unresolved + ' signature' + (g.unresolved > 1 ? "s" : "") + (g.unresolved === 1 ? ' needs' : ' need') + ' symbols to name the exact frame">' + g.unresolved + (g.unresolved === 1 ? ' needs symbols' : ' need symbols') + '</span>' : "";
       return '<div class="rootcause" data-cause="' + esc(g.key) + '" role="button" tabindex="0" aria-label="Filter failures to ' + esc(g.label) + '">' +
         '<span class="rootcause__ico"><iconify-icon icon="' + g.icon + '" width="17" height="17" aria-hidden="true"></iconify-icon></span>' +
         '<span class="rootcause__main">' +
@@ -1646,7 +1646,7 @@
     var env = det && det.log ? { os: topShare(det.log, "os"), dev: topShare(det.log, "dev") } : null;
     var envHTML = env ? '<div class="stk__env"><iconify-icon icon="fluent:target-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Most affected: <strong>' + esc(env.os.label) + '</strong> (' + env.os.pct + '%) \u00b7 <strong>' + esc(env.dev.label) + '</strong> devices (' + env.dev.pct + '%)</div>' : "";
     var sb = stackBody(app, f), bodyHTML = sb.html, parts = sb.parts;
-    var ctx = envHTML + '<p class="stk__rep muted">Representative stack for this failure \u2014 every occurrence shares this signature. Open a row in the failure log below to see that occurrence\u2019s stack.</p>';
+    var ctx = envHTML + '<p class="stk__rep muted">Representative stack for this failure \u2014 every occurrence shares this signature. Select a row in the failure log below to see that occurrence\u2019s stack.</p>';
     if (f.resolved) {
       return '<div class="stk stk--resolved"><div class="stk__head"><fluent-badge appearance="outline" color="success">' + (msix ? "Full stack trace" : "Symbols resolved") + '</fluent-badge>' +
         '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
@@ -1654,7 +1654,7 @@
         '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
         '<fluent-button appearance="outline" size="small" data-dl-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download stack</fluent-button></span></div>' +
         ctx + bodyHTML +
-        '<p class="stk__hint muted">Frame 0 is the crash site \u2014 <span class="mono">' + esc(f.fn) + '</span>. Click a <span class="mono">file:line</span> to copy it and jump to your source.</p>' +
+        '<p class="stk__hint muted">Frame 0 is the crash site \u2014 <span class="mono">' + esc(f.fn) + '</span>. Select a <span class="mono">file:line</span> to copy it and jump to your source.</p>' +
         '<div class="crashai" id="crashai-' + f.id + '" hidden>' + crashInsightHTML(app, f, parts, env) + '</div></div>';
     }
     return '<div class="stk stk--unresolved"><div class="stk__head"><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
