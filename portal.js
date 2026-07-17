@@ -744,7 +744,7 @@
      per-failure drill-down), tabbed by analytics type. ALL figures here are generated
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0;
-  var anaSearch = "", anaType = "all", anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
+  var anaSearch = "", anaType = "all", anaCause = null, anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
   var symSort = { key: "ver", dir: "desc" };
   var anaLogPage = 0, anaLogQuery = "";
   // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
@@ -1401,9 +1401,10 @@
       countCard("Hangs", fmtCompact(v.hangs), sub, v.series[1].values, "var(--magenta)", v.dHang) +
       countCard("Memory failures", fmtCompact(v.mem), sub, v.series[2].values, "var(--purple)", v.dMem) + '</div>';
     var msix = isMsix(app);
-    return aiInsightHTML(app) + (msix ? "" : symbolsPanel(app)) + cards +
-      apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs and memory failures across all your users") +
+    return aiInsightHTML(app) + cards + (msix ? "" : symbolsPanel(app)) +
+      rootCausesPanel(app) +
       failuresPanel(app, d) +
+      apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs and memory failures across all your users") +
       apanel("Failures by version", chartBars({ bars: d.dist }), "Failures grouped by the app version they occurred on") +
       apanel("Geographical failure hits", geoBars(h.geo.slice(0, 8).map(function (r) { return { label: r.country, hits: r.hits, pct: r.pct }; })), "Top regions by failure hits");
   }
@@ -1428,7 +1429,7 @@
         '<iconify-icon class="symacc__chev" icon="fluent:chevron-down-16-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
       '</summary>' +
       '<div class="symacc__body">' +
-        '<p class="apanel__sub muted symacc__hint">Symbols are matched per app version. Uploading resolves stack traces for <strong>future</strong> crashes on that build \u2014 occurrences that already happened stay unresolved.</p>' +
+        '<p class="apanel__sub muted symacc__hint">Symbols are matched per app version. Uploading resolves stack traces for <strong>future</strong> crashes on that build \u2014 occurrences that already happened stay unresolved. Processing can take up to 24 hours \u2014 we\u2019ll email you when a version resolves or needs attention.</p>' +
         '<div id="symTableHost">' + symbolsTable(app) + '</div>' +
       '</div>' +
       '</details></section>';
@@ -1448,30 +1449,16 @@
   }
   function pagerHTML(pg, pages, attr, total, noun) {
     if (pages <= 1) return "";
-    var nums = [];
-    if (pages <= 7) { for (var i = 0; i < pages; i++) nums.push(i); }
-    else {
-      nums.push(0);
-      var s = Math.max(1, pg - 1), e = Math.min(pages - 2, pg + 1);
-      if (s > 1) nums.push("\u2026");
-      for (var j = s; j <= e; j++) nums.push(j);
-      if (e < pages - 2) nums.push("\u2026");
-      nums.push(pages - 1);
-    }
-    var numHTML = nums.map(function (n) {
-      if (n === "\u2026") return '<span class="apager__ellipsis">\u2026</span>';
-      var cur = n === pg;
-      return '<button class="apager__n' + (cur ? " is-current" : "") + '" ' + attr + '="' + n + '"' + (cur ? ' aria-current="page"' : "") + '>' + (n + 1) + '</button>';
-    }).join("");
-    return '<div class="apager"><span class="apager__count">' + total + ' ' + noun + '</span>' +
-      '<button class="apager__b" ' + attr + '="' + (pg - 1) + '"' + (pg <= 0 ? " disabled" : "") + ' aria-label="Previous page"><iconify-icon icon="fluent:chevron-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>' +
-      '<div class="apager__nums">' + numHTML + '</div>' +
-      '<button class="apager__b" ' + attr + '="' + (pg + 1) + '"' + (pg >= pages - 1 ? " disabled" : "") + ' aria-label="Next page"><iconify-icon icon="fluent:chevron-right-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
+    return '<div class="apager">' +
+      '<button class="apager__b" ' + attr + '="' + (pg - 1) + '"' + (pg <= 0 ? " disabled" : "") + ' aria-label="Previous page"><iconify-icon icon="fluent:chevron-left-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>' +
+      '<span class="apager__status">Page ' + (pg + 1) + ' of ' + pages + ' \u00b7 ' + total + ' ' + noun + '</span>' +
+      '<button class="apager__b" ' + attr + '="' + (pg + 1) + '"' + (pg >= pages - 1 ? " disabled" : "") + ' aria-label="Next page"><iconify-icon icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
   }
   function failTableInner(app) {
     var d = anaData(app), msix = isMsix(app), list = d.failures.slice();
     var vf = anaFilters.appver; if (vf && vf.length) list = list.filter(function (f) { return vf.indexOf(f.ver) >= 0; });
     if (anaType !== "all") list = list.filter(function (f) { return f.type === anaType; });
+    if (anaCause) list = list.filter(function (f) { return causeCat(f).key === anaCause; });
     if (anaSearch) { var q = anaSearch.toLowerCase(); list = list.filter(function (f) { return f.name.toLowerCase().indexOf(q) >= 0 || f.ver.toLowerCase().indexOf(q) >= 0; }); }
     var key = anaSort.key, dir = anaSort.dir === "asc" ? 1 : -1;
     list.sort(function (a, b) { return (a[key] - b[key]) * dir; });
@@ -1482,10 +1469,11 @@
         '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
         '<td>' + ftypePill(f.type) + '</td><td><span class="mono">' + esc(f.ver) + '</span></td>' +
         (msix ? "" : '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>') +
-        '<td class="num">' + fmtComma(f.hits) + '</td><td class="num">' + fmtComma(f.devices) + '</td></tr>';
+        '<td class="num" title="' + fmtComma(f.hits) + ' hits">' + fmtCompact(f.hits) + '</td><td class="num" title="' + fmtComma(f.devices) + ' devices">' + fmtCompact(f.devices) + '</td></tr>';
     }).join("");
     if (!list.length) rows = '<tr><td colspan="' + (msix ? 5 : 6) + '" class="cellspan">No failures match your search or filters.</td></tr>';
-    return '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th><th>Version</th>' + (msix ? "" : '<th>Symbols</th>') + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    var causeChip = anaCause ? '<div class="failcausechip"><iconify-icon icon="fluent:filter-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Category: <strong>' + esc(causeLabelByKey(app, anaCause)) + '</strong></span><button class="failcausechip__x" data-cause-clear="1" aria-label="Clear category filter" title="Clear category filter"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button></div>' : "";
+    return causeChip + '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th><th>Version</th>' + (msix ? "" : '<th>Symbols</th>') + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
       pagerHTML(pg, pages, "data-anapage", list.length, "failures");
   }
   function renderFailTableHost() { var h = $("failTableHost"); if (h) h.innerHTML = failTableInner(appById(analyticsAppId) || state.apps[0]); }
@@ -1555,14 +1543,77 @@
     if (c.indexOf("C0000374") >= 0) return { name: "heap corruption \u2014 a bad write damaged heap metadata", fix: "Audit buffer sizes and use-after-free around the failing allocation; PageHeap will halt at the offending write." };
     if (t === "Memory" || c.indexOf("C06D") >= 0) return { name: "heap corruption or an invalid free near the failing allocation", fix: "Run the build under Application Verifier + PageHeap to catch the offending write, then audit buffer sizes and object ownership around the crash site." };
     if (c.indexOf("C0000005") >= 0) return { name: "an access violation \u2014 a null or already-freed pointer was dereferenced", fix: "Null-check the pointer before use and confirm the object outlives this call; a use-after-free one frame up is the usual culprit." };
+    if (c.indexOf("80000003") >= 0) return { name: "a debug breakpoint (int 3) \u2014 a shipped assert or __debugbreak fired, usually on an error path", fix: "Find the assertion/__debugbreak on the failing path, handle the error condition gracefully, and strip debug breaks from release builds." };
     return { name: "an unhandled exception", fix: "Wrap the failing operation in structured exception handling and validate its inputs before the call." };
   }
-  function crashInsightHTML(app, f, parts, env) {
+  // Compact cause CATEGORY for grouping (parallels crashCause but returns a short bucket label + icon).
+  function causeCat(f) {
+    var c = (f.code || "").toUpperCase(), t = f.type;
+    if (t === "Hang") return { key: "hang", label: "Unresponsive UI (hang)", icon: "fluent:hourglass-16-regular" };
+    if (c.indexOf("C00000FD") >= 0) return { key: "stack", label: "Stack overflow", icon: "fluent:arrow-repeat-all-16-regular" };
+    if (c.indexOf("C0000409") >= 0) return { key: "failfast", label: "Fail-fast (buffer overrun)", icon: "fluent:shield-error-16-regular" };
+    if (c.indexOf("C0000374") >= 0) return { key: "heap", label: "Heap corruption", icon: "fluent:memory-16-regular" };
+    if (t === "Memory" || c.indexOf("C06D") >= 0) return { key: "memory", label: "Memory / heap failure", icon: "fluent:memory-16-regular" };
+    if (c.indexOf("C0000005") >= 0) return { key: "av", label: "Access violation (null / use-after-free)", icon: "fluent:target-16-regular" };
+    if (c.indexOf("80000003") >= 0) return { key: "break", label: "Debug breakpoint (assert)", icon: "fluent:bug-16-regular" };
+    return { key: "other", label: "Unhandled exception", icon: "fluent:warning-16-regular" };
+  }
+  // Resolve a cause key back to its label (single source of truth = causeCat over real failures).
+  function causeLabelByKey(app, key) {
+    var d = anaData(app);
+    for (var i = 0; i < d.failures.length; i++) { var c = causeCat(d.failures[i]); if (c.key === key) return c.label; }
+    return key;
+  }
+  // Aggregate failure buckets into cause groups (share of total hits, signatures, top version).
+  function topRootCauses(d) {
+    var groups = {}, order = [], total = 0;
+    d.failures.forEach(function (f) {
+      total += f.hits;
+      var cat = causeCat(f), g = groups[cat.key];
+      if (!g) { g = groups[cat.key] = { key: cat.key, label: cat.label, icon: cat.icon, hits: 0, devices: 0, sigs: 0, resolved: 0, vers: {}, top: null }; order.push(g); }
+      g.hits += f.hits; g.devices += f.devices; g.sigs++; if (f.resolved) g.resolved++;
+      g.vers[f.ver] = (g.vers[f.ver] || 0) + f.hits;
+      if (!g.top || f.hits > g.top.hits) g.top = f;
+    });
+    order.forEach(function (g) {
+      g.pct = total ? +(g.hits / total * 100).toFixed(1) : 0;
+      g.unresolved = g.sigs - g.resolved;
+      var bv = null, bh = -1; for (var v in g.vers) { if (g.vers.hasOwnProperty(v) && g.vers[v] > bh) { bh = g.vers[v]; bv = v; } }
+      g.topVer = bv;
+    });
+    order.sort(function (a, b) { return b.hits - a.hits; });
+    return { list: order, total: total };
+  }
+  // "Top root causes" summary panel (app-level roll-up above the per-signature failures table).
+  function rootCausesPanel(app) {
+    var d = anaData(app), rc = topRootCauses(d);
+    if (!rc.list.length) return "";
+    var msix = isMsix(app), top = rc.list[0];
+    var lead = '<p class="rootcause__lead"><strong>' + top.pct + '%</strong> of failure hits fall into <strong>' + esc(top.label) + '</strong>' +
+      (top.topVer ? ' \u2014 most on <span class="mono">' + esc(top.topVer) + '</span>' : "") + '.</p>';
+    var rows = rc.list.slice(0, 5).map(function (g) {
+      var meta = fmtCompact(g.hits) + ' hits \u00b7 ' + g.sigs + ' signature' + (g.sigs > 1 ? "s" : "") + (g.topVer ? ' \u00b7 top in ' + esc(g.topVer) : "");
+      var unres = (!msix && g.unresolved > 0) ? ' \u00b7 <span class="rootcause__unres" title="' + g.unresolved + ' signature' + (g.unresolved > 1 ? "s" : "") + ' need symbols to name the exact frame">' + g.unresolved + ' need symbols</span>' : "";
+      return '<div class="rootcause" data-cause="' + esc(g.key) + '" role="button" tabindex="0" aria-label="Filter failures to ' + esc(g.label) + '">' +
+        '<span class="rootcause__ico"><iconify-icon icon="' + g.icon + '" width="17" height="17" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="rootcause__main">' +
+          '<span class="rootcause__row1"><span class="rootcause__label">' + esc(g.label) + '</span><span class="rootcause__pct">' + g.pct + '%</span></span>' +
+          '<span class="rootcause__bar"><span class="rootcause__fill" style="width:' + Math.max(2, g.pct) + '%"></span></span>' +
+          '<span class="rootcause__meta muted">' + meta + unres + '</span>' +
+        '</span>' +
+        '<iconify-icon class="rootcause__chev" icon="fluent:filter-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+      '</div>';
+    }).join("");
+    return apanel("Top failure categories", lead + '<div class="rootcause-list">' + rows + '</div>', "Grouped by fault type from the exception code \u2014 select a category to filter the failures list below");
+  }
+  function crashInsightHTML(app, f, parts, env, occ) {
     var cause = crashCause(f), crash = parts[0] || { loc: "" }, caller = parts[1];
     var where = (crash && crash.loc) ? '<span class="mono">' + esc(crash.loc) + '</span>' : '<span class="mono">' + esc(f.fn) + '</span>';
     var callerTxt = caller ? ' It runs from <span class="mono">' + esc(callerFn(caller.code)) + '</span>' + (caller.loc ? ' (<span class="mono">' + esc(caller.loc) + '</span>)' : "") + ', so the bad state is often set there.' : "";
     var envTxt = env ? ' Reproduce on <strong>' + esc(env.os.label) + '</strong> (' + env.os.pct + '% of hits)' + (env.dev.pct >= 40 ? ', mostly on <strong>' + esc(env.dev.label) + '</strong> devices' : "") + '.' : "";
+    var occTxt = occ ? '<p><strong>This instance:</strong> ' + esc(occ.dev) + ' \u00b7 ' + esc(occ.model) + ' on <span class="mono">' + esc(occ.os) + '</span> \u00b7 ' + esc(occ.date) + '.</p>' : "";
     return '<div class="crashai__head"><span class="crashai__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>AI analysis</span><span class="crashai__conf muted">Generated from the stack, exception code &amp; telemetry</span></div>' +
+      occTxt +
       '<p><strong>Likely cause:</strong> ' + cause.name + ', consistent with <span class="mono">' + esc(f.code) + '</span> (' + esc(f.type) + ').</p>' +
       '<p><strong>Where to look:</strong> start at ' + where + ', the crash site in <span class="mono">' + esc(f.fn) + '</span>.' + callerTxt + '</p>' +
       '<p><strong>Suggested fix:</strong> ' + cause.fix + envTxt + '</p>' +
@@ -1616,11 +1667,18 @@
   function occStackHTML(app, f, occ) {
     var badge = isMsix(app) ? '<fluent-badge appearance="outline" color="success">Full stack trace</fluent-badge>'
       : f.resolved ? '<fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' : '<fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>';
+    var sb = stackBody(app, f);
+    var det = failureDetail(app, f);
+    var env = det && det.log ? { os: topShare(det.log, "os"), dev: topShare(det.log, "dev") } : null;
+    var aiBtn = f.resolved ? '<fluent-button appearance="outline" size="small" data-crashai-occ="' + esc(occ.id) + '"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Explain this crash</fluent-button>' : "";
+    var aiPanel = f.resolved ? '<div class="crashai" id="crashai-occ-' + esc(occ.id) + '" hidden>' + crashInsightHTML(app, f, sb.parts, env, occ) + '</div>' : "";
     return '<div class="occdlg__ctx"><iconify-icon icon="fluent:document-bullet-list-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span><strong>' + esc(occ.date) + '</strong> \u00b7 ' + esc(occ.dev) + ' \u00b7 ' + esc(occ.model) + ' \u00b7 <span class="mono">' + esc(occ.os) + '</span></span></div>' +
       '<div class="occdlg__meta">' + badge + '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
-      '<fluent-button class="occdlg__dl" appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
-      '<fluent-button appearance="outline" size="small" data-dl-dump="' + esc(occ.id) + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Crash dump (.cab)</fluent-button></div>' +
-      '<div class="stk ' + (f.resolved ? "stk--resolved" : "stk--unresolved") + '">' + stackBody(app, f).html + '</div>' +
+      '<span class="occdlg__actions">' + aiBtn +
+      '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
+      '<fluent-button appearance="outline" size="small" data-dl-dump="' + esc(occ.id) + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Crash dump (.cab)</fluent-button></span></div>' +
+      '<div class="stk ' + (f.resolved ? "stk--resolved" : "stk--unresolved") + '">' + sb.html + '</div>' +
+      aiPanel +
       '<p class="occdlg__note muted">This occurrence shares the failure\u2019s signature \u2014 download its crash dump to debug this exact instance in your debugger.</p>';
   }
   function openOccStack(occId) {
@@ -1714,8 +1772,8 @@
       '<li>A bare <span class="mono">.pdb</span> can\u2019t be matched \u2014 include the binaries it was built with.</li></ul>' +
       '<fluent-link href="#" data-noop="1">Learn more about symbol packaging \u2192</fluent-link></div>' +
       '<div class="symfoot"><fluent-button appearance="subtle" data-sym-close="1">Cancel</fluent-button><fluent-button appearance="primary" data-sym-start="1"' + (symUp.file ? "" : " disabled") + '>Upload &amp; validate</fluent-button></div>';
-    else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries. This usually takes a few minutes \u2014 you can close this and come back; we\u2019ll keep working.</p></div>';
-    else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols accepted for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed. Your <strong>future</strong> crashes will start showing resolved stack traces within the next <strong>24 hours</strong>. Crashes that already happened stay unresolved.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
+    else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries. This usually takes a few minutes \u2014 you can close this and come back; we\u2019ll keep working \u2014 and we\u2019ll email you the moment it\u2019s done.</p></div>';
+    else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols accepted for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed. Your <strong>future</strong> crashes will start showing resolved stack traces within the next <strong>24 hours</strong>. Crashes that already happened stay unresolved. We\u2019ll email you when processing finishes \u2014 whether it resolves or needs your attention.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
     else html = '<div class="symstate"><iconify-icon class="symstate__err" icon="fluent:error-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Action needed' + (symUp.ver ? " on " + esc(symUp.ver) : "") + '</strong><p class="muted">' + esc(SYM_ERR.msg) + '</p><div class="symerr"><span class="mono">' + SYM_ERR.code + '</span></div><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-retry="1">Upload again</fluent-button></div></div>';
     body.innerHTML = html;
     var br = $("symBrowse"), fi = $("symFile");
@@ -1806,7 +1864,7 @@
     }).join("") + '</fluent-listbox></fluent-dropdown>';
     var dd = $("anaAppDd");
     if (dd) {
-      dd.addEventListener("change", function () { var v = dd.value; if (!v || v === analyticsAppId) return; analyticsAppId = v; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; renderAnalytics(); });
+      dd.addEventListener("change", function () { var v = dd.value; if (!v || v === analyticsAppId) return; analyticsAppId = v; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; renderAnalytics(); });
       // Fluent dropdown builds a text-only combobox trigger; inject the current app's logo into it.
       var tries = 0;
       (function injectAppLogo() {
@@ -2235,6 +2293,8 @@
       if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
       var fr = e.target.closest && e.target.closest("[data-failure]");
       if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      var kc = e.target.closest && e.target.closest("[data-cause]");
+      if (kc) { e.preventDefault(); anaCause = kc.getAttribute("data-cause"); anaType = "all"; anaSearch = ""; anaPage = 0; renderAnalyticsPanel(); var _kfs = document.getElementById("ca-failsec"); if (_kfs) _kfs.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       var ss = e.target.closest && e.target.closest("[data-anasort]");
       if (ss) { e.preventDefault(); var sk = ss.getAttribute("data-anasort"); if (anaSort.key === sk) anaSort.dir = anaSort.dir === "asc" ? "desc" : "asc"; else { anaSort.key = sk; anaSort.dir = "desc"; } anaPage = 0; renderFailTableHost(); return; }
       var ssk2 = e.target.closest && e.target.closest("[data-symsort]");
@@ -2262,7 +2322,7 @@
       var cont = e.target.closest("[data-continue]");
       if (cont) { openPublishFlow(cont.getAttribute("data-continue")); return; }
       var an = e.target.closest("[data-analytics]");
-      if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; goView("analytics"); renderAnalytics(); return; }
+      if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; goView("analytics"); renderAnalytics(); return; }
       var rc = e.target.closest("[data-removecert]");
       if (rc) { var cid = rc.getAttribute("data-removecert");
         state.certs = state.certs.filter(function (c) { return c.id !== cid; });
@@ -2272,8 +2332,11 @@
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
       var atab = e.target.closest("[data-anatab]");
-      if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; renderAnaFilter(); renderAnalyticsPanel(); return; }
+      if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; renderAnaFilter(); renderAnalyticsPanel(); return; }
       if (e.target.closest("[data-ai-dismiss]")) { aiDismissed[analyticsAppId] = true; renderAnalyticsPanel(); return; }
+      if (e.target.closest("[data-cause-clear]")) { anaCause = null; anaPage = 0; renderFailTableHost(); return; }
+      var rcc = e.target.closest("[data-cause]");
+      if (rcc) { anaCause = rcc.getAttribute("data-cause"); anaType = "all"; anaSearch = ""; anaPage = 0; renderAnalyticsPanel(); var _fs = document.getElementById("ca-failsec"); if (_fs) _fs.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       var frow = e.target.closest("[data-failure]");
       if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaLogPage = 0; anaLogQuery = ""; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
       var sj = e.target.closest("[data-sym-jump]");
@@ -2350,6 +2413,8 @@
     var occD = $("occDialog");
     if (occD) occD.addEventListener("click", function (e) {
       if (e.target.closest("[data-occ-close]")) { closeOccStack(); return; }
+      var caiO = e.target.closest("[data-crashai-occ]");
+      if (caiO) { var pO = document.getElementById("crashai-occ-" + caiO.getAttribute("data-crashai-occ")); if (pO) { pO.hidden = false; pO.classList.add("crashai--in"); } caiO.setAttribute("hidden", ""); return; }
       var cs = e.target.closest("[data-copy-stack]");
       if (cs) { var ca2 = appById(analyticsAppId), cf2 = ca2 && anaData(ca2).failures.filter(function (x) { return x.id === cs.getAttribute("data-copy-stack"); })[0]; if (cf2) { try { if (navigator.clipboard) navigator.clipboard.writeText(stackTSV(ca2, cf2)); } catch (e4) {} toast("Stack trace copied", true); } return; }
       var cl = e.target.closest("[data-copy-loc]");

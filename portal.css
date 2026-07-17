@@ -506,6 +506,8 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .atable--sym th, .atable--sym td { width: 25%; }
 .atable--sym .num { text-align: left; }
 .atable--sym .atable__act { text-align: left; }
+/* Failures table: Hits/Devices left-aligned (per request) */
+.atable--fail .num { text-align: left; }
 .failrow { cursor: pointer; }
 .failrow:hover { background: var(--hover); }
 .failrow:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
@@ -515,6 +517,13 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .failsearch { width: 300px; max-width: 100%; }
 .failtypesel { min-width: 156px; }
 .newbadge { margin-left: 8px; vertical-align: middle; }
+.failcausechip { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 6px 6px 6px 12px; border-radius: 999px;
+  background: var(--brand-tint); border: 1px solid var(--brand-tint-stroke); color: var(--text); font-size: 12.5px; }
+.failcausechip > iconify-icon { color: var(--brand-soft); flex: none; }
+.failcausechip strong { color: var(--text); }
+.failcausechip__x { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--text-2); cursor: pointer; }
+.failcausechip__x:hover { background: var(--hover); color: var(--text); }
 /* Fluent's built-in outline paints a solid fill in this web-components build; force a true hollow outline. */
 /* Status badges: this Fluent rc renders "outline"/"ghost" as a solid fill, so we
    style them ourselves as a tint pill — soft color-matched background + colored
@@ -555,18 +564,12 @@ fluent-badge[appearance="outline"][color="subtle"] { background-color: var(--sur
 .demoswitch__b.is-on { background: var(--brand-strong); color: #fff; }
 .failrow:hover .faillink, .atable td:hover > .faillink { text-decoration: underline; }
 
-.apager { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 14px; font-size: 12.5px; color: var(--text-3); }
+.apager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; font-size: 12.5px; color: var(--text-3); }
 .apager__b { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-2); border-radius: var(--r-sm); cursor: pointer; }
 .apager__b:hover:not([disabled]) { background: var(--hover); color: var(--text); }
 .apager__b[disabled] { opacity: .4; cursor: default; }
-.apager__count { margin-right: auto; }
-.apager__nums { display: inline-flex; align-items: center; gap: 6px; }
-.apager__n { min-width: 30px; height: 30px; padding: 0 9px; display: inline-grid; place-items: center; border: 1px solid var(--border);
-  background: var(--surface); color: var(--text-2); border-radius: var(--r-sm); cursor: pointer; font: 600 12.5px var(--font); }
-.apager__n:hover:not(.is-current) { background: var(--hover); color: var(--text); }
-.apager__n.is-current { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; cursor: default; }
-.apager__ellipsis { color: var(--text-3); padding: 0 2px; }
+.apager__status { font-variant-numeric: tabular-nums; }
 .aback { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 7px 8px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-2); border-radius: var(--r-sm); font: 600 13px var(--font); cursor: pointer; align-self: flex-start; }
 .aback:hover { background: var(--hover); color: var(--text); }
@@ -712,6 +715,26 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .ai-insight__x { flex: none; display: inline-flex; padding: 4px; margin: 0 -8px 0 -2px; background: none; border: 0; border-radius: var(--r-sm); color: var(--text-3); cursor: pointer; }
 .ai-insight__x:hover { color: var(--text); background: var(--hover); }
 
+/* Top failure categories - flat divided list (no box-in-box) */
+.rootcause__lead { margin: 0 0 8px; font-size: 13.5px; line-height: 1.55; color: var(--text-2); }
+.rootcause__lead strong { color: var(--text); }
+.rootcause-list { display: flex; flex-direction: column; }
+.rootcause { display: flex; align-items: center; gap: 14px; padding: 13px 12px; margin: 0 -12px;
+  background: none; border: 0; border-top: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.rootcause:first-child { border-top: 0; }
+.rootcause:hover { background: var(--hover); }
+.rootcause:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.rootcause__ico { flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--brand-soft); }
+.rootcause__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.rootcause__row1 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.rootcause__label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.rootcause__pct { font-size: 13.5px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; flex: none; }
+.rootcause__bar { height: 5px; border-radius: 3px; overflow: hidden; background: color-mix(in srgb, var(--text) 12%, transparent); }
+.rootcause__fill { display: block; height: 100%; border-radius: 3px; background: var(--brand); min-width: 2px; }
+.rootcause__meta { font-size: 12px; }
+.rootcause__unres { color: var(--warn); }
+.rootcause__chev { color: var(--text-3); flex: none; }
+
 .ca-alert { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r-md);
   background: var(--warn-bg); border: 1px solid rgba(247,185,85,.35); }
 .ca-alert__ico { color: var(--warn); flex: none; }
@@ -836,8 +859,9 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .occdlg__ctx { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 9px 12px; border-radius: var(--r-sm); background: var(--brand-tint); border: 1px solid var(--brand-tint-stroke); font-size: 12.5px; color: var(--text-2); }
 .occdlg__ctx iconify-icon { color: var(--brand-soft); flex: none; }
 .occdlg__ctx strong { color: var(--text); }
-.occdlg__meta { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.occdlg__meta { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .occdlg__dl { margin-left: auto; }
+.occdlg__actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .occdlg__note { margin: 14px 0 0; font-size: 12px; }
 
 .symmodal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px;
