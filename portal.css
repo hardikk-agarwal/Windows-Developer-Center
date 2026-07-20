@@ -374,6 +374,24 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .apptable--store td.metric-cell:hover strong,
 .apptable--store td.metric-cell:hover .metric__row,
 .apptable--store td.metric-cell:hover .ratecell { color: var(--brand-soft); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Reserve-name → "how do you want to fill it?" chooser (Copilot vs manual), before the flow. */
+.pub-choose { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.pub-choice { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
+  padding: 14px 16px; border-radius: var(--r-lg, 12px); border: 1px solid var(--border, #272c3a);
+  background: var(--surface, #151823); color: var(--text, #fff); font: inherit;
+  transition: border-color .14s ease, background .14s ease, transform .14s ease; }
+.pub-choice:hover { border-color: var(--brand, #2899f5); background: var(--surface-2, #1b1f2c); transform: translateY(-1px); }
+.pub-choice:focus-visible { outline: 2px solid var(--brand, #2899f5); outline-offset: 2px; }
+.pub-choice--cpx { border-color: color-mix(in srgb, var(--brand, #2899f5) 45%, transparent);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--brand, #2899f5) 12%, transparent), transparent 72%); }
+.pub-choice__logo { width: 34px; height: 34px; flex: 0 0 auto; object-fit: contain; }
+.pub-choice__ic { width: 34px; height: 34px; flex: 0 0 auto; border-radius: 8px; display: grid; place-items: center;
+  background: var(--surface-2, #1b1f2c); color: var(--text-2, #c6cad6); }
+.pub-choice__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pub-choice__t strong { font-size: 14px; font-weight: 600; }
+.pub-choice__t span { font-size: 12.5px; color: var(--text-3, #8b909e); line-height: 1.4; }
+.pub-choice__chev { flex: 0 0 auto; color: var(--text-3, #8b909e); }
 .spinner--xs { width: 11px; height: 11px; border-width: 2px; }
 
 /* segmented allow/block */

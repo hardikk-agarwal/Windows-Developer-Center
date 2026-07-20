@@ -248,7 +248,7 @@
           <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
         </button>
       </div>
-      <p class="muted modal__intro">Reserve your app's name and default language to get started. Next, you'll add
+      <p class="muted modal__intro" id="pubIntro">Reserve your app's name and default language to get started. Next, you'll add
         packages, store listing, and age rating in the publishing flow. Your signed binary and certificate carry over.</p>
 
       <div class="field">
@@ -276,6 +276,23 @@
       <div class="modal__foot">
         <fluent-button appearance="subtle" data-pubclose>Cancel</fluent-button>
         <fluent-button appearance="primary" id="pubCreate">Reserve name</fluent-button>
+      </div>
+
+      <!-- Step 2 (after the name is reserved): how do you want to fill the submission? -->
+      <div id="pubChoose" hidden>
+        <p class="muted modal__intro" id="pubChooseIntro"></p>
+        <div class="pub-choose">
+          <button type="button" class="pub-choice pub-choice--cpx" id="pubChooseCopilot">
+            <img class="pub-choice__logo" src="publishing/assets/Copilot-Logo.png" alt="" aria-hidden="true" />
+            <span class="pub-choice__t"><strong>Set up with Copilot</strong><span>Drop a .zip with your package and assets — Copilot drafts your listing, places your media, and gives you a complete draft to review.</span></span>
+            <iconify-icon class="pub-choice__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+          </button>
+          <button type="button" class="pub-choice" id="pubChooseManual">
+            <span class="pub-choice__ic"><iconify-icon icon="fluent:document-edit-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon></span>
+            <span class="pub-choice__t"><strong>I'll set it up myself</strong><span>Add your package, listing, and media step by step. You can bring in Copilot anytime from the corner.</span></span>
+            <iconify-icon class="pub-choice__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+          </button>
+        </div>
       </div>
     </div>
   </div>

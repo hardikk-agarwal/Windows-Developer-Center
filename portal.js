@@ -1401,7 +1401,7 @@
       countCard("Memory failures", fmtCompact(v.mem), sub, v.series[2].values, "var(--purple)", v.dMem) + '</div>';
     var msix = isMsix(app);
     return aiInsightHTML(app) + cards + (msix ? "" : symbolsPanel(app)) +
-      rootCausesPanel(app) +
+      /* "Top failure categories" hidden for now - re-add `rootCausesPanel(app) +` here to restore */
       failuresPanel(app, d) +
       apanel("Failures over time", chartLine({ series: v.series, labels: v.labels, area: true }) + chartLegend(v.series), "Crashes, hangs, and memory failures across all your users") +
       apanel("Failures by version", chartBars({ bars: d.dist }), "Failures grouped by the app version they occurred on") +
@@ -2105,6 +2105,7 @@
     var a = appById(id); if (!a) return;
     publishId = id;
     if ($("pubTitle")) $("pubTitle").textContent = "Publish to the Store";
+    resetPubSteps();
     var nm = $("pubName");
     nm.value = (a.storeName || a.name).replace(/\.[^.]+$/, "");
     $("pubLang").value = a.storeLang || "en-US";
@@ -2117,6 +2118,7 @@
   function openNewApp() {
     publishId = null;
     if ($("pubTitle")) $("pubTitle").textContent = "Create a new app";
+    resetPubSteps();
     $("pubName").value = "";
     $("pubLang").value = "en-US";
     $("publishModal").hidden = false;
@@ -2124,7 +2126,7 @@
     checkPubName();
     setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
   }
-  function closePublish() { $("publishModal").hidden = true; document.removeEventListener("keydown", escPub); publishId = null; }
+  function closePublish() { $("publishModal").hidden = true; document.removeEventListener("keydown", escPub); publishId = null; pubChooseApp = null; resetPubSteps(); }
   function checkPubName() {
     var v = ($("pubName").value || "").trim(), hint = $("pubNameHint"), btn = $("pubCreate");
     if (v.length < 2) {
@@ -2151,12 +2153,31 @@
     a.storeLang = readDropdownValue($("pubLang")) || "en-US";
     a.storeCreated = a.storeCreated || today();
     if (!a.store) a.storeStatus = "in-progress";        // reserved → entering the flow
-    save(); renderApps(); closePublish();               // persist + reflect the new row before navigating
-    openPublishFlow(a.id);                              // launch the full publishing flow
+    save(); renderApps();                               // persist + reflect the new row
+    showPubChooser(a);                                  // ask HOW they want to fill it, before the flow
+  }
+  // After the name is reserved, ask how they want to fill the submission — BEFORE the flow.
+  var pubChooseApp = null;
+  function resetPubSteps() {
+    if ($("pubIntro")) $("pubIntro").hidden = false;
+    var m = $("publishModal"); if (!m) return;
+    m.querySelectorAll(".field").forEach(function (el) { el.hidden = false; });
+    var foot = m.querySelector(".modal__foot"); if (foot) foot.hidden = false;
+    if ($("pubChoose")) $("pubChoose").hidden = true;
+  }
+  function showPubChooser(a) {
+    pubChooseApp = a;
+    if ($("pubTitle")) $("pubTitle").textContent = "How do you want to set it up?";
+    if ($("pubIntro")) $("pubIntro").hidden = true;
+    var m = $("publishModal"); if (m) { m.querySelectorAll(".field").forEach(function (el) { el.hidden = true; }); var foot = m.querySelector(".modal__foot"); if (foot) foot.hidden = true; }
+    var intro = $("pubChooseIntro"); if (intro) intro.innerHTML = '\u201c' + esc(a.storeName || a.name) + '\u201d is reserved. How would you like to build your submission?';
+    if ($("pubChoose")) $("pubChoose").hidden = false;
   }
   function wirePublish() {
     $("publishModal").addEventListener("click", function (e) { if (e.target.closest("[data-pubclose]")) closePublish(); });
     $("pubCreate").addEventListener("click", doCreateApp);
+    var cCopilot = $("pubChooseCopilot"); if (cCopilot) cCopilot.addEventListener("click", function () { var id = pubChooseApp && pubChooseApp.id; closePublish(); if (id) openPublishFlow(id, "copilot"); });
+    var cManual = $("pubChooseManual"); if (cManual) cManual.addEventListener("click", function () { var id = pubChooseApp && pubChooseApp.id; closePublish(); if (id) openPublishFlow(id); });
     var nm = $("pubName");
     nm.addEventListener("input", checkPubName);
     nm.addEventListener("keyup", checkPubName);
@@ -2165,7 +2186,7 @@
     });
   }
   // Map the app into v4's localStorage shape and navigate to the full flow.
-  function openPublishFlow(id) {
+  function openPublishFlow(id, mode) {
     var a = appById(id); if (!a) return;
     var ms; try { ms = JSON.parse(localStorage.getItem("msstore.apps")) || []; } catch (e) { ms = []; }
     if (!Array.isArray(ms)) ms = [];
@@ -2187,7 +2208,7 @@
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
-    location.href = "publishing/publish-v2.html?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
+    location.href = "publishing/publish-v2.html?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp") + (mode === "copilot" ? "&copilot=1" : "");
   }
 
   var STORE_MSA = { name: "Priya Nair", email: "priya.nair@outlook.com", initials: "PN" };
