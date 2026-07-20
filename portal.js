@@ -744,7 +744,7 @@
      per-failure drill-down), tabbed by analytics type. ALL figures here are generated
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0;
-  var anaSearch = "", anaType = "all", anaCause = null, anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
+  var anaSearch = "", anaType = "all", anaCause = null, anaStackAnchor = "latest", anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
   var symSort = { key: "ver", dir: "desc" };
   var anaLogPage = 0, anaLogQuery = "";
   // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
@@ -1514,9 +1514,9 @@
     var d = anaData(app);
     var osTail = ["USER32!DispatchMessageW + 0x2d1", "KERNEL32!BaseThreadInitThunk + 0x14", "ntdll!RtlUserThreadStart + 0x21"];
     if (f.resolved) return [
-      d.base + "!" + f.fn + "(RenderContext *)  [" + srcFile(f.fn) + ":" + (300 + (Math.abs(hashStr(f.id)) % 500)) + "]",
-      d.base + "!Compositor::Commit(void)  [compositor.cpp:158]",
-      d.base + "!ui::View::OnPaint(PaintArgs &)  [view.cpp:1032]"
+      d.base + "!" + f.fn + "(RenderContext *)",
+      d.base + "!Compositor::Commit(void)",
+      d.base + "!ui::View::OnPaint(PaintArgs &)"
     ].concat(osTail);
     var modOff = function (seed) { var r = anaRng(seed || 1); var v = 0x120000 + ((r() * 0xE00000) | 0); return "0x" + ("00000000" + v.toString(16)).slice(-8); };
     return [d.base + ".exe + " + modOff(Math.abs(hashStr(f.id)) || 1), d.base + ".exe + " + modOff((Math.abs(hashStr(f.id)) + 7) || 1)].concat(osTail);
@@ -1621,47 +1621,70 @@
   function stackBody(app, f) {
     var frames = stackFrames(app, f), base = anaData(app).base;
     var parts = frames.map(function (fr) { return frameParts(fr, base); });
+    var cols = function (p) { var code = p.code, bang = code.indexOf("!"); if (bang >= 0) return { image: p.module, fn: code.slice(bang + 1) }; var sp = code.indexOf(" "); return { image: p.module, fn: sp >= 0 ? code.slice(sp + 1) : code }; };
     var frameRow = function (i, p) {
-      var loc = p.loc ? '<button class="stk__loc mono" data-copy-loc="' + esc(p.loc) + '" title="Copy ' + esc(p.loc) + '">' + esc(p.loc) + '<iconify-icon icon="fluent:copy-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></button>' : "";
-      return '<div class="stk__frame stk__frame--' + (p.app ? "app" : "sys") + (i === 0 ? " is-crash" : "") + '"><span class="stk__idx">' + i + '</span><span class="stk__fn mono">' + esc(p.code) + '</span>' + loc + '</div>';
+      var c = cols(p);
+      return '<div class="stk__frame stk__frame--' + (p.app ? "app" : "sys") + (i === 0 ? " is-crash" : "") + '">' +
+        '<span class="stk__idx mono">' + i + '</span>' +
+        '<span class="stk__img mono">' + esc(c.image) + '</span>' +
+        '<span class="stk__fn mono">' + esc(c.fn) + '</span></div>';
     };
     var appRows = "", sysRows = "", sysN = 0;
     parts.forEach(function (p, i) { if (p.app) appRows += frameRow(i, p); else { sysRows += frameRow(i, p); sysN++; } });
     var sysBlock = sysN ? '<details class="stk__sys"><summary class="stk__syssum"><iconify-icon class="stk__syschev" icon="fluent:chevron-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' + sysN + ' system frame' + (sysN > 1 ? "s" : "") + ' \u00b7 Windows runtime, not your code</summary><div>' + sysRows + '</div></details>' : "";
-    return { html: '<div class="stk__body">' + appRows + sysBlock + '</div>', parts: parts };
+    return { html: '<div class="stk__body"><div class="stk__frame stk__frame--head"><span class="stk__idx">Frame</span><span class="stk__img">Image</span><span class="stk__fn">Function</span></div>' + appRows + sysBlock + '</div>', parts: parts };
   }
   function stackTSV(app, f) {
-    var frames = stackFrames(app, f), base = anaData(app).base, lines = ["Frame\tImage\tFunction\tLocation"];
+    var frames = stackFrames(app, f), base = anaData(app).base, lines = ["Frame\tImage\tFunction"];
     frames.forEach(function (fr, i) {
-      var p = frameParts(fr, base), image = p.module, fn = "", locv = p.loc || "", bang = p.code.indexOf("!");
-      if (bang >= 0) { fn = p.code.slice(bang + 1); var op = fn.indexOf(" + 0x"); if (op >= 0) { if (!locv) locv = fn.slice(op + 3); fn = fn.slice(0, op); } }
-      else { var pl = p.code.indexOf(" + "); if (pl >= 0 && !locv) locv = p.code.slice(pl + 3); }
-      lines.push(i + "\t" + image + "\t" + fn + "\t" + locv);
+      var p = frameParts(fr, base), image = p.module, fn = p.code, bang = p.code.indexOf("!");
+      if (bang >= 0) fn = p.code.slice(bang + 1);
+      lines.push(i + "\t" + image + "\t" + fn);
     });
     return lines.join("\n");
+  }
+  // Anchor the failure-level stack to a concrete occurrence: the latest one, or the latest one on
+  // the most-affected device type. (Occurrences share the signature, so the frames are identical.)
+  function anchorOccs(det, devLabel) {
+    var log = (det && det.log) || [];
+    var when = function (o) { var t = Date.parse(o.date); return isNaN(t) ? 0 : t; };
+    var byNew = log.slice().sort(function (a, b) { return when(b) - when(a); });
+    var onDev = devLabel ? byNew.filter(function (o) { return o.dev === devLabel; }) : [];
+    return { latest: byNew[0] || null, topdev: onDev[0] || byNew[0] || null };
+  }
+  function renderStackSec() {
+    var host = $("ca-stacksec"); if (!host) return;
+    var app = appById(analyticsAppId) || state.apps[0];
+    var f = app && anaData(app).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (!f) return;
+    host.innerHTML = stackTraceHTML(app, f, failureDetail(app, f));
+  }
+  function closeDlMenus() {
+    var ms = document.querySelectorAll(".stkdl__menu:not([hidden])");
+    for (var i = 0; i < ms.length; i++) { ms[i].hidden = true; var b = ms[i].parentNode.querySelector("[data-dl-menu]"); if (b) b.setAttribute("aria-expanded", "false"); }
   }
   function stackTraceHTML(app, f, det) {
     var msix = isMsix(app);
     var env = det && det.log ? { os: topShare(det.log, "os"), dev: topShare(det.log, "dev") } : null;
-    var envHTML = env ? '<div class="stk__env"><iconify-icon icon="fluent:target-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Most affected: <strong>' + esc(env.os.label) + '</strong> (' + env.os.pct + '%) \u00b7 <strong>' + esc(env.dev.label) + '</strong> devices (' + env.dev.pct + '%)</div>' : "";
+    var _anc = anchorOccs(det, env && env.dev ? env.dev.label : null);
+    var occ = (anaStackAnchor === "topdev" ? _anc.topdev : _anc.latest) || null;
+    var anchorHTML = (det && det.log && det.log.length) ? ('<div class="stk__anchor"><div class="stkseg" role="group" aria-label="Which occurrence to show"><button class="stkseg__b' + (anaStackAnchor === "topdev" ? "" : " is-on") + '" data-stackanchor="latest">Latest occurrence</button><button class="stkseg__b' + (anaStackAnchor === "topdev" ? " is-on" : "") + '" data-stackanchor="topdev">Most-affected device</button></div>' + (occ ? '<span class="stk__anchor-ctx muted"><strong>' + esc(occ.date) + '</strong> \u00b7 ' + esc(occ.model) + ' \u00b7 <span class="mono">' + esc(occ.os) + '</span></span>' : "") + '</div>') : "";
     var sb = stackBody(app, f), bodyHTML = sb.html, parts = sb.parts;
-    var ctx = envHTML + '<p class="stk__rep muted">Representative stack for this failure \u2014 every occurrence shares this signature. Select a row in the failure log below to see that occurrence\u2019s stack.</p>';
+    var ctx = anchorHTML;
+    var dumpBtn = '<span class="stkdl"><fluent-button appearance="outline" size="small" data-dl-menu aria-haspopup="true" aria-expanded="false"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download<iconify-icon slot="end" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></fluent-button><div class="stkdl__menu" role="menu" hidden><button type="button" class="stkdl__item" role="menuitem" data-dl-stack="' + f.id + '"><iconify-icon icon="fluent:document-bullet-list-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Stack trace (.txt)</button>' + (occ ? '<button type="button" class="stkdl__item" role="menuitem" data-dl-dump="' + esc(occ.id) + '"><iconify-icon icon="fluent:folder-zip-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Crash dump (.cab)</button>' : "") + '</div></span>';
     if (f.resolved) {
-      return '<div class="stk stk--resolved"><div class="stk__head"><fluent-badge appearance="outline" color="success">' + (msix ? "Full stack trace" : "Symbols resolved") + '</fluent-badge>' +
+      return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="success">' + (msix ? "Full stack trace" : "Symbols resolved") + '</fluent-badge>' +
         '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
-        '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-crashai="' + f.id + '"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Explain this crash</fluent-button>' +
-        '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
-        '<fluent-button appearance="outline" size="small" data-dl-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download stack</fluent-button></span></div>' +
-        ctx + bodyHTML +
-        '<p class="stk__hint muted">Frame 0 is the crash site \u2014 <span class="mono">' + esc(f.fn) + '</span>. Select a <span class="mono">file:line</span> to copy it and jump to your source.</p>' +
-        '<div class="crashai" id="crashai-' + f.id + '" hidden>' + crashInsightHTML(app, f, parts, env) + '</div></div>';
+        '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-crashai="' + f.id + '"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Explain this crash</fluent-button>' + dumpBtn +
+        '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button></span></header>' +
+        '<div class="apanel__body"><div class="stk stk--resolved">' + ctx + bodyHTML +
+        '<div class="crashai" id="crashai-' + f.id + '" hidden>' + crashInsightHTML(app, f, parts, env, occ) + '</div></div></div></section>';
     }
-    return '<div class="stk stk--unresolved"><div class="stk__head"><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
+    return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
       '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
-      '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-sym-manage="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:folder-zip-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Manage symbols</fluent-button>' +
-      '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
-      '<fluent-button appearance="outline" size="small" data-dl-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download stack</fluent-button></span></div>' + ctx + bodyHTML +
-      '<p class="stk__hint muted">No symbols for <strong>' + esc(f.ver) + '</strong>, so these frames show as raw offsets \u2014 Windows frames resolve automatically. Uploading symbols can\u2019t fix this crash or any that already happened \u2014 it only names <strong>future</strong> ones. <button class="stk__link" data-sym-manage="' + esc(f.ver) + '">Manage symbols for ' + esc(f.ver) + '</button> to resolve future reports.</p></div>';
+      '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-sym-manage="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:folder-zip-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Manage symbols</fluent-button>' + dumpBtn +
+      '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button></span></header>' +
+      '<div class="apanel__body"><div class="stk stk--unresolved">' + ctx + bodyHTML +
+      '<p class="stk__hint muted">No symbols for <strong>' + esc(f.ver) + '</strong>, so these frames are raw offsets. Uploading resolves <strong>future</strong> crashes \u2014 <button class="stk__link" data-sym-manage="' + esc(f.ver) + '">Manage symbols for ' + esc(f.ver) + '</button>.</p></div></div></section>';
   }
   function occStackHTML(app, f, occ) {
     var badge = isMsix(app) ? '<fluent-badge appearance="outline" color="success">Full stack trace</fluent-badge>'
@@ -1675,7 +1698,7 @@
       '<div class="occdlg__meta">' + badge + '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
       '<span class="occdlg__actions">' + aiBtn +
       '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button>' +
-      '<fluent-button appearance="outline" size="small" data-dl-dump="' + esc(occ.id) + '"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Crash dump (.cab)</fluent-button></span></div>' +
+      '<span class="stkdl"><fluent-button appearance="outline" size="small" data-dl-menu aria-haspopup="true" aria-expanded="false"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download<iconify-icon slot="end" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></fluent-button><div class="stkdl__menu" role="menu" hidden><button type="button" class="stkdl__item" role="menuitem" data-dl-stack="' + f.id + '"><iconify-icon icon="fluent:document-bullet-list-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Stack trace (.txt)</button><button type="button" class="stkdl__item" role="menuitem" data-dl-dump="' + esc(occ.id) + '"><iconify-icon icon="fluent:folder-zip-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Crash dump (.cab)</button></div></span></span></div>' +
       '<div class="stk ' + (f.resolved ? "stk--resolved" : "stk--unresolved") + '">' + sb.html + '</div>' +
       aiPanel +
       '<p class="occdlg__note muted">This occurrence shares the failure\u2019s signature \u2014 download its crash dump to debug this exact instance in your debugger.</p>';
@@ -1711,18 +1734,18 @@
     return '<button class="aback" data-anaback="1"><iconify-icon icon="fluent:chevron-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Back to overview</button>' +
       '<div class="failhead"><div class="failhead__id"><span class="muted">Failure</span><span class="failhead__name mono">' + esc(f.name) + '</span></div>' +
         '<div class="failhead__meta">' + ftypePill(f.type) + '<span class="mono muted">' + esc(f.ver) + '</span><span class="mono muted">' + esc(f.code) + '</span><strong>' + fmtComma(f.hits) + ' hits</strong></div></div>' +
-      '<div id="ca-stacksec">' + apanel("Stack trace", stackTraceHTML(app, f, det)) + '</div>' +
+      '<div id="ca-stacksec">' + stackTraceHTML(app, f, det) + '</div>' +
+      failureLogPanel(app, f) +
       apanel("Failure hits", chartLine({ series: det.hits.series, labels: det.hits.labels, area: true }) + chartLegend(det.hits.series)) +
       '<div class="apanel-grid">' +
         apanel("Impacted app versions", impactedVersionsHTML(app, f)) +
         apanel("Device configuration \u00b7 CPU", '<table class="atable atable--sm"><thead><tr><th>CPU</th><th class="num">Share</th></tr></thead><tbody>' + cpuRows + '</tbody></table>') +
-      '</div>' +
-      failureLogPanel(app, f);
+      '</div>';
   }
   function failureLogPanel(app, f) {
     return '<section class="apanel" id="ca-logsec"><header class="apanel__head"><h3>Failure log</h3>' +
       '<iconify-icon class="apanel__i" icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></header>' +
-      '<p class="apanel__sub muted">Every reported occurrence from the last 30 days \u2014 open its stack trace or download the crash dump (.cab) to debug locally.</p>' +
+      '<p class="apanel__sub muted">Every reported occurrence from the last 30 days \u2014 select a row to open its stack trace, where you can also download its crash dump (.cab).</p>' +
       '<div class="failctl"><fluent-text-input id="failLogSearch" appearance="outline" class="failsearch" placeholder="Search occurrences\u2026" value="' + esc(anaLogQuery) + '"><iconify-icon slot="start" icon="fluent:search-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></fluent-text-input></div>' +
       '<div id="failLogHost">' + failLogInner(app, f) + '</div></section>';
   }
@@ -1731,11 +1754,11 @@
     if (anaLogQuery) { var q = anaLogQuery.toLowerCase(); list = list.filter(function (r) { return (r.model + " " + r.os + " " + r.ver + " " + r.dev + " " + r.date).toLowerCase().indexOf(q) >= 0; }); }
     var per = 6, pages = Math.max(1, Math.ceil(list.length / per)), pg = Math.max(0, Math.min(anaLogPage, pages - 1));
     var rows = list.slice(pg * per, pg * per + per).map(function (r) {
-      return '<tr><td>' + esc(r.date) + '</td><td><span class="mono">' + esc(r.ver) + '</span></td><td>' + esc(r.dev) + '</td><td>' + esc(r.model) + '</td><td><span class="mono">' + esc(r.os) + '</span></td>' +
-        '<td class="atable__act occ-links"><fluent-link data-occ-stack="' + r.id + '">Stack trace</fluent-link><fluent-link data-dl-dump="' + r.id + '">Crash dump</fluent-link></td></tr>';
+      return '<tr class="occrow" data-occ-stack="' + r.id + '"><td>' + esc(r.date) + '</td><td><span class="mono">' + esc(r.ver) + '</span></td><td>' + esc(r.dev) + '</td><td>' + esc(r.model) + '</td><td><span class="mono">' + esc(r.os) + '</span></td>' +
+        '<td class="atable__act occ-open-cell"><button type="button" class="occ-open" data-occ-stack="' + r.id + '" title="View the stack trace for this occurrence" aria-label="View stack trace \u2014 ' + esc(r.date) + '"><iconify-icon icon="fluent:chevron-right-16-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></td></tr>';
     }).join("");
     if (!list.length) rows = '<tr><td colspan="6" class="cellspan">No occurrences match your search.</td></tr>';
-    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Date</th><th>Package version</th><th>Device type</th><th>Device model</th><th>OS build</th><th>Links</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Date</th><th>Package version</th><th>Device type</th><th>Device model</th><th>OS build</th><th class="atable__act"><span class="vh">Open stack trace</span></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       pagerHTML(pg, pages, "data-analogpage", list.length, "occurrences");
   }
   function renderFailLogHost() { var h = $("failLogHost"); if (!h) return; var app = appById(analyticsAppId) || state.apps[0], f = app && anaData(app).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (f) h.innerHTML = failLogInner(app, f); }
@@ -2333,7 +2356,7 @@
     document.querySelector(".main").addEventListener("keydown", function (e) {
       if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
       var fr = e.target.closest && e.target.closest("[data-failure]");
-      if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); anaStackAnchor = "latest"; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
       var kc = e.target.closest && e.target.closest("[data-cause]");
       if (kc) { e.preventDefault(); anaCause = kc.getAttribute("data-cause"); anaType = "all"; anaSearch = ""; anaPage = 0; renderAnalyticsPanel(); var _kfs = document.getElementById("ca-failsec"); if (_kfs) _kfs.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       var ss = e.target.closest && e.target.closest("[data-anasort]");
@@ -2342,6 +2365,12 @@
       if (ssk2) { e.preventDefault(); var sk2 = ssk2.getAttribute("data-symsort"); if (symSort.key === sk2) symSort.dir = symSort.dir === "asc" ? "desc" : "asc"; else { symSort.key = sk2; symSort.dir = "desc"; } renderSymTableHost(); return; }
     });
     document.querySelector(".main").addEventListener("click", function (e) {
+      var _dlm = e.target.closest("[data-dl-menu]");
+      if (_dlm) { var _w = _dlm.closest(".stkdl"), _mn = _w && _w.querySelector(".stkdl__menu"); var _op = _mn && _mn.hidden; closeDlMenus(); if (_op) { _mn.hidden = false; _dlm.setAttribute("aria-expanded", "true"); } return; }
+      var _dst = e.target.closest("[data-dl-stack]");
+      if (_dst) { var _asa = appById(analyticsAppId), _fsa = _asa && anaData(_asa).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (_fsa) { downloadText(_fsa.name.replace(/[^a-z0-9]+/gi, "-").slice(0, 40) + "_stacktrace.txt", stackTSV(_asa, _fsa)); toast("Downloading stack trace", true); } closeDlMenus(); return; }
+      if (e.target.closest(".stkdl__item")) closeDlMenus();
+      if (!e.target.closest(".stkdl")) closeDlMenus();
       if (e.target.closest("[data-openmodal]")) { e.preventDefault();
         // Store: the certs section IS the entry for adding your first cert, so always open the
         // dialog. WDP: before verifying, route to the overview's verify flow.
@@ -2379,11 +2408,13 @@
       var rcc = e.target.closest("[data-cause]");
       if (rcc) { anaCause = rcc.getAttribute("data-cause"); anaType = "all"; anaSearch = ""; anaPage = 0; renderAnalyticsPanel(); var _fs = document.getElementById("ca-failsec"); if (_fs) _fs.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       var frow = e.target.closest("[data-failure]");
-      if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaLogPage = 0; anaLogQuery = ""; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaStackAnchor = "latest"; anaLogPage = 0; anaLogQuery = ""; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
       var sj = e.target.closest("[data-sym-jump]");
       if (sj) { var sjsec = document.getElementById("ca-symsec"); var sjdet = sjsec && sjsec.querySelector("details.symacc"); if (sjdet) sjdet.open = true; if (sjsec) sjsec.scrollIntoView({ behavior: "smooth", block: "start" }); var sjrow = document.querySelector('#ca-symsec tr[data-ver="' + sj.getAttribute("data-sym-jump") + '"]'); if (sjrow) { sjrow.classList.remove("symhi"); void sjrow.offsetWidth; sjrow.classList.add("symhi"); } return; }
       var smg = e.target.closest("[data-sym-manage]");
       if (smg) { var smgv = smg.getAttribute("data-sym-manage"); anaFailure = null; renderAnalyticsPanel(); var smgsec = document.getElementById("ca-symsec"); var smgdet = smgsec && smgsec.querySelector("details.symacc"); if (smgdet) smgdet.open = true; if (smgsec) smgsec.scrollIntoView({ behavior: "smooth", block: "start" }); var smgrow = smgv && document.querySelector('#ca-symsec tr[data-ver="' + smgv + '"]'); if (smgrow) { smgrow.classList.remove("symhi"); void smgrow.offsetWidth; smgrow.classList.add("symhi"); } return; }
+      var _sanc = e.target.closest("[data-stackanchor]");
+      if (_sanc) { anaStackAnchor = _sanc.getAttribute("data-stackanchor"); renderStackSec(); return; }
       if (e.target.closest("[data-anaback]")) { anaFailure = null; renderAnalyticsPanel(); return; }
       var ost = e.target.closest("[data-occ-stack]");
       if (ost) { openOccStack(ost.getAttribute("data-occ-stack")); return; }
@@ -2453,6 +2484,12 @@
     });
     var occD = $("occDialog");
     if (occD) occD.addEventListener("click", function (e) {
+      var _dlm = e.target.closest("[data-dl-menu]");
+      if (_dlm) { var _w = _dlm.closest(".stkdl"), _mn = _w && _w.querySelector(".stkdl__menu"); var _op = _mn && _mn.hidden; closeDlMenus(); if (_op) { _mn.hidden = false; _dlm.setAttribute("aria-expanded", "true"); } return; }
+      var _dst = e.target.closest("[data-dl-stack]");
+      if (_dst) { var _oa = appById(analyticsAppId), _of = _oa && anaData(_oa).failures.filter(function (x) { return x.id === anaFailure; })[0]; if (_of) { downloadText(_of.name.replace(/[^a-z0-9]+/gi, "-").slice(0, 40) + "_stacktrace.txt", stackTSV(_oa, _of)); toast("Downloading stack trace", true); } closeDlMenus(); return; }
+      if (e.target.closest(".stkdl__item")) closeDlMenus();
+      if (!e.target.closest(".stkdl")) closeDlMenus();
       if (e.target.closest("[data-occ-close]")) { closeOccStack(); return; }
       var caiO = e.target.closest("[data-crashai-occ]");
       if (caiO) { var pO = document.getElementById("crashai-occ-" + caiO.getAttribute("data-crashai-occ")); if (pO) { pO.hidden = false; pO.classList.add("crashai--in"); } caiO.setAttribute("hidden", ""); return; }
