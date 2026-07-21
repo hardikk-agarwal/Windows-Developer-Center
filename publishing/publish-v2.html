@@ -1348,6 +1348,155 @@
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
   .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
+
+  /* ---- "Publish with Copilot": agentic ZIP intake (entry, intake dialog, run overlay, summary) ---- */
+  .cpx-entry { display: flex; align-items: center; gap: var(--sp-14); width: 100%; text-align: left; cursor: pointer;
+    padding: var(--sp-16) var(--sp-18); border-radius: var(--r-12); border: 1px solid color-mix(in srgb, var(--brand) 42%, transparent);
+    background: linear-gradient(120deg, color-mix(in srgb, var(--brand) 15%, transparent), color-mix(in srgb, var(--brand) 4%, transparent));
+    color: var(--fg-1); font: inherit; transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .cpx-entry:hover { transform: translateY(-1px); border-color: var(--brand); box-shadow: 0 12px 30px -14px color-mix(in srgb, var(--brand) 75%, transparent); }
+  .cpx-entry:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .cpx-entry__spark { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--r-8); display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #6E56CF, var(--brand)); box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--brand) 80%, transparent); }
+  .cpx-entry__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .cpx-entry__t strong { font-size: 14px; font-weight: 600; }
+  .cpx-entry__t span { font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  .cpx-entry__badge { flex: 0 0 auto; align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--brand); background: color-mix(in srgb, var(--brand) 15%, transparent); border-radius: 999px; padding: 3px 9px; }
+  .cpx-entry-or { display: flex; align-items: center; gap: var(--sp-12); margin: var(--sp-16) 0; color: var(--fg-3); font-size: 12px; }
+  .cpx-entry-or::before, .cpx-entry-or::after { content: ''; height: 1px; flex: 1; background: var(--stroke-2); }
+  .cpx-drop { display: flex; flex-direction: column; align-items: center; gap: var(--sp-6); padding: var(--sp-24) var(--sp-24) var(--sp-20); margin-top: var(--sp-4);
+    border: 1.5px dashed color-mix(in srgb, var(--brand) 40%, transparent); border-radius: var(--r-12); background: color-mix(in srgb, var(--brand) 5%, transparent); color: var(--fg-2); cursor: pointer; text-align: center; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .cpx-drop:hover, .cpx-drop.is-drag { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .cpx-drop.is-drag { border-style: solid; }
+  .cpx-drop__disc { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 14%, transparent); margin-bottom: 2px; transition: transform var(--dur-2) var(--ease-out); }
+  .cpx-drop:hover .cpx-drop__disc { transform: scale(1.04); }
+  .cpx-drop iconify-icon { color: var(--brand); }
+  .cpx-drop strong { color: var(--fg-1); font-size: 14px; }
+  .cpx-drop span { font-size: 12px; }
+  .cpx-drop u { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .cpx-drop:hover u { text-decoration: underline; }
+  .cpx-drop.is-selected { border-style: solid; border-color: color-mix(in srgb, var(--status-success, #57c038) 55%, var(--stroke-2)); background: color-mix(in srgb, var(--status-success, #57c038) 8%, transparent); }
+  .cpx-drop.is-selected .cpx-drop__disc { background: color-mix(in srgb, var(--status-success, #57c038) 16%, transparent); }
+  .cpx-drop.is-selected iconify-icon { color: var(--status-success, #57c038); }
+  .cpx-drop.is-selected strong { word-break: break-all; }
+  .cpx-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: var(--sp-16) 0 0; font-size: 12px; color: var(--fg-3); line-height: 1.45; }
+  .cpx-note iconify-icon { color: var(--status-success, #57c038); flex: 0 0 auto; margin-top: 1px; }
+  .cpx-guide { margin: var(--sp-14) 0 0; border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; }
+  .cpx-guide > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 9px 12px; font-size: 12.5px; font-weight: 600; color: var(--fg-2); }
+  .cpx-guide > summary::-webkit-details-marker { display: none; }
+  .cpx-guide > summary:hover { color: var(--fg-1); }
+  .cpx-guide__chev { color: var(--fg-3); flex: 0 0 auto; transition: transform var(--dur-2) var(--ease-out); }
+  .cpx-guide[open] .cpx-guide__chev { transform: rotate(90deg); }
+  .cpx-guide__list { list-style: none; margin: 0; padding: 2px 14px 8px; display: flex; flex-direction: column; gap: 5px; }
+  .cpx-guide__list li { font-size: 12px; color: var(--fg-2); line-height: 1.4; }
+  .cpx-guide__list b { color: var(--fg-1); font-weight: 600; }
+  .cpx-guide code { font-family: var(--font-mono, ui-monospace, "Cascadia Code", monospace); font-size: 11px; background: color-mix(in srgb, var(--fg-1) 9%, transparent); border-radius: 4px; padding: 1px 5px; color: var(--fg-1); }
+  .cpx-guide__note { margin: 0 14px 11px; font-size: 11.5px; color: var(--fg-3); }
+  .cpx-run { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: var(--sp-24); background: rgba(6, 8, 14, .62); backdrop-filter: blur(6px); }
+  .cpx-run[hidden] { display: none; }
+  .cpx-run__card { width: min(560px, 94vw); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-16); padding: var(--sp-24); box-shadow: 0 30px 80px -24px rgba(0,0,0,.6); }
+  .cpx-run__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-18); }
+  .cpx-run__spark { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--r-8); display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #6E56CF, var(--brand)); animation: cpxPulse 1.8s ease-in-out infinite; }
+  @keyframes cpxPulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 45%, transparent); } 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--brand) 0%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .cpx-run__spark { animation: none; } }
+  .cpx-run__head strong { display: block; font-size: 15px; }
+  .cpx-run__head span { font-size: 12.5px; color: var(--fg-3); }
+  .cpx-run__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .cpx-step { display: flex; gap: var(--sp-12); align-items: flex-start; padding: var(--sp-8) 0; opacity: .45; transition: opacity var(--dur-2) var(--ease-out); }
+  .cpx-step.is-active, .cpx-step.is-done { opacity: 1; }
+  .cpx-step__ic { flex: 0 0 auto; width: 20px; height: 20px; display: grid; place-items: center; margin-top: 1px; }
+  .cpx-step__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--stroke-2); }
+  .cpx-step__ic fluent-spinner, .cpx-step__chk { display: none; }
+  .cpx-step.is-active .cpx-step__dot { display: none; }
+  .cpx-step.is-active .cpx-step__ic fluent-spinner { display: inline-flex; }
+  .cpx-step.is-done .cpx-step__dot { display: none; }
+  .cpx-step.is-done .cpx-step__chk { display: inline-flex; color: var(--status-success, #57c038); }
+  .cpx-step.is-handoff { opacity: 1; }
+  .cpx-step.is-handoff .cpx-step__dot, .cpx-step.is-handoff .cpx-step__ic fluent-spinner { display: none; }
+  .cpx-step.is-handoff .cpx-step__chk { display: inline-flex; color: var(--brand); }
+  .cpx-step__txt { min-width: 0; display: flex; flex-direction: column; }
+  .cpx-step__txt strong { font-size: 13px; font-weight: 500; color: var(--fg-1); }
+  .cpx-step__txt span { font-size: 12px; color: var(--fg-3); max-height: 0; overflow: hidden; opacity: 0; transition: max-height var(--dur-3) var(--ease-out), opacity var(--dur-3) var(--ease-out); }
+  .cpx-step.is-active .cpx-step__txt span, .cpx-step.is-done .cpx-step__txt span, .cpx-step.is-handoff .cpx-step__txt span { max-height: 44px; opacity: 1; }
+  .cpx-run__foot { margin: var(--sp-18) 0 0; font-size: 12px; color: var(--fg-3); display: flex; align-items: center; gap: 6px; }
+  .cpx-run__foot iconify-icon { color: var(--status-success, #57c038); }
+  /* Copilot progress + summary rendered inside the chat panel (unified progress + conversation). */
+  .cpx-chat-steps { list-style: none; margin: 6px 0 2px; padding: 0; display: flex; flex-direction: column; }
+  .cpx-chat-steps .cpx-step { padding: 5px 0; }
+  .cpx-chat-sum { list-style: none; margin: 8px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .cpx-chat-sum li { display: flex; align-items: baseline; gap: 7px; font-size: 12.5px; color: var(--fg-1); }
+  .cpx-chat-sum li iconify-icon { color: var(--status-success, #57c038); flex: 0 0 auto; position: relative; top: 2px; }
+  .cpx-chat-sum li span { color: var(--fg-3); font-size: 11.5px; }
+
+  /* Persistent Copilot launcher (FAB) + conversational panel + first-run chooser */
+  /* Wide, horizontally-centered Copilot on-ramp banner, floating near the bottom of the flow. */
+  .cpx-onramp { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 899; width: min(760px, calc(100vw - 48px)); display: flex; align-items: center; gap: 16px; border: 1px solid color-mix(in srgb, var(--brand) 42%, var(--stroke-2)); border-radius: 14px; background: var(--layer); box-shadow: 0 24px 60px -18px rgba(0,0,0,.65); padding: 14px 16px 14px 18px; animation: cpxOnrampIn .3s var(--ease-out, cubic-bezier(.2,.8,.2,1)); }
+  .cpx-onramp[hidden] { display: none; }
+  .cpx-onramp__spark { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: #fff; box-shadow: 0 2px 8px -3px rgba(0,0,0,.35); }
+  .cpx-onramp__spark .cpx-logo { width: 26px; height: 26px; }
+  .cpx-onramp__t { flex: 1 1 auto; min-width: 0; }
+  .cpx-onramp__t strong { display: block; font-size: 15px; font-weight: 600; }
+  .cpx-onramp__t span { display: block; font-size: 12.5px; color: var(--fg-2); margin-top: 2px; line-height: 1.45; }
+  .cpx-onramp__go { flex: 0 0 auto; }
+  .cpx-onramp__go .cpx-logo { width: 18px; height: 18px; }
+  .cpx-onramp__x { flex: 0 0 auto; width: 30px; height: 30px; border: 0; background: transparent; color: var(--fg-2); border-radius: 7px; cursor: pointer; display: grid; place-items: center; }
+  .cpx-onramp__x:hover { background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-1); }
+  @keyframes cpxOnrampIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  @media (prefers-reduced-motion: reduce) { .cpx-onramp { animation: none; } }
+  @media (max-width: 720px) { .cpx-onramp { flex-wrap: wrap; gap: 12px 14px; padding: 16px 16px 14px; } .cpx-onramp__t { flex-basis: calc(100% - 54px); } .cpx-onramp__go { flex-basis: 100%; } .cpx-onramp__x { position: absolute; top: 8px; right: 8px; } }
+  .cpx-fab { position: fixed; right: 22px; bottom: 22px; z-index: 900; display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; border: 0; border-radius: 999px; cursor: pointer; color: #fff; font: inherit; font-size: 13.5px; font-weight: 600; background: linear-gradient(135deg, #6E56CF, var(--brand)); box-shadow: 0 12px 30px -8px color-mix(in srgb, var(--brand) 70%, transparent); transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+  .cpx-fab:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -8px color-mix(in srgb, var(--brand) 80%, transparent); }
+  .cpx-fab:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .cpx-fab[hidden] { display: none; }
+  .cpx-fab iconify-icon { color: #fff; }
+  @media (max-width: 620px) { .cpx-fab__label { display: none; } .cpx-fab { padding: 14px; } }
+  .cpx-panel { position: fixed; right: 20px; bottom: 20px; z-index: 950; width: min(400px, calc(100vw - 40px)); max-height: min(620px, calc(100vh - 40px)); display: flex; flex-direction: column; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-16); box-shadow: 0 30px 80px -24px rgba(0,0,0,.6); overflow: hidden; }
+  .cpx-panel[hidden] { display: none; }
+  .cpx-panel__head { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-14) var(--sp-16); border-bottom: 1px solid var(--stroke-2); }
+  .cpx-panel__title { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .cpx-panel__spark { width: 26px; height: 26px; border-radius: var(--r-8); display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #6E56CF, var(--brand)); }
+  .cpx-panel__spark iconify-icon { color: #fff; }
+  .cpx-panel__x { background: none; border: 0; color: var(--fg-3); cursor: pointer; padding: 4px; border-radius: var(--r-4); }
+  .cpx-panel__x:hover { background: var(--subtle); color: var(--fg-1); }
+  .cpx-panel__body { flex: 1; min-height: 130px; overflow-y: auto; padding: var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-12); }
+  .cpx-msg { display: flex; }
+  .cpx-msg--me { justify-content: flex-end; }
+  .cpx-msg__b { max-width: 84%; padding: 9px 12px; border-radius: 14px; font-size: 13px; line-height: 1.45; }
+  .cpx-msg--ai .cpx-msg__b { background: var(--subtle); color: var(--fg-1); border-bottom-left-radius: 4px; }
+  .cpx-msg--me .cpx-msg__b { background: linear-gradient(135deg, #6E56CF, var(--brand)); color: #fff; border-bottom-right-radius: 4px; }
+  .cpx-msg__b b { font-weight: 600; }
+  .cpx-msg__acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .cpx-msg__act { font: inherit; font-size: 12px; font-weight: 600; color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); border: 0; border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+  .cpx-msg__act:hover { background: color-mix(in srgb, var(--brand) 22%, transparent); }
+  .cpx-typing { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }
+  .cpx-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--fg-3); animation: cpxBlink 1s infinite; }
+  .cpx-typing i:nth-child(2) { animation-delay: .15s; } .cpx-typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes cpxBlink { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  .cpx-panel__sugg { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 var(--sp-16) var(--sp-12); }
+  .cpx-sugg__chip { font: inherit; font-size: 12px; color: var(--fg-2); background: transparent; border: 1px solid var(--stroke-2); border-radius: 999px; padding: 5px 10px; cursor: pointer; }
+  .cpx-sugg__chip:hover { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
+  .cpx-panel__foot { display: flex; gap: 8px; padding: var(--sp-12) var(--sp-16); border-top: 1px solid var(--stroke-2); }
+  .cpx-panel__input { flex: 1; min-width: 0; background: color-mix(in srgb, var(--fg-1) 5%, transparent); border: 1px solid var(--stroke-2); border-radius: 999px; padding: 8px 14px; color: var(--fg-1); font: inherit; font-size: 13px; outline: none; }
+  .cpx-panel__input:focus { border-color: var(--brand); }
+  .cpx-panel__send { flex: 0 0 auto; width: 36px; height: 36px; border: 0; border-radius: 50%; cursor: pointer; color: #fff; background: linear-gradient(135deg, #6E56CF, var(--brand)); display: grid; place-items: center; }
+  .cpx-panel__send iconify-icon { color: #fff; }
+  .cpx-welcome { border: 1px solid color-mix(in srgb, var(--brand) 42%, transparent); border-radius: var(--r-12); background: linear-gradient(120deg, color-mix(in srgb, var(--brand) 12%, transparent), transparent 72%); padding: var(--sp-18) var(--sp-20); margin: 0 0 var(--sp-20); }
+  .cpx-welcome__top { display: flex; align-items: center; gap: var(--sp-12); }
+  .cpx-welcome__spark { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--r-8); display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #6E56CF, var(--brand)); }
+  .cpx-welcome__spark iconify-icon { color: #fff; }
+  .cpx-welcome__t strong { font-size: 15px; }
+  .cpx-welcome__t span { display: block; font-size: 13px; color: var(--fg-2); margin-top: 1px; line-height: 1.4; }
+  .cpx-welcome__acts { display: flex; flex-wrap: wrap; gap: var(--sp-10); margin-top: var(--sp-16); }
+
+  /* Use the ACTUAL Copilot logo (colorful swirl) on a light disc — not a purple gradient + sparkle. */
+  .cpx-logo { display: block; object-fit: contain; }
+  .cpx-fab { background: var(--layer); color: var(--fg-1); border: 1px solid var(--stroke-2); box-shadow: 0 12px 30px -10px rgba(0,0,0,.5); }
+  .cpx-fab:hover { border-color: color-mix(in srgb, var(--brand) 55%, var(--stroke-2)); box-shadow: 0 16px 40px -10px rgba(0,0,0,.55); }
+  .cpx-fab .cpx-logo { width: 22px; height: 22px; }
+  .cpx-run__spark, .cpx-panel__spark, .cpx-summary__spark { background: #fff; }
+  .cpx-run__spark .cpx-logo { width: 26px; height: 26px; }
+  .cpx-panel__spark .cpx-logo { width: 20px; height: 20px; }
+  .cpx-summary__spark .cpx-logo { width: 24px; height: 24px; }
+  #cpx-title .cpx-logo { display: inline-block; width: 20px; height: 20px; vertical-align: -4px; margin-right: 6px; }
   /* Close (title-action) button is icon-only, not Fluent's wide default. */
   #ai-autofill-dialog fluent-button[slot="title-action"],
   #rating-dialog fluent-button[slot="title-action"],
@@ -3593,6 +3742,91 @@
     <fluent-button slot="action" appearance="primary" id="whatsnew-save">Save</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
+
+<!-- Publish with Copilot — intake dialog: drop a project .zip (or try a sample). -->
+<fluent-dialog id="cpx-dialog" modal-type="modal" aria-labelledby="cpx-title">
+  <fluent-dialog-body>
+    <span slot="title" id="cpx-title">
+      <img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
+      Publish with Copilot
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-cpx-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="ez-ai-dialog__intro">Drop a <b>.zip</b> with your assets — screenshots, icon, README — and your package if it’s built. Copilot reads everything and drafts your whole submission for you to review.</p>
+    <label class="cpx-drop" id="cpx-drop" for="cpx-file" tabindex="0" role="button">
+      <span class="cpx-drop__disc"><iconify-icon id="cpx-drop-ic" icon="fluent:folder-zip-24-regular" width="30" height="30" aria-hidden="true"></iconify-icon></span>
+      <strong id="cpx-drop-title">Drop your project .zip here</strong>
+      <span id="cpx-drop-hint">or <u>browse</u> your files</span>
+    </label>
+    <input type="file" id="cpx-file" accept=".zip" hidden />
+    <details class="cpx-guide">
+      <summary><iconify-icon class="cpx-guide__chev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> How to name things in your .zip</summary>
+      <ul class="cpx-guide__list">
+        <li><b>Package</b> — your <code>.msix</code> / <code>.appx</code> (or <code>.exe</code> / <code>.msi</code>)</li>
+        <li><b>Icon</b> — name it <code>logo</code> or <code>icon</code></li>
+        <li><b>Cover image</b> — name it <code>hero</code> or <code>cover</code></li>
+        <li><b>Screenshots</b> — any other images (e.g. <code>screenshot-1.png</code>)</li>
+        <li><b>Description</b> — a <code>README.md</code></li>
+        <li><b>What’s new</b> — a <code>CHANGELOG.md</code></li>
+      </ul>
+      <p class="cpx-guide__note">Folders are fine — Copilot looks everywhere inside the .zip.</p>
+    </details>
+    <p class="cpx-note"><iconify-icon icon="fluent:shield-checkmark-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>Nothing is submitted until you review and approve everything.</span></p>
+    <fluent-button slot="action" appearance="secondary" data-cpx-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="cpx-go" disabled>
+      <iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Set up with Copilot
+    </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Publish with Copilot — agent run overlay (narrated pipeline). -->
+<div class="cpx-run" id="cpx-run" hidden role="status" aria-live="polite">
+  <div class="cpx-run__card">
+    <div class="cpx-run__head">
+      <span class="cpx-run__spark"><img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" /></span>
+      <div><strong>Copilot is building your submission</strong><span id="cpx-run-sub">Reading your project…</span></div>
+    </div>
+    <ol class="cpx-run__steps" id="cpx-run-steps"></ol>
+    <p class="cpx-run__foot"><iconify-icon icon="fluent:shield-checkmark-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> You'll review everything before it's submitted.</p>
+  </div>
+</div>
+
+<!-- Wide, horizontally-centered Copilot on-ramp banner, floating near the bottom of the flow.
+     Dismiss it (or engage Copilot any way) to hide it; the "Ask Copilot" launcher takes over. -->
+<div class="cpx-onramp" id="cpx-onramp" hidden role="complementary" aria-label="Copilot suggestion">
+  <span class="cpx-onramp__spark"><img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" /></span>
+  <div class="cpx-onramp__t">
+    <strong>Let Copilot set up your submission</strong>
+    <span>Drop a .zip — Copilot drafts your listing and places your screenshots, ready for you to review.</span>
+  </div>
+  <fluent-button appearance="primary" id="cpx-onramp-go" class="cpx-onramp__go">
+    <img slot="start" class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
+    Set up with Copilot
+  </fluent-button>
+  <button type="button" class="cpx-onramp__x" id="cpx-onramp-x" aria-label="Dismiss Copilot suggestion">
+    <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+  </button>
+</div>
+
+<!-- Persistent Copilot launcher (bottom-right) + conversational assistant panel (Phase 2). -->
+<button type="button" class="cpx-fab" id="cpx-fab" aria-label="Ask Copilot" aria-expanded="false">
+  <img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
+  <span class="cpx-fab__label">Ask Copilot</span>
+</button>
+<section class="cpx-panel" id="cpx-panel" hidden aria-label="Copilot assistant">
+  <header class="cpx-panel__head">
+    <span class="cpx-panel__title"><span class="cpx-panel__spark"><img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" /></span> Copilot</span>
+    <button type="button" class="cpx-panel__x" id="cpx-panel-x" aria-label="Close Copilot"><iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+  </header>
+  <div class="cpx-panel__body" id="cpx-chat"></div>
+  <div class="cpx-panel__sugg" id="cpx-sugg"></div>
+  <form class="cpx-panel__foot" id="cpx-form">
+    <input type="text" class="cpx-panel__input" id="cpx-input" placeholder="Ask Copilot to help with your listing…" autocomplete="off" aria-label="Ask Copilot" />
+    <button type="submit" class="cpx-panel__send" id="cpx-send" aria-label="Send"><iconify-icon icon="fluent:send-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+  </form>
+</section>
 
 <!-- Auto-draft notice: shown when a PWA's listing is drafted from its site (labeled + undoable). -->
 <div class="ez-draft-toast" id="draft-toast" hidden role="status" aria-live="polite">
@@ -8298,6 +8532,478 @@
     renderWhatsNew();
   })();
 
+  // ---- "Publish with Copilot": agentic ZIP intake (Phase 1) --------------------------------
+  // Drop a project .zip (package + assets); Copilot classifies it, drafts the listing, places
+  // media, and hands back a complete, editable draft with a summary + gaps card. Nothing is
+  // auto-submitted. Classification/fills are simulated (like the rest of this prototype) but drive
+  // the REAL flow state — reusing renderPackages / the name+desc+category commit paths / renderShots
+  // / the icon commit / ezRenderPreview / updateGate / showWzStep.
+  (function wireCopilotIntake () {
+    var dlg = $('cpx-dialog');
+    if (!dlg) return;
+    var svgURL = function (s) { return 'data:image/svg+xml;utf8,' + encodeURIComponent(s); };
+    var esc = function (s) { return String(s).replace(/[&<>]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]; }); };
+    function iconSvg () {
+      return svgURL('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6E56CF"/><stop offset="1" stop-color="#2899F5"/></linearGradient></defs><rect width="256" height="256" rx="58" fill="url(#g)"/><text x="128" y="178" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="150" font-weight="700" fill="#fff">N</text></svg>');
+    }
+    function shotSvg (i, title) {
+      var hues = ['#2899F5', '#6E56CF', '#16A34A', '#0EA5E9', '#DB2777'];
+      var c = hues[i % hues.length];
+      return svgURL('<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800">'
+        + '<rect width="1280" height="800" fill="#0f1117"/>'
+        + '<rect width="1280" height="60" fill="#171b24"/>'
+        + '<circle cx="34" cy="30" r="7" fill="#ff5f57"/><circle cx="60" cy="30" r="7" fill="#febc2e"/><circle cx="86" cy="30" r="7" fill="#28c840"/>'
+        + '<rect x="40" y="100" width="330" height="660" rx="16" fill="#171b24"/>'
+        + '<rect x="410" y="100" width="830" height="660" rx="16" fill="#141922"/>'
+        + '<rect x="74" y="140" width="104" height="104" rx="24" fill="' + c + '"/>'
+        + '<rect x="74" y="270" width="240" height="14" rx="7" fill="#39414f"/>'
+        + '<rect x="74" y="300" width="200" height="14" rx="7" fill="#2b3240"/>'
+        + '<rect x="446" y="150" width="470" height="30" rx="8" fill="#e8eaf0"/>'
+        + '<rect x="446" y="212" width="740" height="14" rx="7" fill="#39414f"/>'
+        + '<rect x="446" y="242" width="700" height="14" rx="7" fill="#2b3240"/>'
+        + '<rect x="446" y="272" width="720" height="14" rx="7" fill="#2b3240"/>'
+        + '<rect x="446" y="302" width="640" height="14" rx="7" fill="#2b3240"/>'
+        + '<text x="446" y="712" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="700" fill="' + c + '">' + esc(title) + '</text>'
+        + '</svg>');
+    }
+    var SAMPLE = {
+      zip: 'Notably-2.4.0.zip',
+      name: 'Notably',
+      desc: 'Notably is a fast, private place to capture everything on your mind. Jot a quick thought or write long-form in clean Markdown, then find it instantly with full-text search and tags.\n\nYour notes stay on your device by default and sync only when you choose \u2014 end-to-end encrypted, no account required. Built for Windows, Notably is lightweight, works completely offline, and looks great in light and dark themes.',
+      short: 'Fast, private, offline notes with Markdown, tags, and instant search.',
+      features: ['Write in clean Markdown with live preview', 'Find anything instantly with full-text search and tags', 'Works fully offline \u2014 your notes stay on your device', 'End-to-end encrypted sync, no account required', 'Light & dark themes that match Windows'],
+      shots: ['Capture ideas in a flash', 'Organize with tags', 'Find anything instantly', 'Beautiful in dark mode', 'Private by default']
+    };
+    var STEPS = [
+      { k: 'classify', label: 'Unzipping and classifying files', detail: '1 package \u00b7 1 icon \u00b7 5 screenshots \u00b7 README.md' },
+      { k: 'inspect', label: 'Reading the package manifest', detail: 'Notably 2.4.0.0 \u00b7 x64 \u00b7 Desktop \u00b7 no restricted capabilities' },
+      { k: 'listing', label: 'Drafting your Store listing', detail: 'Name, description, category and highlights from README.md' },
+      { k: 'media', label: 'Placing your screenshots and icon', detail: 'Icon + 5 screenshots, checked for resolution and aspect' },
+      { k: 'reach', label: 'Setting reach & price', detail: 'Free \u00b7 all 240 markets \u00b7 public \u2014 change anytime' },
+      { k: 'compliance', label: 'Checking Store policies', detail: 'No restricted capabilities \u00b7 no blockers found' },
+      { k: 'rating', label: 'Age rating \u2014 over to you', detail: 'Opening the questionnaire for you to answer' }
+    ];
+    function wait (ms) { return new Promise(function (r) { setTimeout(r, (typeof reduceMotion === 'function' && reduceMotion()) ? Math.min(ms, 120) : ms); }); }
+    function cap (s) { s = String(s == null ? '' : s); return s.charAt(0).toUpperCase() + s.slice(1); }
+    function sumLi (label, val) { return '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon> ' + esc(label) + ' <span>' + esc(val) + '</span></li>'; }
+    function sampleSummaryHtml (zip) { return '<b>All set</b> — here’s what I set up from <b>' + esc(zip) + '</b>:<ul class="cpx-chat-sum"><li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon> Listing copy <span>from your README</span></li><li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon> Category <span>Productivity</span></li><li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon> Screenshots &amp; icon <span>5 images</span></li><li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon> Reach &amp; price <span>Free · all markets</span></li></ul>Two things still need <b>you</b> — I can’t do these for you:'; }
+    function sampleActions () { return [ { label: 'Complete age rating', run: function () { try { if (typeof showWzStep === 'function') showWzStep(2); } catch (e) {} } }, { label: 'Review screenshots', run: function () { try { if (typeof showWzStep === 'function') showWzStep(1); } catch (e) {} setTimeout(function () { var el = $('ez-pv-shots'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 160); } } ]; }
+    // ---- REAL project .zip parsing --------------------------------------------------------
+    function imgSize (url) { return new Promise(function (res) { var im = new Image(); var done = false; var t = setTimeout(function () { if (!done) { done = true; res({ w: 0, h: 0 }); } }, 3000); im.onload = function () { if (done) return; done = true; clearTimeout(t); res({ w: im.naturalWidth, h: im.naturalHeight }); }; im.onerror = function () { if (done) return; done = true; clearTimeout(t); res({ w: 0, h: 0 }); }; im.src = url; }); }
+    // Crack open a dropped project .zip and classify what's inside: the app package, image assets
+    // (icon vs screenshots), a README (→ description) and a changelog. The package itself is handed
+    // to the SAME real MSIX pipeline the manual upload uses (extractPackageMetadata + manifest read).
+    async function parseZipProject (file) {
+      if (typeof JSZip === 'undefined') throw new Error('JSZip unavailable');
+      var zip = await JSZip.loadAsync(file);
+      var entries = [];
+      zip.forEach(function (path, entry) { if (!entry.dir && !/(^|\/)__MACOSX\//.test(path) && !/(^|\/)\.[^\/]/.test(path)) entries.push(entry); });
+      var PKG = { msix: 1, msixbundle: 1, appx: 1, appxbundle: 1, msixupload: 1, appxupload: 1, xap: 1, exe: 1, msi: 1 };
+      var IMG = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+      function rank (e) { return (e === 'msix' || e === 'appx') ? 0 : (e === 'msixbundle' || e === 'appxbundle') ? 1 : (e === 'msixupload' || e === 'appxupload') ? 2 : (e === 'msi') ? 3 : (e === 'exe') ? 4 : 5; }
+      var pkgEntry = null, pkgRank = 99, imgEntries = [], readmeEntry = null, changelogEntry = null;
+      entries.forEach(function (entry) {
+        var base = entry.name.split('/').pop();
+        var ext = (base.indexOf('.') >= 0 ? base.split('.').pop() : '').toLowerCase();
+        if (PKG[ext]) { var r = rank(ext); if (r < pkgRank) { pkgRank = r; pkgEntry = entry; } }
+        else if (IMG[ext]) imgEntries.push({ entry: entry, base: base, mime: IMG[ext] });
+        else if (/^readme(\.|$)/i.test(base) || (ext === 'md' && !/change|release|whatsnew|history|contribut|licen[sc]e|code_of/i.test(base))) { if (!readmeEntry) readmeEntry = entry; }
+        else if (/change[-_ ]?log|release[-_ ]?notes|whats[-_ ]?new|^history\.(md|txt)$/i.test(base)) { if (!changelogEntry) changelogEntry = entry; }
+        else if (ext === 'txt' && /descrip/i.test(base) && !readmeEntry) readmeEntry = entry;
+      });
+      var readmeText = ''; try { if (readmeEntry) readmeText = await readmeEntry.async('string'); } catch (e) {}
+      var changelogText = ''; try { if (changelogEntry) changelogText = await changelogEntry.async('string'); } catch (e) {}
+      var images = [];
+      for (var i = 0; i < imgEntries.length && images.length < 14; i++) {
+        try { var b64 = await imgEntries[i].entry.async('base64'); var url = 'data:' + imgEntries[i].mime + ';base64,' + b64; var d = await imgSize(url); images.push({ name: imgEntries[i].base, url: url, w: d.w, h: d.h }); } catch (e) {}
+      }
+      var pkgFile = null, pkgName = '';
+      if (pkgEntry) { try { var blob = await pkgEntry.async('blob'); pkgName = pkgEntry.name.split('/').pop(); pkgFile = new File([blob], pkgName, { type: 'application/octet-stream' }); } catch (e) {} }
+      return { pkgFile: pkgFile, pkgName: pkgName, images: images, readmeText: readmeText, changelogText: changelogText, fileCount: entries.length, zipBase: (file.name || '').replace(/\.zip$/i, '') };
+    }
+    function descFromReadme (md) {
+      if (!md) return '';
+      var t = String(md).replace(/```[\s\S]*?```/g, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/<[^>]+>/g, ' ').replace(/\r/g, '');
+      var paras = t.split(/\n\s*\n/).map(function (p) { return p.replace(/^#{1,6}\s*/gm, '').replace(/^\s*[>*+\-]\s+/gm, '').replace(/[*_`]/g, '').replace(/\s+/g, ' ').trim(); })
+        .filter(function (p) { return p.length > 40 && !/shields\.io|\bbadge\b|^https?:\/\/\S+$/i.test(p); });
+      return paras.slice(0, 3).join('\n\n').slice(0, 1500);
+    }
+    function titleCase (s) { return String(s).replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+    function deriveName (found) {
+      var m = (found.readmeText || '').match(/^\s{0,3}#\s+(.+?)\s*#*\s*$/m);
+      if (m && m[1].trim().length >= 2 && m[1].trim().length <= 60) return m[1].trim();
+      var z = (found.zipBase || '').replace(/[_-]?v?\d+(\.\d+)+.*$/i, '').replace(/[_-]?(x64|x86|arm64|arm|neutral)\b.*$/i, '').trim();
+      if (z && z.length >= 2) return titleCase(z).slice(0, 50);
+      if (found.pkgName) { var pb = found.pkgName.replace(/\.[^.]+$/, '').replace(/[_-]?\d+(\.\d+)+.*$/, '').replace(/[_-]?(x64|x86|arm64|arm|neutral)\b.*$/i, '').trim(); if (pb) return titleCase(pb).slice(0, 50); }
+      return '';
+    }
+    function guessCategory (text) {
+      var t = ' ' + (text || '').toLowerCase() + ' ';
+      var map = [['games', /\b(game|player|level|puzzle|arcade|rpg|shooter)\b/], ['photo-and-video', /\b(photo|video|camera|footage|edit(or|ing)?)\b/], ['music', /\b(music|audio|podcast|playlist|song)\b/], ['developer-tools', /\b(developer|api|sdk|terminal|compiler|git)\b/], ['social', /\b(chat|social|message|community|forum)\b/], ['education', /\b(learn|course|study|education|quiz|flashcard)\b/], ['productivity', /\b(note|task|todo|to-do|document|calendar|productiv|organiz)\b/]];
+      for (var i = 0; i < map.length; i++) { if (map[i][1].test(t)) return map[i][0]; }
+      return 'productivity';
+    }
+    function classifyImages (images, havePkgIcon) {
+      var isIconish = function (im) { return /(^|[-_. ])(icon|logo|tile|storelogo|square\d*|applist)/i.test(im.name) || (im.w && im.h && Math.abs(im.w / im.h - 1) < 0.18 && im.w <= 768); };
+      var isHeroish = function (im) { return /(^|[-_. ])(hero|cover|banner|marquee|promo|feature[-_ ]?graphic|super[-_ ]?hero)/i.test(im.name); };
+      var iconish = images.filter(isIconish).sort(function (a, b) { return (a.w || 9999) - (b.w || 9999); });
+      var icon = havePkgIcon ? null : (iconish[0] || null);
+      var hero = images.filter(function (im) { return im !== icon && isHeroish(im); })[0] || null;
+      var shots = images.filter(function (im) { return im !== icon && im !== hero && !isIconish(im) && !isHeroish(im); }).sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); }).slice(0, 10);
+      return { icon: icon, hero: hero, shots: shots };
+    }
+
+    function addSamplePackage () {
+      try {
+        if (typeof packages !== 'undefined' && !packages.some(function (p) { return p.id === 'pkg-cpx'; })) {
+          packages.push({ id: 'pkg-cpx', source: 'zip', kind: 'msix', win32: false, fromPwa: false, filename: 'Notably_2.4.0.0_x64.msix', type: 'MSIX', version: '2.4.0.0', arches: ['x64'], langs: ['en-US'], installParams: '', capabilities: [], devices: ['Desktop'], manifestParsed: true, sizeBytes: 24 * 1024 * 1024 });
+        }
+      } catch (e) {}
+      try { if (typeof renderPackages === 'function') renderPackages(); } catch (e) {}
+      try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+    }
+    function fillListing () {
+      try { fName.value = SAMPLE.name; if (typeof syncName === 'function') syncName(); } catch (e) {}
+      try { fDesc.value = SAMPLE.desc; if (typeof syncDesc === 'function') syncDesc(); } catch (e) {}
+      try { fCategory.value = 'productivity'; if (typeof syncCategory === 'function') syncCategory(); } catch (e) {}
+      try { adv.listing.shortDesc = SAMPLE.short; } catch (e) {}
+      try { adv.listing.features = SAMPLE.features.join('\n'); if (window.__setFeatures) window.__setFeatures(SAMPLE.features.join('\n')); } catch (e) {}
+      try { if (typeof ezRenderPreview === 'function') ezRenderPreview(); } catch (e) {}
+    }
+    function fillMedia () {
+      try { userIconDataUrl = iconSvg(); if (typeof refreshLogoHue === 'function') refreshLogoHue(); if (typeof refreshAppHeadIcon === 'function') refreshAppHeadIcon(); } catch (e) {}
+      try { if (state && Array.isArray(state.shots)) { SAMPLE.shots.forEach(function (t, i) { state.shots.push(shotSvg(i, t)); }); } } catch (e) {}
+      try { if (typeof renderShots === 'function') renderShots(); } catch (e) {}
+      try { if (typeof ezRenderPreview === 'function') ezRenderPreview(); } catch (e) {}
+      try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+    }
+
+    function renderRunSteps () {
+      var ol = $('cpx-run-steps'); if (!ol) return;
+      ol.innerHTML = STEPS.map(function (s) {
+        return '<li class="cpx-step is-pending" data-k="' + s.k + '">'
+          + '<span class="cpx-step__ic"><span class="cpx-step__dot"></span><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner><iconify-icon class="cpx-step__chk" icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span>'
+          + '<span class="cpx-step__txt"><strong>' + s.label + '</strong><span>' + s.detail + '</span></span></li>';
+      }).join('');
+    }
+    function setStep (k, st) { var li = document.querySelector('.cpx-step[data-k="' + k + '"]'); if (li) { li.classList.remove('is-pending', 'is-active', 'is-done'); li.classList.add(st); } }
+
+    async function run (zipName, file) {
+      try { dlg.hide(); } catch (e) {}
+      var _or = $('cpx-onramp'); if (_or) _or.hidden = true; if (window.__cpxSyncFab) window.__cpxSyncFab();   // used Copilot → retire the banner, restore the launcher
+      var C = window.__cpxChat;
+      var real = !!(file && typeof JSZip !== 'undefined');
+      var zip = zipName || (file && file.name) || SAMPLE.zip;
+      var stepsHost = null, overlay = null;
+      if (C) {
+        C.open(true);                                  // the chat panel IS the progress surface now
+        C.ai('Setting up your submission from <b>' + esc(zip) + '</b> — I’ll show my progress here.');
+        var msg = C.ai('<ul class="cpx-chat-steps">' + STEPS.map(function (s) {
+          return '<li class="cpx-step is-pending" data-k="' + s.k + '"><span class="cpx-step__ic"><span class="cpx-step__dot"></span><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner><iconify-icon class="cpx-step__chk" icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="cpx-step__txt"><strong>' + s.label + '</strong><span>' + (real ? '' : s.detail) + '</span></span></li>';
+        }).join('') + '</ul>');
+        stepsHost = (msg && msg.querySelector) ? msg.querySelector('.cpx-chat-steps') : null;
+      } else {
+        renderRunSteps();
+        var sub = $('cpx-run-sub'); if (sub) sub.textContent = 'Reading ' + zip + '…';
+        overlay = $('cpx-run'); if (overlay) overlay.hidden = false;
+      }
+      function mark (k, st) { var scope = stepsHost || document; var li = scope.querySelector('.cpx-step[data-k="' + k + '"]'); if (li) { li.classList.remove('is-pending', 'is-active', 'is-done', 'is-handoff'); li.classList.add(st); } if (C) C.scroll(); }
+      function setDetail (k, text) { var scope = stepsHost || document; var el = scope.querySelector('.cpx-step[data-k="' + k + '"] .cpx-step__txt span'); if (el) el.textContent = text; if (C) C.scroll(); }
+      // Hand-off: the age-rating step ends "over to you" (brand person icon), not a green check.
+      function markHandoff (k) { var scope = stepsHost || document; var li = scope.querySelector('.cpx-step[data-k="' + k + '"]'); if (li) { li.classList.remove('is-pending', 'is-active', 'is-done'); li.classList.add('is-handoff'); var chk = li.querySelector('.cpx-step__chk'); if (chk) chk.setAttribute('icon', 'fluent:person-16-filled'); } if (C) C.scroll(); }
+
+      if (!real) {
+        // ---- Simulated sample project (Notably) ----
+        mark('classify', 'is-active'); await wait(950); mark('classify', 'is-done');
+        mark('inspect', 'is-active'); await wait(300); addSamplePackage(); await wait(650); mark('inspect', 'is-done');
+        mark('listing', 'is-active'); await wait(350); fillListing(); await wait(750); mark('listing', 'is-done');
+        mark('media', 'is-active'); await wait(350); fillMedia(); await wait(700); mark('media', 'is-done');
+        mark('rating', 'is-active'); await wait(650); mark('rating', 'is-done');
+        mark('reach', 'is-active'); await wait(600);
+        try { reachVisited = true; if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+        mark('reach', 'is-done');
+        mark('compliance', 'is-active'); await wait(800); mark('compliance', 'is-done');
+        await wait(450);
+        if (overlay) overlay.hidden = true;
+        try { if (typeof showWzStep === 'function') showWzStep(1); } catch (e) {}
+        if (C) C.ai(sampleSummaryHtml(zip), sampleActions());
+        if (typeof announce === 'function') announce('Copilot set up your submission from the sample. Review the highlights in the chat.');
+        return;
+      }
+
+      // ---- REAL dropped project .zip ----
+      // Walk the developer through the wizard live: Package first, then Listing and Reach & price,
+      // finishing on Age rating (the one thing they complete themselves).
+      var found = null, perr = null;
+      try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
+      mark('classify', 'is-active');
+      try { found = await parseZipProject(file); } catch (e) { perr = e; }
+      await wait(300);
+      if (perr || !found) {
+        mark('classify', 'is-done');
+        if (C) C.ai('I couldn’t read <b>' + esc(zip) + '</b> — it may not be a valid .zip. Add your package and assets manually, or try a different file.');
+        return;
+      }
+      var counts = [];
+      if (found.pkgFile) counts.push('1 package');
+      if (found.images.length) counts.push(found.images.length + ' image' + (found.images.length > 1 ? 's' : ''));
+      if (found.readmeText) counts.push('README');
+      if (found.changelogText) counts.push('changelog');
+      setDetail('classify', counts.length ? ('Found ' + counts.join(' · ') + ' in ' + found.fileCount + ' files') : (found.fileCount + ' files — nothing recognized yet'));
+      mark('classify', 'is-done');
+
+      // inspect / package — reuse the real MSIX pipeline
+      mark('inspect', 'is-active'); await wait(250);
+      var pkgMeta = null;
+      if (found.pkgFile) {
+        try { pkgMeta = extractPackageMetadata(found.pkgFile); packages.push(pkgMeta); if (typeof renderPackages === 'function') renderPackages(); if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+        try { if (pkgMeta && typeof enrichPackagesFromManifest === 'function') await enrichPackagesFromManifest([pkgMeta]); } catch (e) {}
+      }
+      await wait(300);
+      if (pkgMeta) setDetail('inspect', [pkgMeta.filename, (pkgMeta.arches || []).join('/'), pkgMeta.version].filter(Boolean).join(' · '));
+      else setDetail('inspect', 'No package found — add one before submitting');
+      mark('inspect', 'is-done');
+
+      // listing — name + description + category from the real README / filenames (shown filling live)
+      mark('listing', 'is-active');
+      try { if (pkgMeta && typeof showWzStep === 'function') showWzStep(1); } catch (e) {}
+      await wait(300);
+      var nm = deriveName(found);
+      try { if (nm) { fName.value = nm; if (typeof syncName === 'function') syncName(); } } catch (e) {}
+      var desc = descFromReadme(found.readmeText);
+      try { if (desc) { fDesc.value = desc; if (typeof syncDesc === 'function') syncDesc(); } } catch (e) {}
+      var catv = guessCategory((found.readmeText || '') + ' ' + nm);
+      try { if (fCategory) { if (!fCategory.querySelector('fluent-option[value="' + catv + '"]')) catv = 'productivity'; if (fCategory.querySelector('fluent-option[value="' + catv + '"]')) { fCategory.value = catv; if (typeof syncCategory === 'function') syncCategory(); } } } catch (e) {}
+      try { if (typeof ezRenderPreview === 'function') ezRenderPreview(); } catch (e) {}
+      await wait(350);
+      setDetail('listing', [nm ? ('Named “' + nm + '”') : '', desc ? 'description from README' : (found.readmeText ? '' : 'no README found'), 'category ' + cap(catv)].filter(Boolean).join(' · '));
+      mark('listing', 'is-done');
+
+      // media — icon (package manifest, else a square image), a cover/hero image, + screenshots
+      mark('media', 'is-active'); await wait(300);
+      var havePkgIcon = false; try { havePkgIcon = !!pkgIconDataUrl; } catch (e) {}
+      var cls = classifyImages(found.images, havePkgIcon);
+      try { if (cls.icon) { userIconDataUrl = cls.icon.url; if (typeof refreshLogoHue === 'function') refreshLogoHue(); if (typeof refreshAppHeadIcon === 'function') refreshAppHeadIcon(); } } catch (e) {}
+      try { if (cls.hero && window.__setHero) window.__setHero(cls.hero.url, 'image'); } catch (e) {}
+      try { if (state && Array.isArray(state.shots)) cls.shots.forEach(function (s) { state.shots.push(s.url); }); } catch (e) {}
+      try { if (typeof renderShots === 'function') renderShots(); } catch (e) {}
+      try { if (typeof ezRenderPreview === 'function') ezRenderPreview(); } catch (e) {}
+      try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+      await wait(350);
+      var shotN = (state && state.shots) ? state.shots.length : 0;
+      var iconMsg = havePkgIcon ? 'icon from package' : (cls.icon ? 'icon from your images' : 'no icon found');
+      var mediaParts = [];
+      if (shotN) mediaParts.push(shotN + ' screenshot' + (shotN > 1 ? 's' : ''));
+      if (cls.hero) mediaParts.push('cover image');
+      mediaParts.push(iconMsg);
+      setDetail('media', (shotN || cls.hero || havePkgIcon || cls.icon) ? mediaParts.join(' · ') : 'no images found');
+      mark('media', 'is-done');
+
+      // changelog → what's new (only surfaces in the update flow; harmless otherwise)
+      try { if (found.changelogText && adv && adv.listing) { adv.listing.whatsNew = (descFromReadme(found.changelogText) || found.changelogText).slice(0, 1000); if (typeof renderWhatsNew === 'function') renderWhatsNew(); } } catch (e) {}
+
+      // Reach & price: navigate to it and complete it on defaults (free · all markets · public · no
+      // trial). The values are already valid defaults, so we just mark it reviewed (reachVisited) and
+      // refresh the gate — that satisfies the submit gate's reachVisited requirement.
+      mark('reach', 'is-active');
+      try { if (pkgMeta && typeof showWzStep === 'function') showWzStep(3); } catch (e) {}
+      await wait(600);
+      try { reachVisited = true; if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+      mark('reach', 'is-done');
+      mark('compliance', 'is-active'); await wait(600);
+      var caps = (pkgMeta && pkgMeta.capabilities) ? pkgMeta.capabilities.filter(function (c) { return typeof isRestrictedCapability === 'function' && isRestrictedCapability(c); }) : [];
+      setDetail('compliance', caps.length ? (caps.length + ' restricted capability — needs justification') : 'No restricted capabilities found');
+      mark('compliance', 'is-done');
+      await wait(300);
+
+      if (overlay) overlay.hidden = true;
+      // Finish on the Age rating page — the one thing the developer completes themselves.
+      mark('rating', 'is-active');
+      try { if (pkgMeta && typeof showWzStep === 'function') showWzStep(2); } catch (e) {}
+      await wait(650);
+      setDetail('rating', pkgMeta ? 'Answer the short questionnaire to finish' : 'Add your package first, then rate your app');
+      markHandoff('rating');
+      await wait(200);
+
+      if (C) {
+        var filled = [];
+        if (pkgMeta) filled.push(sumLi('Package', pkgMeta.filename + (pkgMeta.version ? ' · ' + pkgMeta.version : '')));
+        if (fName && fName.value.trim()) filled.push(sumLi('Name', fName.value.trim()));
+        if (fDesc && fDesc.value.trim()) filled.push(sumLi('Listing copy', found.readmeText ? 'from your README' : 'drafted'));
+        filled.push(sumLi('Category', cap((fCategory && fCategory.value) || catv)));
+        if (shotN) filled.push(sumLi('Screenshots', shotN + ' image' + (shotN > 1 ? 's' : '')));
+        if (cls.hero) filled.push(sumLi('Cover image', 'placed from your assets'));
+        filled.push(sumLi('Reach & price', 'Free · all markets'));
+        var extra = [];
+        if (!pkgMeta) extra.push('add your package');
+        if (!shotN) extra.push('add screenshots');
+        var tail = pkgMeta
+          ? 'I’ve landed you on the <b>Age rating</b> page — answer the short questionnaire to finish' + (extra.length ? ' (you’ll also want to ' + extra.join(' and ') + ')' : '') + '.'
+          : 'First <b>add your package</b>, then complete your age rating' + (shotN ? '' : ' and add screenshots') + '.';
+        var html = '<b>Done</b> — here’s what I set up from <b>' + esc(zip) + '</b>:<ul class="cpx-chat-sum">' + filled.join('') + '</ul>' + tail;
+        var acts = [];
+        if (!pkgMeta) acts.push({ label: 'Add package', run: function () { try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {} } });
+        acts.push({ label: 'Complete age rating', run: function () { try { if (typeof showWzStep === 'function') showWzStep(2); } catch (e) {} } });
+        acts.push({ label: shotN ? 'Review screenshots' : 'Add screenshots', run: function () { try { if (typeof showWzStep === 'function') showWzStep(1); } catch (e) {} setTimeout(function () { var el = $('ez-pv-shots'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 160); } });
+        C.ai(html, acts);
+      }
+      if (typeof announce === 'function') announce('Copilot set up your submission. You are now on the age rating page. Answer the questionnaire to finish.');
+    }
+
+    // Staged-file model: dropping/browsing a .zip selects it (shows the name, enables the primary
+    // button); the developer then clicks "Set up with Copilot" to run the pipeline. Nothing auto-runs.
+    var stagedFile = null;
+    var goBtn = $('cpx-go');
+    function setGoEnabled (on) { if (goBtn) { if (on) goBtn.removeAttribute('disabled'); else goBtn.setAttribute('disabled', ''); } }
+    function resetStage () {
+      stagedFile = null;
+      var t = $('cpx-drop-title'), h = $('cpx-drop-hint'), ic = $('cpx-drop-ic'), d = $('cpx-drop');
+      if (t) t.textContent = 'Drop your project .zip here';
+      if (h) h.innerHTML = 'or <u>browse</u> your files';
+      if (ic) ic.setAttribute('icon', 'fluent:folder-zip-24-regular');
+      if (d) d.classList.remove('is-selected');
+      setGoEnabled(false);
+    }
+    function stageFile (f) {
+      if (!f) return;
+      stagedFile = f;
+      var t = $('cpx-drop-title'), h = $('cpx-drop-hint'), ic = $('cpx-drop-ic'), d = $('cpx-drop');
+      if (t) t.textContent = f.name;
+      if (h) h.innerHTML = 'or <u>browse</u> to choose a different file';
+      if (ic) ic.setAttribute('icon', 'fluent:checkmark-circle-24-regular');
+      if (d) d.classList.add('is-selected');
+      setGoEnabled(true);
+    }
+
+    function openCpx () { resetStage(); try { dlg.show(); } catch (e) {} }
+    window.__cpxOpenIntake = openCpx;   // let the floating Copilot launcher / on-ramp banner open the intake
+    var openBtn = $('cpx-open'); if (openBtn) openBtn.addEventListener('click', openCpx);
+    // Dismissable Copilot on-ramp banner inside the flow. Dismiss → hidden for the session (the floating
+    // "Ask Copilot" launcher stays available); it also retires itself once the pipeline runs.
+    var onramp = $('cpx-onramp');
+    if (onramp) {
+      var orDismissed = false; try { orDismissed = sessionStorage.getItem('cpx.onrampDismissed') === '1'; } catch (e) {}
+      if (!orDismissed) onramp.hidden = false;
+      var orGo = $('cpx-onramp-go'); if (orGo) orGo.addEventListener('click', function () { openCpx(); onramp.hidden = true; if (window.__cpxSyncFab) window.__cpxSyncFab(); });
+      var orX = $('cpx-onramp-x'); if (orX) orX.addEventListener('click', function () { onramp.hidden = true; if (window.__cpxSyncFab) window.__cpxSyncFab(); try { sessionStorage.setItem('cpx.onrampDismissed', '1'); } catch (e) {} });
+    }
+    dlg.querySelectorAll('[data-cpx-close]').forEach(function (b) { b.addEventListener('click', function () { try { dlg.hide(); } catch (e) {} }); });
+    if (goBtn) goBtn.addEventListener('click', function () { if (stagedFile) run(stagedFile.name, stagedFile); });
+    var fileInp = $('cpx-file'); if (fileInp) fileInp.addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) stageFile(f); });
+    var drop = $('cpx-drop');
+    if (drop) {
+      drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (fileInp) fileInp.click(); } });
+      ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); drop.classList.add('is-drag'); }); });
+      ['dragleave', 'dragend'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); drop.classList.remove('is-drag'); }); });
+      drop.addEventListener('drop', function (e) { e.preventDefault(); e.stopPropagation(); drop.classList.remove('is-drag'); var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) stageFile(f); });
+    }
+  })();
+
+  // ---- Copilot assistant: persistent launcher (FAB) + conversational panel (Phase 2/3) ------
+  // Always-available way to bring in Copilot — whether you started manually or not. Chat drives the
+  // REAL listing fields with small deterministic transforms (no dependency on a live AI endpoint),
+  // every edit is undoable, and "Set up from a .zip" hands off to the Phase-1 intake pipeline. Also
+  // renders the first-run chooser ("fill with Copilot, or add it yourself") on a fresh draft.
+  (function wireCopilotAssistant () {
+    var fab = $('cpx-fab'), panel = $('cpx-panel'), chat = $('cpx-chat'), sugg = $('cpx-sugg'), form = $('cpx-form'), input = $('cpx-input');
+    if (!fab || !panel) return;
+    var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]; }); };
+    var greeted = false;
+    function sentences (t) { return (t || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean); }
+    function cap (s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+    function withPeriod (s) { s = (s || '').trim(); return !s || /[.!?]$/.test(s) ? s : s + '.'; }
+    function descVal () { try { return (fDesc.value || '').trim(); } catch (e) { return ''; } }
+    function setDesc (t) { try { fDesc.value = t; if (typeof syncDesc === 'function') syncDesc(); } catch (e) {} }
+    function appName () { try { return (fName.value || app.name || 'This app').trim() || 'This app'; } catch (e) { return 'This app'; } }
+
+    var FEATURES = ['Fast and lightweight', 'Clean design for light and dark themes', 'Works offline', 'Private by default', 'Regular, meaningful updates'];
+    function opDraftDesc () { setDesc(appName() + ' helps you get more done on Windows. It stays fast and out of your way, with a clean design that fits light and dark themes and everything a click away.'); return 'Drafted a first description — shape it however you like.'; }
+    function opTone (tone) { var ss = sentences(descVal()); var body = ss.map(function (s) { return cap(s.trim()); }).join(' '); var out = tone === 'friendly' ? ('Meet your new favorite tool. ' + body) : tone === 'professional' ? ('Built for everyday productivity, ' + (body.charAt(0).toLowerCase() + body.slice(1))) : withPeriod(ss[0] || body); setDesc(out); return 'Rewrote your description in a <b>' + tone + '</b> tone.'; }
+    function opShorter () { var ss = sentences(descVal()); setDesc(ss.slice(0, Math.max(1, Math.ceil(ss.length / 2))).map(withPeriod).join(' ')); return 'Tightened your description.'; }
+    function opLonger () { setDesc(descVal() + ' It works offline, respects your privacy, and keeps things simple so you can focus on what matters.'); return 'Expanded your description with a little more detail.'; }
+    function opImprove () { setDesc(sentences(descVal()).map(function (s) { return withPeriod(cap(s.trim())); }).join(' ')); return 'Polished your wording.'; }
+    function opFeatures () { var lines = FEATURES.slice(); var d0 = sentences(descVal())[0]; if (d0) lines.unshift(cap(d0).replace(/[.!?]+$/, '')); var t = lines.slice(0, 5).join('\n'); try { adv.listing.features = t; if (window.__setFeatures) window.__setFeatures(t); if (typeof ezRenderPreview === 'function') ezRenderPreview(); } catch (e) {} return 'Drafted five feature highlights.'; }
+    function opCategory () { try { fCategory.value = 'productivity'; if (typeof syncCategory === 'function') syncCategory(); } catch (e) {} return 'Set your category to <b>Productivity</b> based on your description — change it anytime.'; }
+    function opWhatsNew () { try { if (typeof genWhatsNew === 'function') { genWhatsNew((adv.listing.whatsNew || '').trim()).then(function (t) { adv.listing.whatsNew = t; if (typeof renderWhatsNew === 'function') renderWhatsNew(); }); } } catch (e) {} return 'Drafted your “What’s new in this version” notes.'; }
+
+    function gaps () {
+      var g = [];
+      try {
+        if (!state.pkg) g.push(['Add your app package', 0]);
+        if (!state.name) g.push(['Name your app', 1]);
+        if (!state.desc) g.push(['Write a description', 1]);
+        if (!state.category) g.push(['Pick a category', 1]);
+        if (!(state.shots && state.shots.length)) g.push(['Add screenshots', 1]);
+        if (!state.rating) g.push(['Set your age rating', 2]);
+      } catch (e) {}
+      return g;
+    }
+
+    function scrollDown () { try { chat.scrollTop = chat.scrollHeight; } catch (e) {} }
+    function addMe (text) { var d = document.createElement('div'); d.className = 'cpx-msg cpx-msg--me'; d.innerHTML = '<div class="cpx-msg__b">' + esc(text) + '</div>'; chat.appendChild(d); scrollDown(); }
+    function addAi (html, acts) {
+      var d = document.createElement('div'); d.className = 'cpx-msg cpx-msg--ai';
+      var b = '<div class="cpx-msg__b">' + html;
+      if (acts && acts.length) { b += '<div class="cpx-msg__acts">' + acts.map(function (a, i) { return '<button type="button" class="cpx-msg__act" data-act="' + i + '">' + esc(a.label) + '</button>'; }).join('') + '</div>'; }
+      b += '</div>'; d.innerHTML = b;
+      if (acts && acts.length) { d.querySelectorAll('.cpx-msg__act').forEach(function (btn) { btn.addEventListener('click', function () { var a = acts[+btn.getAttribute('data-act')]; if (a && a.run) a.run(); }); }); }
+      chat.appendChild(d); scrollDown(); return d;
+    }
+    function typing () { var d = document.createElement('div'); d.className = 'cpx-msg cpx-msg--ai'; d.innerHTML = '<div class="cpx-msg__b"><span class="cpx-typing"><i></i><i></i><i></i></span></div>'; chat.appendChild(d); scrollDown(); return d; }
+    function undoAct (snapshot) { return { label: 'Undo', run: function () { setDesc(snapshot.desc); addAi('Reverted that change.'); } }; }
+    function replyEdit (summaryHtml, snapshot, goStep) { var acts = []; if (snapshot) acts.push(undoAct(snapshot)); if (goStep != null) acts.push({ label: 'View', run: function () { try { showWzStep(goStep); } catch (e) {} } }); addAi(summaryHtml, acts); }
+
+    function respond (text) {
+      var t = (text || '').toLowerCase().trim(); if (!t) return;
+      var snap = { desc: descVal() };
+      if (/\b(zip|package|upload|set ?up|do it for me|fill (it|everything|in)|from my (files|assets)|autofill|generate everything)\b/.test(t)) { addAi('Let’s set it up from your files — drop your <b>.zip</b> or try the sample.'); if (window.__cpxOpenIntake) window.__cpxOpenIntake(); return; }
+      if (/\b(missing|left|gaps?|ready|before .*(submit|publish)|what .*(need|do i))\b/.test(t)) { var g = gaps(); if (!g.length) { addAi('You’re all set — nothing’s missing. When you’re ready, hit <b>Submit for review</b>.'); return; } addAi('A few things still need you:', g.map(function (x) { return { label: x[0], run: function () { try { showWzStep(x[1]); } catch (e) {} } }; })); return; }
+      if (/\b(what.?s ?new|release note|changelog|what changed)\b/.test(t)) { addAi(opWhatsNew()); return; }
+      var hasDesc = !!descVal();
+      if (/\b(feature|highlight|bullet)\b/.test(t)) { replyEdit(opFeatures(), null, 1); return; }
+      if (/\b(category|genre)\b/.test(t)) { replyEdit(opCategory(), null, 1); return; }
+      if (/\b(punch|playful|casual|friendly|fun|lively|warm|exciting)\b/.test(t)) { if (!hasDesc) addAi(opDraftDesc()); replyEdit(opTone('friendly'), snap, 1); return; }
+      if (/\b(professional|formal|serious|business|enterprise|polished tone)\b/.test(t)) { if (!hasDesc) addAi(opDraftDesc()); replyEdit(opTone('professional'), snap, 1); return; }
+      if (/\b(short|concise|trim|tighten|brief|cut|smaller)\b/.test(t)) { if (!hasDesc) { addAi('There’s no description yet — say “draft my description” and I’ll start one.'); return; } replyEdit(opShorter(), snap, 1); return; }
+      if (/\b(long|expand|more detail|elaborate|flesh|bigger)\b/.test(t)) { if (!hasDesc) addAi(opDraftDesc()); replyEdit(opLonger(), snap, 1); return; }
+      if (/\b(improve|polish|better|rewrite|clean up|proofread|grammar|fix)\b/.test(t)) { if (!hasDesc) { replyEdit(opDraftDesc(), snap, 1); return; } replyEdit(opImprove(), snap, 1); return; }
+      if (/\b(draft|write|create|generate|make).*(description|desc|copy|listing|about)\b/.test(t) || /^\s*description\s*$/.test(t)) { replyEdit(opDraftDesc(), snap, 1); return; }
+      if (/\bwhy\b/.test(t)) { addAi('I chose <b>Productivity</b> because your description centers on capturing notes and getting things done — that’s where customers look for tools like yours. Want a different category? Just tell me which.'); return; }
+      addAi('I can help with your listing. Try one of these:', [
+        { label: 'Set up from a .zip', run: function () { if (window.__cpxOpenIntake) window.__cpxOpenIntake(); } },
+        { label: 'Improve my description', run: function () { send('improve my description'); } },
+        { label: 'What’s missing?', run: function () { send('what’s missing?'); } }
+      ]);
+    }
+    function send (text) { addMe(text); var dots = typing(); setTimeout(function () { try { dots.remove(); } catch (e) {} respond(text); renderSugg(); }, 430); }
+
+    function renderSugg () {
+      if (!sugg) return;
+      var chips = ['Set up from a .zip'];
+      var inUpdate = false; try { inUpdate = !!inUpdateFlow; } catch (e) {}
+      if (!descVal()) chips.push('Draft my description'); else { chips.push('Make it punchier'); chips.push('Make it professional'); chips.push('Shorten it'); }
+      chips.push('Draft feature highlights'); chips.push('Suggest a category');
+      if (inUpdate) chips.push('Draft what’s new');
+      chips.push('What’s missing?');
+      sugg.innerHTML = chips.map(function (c) { return '<button type="button" class="cpx-sugg__chip">' + esc(c) + '</button>'; }).join('');
+      sugg.querySelectorAll('.cpx-sugg__chip').forEach(function (b) { b.addEventListener('click', function () { send(b.textContent); }); });
+    }
+    function greet () { if (greeted) return; greeted = true; addAi('Hi! I’m Copilot. I can draft your listing, improve your copy, suggest a category, or set everything up from a <b>.zip</b>. What would you like to do?'); }
+    function openPanel (skipGreet) { if (!skipGreet) greet(); renderSugg(); panel.hidden = false; fab.setAttribute('aria-expanded', 'true'); var _or = $('cpx-onramp'); if (_or) _or.hidden = true; setTimeout(function () { try { input.focus(); } catch (e) {} }, 60); }
+    function closePanel () { panel.hidden = true; fab.setAttribute('aria-expanded', 'false'); }
+
+    fab.addEventListener('click', function () { if (panel.hidden) openPanel(); else closePanel(); });
+    var px = $('cpx-panel-x'); if (px) px.addEventListener('click', closePanel);
+    if (form) form.addEventListener('submit', function (e) { e.preventDefault(); var v = (input.value || '').trim(); if (!v) return; input.value = ''; send(v); });
+
+    function syncFabVisibility () { try { var ed = $('editor'); var edHidden = ed ? ed.hidden : false; var onr = $('cpx-onramp'); var bannerUp = !!(onr && !onr.hidden); fab.hidden = edHidden || bannerUp; if (edHidden) { closePanel(); if (onr) onr.hidden = true; } } catch (e) {} }
+    window.__cpxSyncFab = syncFabVisibility;   // let the on-ramp banner reconcile the launcher when it shows/hides
+    // Expose the chat as a surface the setup pipeline can post progress into (progress + conversation in one place).
+    window.__cpxChat = { open: function (skipGreet) { openPanel(skipGreet); }, ai: addAi, me: addMe, scroll: scrollDown };
+    try { var ed0 = $('editor'); if (ed0) new MutationObserver(syncFabVisibility).observe(ed0, { attributes: true, attributeFilter: ['hidden'] }); } catch (e) {}
+    syncFabVisibility();
+  })();
+
   // Autofill the listing with AI (or a clean heuristic draft).
   // Listing autofill — shared by the "Autofill with AI" button and the automatic
   // draft-from-site after a PWA is packaged. `auto` skips the dialog button/close chrome.
@@ -10754,6 +11460,8 @@ function openPriceScheduleDialog() {
     // Exposed for the adaptive AI assist (draft/enhance the Features field).
     window.__getFeatures = function () { return L.features || ''; };
     window.__setFeatures = function (t) { L.features = t || ''; persistAdvanced(); renderFeatures(); if (typeof updateGate === 'function') updateGate(); };
+    // Exposed for Copilot: set the cover/hero image (an image data URL) from a dropped project .zip.
+    window.__setHero = function (url, type) { L.hero = url ? { type: type || 'image', url: url } : null; persistAdvanced(); renderHeroMedia(); if (typeof updateGate === 'function') updateGate(); };
 
     // ---- Hero art (image/video) — right-side masked banner, exactly as variant B ----
     const heroEl = $('ez-hero'), heroMedia = $('ez-pv-hero-media'), heroFile = $('adv-hero-file'), heroDel = $('ez-hero-del'), heroAdd = $('ez-hero-add');

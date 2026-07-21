@@ -4,16 +4,24 @@
    (loaded only by store-portal.html) and reuses the same tokens.
    ===================================================================== */
 
-/* Overview zero state — "Get started" numbered steps (flat & informational, not clickable tiles) */
-.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 28px; }
-.gstep { display: flex; gap: 12px; align-items: flex-start; }
-.gstep__n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
-  font-weight: 700; font-size: 14px; background: rgba(40,153,245,.16); color: var(--brand-soft);
-  border: 1px solid rgba(40,153,245,.4); }
+/* Overview zero state — "Get started": a light 3-step sequence (informational) linked by a connector. */
+.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 28px; margin: 6px 0 26px; }
+.gstep { position: relative; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.gstep__n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 14px; position: relative; z-index: 1; color: var(--brand-soft);
+  background: color-mix(in srgb, var(--brand) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent); }
+.gstep:not(:last-child)::after { content: ''; position: absolute; top: 14px; left: 38px; width: calc(100% - 18px); height: 2px;
+  border-radius: 2px; background: color-mix(in srgb, var(--brand) 28%, var(--border)); z-index: 0; }
 .gstep__t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.gstep__t strong { font-size: 15px; color: var(--text); }
-.gstep__t .muted { font-size: 13px; color: var(--text-2); }
+.gstep__t strong { font-size: 15px; color: var(--text); letter-spacing: -0.01em; }
+.gstep__t .muted { font-size: 13px; line-height: 1.5; color: var(--text-2); }
 .gstep__cta { margin-top: 8px; align-self: flex-start; }
+@media (max-width: 760px) {
+  .gsteps { grid-template-columns: 1fr; gap: 18px; }
+  .gstep { flex-direction: row; align-items: flex-start; gap: 14px; }
+  .gstep:not(:last-child)::after { display: none; }
+}
 
 /* Overview — collapsible "What can you publish?" (progressive disclosure keeps the page light) */
 .pkgdisc { margin: 20px 0 24px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); }
@@ -37,9 +45,39 @@
   padding: 1px 6px; border-radius: 999px; background: rgba(40,153,245,.16); color: var(--brand-soft); }
 .pkgrow__desc { margin: 2px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-3); }
 .pkgrow__desc b { font-weight: 600; color: var(--text-2); }
+.pkgrow__benefits { list-style: none; margin: 8px 0 2px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+.pkgrow__benefits li { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
+.pkgrow__benefits iconify-icon { flex: none; width: 14px; height: 14px; color: var(--brand-soft); }
+@media (max-width: 560px) { .pkgrow__benefits { grid-template-columns: 1fr; } }
 .pkgdisc__more { display: inline-flex; align-items: center; gap: 5px; margin: 10px 4px 2px; padding: 4px 0;
   font-size: 12.5px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
 .pkgdisc__more:hover { text-decoration: underline; }
+
+/* Overview — "Come prepared" Copilot on-ramp: what to bring in a .zip so Copilot can draft the whole submission. */
+.prep { display: flex; gap: 14px; align-items: flex-start; margin: 20px 0 22px; padding: 16px 18px;
+  border: 1px solid rgba(40,153,245,.4); border-radius: var(--r-lg);
+  background: linear-gradient(120deg, rgba(40,153,245,.12), transparent 70%); }
+.prep__logo { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+  background: #fff; box-shadow: 0 2px 8px -3px rgba(0,0,0,.35); }
+.prep__logo img { width: 26px; height: 26px; object-fit: contain; }
+.prep__body { flex: 1; min-width: 0; }
+.prep__title { font-size: 15px; font-weight: 600; color: var(--text); }
+.prep__sub { font-size: 13px; color: var(--text-2); margin: 3px 0 0; line-height: 1.45; }
+.prep__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.prep__chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); font-size: 12px; color: var(--text-2); }
+.prep__chip iconify-icon { color: var(--brand-soft); }
+.prep__note { font-size: 12px; color: var(--text-3); margin: 11px 0 0; line-height: 1.45; }
+.prep__note b { color: var(--text-2); font-weight: 600; }
+@media (max-width: 760px) { .prep { flex-direction: column; } }
+/* Slim, subtle variant — used below the Get started steps and atop the Apps list (returning devs). */
+.prep--slim { align-items: center; gap: 12px; margin: 16px 0; padding: 12px 15px;
+  border-color: rgba(40,153,245,.28); background: linear-gradient(120deg, rgba(40,153,245,.08), transparent 72%); }
+.prep--slim .prep__logo { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 1px 6px -3px rgba(0,0,0,.35); }
+.prep--slim .prep__logo img { width: 21px; height: 21px; }
+.prep--slim .prep__title { font-size: 13.5px; }
+.prep--slim .prep__sub { font-size: 12.5px; margin-top: 2px; }
+@media (max-width: 760px) { .prep--slim { align-items: flex-start; } }
 
 /* Apps table row actions + delete confirmation */
 .rowactions { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
