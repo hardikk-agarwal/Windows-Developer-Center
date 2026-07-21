@@ -1371,7 +1371,7 @@
         '<h3>Upload your symbols before the first crash</h3>' +
         '<p>Symbols turn raw crash data into readable stack traces with function names and line numbers \u2014 but only for crashes <strong>after</strong> you upload them. Add <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your first crash is actionable.</p>' +
         '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
-        '<fluent-link href="#" data-noop="1">What should I upload? \u2192</fluent-link></div></div>';
+        '<fluent-link href="https://learn.microsoft.com/windows/win32/debug/symbol-files" target="_blank" rel="noopener noreferrer">What should I upload? \u2192</fluent-link></div></div>';
     return '<div class="ca-zero"><div class="ca-zero__hero"><img class="ca-zero__art" data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
       '<h2>No crashes reported yet for ' + esc(app.name) + '</h2>' +
       '<p class="muted">Crash and hang reports appear here once your app reaches about <strong>100 devices</strong> \u2014 usually within <strong>4 hours</strong>.</p></div>' +
@@ -1792,7 +1792,7 @@
       '<div class="symguide"><strong>What to upload</strong><ul><li>Your full build output as a <b>.zip</b> \u2014 the app\u2019s <span class="mono">.exe</span>/<span class="mono">.dll</span> files <b>and</b> their matching <span class="mono">.pdb</span> symbols.</li>' +
       '<li>We auto-detect the app and version from the binaries, so you don\u2019t have to sort them.</li>' +
       '<li>A bare <span class="mono">.pdb</span> can\u2019t be matched \u2014 include the binaries it was built with.</li></ul>' +
-      '<fluent-link href="#" data-noop="1">Learn more about symbol packaging \u2192</fluent-link></div>' +
+      '<fluent-link href="#" data-noop="1">Learn more \u2192</fluent-link></div>' +
       '<div class="symfoot"><fluent-button appearance="subtle" data-sym-close="1">Cancel</fluent-button><fluent-button appearance="primary" data-sym-start="1"' + (symUp.file ? "" : " disabled") + '>Upload &amp; validate</fluent-button></div>';
     else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries. This usually takes a few minutes \u2014 you can close this and come back; we\u2019ll keep working \u2014 and we\u2019ll email you the moment it\u2019s done.</p></div>';
     else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols accepted for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed. Your <strong>future</strong> crashes will start showing resolved stack traces within the next <strong>24 hours</strong>. Crashes that already happened stay unresolved. We\u2019ll email you when processing finishes \u2014 whether it resolves or needs your attention.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
