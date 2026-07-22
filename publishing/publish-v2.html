@@ -2255,26 +2255,19 @@
   .ez-pkg-url__row fluent-text-input::part(root) { width: 100%; min-width: 100%; max-width: none; box-sizing: border-box; }
   .ez-pkg-url__row fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
   .ez-pkg-url__row fluent-button { flex: 0 0 auto; white-space: nowrap; }
-  /* Balanced two-method layout: "Upload your package" and "Publish from a link" as equal side-by-side
-     cards, so a PWA/website (URL) developer sees an equal option, not a small field below the upload. */
+  /* Balanced two-method layout: "Upload your package" and "Link to your app" as equal cards stacked
+     top to bottom, so a PWA/website (URL) developer sees an equal option, not a small field below. */
   .ez-pkg-drop[hidden], .ez-pkg-url[hidden], .ez-pkg-or[hidden] { display: none; }
-  .ez-pkg-add--split { display: flex; flex-direction: row; align-items: stretch; gap: var(--sp-16); }
-  .ez-pkg-add--split .ez-pkg-method { flex: 1 1 0; min-width: 0; box-sizing: border-box; align-items: flex-start; text-align: left; gap: var(--sp-6); padding: var(--sp-20); min-height: 176px; background: var(--layer); }
+  .ez-pkg-add--split { display: flex; flex-direction: column; align-items: stretch; gap: var(--sp-12); }
+  .ez-pkg-add--split .ez-pkg-method { box-sizing: border-box; align-items: flex-start; text-align: left; gap: var(--sp-6); padding: var(--sp-20); background: var(--subtle); }
   .ez-pkg-add--split .ez-pkg-url { border: 1px solid var(--stroke-2); border-radius: var(--r-12); }
   /* Upload keeps its dashed-drop hover/drag feedback, but on the same base bg as the link card. */
-  .ez-pkg-add--split .ez-pkg-drop:hover, .ez-pkg-add--split .ez-pkg-drop.is-drag { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
-  .ez-pkg-add--split .ez-pkg-url__row { width: 100%; margin-top: auto; }
+  .ez-pkg-add--split .ez-pkg-drop:hover, .ez-pkg-add--split .ez-pkg-drop.is-drag { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--subtle)); }
+  .ez-pkg-add--split .ez-pkg-url__row { width: 100%; }
   .ez-pkg-method__ic { color: var(--brand); }
   .ez-pkg-method__title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   .ez-pkg-method__desc { font-size: 12.5px; color: var(--fg-3); line-height: 1.45; }
-  .ez-pkg-add--split .ez-pkg-or { flex-direction: column; margin: 0; flex: 0 0 auto; }
-  .ez-pkg-add--split .ez-pkg-or::before, .ez-pkg-add--split .ez-pkg-or::after { width: 1px; height: auto; flex: 1 1 auto; }
-  @media (max-width: 640px) {
-    .ez-pkg-add--split { flex-direction: column; }
-    .ez-pkg-add--split .ez-pkg-method { min-height: 0; }
-    .ez-pkg-add--split .ez-pkg-or { flex-direction: row; }
-    .ez-pkg-add--split .ez-pkg-or::before, .ez-pkg-add--split .ez-pkg-or::after { width: auto; height: 1px; }
-  }
+  .ez-pkg-add--split .ez-pkg-or { margin: 0; }
   .ez-field { margin-bottom: var(--sp-16); }
   .ez-field:last-child { margin-bottom: 0; }
   .ez-field__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin-bottom: var(--sp-6); }
