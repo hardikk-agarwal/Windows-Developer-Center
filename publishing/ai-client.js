@@ -143,9 +143,11 @@ async function aiGenerateListing({ appName, pitch, features, audience, tone, pac
     },
   };
 
-  // Listing copy benefits from reasoning quality — keep effort at default 'medium'.
-  // Token budget needs headroom for reasoning + structured JSON payload.
-  const text = await callResponses({ system, user, schema, maxOutputTokens: 6000 });
+  // Speed matters here — the developer is watching a "Writing…" spinner. GPT-5-mini is a reasoning
+  // model, so reasoning effort is the biggest latency lever; listing copy doesn't need deep planning,
+  // so 'low' roughly halves the wait with no meaningful quality loss. The token cap only bounds the
+  // output (it doesn't add latency), but keep it comfortably above a full listing so JSON never truncates.
+  const text = await callResponses({ system, user, schema, maxOutputTokens: 3000, reasoningEffort: 'low' });
   return JSON.parse(text);
 }
 
@@ -293,6 +295,70 @@ async function aiTransformText({ system, user, maxTokens = 800 }) {
 }
 
 // ---------------------------------------------------------------------------
+// Conversational assistant for the Copilot chat panel.
+// Answers ANY free-form question about publishing to the Microsoft Store, and —
+// when the developer clearly wants an edit — classifies the request into one of
+// the listing ACTIONS the panel can perform on the real form. Structured output:
+//   { mode: 'answer'|'action', action: <enum|'none'>, reply: string }
+// The caller runs the action (a deterministic, undoable form edit) and/or shows
+// `reply`. Grounded with a compact snapshot of the current submission + recent
+// turns so follow-ups make sense.
+// ---------------------------------------------------------------------------
+const CHAT_ACTIONS = [
+  'setup_zip', 'draft_description', 'improve', 'shorten', 'lengthen',
+  'tone_friendly', 'tone_professional', 'features', 'category',
+  'whats_new', 'whats_missing', 'none',
+];
+
+async function aiListingChat({ message, history, context }) {
+  const system = [
+    'You are Copilot, built into the Microsoft Store app-publishing flow in the Windows Developer Portal (the modern home for what developers used to call Partner Center).',
+    'You help developers publish Windows apps: writing and improving the Store listing, and understanding submission, packaging (MSIX / MSI / EXE / PWA), age ratings (IARC), pricing, markets, certification, and Store policies.',
+    'Answer ANY question the developer asks — clearly, accurately, and concisely (usually 2-5 sentences). If a question falls outside Microsoft Store publishing, still answer briefly and helpfully. Plain text only: no Markdown, no headings, no HTML tags.',
+    '',
+    "You can also trigger ACTIONS that edit the developer's live listing. Pick an action ONLY when the user clearly wants that change; otherwise set mode=\"answer\" and action=\"none\".",
+    'Available actions:',
+    '- setup_zip — open the "set up from a .zip" flow that auto-drafts everything from their project files.',
+    '- draft_description — write a first app description.',
+    '- improve — polish / clean up the existing description.',
+    '- shorten — make the description shorter.',
+    '- lengthen — expand the description with more detail.',
+    '- tone_friendly — rewrite the description in a friendly, punchy tone.',
+    '- tone_professional — rewrite the description in a professional tone.',
+    '- features — draft feature-highlight bullets.',
+    '- category — suggest / set the Store category.',
+    '- whats_new — draft the "what\'s new in this version" notes.',
+    '- whats_missing — list what still needs finishing before submitting.',
+    '',
+    'When mode="action": put a short, natural confirmation in reply (e.g. "Sure — polishing your description now.") and DO NOT write the listing content yourself; the app performs the edit. When mode="answer": put the full answer in reply.',
+  ].join('\n');
+
+  const ctx = context ? ('Current submission:\n' + context + '\n\n') : '';
+  const hist = (history && history.length)
+    ? ('Recent conversation:\n' + history.map(h => (h.role === 'me' ? 'Developer' : 'Copilot') + ': ' + h.text).join('\n') + '\n\n')
+    : '';
+  const user = ctx + hist + 'Developer says: ' + message;
+
+  const schema = {
+    name: 'copilot_chat',
+    schema: {
+      type: 'object',
+      properties: {
+        mode:   { type: 'string', enum: ['answer', 'action'] },
+        action: { type: 'string', enum: CHAT_ACTIONS },
+        reply:  { type: 'string' },
+      },
+      required: ['mode', 'action', 'reply'],
+      additionalProperties: false,
+    },
+  };
+  // Short answers + a tiny classification — low reasoning effort keeps the chat snappy;
+  // generous token cap so the reasoning model always has room for the visible reply.
+  const text = await callResponses({ system, user, schema, maxOutputTokens: 3000, reasoningEffort: 'low' });
+  return JSON.parse(text);
+}
+
+// ---------------------------------------------------------------------------
 // Expose on window so the prototype's existing scripts can call into it.
 // ---------------------------------------------------------------------------
 window.AI = {
@@ -305,6 +371,7 @@ window.AI = {
   generateImage:         aiGenerateImage,
   generatePrivacyPolicy: aiGeneratePrivacyPolicy,
   transformText:         aiTransformText,
+  listingChat:           aiListingChat,
 };
 
 // When there's no embedded browser key, ask the server whether it can proxy AI

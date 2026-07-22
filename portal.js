@@ -282,8 +282,7 @@
             gstep(2, "Add packages &amp; listing", "Upload your build, write your Store listing with screenshots, then set your age rating and price.") +
             gstep(3, "Submit &amp; go live", "Pass certification and reach customers across Windows.") +
           '</div>' +
-          storeOnrampsHTML() +
-          copilotPrepHTML();
+          storeOnrampsHTML();
         return;
       }
       var sn = state.apps.length, sInStore = state.apps.filter(function (a) { return a.store; }).length;

@@ -2709,12 +2709,28 @@
      glow (no ring / forced border-radius) so it's safe on the pill-shaped buttons too. */
   @keyframes wzRevealHi { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 26px color-mix(in srgb, var(--brand) 50%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
   .wz-reveal { scroll-margin-top: 96px; animation: wzRevealHi 2s var(--ease-out); }
+  /* Entrance for each field revealed by "Make your listing stand out": a brief staggered fade + rise
+     (per-item delays set inline in JS) so it reads as new options animating in, not a static jump.
+     Pairs with the .wz-reveal glow above. `both` fill keeps later items hidden until their turn. */
+  @keyframes wzAdvIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  /* Motion-reduced variant: fade only, no positional slide (safe under prefers-reduced-motion). */
+  @keyframes wzAdvInRM { from { opacity: 0; } to { opacity: 1; } }
+  .wz-adv-in { animation: wzAdvIn 380ms var(--ease-out) both; will-change: opacity, transform; }
   /* First-run nudge: a one-time attention pulse on the disclosure header (accent-aware). */
   .wz-enhance--intro { animation: wzEnhanceIntro 2.1s var(--ease-out) 1; }
   @keyframes wzEnhanceIntro { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 34%, transparent); border-color: color-mix(in srgb, var(--brand) 55%, var(--stroke-2)); } 100% { box-shadow: 0 0 0 0 transparent; } }
   #wz-more-bar[data-step="step-reach"] .wz-enhance--intro { animation-name: wzEnhanceIntroReach; }
   @keyframes wzEnhanceIntroReach { 0% { box-shadow: 0 0 0 0 transparent; } 16% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple, var(--brand)) 34%, transparent); border-color: color-mix(in srgb, var(--accent-purple, var(--brand)) 55%, var(--stroke-2)); } 100% { box-shadow: 0 0 0 0 transparent; } }
-  @media (prefers-reduced-motion: reduce) { .wz-enhance__chev { transition: none; } .wz-reveal, .wz-enhance--intro { animation: none; } }
+  /* Under reduced motion we still surface the reveal, just with NO positional movement: fields
+     cross-fade in (opacity only) and the scroll-in glow stays (a color pulse, not motion). The
+     !important durations beat the global `*{animation-duration:.001ms!important}` reset in styles.css
+     that would otherwise make them instant/invisible. Only the header's attention pulse is dropped. */
+  @media (prefers-reduced-motion: reduce) {
+    .wz-enhance__chev { transition: none; }
+    .wz-enhance--intro { animation: none; }
+    .wz-reveal { animation-duration: 1.8s !important; }
+    .wz-adv-in { animation-name: wzAdvInRM; animation-duration: 360ms !important; }
+  }
 
   /* ---- Step count badge + hover "what's left" checklist (v2 vertical rail) ---- */
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge { margin-left: auto; flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-full); background: color-mix(in srgb, var(--fg-1) 15%, transparent); color: var(--fg-1); font-size: 11px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -5148,7 +5164,7 @@
   function refreshAppHeadIcon() {
     const icon = $('app-icon');
     if (!icon) return;
-    const iconUrl = userIconDataUrl || pkgIconDataUrl || baseIcon;
+    const iconUrl = userIconDataUrl || pkgIconDataUrl || themedAppLogo(baseIcon);
     if (iconUrl) {
       icon.style.backgroundImage = 'url(' + iconUrl + ')';
       icon.style.backgroundSize = 'cover';
@@ -6059,6 +6075,27 @@
     const st = $('wz-more-state'); if (st) st.textContent = on ? 'Hide' : 'Show';
   }
   let wzRevealCleanup = null;
+  // Staggered entrance for the fields that "Make your listing stand out" reveals: fade + rise each
+  // outermost .adv-only block in DOM order (capped stagger) so expanding reads as new options
+  // animating in rather than a silent jump. Delays are inline; the class self-removes after it plays.
+  function wzAnimateReveal(step) {
+    if (!step) return;
+    // Runs even under reduced motion — the .wz-adv-in CSS drops to an opacity-only fade there (no slide).
+    let els = [];
+    try { els = Array.prototype.slice.call(step.querySelectorAll('.adv-only')); } catch (e) { return; }
+    els = els.filter(el =>
+      el && el.getClientRects && el.getClientRects().length &&           // visible right now
+      !(el.parentElement && el.parentElement.closest('.adv-only'))       // outermost only (avoid double-anim on nested)
+    );
+    if (!els.length) return;
+    els.forEach((el, i) => {
+      const d = Math.min(i, 8) * 60;
+      el.classList.remove('wz-adv-in'); void el.offsetWidth;             // restart cleanly if re-expanded
+      el.style.animationDelay = d + 'ms';
+      el.classList.add('wz-adv-in');
+      setTimeout(() => { el.classList.remove('wz-adv-in'); el.style.animationDelay = ''; }, d + 460);
+    });
+  }
   // Highlight each optional field the FIRST time it scrolls into view (soft brand glow, then fade) —
   // so every extra revealed by "Make your listing stand out" is easy to spot as you reach it,
   // including the ones below the fold on reveal. Watches the editor's scroll container (the fields
@@ -6068,7 +6105,7 @@
     if (wzRevealCleanup) { try { wzRevealCleanup(); } catch (e) {} wzRevealCleanup = null; }
     if (cur !== 'step-listing') return;
     const step = $(cur); if (!step) return;
-    if (typeof reduceMotion === 'function' && reduceMotion()) return;   // respect reduced motion
+    // Glow runs even under reduced motion — it's a color/shadow pulse (no positional movement).
     let els = [];
     try { els = Array.prototype.slice.call(step.querySelectorAll('.ez-hero-empty.adv-only, #ez-trailer-add, #ez-features-section, #ez-info-section')); } catch (e) {}
     els = els.filter(el => el);
@@ -6106,7 +6143,7 @@
         if (typeof renderShots === 'function') renderShots();
       }
       if (typeof ezRenderPreview === 'function') ezRenderPreview();
-      if (on) wzRevealFeedback(cur);
+      if (on) { wzAnimateReveal(step); wzRevealFeedback(cur); }
       else if (wzRevealCleanup) { try { wzRevealCleanup(); } catch (e) {} wzRevealCleanup = null; }
     });
   })();
@@ -6715,6 +6752,32 @@
   // logo (pkgIconDataUrl) or a manual upload (userIconDataUrl) overrides it for header + listing.
   const baseIcon = (app && (app.baseLogo || app.icon)) || null;
   let appBrandLogo = null;     // internal/placeholder brand logo for recognized demo apps (e.g. Photoshop)
+
+  // The stored app tile (portal.js tileDataUrl) is a DARK gradient (palette color → navy #0b2a4a) baked
+  // for dark mode. When that generated placeholder is the only logo (no real upload / package / brand
+  // logo), recolor it to a light tile in light mode so the header + live-listing logo don't look like a
+  // dark block on a light page. Real logos and dark mode pass through untouched.
+  function _svgFromUrl(u) {
+    try { if (typeof u !== 'string' || !/^data:image\/svg\+xml/.test(u)) return ''; var p = u.split(',')[1] || ''; return /;base64/.test(u.split(',')[0]) ? atob(p) : decodeURIComponent(p); } catch (e) { return ''; }
+  }
+  function isGeneratedTile(u) { var s = _svgFromUrl(u); return !!s && /#0b2a4a/i.test(s) && /<text/i.test(s); }
+  function _mixWhite(hex, amt) {
+    var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex); if (!m) return hex;
+    var r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt);
+    return '#' + [r, g, b].map(function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+  }
+  function themedAppLogo(url) {
+    if (!isGeneratedTile(url)) return url;                                  // real logo → leave as-is
+    if ((document.documentElement.getAttribute('data-theme') || 'dark') !== 'light') return url;  // dark tile fits dark mode
+    var svg = _svgFromUrl(url);
+    var cm = svg.match(/stop-color="(#[0-9a-fA-F]{3,6})"/);                  // first stop = app's palette colour
+    var c = cm ? cm[1] : '#0F6CBD';
+    var tm = svg.match(/>([^<]{1,3})<\/text>/);                             // the initials
+    var t = tm ? tm[1] : 'A';
+    var out = '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + _mixWhite(c, 0.85) + '"/><stop offset="1" stop-color="' + _mixWhite(c, 0.94) + '"/></linearGradient></defs><rect width="96" height="96" fill="url(#g)"/><text x="48" y="62" font-family="Segoe UI, system-ui, sans-serif" font-size="40" font-weight="700" fill="' + c + '" text-anchor="middle">' + t + '</text></svg>';
+    try { return 'data:image/svg+xml;base64,' + btoa(out); } catch (e) { return url; }
+  }
 
   function detectType(name) {
     if (/\.msixbundle$/i.test(name)) return 'MSIX bundle';
@@ -8925,6 +8988,9 @@
     if (!fab || !panel) return;
     var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]; }); };
     var greeted = false;
+    // Short rolling transcript so the AI has conversational context for follow-ups.
+    var history = [];
+    function pushHist (role, text) { var s = String(text == null ? '' : text).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); if (!s) return; history.push({ role: role, text: s.slice(0, 600) }); if (history.length > 12) history.splice(0, history.length - 12); }
     function sentences (t) { return (t || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean); }
     function cap (s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
     function withPeriod (s) { s = (s || '').trim(); return !s || /[.!?]$/.test(s) ? s : s + '.'; }
@@ -8955,9 +9021,26 @@
       return g;
     }
 
+    // Compact snapshot of the submission so AI answers are grounded in this app's state.
+    function buildContext () {
+      var bits = [];
+      try {
+        bits.push('App name: ' + appName());
+        var pkgs = (typeof packages !== 'undefined' && packages) ? packages : [];
+        if (pkgs.length) bits.push('Package(s): ' + pkgs.map(function (p) { return p.win32 ? (p.kind || 'installer') : (p.kind || 'msix'); }).join(', '));
+        else bits.push('Package: none added yet');
+        var d = descVal(); bits.push('Description: ' + (d ? ('"' + d.slice(0, 180) + (d.length > 180 ? '…' : '') + '"') : 'empty'));
+        var cat = ''; try { cat = fCategory.value || ''; } catch (e) {} bits.push('Category: ' + (cat || 'not set'));
+        var g = gaps(); bits.push('Still to do: ' + (g.length ? g.map(function (x) { return x[0]; }).join('; ') : 'nothing — ready to submit'));
+        var cur = ''; try { var el = document.querySelector('.wz-stepind.is-current'); cur = el ? el.textContent.trim() : ''; } catch (e) {} if (cur) bits.push('Current step: ' + cur);
+      } catch (e) {}
+      return bits.join('\n');
+    }
+
     function scrollDown () { try { chat.scrollTop = chat.scrollHeight; } catch (e) {} }
-    function addMe (text) { var d = document.createElement('div'); d.className = 'cpx-msg cpx-msg--me'; d.innerHTML = '<div class="cpx-msg__b">' + esc(text) + '</div>'; chat.appendChild(d); scrollDown(); }
+    function addMe (text) { pushHist('me', text); var d = document.createElement('div'); d.className = 'cpx-msg cpx-msg--me'; d.innerHTML = '<div class="cpx-msg__b">' + esc(text) + '</div>'; chat.appendChild(d); scrollDown(); }
     function addAi (html, acts) {
+      pushHist('ai', html);
       var d = document.createElement('div'); d.className = 'cpx-msg cpx-msg--ai';
       var b = '<div class="cpx-msg__b">' + html;
       if (acts && acts.length) { b += '<div class="cpx-msg__acts">' + acts.map(function (a, i) { return '<button type="button" class="cpx-msg__act" data-act="' + i + '">' + esc(a.label) + '</button>'; }).join('') + '</div>'; }
@@ -8969,7 +9052,7 @@
     function undoAct (snapshot) { return { label: 'Undo', run: function () { setDesc(snapshot.desc); addAi('Reverted that change.'); } }; }
     function replyEdit (summaryHtml, snapshot, goStep) { var acts = []; if (snapshot) acts.push(undoAct(snapshot)); if (goStep != null) acts.push({ label: 'View', run: function () { try { showWzStep(goStep); } catch (e) {} } }); addAi(summaryHtml, acts); }
 
-    function respond (text) {
+    function respondLocal (text) {
       var t = (text || '').toLowerCase().trim(); if (!t) return;
       var snap = { desc: descVal() };
       if (/\b(zip|package|upload|set ?up|do it for me|fill (it|everything|in)|from my (files|assets)|autofill|generate everything)\b/.test(t)) { addAi('Let’s set it up from your files — drop your <b>.zip</b> or try the sample.'); if (window.__cpxOpenIntake) window.__cpxOpenIntake(); return; }
@@ -8991,7 +9074,53 @@
         { label: 'What’s missing?', run: function () { send('what’s missing?'); } }
       ]);
     }
-    function send (text) { addMe(text); var dots = typing(); setTimeout(function () { try { dots.remove(); } catch (e) {} respond(text); renderSugg(); }, 430); }
+    // Exact suggestion-chip labels → actions, so a tapped chip runs instantly and deterministically
+    // (no AI round-trip). Anything typed free-form goes to the AI instead.
+    var CHIP_ACTIONS = {
+      'set up from a .zip': 'setup_zip', 'draft my description': 'draft_description',
+      'improve my description': 'improve', 'make it punchier': 'tone_friendly',
+      'make it professional': 'tone_professional', 'shorten it': 'shorten',
+      'draft feature highlights': 'features', 'suggest a category': 'category',
+      'draft whats new': 'whats_new', 'whats missing': 'whats_missing', 'whats missing?': 'whats_missing'
+    };
+    // Run one of the listing actions on the real form (same outcomes the chips have always had).
+    function runChatAction (action) {
+      var snap = { desc: descVal() }, hasDesc = !!descVal();
+      switch (action) {
+        case 'setup_zip': addAi('Let’s set it up from your files — drop your <b>.zip</b> to begin.'); if (window.__cpxOpenIntake) window.__cpxOpenIntake(); return;
+        case 'whats_missing': { var g = gaps(); if (!g.length) { addAi('You’re all set — nothing’s missing. When you’re ready, hit <b>Submit for review</b>.'); return; } addAi('A few things still need you:', g.map(function (x) { return { label: x[0], run: function () { try { showWzStep(x[1]); } catch (e) {} } }; })); return; }
+        case 'whats_new': addAi(opWhatsNew()); return;
+        case 'features': replyEdit(opFeatures(), null, 1); return;
+        case 'category': replyEdit(opCategory(), null, 1); return;
+        case 'tone_friendly': if (!hasDesc) addAi(opDraftDesc()); replyEdit(opTone('friendly'), snap, 1); return;
+        case 'tone_professional': if (!hasDesc) addAi(opDraftDesc()); replyEdit(opTone('professional'), snap, 1); return;
+        case 'shorten': if (!hasDesc) { addAi('There’s no description yet — say “draft my description” and I’ll start one.'); return; } replyEdit(opShorter(), snap, 1); return;
+        case 'lengthen': if (!hasDesc) addAi(opDraftDesc()); replyEdit(opLonger(), snap, 1); return;
+        case 'improve': if (!hasDesc) { replyEdit(opDraftDesc(), snap, 1); return; } replyEdit(opImprove(), snap, 1); return;
+        case 'draft_description': replyEdit(opDraftDesc(), snap, 1); return;
+        default: return;
+      }
+    }
+    // AI-first responder: real Copilot answers for ANY question; a clear edit request becomes an action.
+    // Falls back to the local keyword heuristics when AI is unavailable or errors out.
+    async function respondAI (text) {
+      var dots = typing();
+      var clearDots = function () { try { dots.remove(); } catch (e) {} };
+      if (!(window.AI && window.AI.enabled && typeof window.AI.listingChat === 'function')) { clearDots(); respondLocal(text); return; }
+      var out = null;
+      try { out = await window.AI.listingChat({ message: text, history: history.slice(-9, -1), context: buildContext() }); } catch (e) { out = null; }
+      clearDots();
+      if (!out || !out.reply) { respondLocal(text); return; }
+      if (out.mode === 'action' && out.action && out.action !== 'none') { runChatAction(out.action); return; }
+      addAi(esc(out.reply).replace(/\n{2,}/g, '<br><br>').replace(/\n/g, '<br>'));
+    }
+    function send (text) {
+      var t = (text || '').trim(); if (!t) return;
+      addMe(t);
+      var chip = CHIP_ACTIONS[t.toLowerCase().replace(/[’']/g, '')];
+      if (chip) { runChatAction(chip); renderSugg(); return; }
+      respondAI(t).then(function () { renderSugg(); });
+    }
 
     function renderSugg () {
       if (!sugg) return;
@@ -9004,7 +9133,7 @@
       sugg.innerHTML = chips.map(function (c) { return '<button type="button" class="cpx-sugg__chip">' + esc(c) + '</button>'; }).join('');
       sugg.querySelectorAll('.cpx-sugg__chip').forEach(function (b) { b.addEventListener('click', function () { send(b.textContent); }); });
     }
-    function greet () { if (greeted) return; greeted = true; addAi('Hi! I’m Copilot. I can draft your listing, improve your copy, suggest a category, or set everything up from a <b>.zip</b>. What would you like to do?'); }
+    function greet () { if (greeted) return; greeted = true; addAi('Hi! I’m Copilot. Ask me anything about publishing to the Microsoft Store — or I can draft your listing, improve your copy, suggest a category, or set everything up from a <b>.zip</b>.'); }
     function openPanel (skipGreet) { if (!skipGreet) greet(); renderSugg(); panel.hidden = false; fab.setAttribute('aria-expanded', 'true'); var _or = $('cpx-onramp'); if (_or) _or.hidden = true; setTimeout(function () { try { input.focus(); } catch (e) {} }, 60); }
     function closePanel () { panel.hidden = true; fab.setAttribute('aria-expanded', 'false'); }
 
@@ -9539,7 +9668,7 @@
     setLiveField('ez-pv-name', nameVal, 'Click to name your app', true);
 
     const iconEl = $('ez-pv-icon');
-    const iconUrl = userIconDataUrl || pkgIconDataUrl || baseIcon;
+    const iconUrl = userIconDataUrl || pkgIconDataUrl || themedAppLogo(baseIcon);
     if (iconEl) {
       if (iconUrl) {
         iconEl.style.background = '';
@@ -11990,12 +12119,19 @@ function openPriceScheduleDialog() {
           if (langDupTgl && langDupTgl.checked) {
             const def = L.locales[DEFAULT_LOCALE] || { description: (fDesc.value || ''), shortDesc: L.shortDesc || '', features: L.features || '' };
             const src = { description: def.description || '', shortDesc: def.shortDesc || '', features: def.features || '' };
+            // Seed the default content into the new locale synchronously, so it's copied even if the
+            // developer saves before the (async) translation finishes; translateInto then refines it
+            // in place. Without this, a quick Save committed an empty bucket (content didn't copy).
+            bucket.description = src.description;
+            bucket.shortDesc = src.shortDesc;
+            bucket.features = src.features;
             langTranslating.add(code);
             renderLangList(langSearch ? langSearch.value : '');
             updateTranslatingBanner();
             await translateInto(bucket, src, code);
             langTranslating.delete(code);
             if (langDraft) renderLangList(langSearch ? langSearch.value : '');
+            else if ((L.activeLocale || DEFAULT_LOCALE) === code) { try { loadActiveLocale(); ezRenderPreview(); } catch (e) {} }
             updateTranslatingBanner();
           }
         }
