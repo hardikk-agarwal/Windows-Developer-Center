@@ -2255,6 +2255,26 @@
   .ez-pkg-url__row fluent-text-input::part(root) { width: 100%; min-width: 100%; max-width: none; box-sizing: border-box; }
   .ez-pkg-url__row fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
   .ez-pkg-url__row fluent-button { flex: 0 0 auto; white-space: nowrap; }
+  /* Balanced two-method layout: "Upload your package" and "Publish from a link" as equal side-by-side
+     cards, so a PWA/website (URL) developer sees an equal option, not a small field below the upload. */
+  .ez-pkg-drop[hidden], .ez-pkg-url[hidden], .ez-pkg-or[hidden] { display: none; }
+  .ez-pkg-add--split { display: flex; flex-direction: row; align-items: stretch; gap: var(--sp-16); }
+  .ez-pkg-add--split .ez-pkg-method { flex: 1 1 0; min-width: 0; box-sizing: border-box; align-items: flex-start; text-align: left; gap: var(--sp-6); padding: var(--sp-20); min-height: 176px; background: var(--layer); }
+  .ez-pkg-add--split .ez-pkg-url { border: 1px solid var(--stroke-2); border-radius: var(--r-12); }
+  /* Upload keeps its dashed-drop hover/drag feedback, but on the same base bg as the link card. */
+  .ez-pkg-add--split .ez-pkg-drop:hover, .ez-pkg-add--split .ez-pkg-drop.is-drag { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
+  .ez-pkg-add--split .ez-pkg-url__row { width: 100%; margin-top: auto; }
+  .ez-pkg-method__ic { color: var(--brand); }
+  .ez-pkg-method__title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .ez-pkg-method__desc { font-size: 12.5px; color: var(--fg-3); line-height: 1.45; }
+  .ez-pkg-add--split .ez-pkg-or { flex-direction: column; margin: 0; flex: 0 0 auto; }
+  .ez-pkg-add--split .ez-pkg-or::before, .ez-pkg-add--split .ez-pkg-or::after { width: 1px; height: auto; flex: 1 1 auto; }
+  @media (max-width: 640px) {
+    .ez-pkg-add--split { flex-direction: column; }
+    .ez-pkg-add--split .ez-pkg-method { min-height: 0; }
+    .ez-pkg-add--split .ez-pkg-or { flex-direction: row; }
+    .ez-pkg-add--split .ez-pkg-or::before, .ez-pkg-add--split .ez-pkg-or::after { width: auto; height: 1px; }
+  }
   .ez-field { margin-bottom: var(--sp-16); }
   .ez-field:last-child { margin-bottom: 0; }
   .ez-field__label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin-bottom: var(--sp-6); }
@@ -2963,18 +2983,21 @@
         <div class="ez-package-list" id="package-list"></div>
         <div id="pkg-type-msg" class="ez-type-msg" hidden></div>
         <div id="pkg-input">
-          <div class="ez-pkg-add" id="pkg-add-surface">
-            <label class="ez-pkg-drop" id="upload-zone" for="pkg-file" tabindex="0" role="button" aria-label="Upload your app package">
-              <iconify-icon icon="fluent:arrow-upload-24-regular" width="26" height="26" aria-hidden="true"></iconify-icon>
-              <span class="ez-pkg-drop__title">Drop your app file, or <span class="ez-pkg-drop__browse">browse</span></span>
+          <div class="ez-pkg-add ez-pkg-add--split" id="pkg-add-surface">
+            <label class="ez-pkg-drop ez-pkg-method" id="upload-zone" for="pkg-file" tabindex="0" role="button" aria-label="Upload your app package">
+              <iconify-icon icon="fluent:arrow-upload-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
+              <span class="ez-pkg-method__title">Upload your package</span>
+              <span class="ez-pkg-method__desc">Drop your file here, or <span class="ez-pkg-drop__browse">browse</span>.</span>
               <span class="ez-pkg-drop__hint" id="pkg-drop-hint">.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap, .exe, .msi</span>
             </label>
             <div class="ez-pkg-or" id="pkg-or"><span>or</span></div>
-            <div class="ez-pkg-url" id="pkg-url-part">
-              <span class="ez-pkg-url__hint">Have a link instead? Paste your installer’s URL, or your website to publish it as a web app.</span>
+            <div class="ez-pkg-url ez-pkg-method" id="pkg-url-part">
+              <iconify-icon class="ez-pkg-method__ic" icon="fluent:link-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
+              <span class="ez-pkg-method__title">Link to your app</span>
+              <span class="ez-pkg-url__hint ez-pkg-method__desc">A hosted installer’s URL, or your website to ship as a web app (PWA).</span>
               <div class="ez-pkg-url__row">
                 <fluent-text-input id="pkg-url-input" placeholder="Installer or website URL" aria-label="Installer or website URL"></fluent-text-input>
-                <fluent-button id="pkg-url-add" appearance="primary" disabled>Add package</fluent-button>
+                <fluent-button id="pkg-url-add" appearance="primary" disabled>Add</fluent-button>
               </div>
             </div>
           </div>
