@@ -206,7 +206,7 @@
         '<div class="status-card__top">' +
           '<img class="status-card__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
           '<div class="status-card__body">' +
-            '<h2>Publish your apps to the Microsoft Store</h2>' +
+            '<h2>Add your app to the Microsoft Store</h2>' +
             '<p class="muted">Reach more than a billion Windows devices. Track crashes, acquisition, usage, ratings &amp; reviews, and performance — all in one place.</p>' +
           '</div>' +
           '<div class="status-card__action">' +
@@ -225,35 +225,28 @@
       (cta || '') + '</div></div>';
   }
 
-  // Store-only "What can you publish?" on-ramps — rendered inside Get started (zero state), below the
-  // 3-step sequence, as a reference for the package types you can bring. Styles: store-portal.css (.pkgdisc / .pkgrow).
+  // Store-only "What you can publish" on-ramps — rendered inside the Overview zero state, below the
+  // 3-step sequence, as an always-visible reference for the package types you can bring (no accordion).
+  // Styles: store-portal.css (.pkgs / .pkg).
   function storeOnrampsHTML() {
-    return '<details class="pkgdisc"><summary>' +
-      '<span class="pkgdisc__ico"><iconify-icon icon="fluent:box-multiple-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-      '<span class="pkgdisc__label">What can you publish? <span>Find the right fit for what you\u2019re building or already have.</span></span>' +
-      '<iconify-icon class="pkgdisc__chev" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
-      '</summary><div class="pkgdisc__body">' +
-        '<div class="pkgrow pkgrow--rich"><span class="pkgrow__ico"><iconify-icon icon="fluent:cube-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkgrow__t"><span class="pkgrow__name">Packaged app · MSIX <span class="pkgrow__rec">Recommended</span></span>' +
-          '<p class="pkgrow__desc"><b>Building a new app?</b> Package it as MSIX (or APPX/UWP) — the richest way to ship on the Store:</p>' +
-          '<ul class="pkgrow__benefits">' +
-            '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Free hosting &amp; code signing</li>' +
-            '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Automatic updates</li>' +
-            '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Runs on more devices</li>' +
-            '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Private &amp; staged releases</li>' +
-          '</ul></div></div>' +
-        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:desktop-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkgrow__t"><span class="pkgrow__name">Desktop app · Win32</span>' +
-          '<p class="pkgrow__desc"><b>Already have an .exe or .msi installer?</b> Publish it as-is, or convert to MSIX for automatic updates.</p></div></div>' +
-        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkgrow__t"><span class="pkgrow__name">Web app · PWA</span>' +
-          '<p class="pkgrow__desc"><b>Have a website?</b> Turn it into an installable app — nothing to rebuild.</p></div></div>' +
-        '<div class="pkgrow"><span class="pkgrow__ico"><iconify-icon icon="fluent:xbox-controller-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkgrow__t"><span class="pkgrow__name">Game · GDK</span>' +
-          '<p class="pkgrow__desc"><b>Building a game?</b> Use the Microsoft Game Development Kit to reach players on Windows and Xbox.</p></div></div>' +
-        '<a class="pkgdisc__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
-          '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
-      '</div></details>';
+    return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
+        '<p class="muted">Find the right fit for what you\u2019re building or already have.</p></div></div>' +
+      '<div class="pkgs">' +
+        '<div class="pkg pkg--rec"><span class="pkg__ico"><iconify-icon icon="fluent:cube-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkg__t"><span class="pkg__name">Packaged app · MSIX <span class="pkg__rec">Recommended</span></span>' +
+          '<p class="pkg__desc">Free hosting, code signing, and automatic updates: the richest way to ship.</p></div></div>' +
+        '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:desktop-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkg__t"><span class="pkg__name">Desktop app · Win32</span>' +
+          '<p class="pkg__desc">Publish your existing .exe or .msi as-is, or convert to MSIX.</p></div></div>' +
+        '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:globe-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkg__t"><span class="pkg__name">Web app · PWA</span>' +
+          '<p class="pkg__desc">Turn your website into an installable app, nothing to rebuild.</p></div></div>' +
+        '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:xbox-controller-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="pkg__t"><span class="pkg__name">Game · GDK</span>' +
+          '<p class="pkg__desc">Reach players on Windows and Xbox with the Game Development Kit.</p></div></div>' +
+      '</div>' +
+      '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
+        '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>';
   }
 
   // Store-only "Come prepared" Copilot on-ramp. Slim + subtle: it sits BELOW the Get started steps
@@ -542,9 +535,9 @@
       if (!above.length && !below.length && !scanning) {
         wrap.innerHTML = '<div class="empty">' +
           '<img data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
-          '<strong>Publish your first app</strong>' +
-          '<p class="muted">Create an app to reserve its name, add your packages and store listing, ' +
-            'and publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
+          '<strong>Add your first app</strong>' +
+          '<p class="muted">Name your app, add your packages and store listing, ' +
+            'then publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
           '<fluent-button appearance="primary" data-newapp>' +
             '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
         '</div>';
@@ -2136,7 +2129,7 @@
   // "Create new app" — reserve a name for a brand-new app (not a discovered one).
   function openNewApp() {
     publishId = null;
-    if ($("pubTitle")) $("pubTitle").textContent = "Create a new app";
+    if ($("pubTitle")) $("pubTitle").textContent = "Add a new app";
     resetPubSteps();
     $("pubName").value = "";
     $("pubLang").value = "en-US";

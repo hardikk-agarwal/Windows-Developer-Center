@@ -140,12 +140,12 @@
       });
     } else {
       var gc = $("goCreate"); if (gc) gc.addEventListener("click", openReserve);
-      var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedStorePortal(); location.href = "store-portal.html#apps"; });
+      var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedStorePortal(); location.href = "store-portal.html#overview"; });
     }
   }
 
-  // Land in the Store portal already signed in, on the Apps page (zero-state nudges
-  // the user to create their first app).
+  // Land in the Store portal already signed in. "Go to developer portal" lands on Overview;
+  // the create flow lands on Apps. (The zero-state on either tab nudges creating the first app.)
   function seedStorePortal() {
     try {
       var KEY = "tdp.portal.store.v1", s;

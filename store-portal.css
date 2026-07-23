@@ -4,6 +4,17 @@
    (loaded only by store-portal.html) and reuses the same tokens.
    ===================================================================== */
 
+/* Roomier separation between the Overview sections (hero → How publishing works → What you can
+   publish): lift the shared 30px section-heading top margin so each block gets clear breathing room. */
+#overviewSummary .block__head--sub { margin-top: 44px; }
+/* A whisper-thin divider on ONLY the "How publishing works" → "What you can publish" boundary
+   (the heading that follows the steps row); the hero → first-section gap stays open whitespace.
+   Faded well below the card-border token so it reads as a hint, not a fence. */
+#overviewSummary .gsteps + .block__head--sub {
+  margin-top: 24px; padding-top: 26px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
 /* Overview zero state — "Get started": a light 3-step sequence (informational) linked by a connector. */
 .gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 28px; margin: 6px 0 26px; }
 .gstep { position: relative; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -23,35 +34,26 @@
   .gstep:not(:last-child)::after { display: none; }
 }
 
-/* Overview — collapsible "What can you publish?" (progressive disclosure keeps the page light) */
-.pkgdisc { margin: 20px 0 24px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); }
-.pkgdisc summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 13px 16px; }
-.pkgdisc summary::-webkit-details-marker { display: none; }
-.pkgdisc summary:focus-visible { outline: 2px solid var(--brand-soft); outline-offset: -2px; border-radius: var(--r-lg); }
-.pkgdisc__ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px;
-  background: rgba(40,153,245,.14); color: var(--brand-soft); }
-.pkgdisc__label { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--text); }
-.pkgdisc__label span { font-weight: 400; color: var(--text-3); }
-.pkgdisc__chev { flex: none; color: var(--text-3); transition: transform .15s ease; }
-.pkgdisc[open] .pkgdisc__chev { transform: rotate(180deg); }
-.pkgdisc__body { padding: 2px 12px 8px; border-top: 1px solid var(--border); }
-.pkgrow { display: flex; gap: 12px; align-items: flex-start; padding: 11px 4px; }
-.pkgrow + .pkgrow { border-top: 1px solid var(--border); }
-.pkgrow__ico { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
-  background: rgba(255,255,255,.05); color: var(--text-2); margin-top: 1px; }
-.pkgrow__t { min-width: 0; }
-.pkgrow__name { font-size: 13.5px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; }
-.pkgrow__rec { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+/* Overview — "What you can publish": four on-ramps shown inline in a single row (four across), a peer
+   section to "How publishing works" (replaces the old collapsible accordion — the progressive
+   disclosure wasn't earning its keep once it defaulted open). Borderless by design: no card chrome.
+   Each item stacks icon-over-text so the narrow columns stay readable, echoing the steps row above. */
+.pkgs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 24px; margin: 4px 0 18px; }
+.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pkg__ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px;
+  background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); }
+.pkg--rec .pkg__ico { background: rgba(40,153,245,.13); color: var(--brand-soft); }
+.pkg__t { min-width: 0; }
+.pkg__name { font-size: 14px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pkg__rec { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   padding: 1px 6px; border-radius: 999px; background: rgba(40,153,245,.16); color: var(--brand-soft); }
-.pkgrow__desc { margin: 2px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-3); }
-.pkgrow__desc b { font-weight: 600; color: var(--text-2); }
-.pkgrow__benefits { list-style: none; margin: 8px 0 2px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
-.pkgrow__benefits li { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
-.pkgrow__benefits iconify-icon { flex: none; width: 14px; height: 14px; color: var(--brand-soft); }
-@media (max-width: 560px) { .pkgrow__benefits { grid-template-columns: 1fr; } }
-.pkgdisc__more { display: inline-flex; align-items: center; gap: 5px; margin: 10px 4px 2px; padding: 4px 0;
+.pkg__desc { margin: 3px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text-3); }
+.pkgs__more { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 2px; padding: 2px 0;
   font-size: 12.5px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
-.pkgdisc__more:hover { text-decoration: underline; }
+.pkgs__more:hover { text-decoration: underline; }
+/* Wrap to 2-up, then 1-up, as the column narrows so the row never crushes the copy. */
+@media (max-width: 900px) { .pkgs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .pkgs { grid-template-columns: 1fr; gap: 16px; } }
 
 /* Overview — "Come prepared" Copilot on-ramp: what to bring in a .zip so Copilot can draft the whole submission. */
 .prep { display: flex; gap: 14px; align-items: flex-start; margin: 20px 0 22px; padding: 16px 18px;
