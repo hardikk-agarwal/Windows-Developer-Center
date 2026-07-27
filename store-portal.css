@@ -34,15 +34,17 @@
   .gstep:not(:last-child)::after { display: none; }
 }
 
-/* Overview — "What you can publish": four on-ramps shown inline in a single row (four across), a peer
-   section to "How publishing works" (replaces the old collapsible accordion — the progressive
-   disclosure wasn't earning its keep once it defaulted open). Borderless by design: no card chrome.
-   Each item stacks icon-over-text so the narrow columns stay readable, echoing the steps row above. */
-.pkgs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 24px; margin: 4px 0 18px; }
-.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.pkg__ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px;
-  background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); }
-.pkg--rec .pkg__ico { background: rgba(40,153,245,.13); color: var(--brand-soft); }
+/* Overview — "What you can publish": four on-ramps as a SET of parallel options — columns divided
+   by slim vertical hairlines, NO fill/border/shadow — a plainly non-clickable "menu of choices",
+   deliberately UNLIKE the "How publishing works" stepper above (a connected, numbered SEQUENCE).
+   Vertical separators (parallel columns) vs the stepper's horizontal connectors (a flow) is the
+   tell. All four share one treatment; MSIX is marked only by its "Recommended" pill (same bg). */
+.pkgs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 6px 0 16px; }
+.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 0 22px; }
+.pkg:first-child { padding-left: 0; }
+.pkg + .pkg { border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.pkg__ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-2); }
 .pkg__t { min-width: 0; }
 .pkg__name { font-size: 14px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pkg__rec { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
@@ -51,8 +53,13 @@
 .pkgs__more { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 2px; padding: 2px 0;
   font-size: 12.5px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
 .pkgs__more:hover { text-decoration: underline; }
-/* Wrap to 2-up, then 1-up, as the column narrows so the row never crushes the copy. */
-@media (max-width: 900px) { .pkgs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Wrap to 2-up, then 1-up as the column narrows; drop the vertical hairlines when wrapped
+   (they only read right in a single row) and fall back to plain spacing. */
+@media (max-width: 900px) {
+  .pkgs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 26px; }
+  .pkg { padding: 0; }
+  .pkg + .pkg { border-left: 0; }
+}
 @media (max-width: 520px) { .pkgs { grid-template-columns: 1fr; gap: 16px; } }
 
 /* Overview — "Come prepared" Copilot on-ramp: what to bring in a .zip so Copilot can draft the whole submission. */
