@@ -3853,8 +3853,9 @@
   </button>
 </div>
 
-<!-- Persistent Copilot launcher (bottom-right) + conversational assistant panel (Phase 2). -->
-<button type="button" class="cpx-fab" id="cpx-fab" aria-label="Ask Copilot" aria-expanded="false">
+<!-- Copilot launcher (bottom-right): HIDDEN in the publishing flow (product decision). The button +
+     panel markup stay in place so the intake/pipeline can still drive the chat programmatically. -->
+<button type="button" class="cpx-fab" id="cpx-fab" aria-label="Ask Copilot" aria-expanded="false" hidden>
   <img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
   <span class="cpx-fab__label">Ask Copilot</span>
 </button>
@@ -9148,7 +9149,9 @@
     var px = $('cpx-panel-x'); if (px) px.addEventListener('click', closePanel);
     if (form) form.addEventListener('submit', function (e) { e.preventDefault(); var v = (input.value || '').trim(); if (!v) return; input.value = ''; send(v); });
 
-    function syncFabVisibility () { try { var ed = $('editor'); var edHidden = ed ? ed.hidden : false; var onr = $('cpx-onramp'); var bannerUp = !!(onr && !onr.hidden); fab.hidden = edHidden || bannerUp; if (edHidden) { closePanel(); if (onr) onr.hidden = true; } } catch (e) {} }
+    // "Ask Copilot" launcher is hidden in the publishing flow (product decision) — keep it hidden
+    // regardless of editor/banner state. The panel + pipeline hooks stay wired for internal use.
+    function syncFabVisibility () { try { var ed = $('editor'); var edHidden = ed ? ed.hidden : false; fab.hidden = true; if (edHidden) { closePanel(); var onr = $('cpx-onramp'); if (onr) onr.hidden = true; } } catch (e) {} }
     window.__cpxSyncFab = syncFabVisibility;   // let the on-ramp banner reconcile the launcher when it shows/hides
     // Expose the chat as a surface the setup pipeline can post progress into (progress + conversation in one place).
     window.__cpxChat = { open: function (skipGreet) { openPanel(skipGreet); }, ai: addAi, me: addMe, scroll: scrollDown };
