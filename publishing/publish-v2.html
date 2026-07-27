@@ -106,10 +106,6 @@
      together on the right — the language dropdown to the left of the Autofill button. */
   .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); }
   .ez-step__headtools .ez-step__action { margin-left: 0; }
-  /* Listing step: pull the "2" badge (and its title) to the Store-listing preview content column
-     below — the hero (app icon / Get button) sits at the 24px hero inset while the step grid is
-     32px, so shift the badge 8px left to share that left edge. Right-side head tools stay put. */
-  #step-listing .ez-step__num { margin-left: calc(var(--sp-24) - var(--sp-32)); }
   .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
   /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
      — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
@@ -399,16 +395,28 @@
   /* link-style Fluent buttons (transparent) keep the brand AI accent + a compact, link-like look */
   fluent-button.link-btn--ai::part(control) { color: var(--brand); padding-left: 0; padding-right: var(--sp-8); min-width: 0; }
 
-  /* ===== Disclosures (Advanced) ===== */
-  .declarations { margin-top: var(--sp-20); padding-top: var(--sp-16); border-top: 1px solid var(--stroke-3); }
-  .declarations__head { margin-bottom: var(--sp-12); }
-  .declarations__title { font-family: var(--font-display); font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-4); }
-  .declarations__sub { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0; line-height: 1.5; }
-  .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-  .declarations__item { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-6) 0; }
-  .declarations__item fluent-switch { flex: 0 0 auto; order: 2; }
-  .declarations__copy { min-width: 0; flex: 1 1 auto; order: 1; }
-  .declarations__label { display: block; font-size: 13px; font-weight: 500; color: var(--fg-1); cursor: pointer; }
+  /* Step 3 = two sub-sections (Disclosures, then Age rating). */
+  .ez-substep + .ez-substep { margin-top: var(--sp-24); }
+  .ez-substep__title { font-family: var(--font-display); font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-10); }
+  /* Disclosure rows: a Fluent settings card — icon + the statement on the left, the answer on
+     the right. The Yes/No label matches the age-rating questionnaire, so an off switch reads as
+     a deliberate "No" rather than an unanswered question. */
+  .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border: 1px solid var(--stroke-3); border-radius: var(--r-12); background: var(--canvas-tint); overflow: hidden; }
+  .declarations__item { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); transition: background var(--dur-2) var(--ease-out); }
+  .declarations__item + .declarations__item { border-top: 1px solid var(--stroke-3); }
+  /* Higher specificity than the flex rule above, so a hidden row actually stays hidden. */
+  .declarations__item[hidden] { display: none; }
+  .declarations__ico { flex: 0 0 auto; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .declarations__label { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 500; color: var(--fg-1); cursor: pointer; }
+  .declarations__answer { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; }
+  .declarations__yn { font-size: 12px; color: var(--fg-3); min-width: 22px; text-align: right; }
+  /* Anything answered Yes tints, so what you've declared is obvious at a glance. */
+  .declarations__item.is-on { background: color-mix(in srgb, var(--brand) 7%, transparent); }
+  .declarations__item.is-on .declarations__ico { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
+  .declarations__item.is-on .declarations__yn { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  @media (prefers-reduced-motion: reduce) {
+    .declarations__item, .declarations__ico { transition: none; }
+  }
 
   /* ===== Advanced listing — PDP-integrated sections + search-terms metadata ===== */
   /* Listing extras: privacy + search terms below the live card. Full-bleed to match the
@@ -1695,6 +1703,13 @@
      height so the list scrolls internally; the header stays pinned. */
   .ez-rating-terr.is-dialog { margin-top: var(--sp-4); max-height: 56vh; overflow-y: auto; }
   .ez-rating-terr.is-dialog .ez-rating-terr__head { position: sticky; top: 0; z-index: 1; background: var(--layer); }
+  /* Compact territory strip on step 3: the questionnaire's RESULT belongs on the page, so the
+     badges show inline once a rating is set. The full table (names, labels, sources) stays in
+     the Preview-ratings dialog. */
+  .ez-rating-badges { margin-top: var(--sp-16); }
+  .ez-rating-badges[hidden] { display: none; }
+  .ez-rating-badges__cap { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-8); }
+  .ez-rating-badges__row { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
   /* IARC Terms agreement in the preview phase (no card) — gates the Confirm button. */
   .rating-terms { display: flex; align-items: flex-start; gap: var(--sp-8); margin-top: var(--sp-12); }
   .rating-terms__text { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
@@ -2897,7 +2912,7 @@
     <div class="wz-steps" id="wz-steps" role="list" aria-label="Publishing steps">
       <button type="button" class="wz-stepind is-current" data-wz="step-package" data-icon="fluent:box-20-filled" role="listitem" aria-current="step"><span class="wz-stepind__dot"><iconify-icon icon="fluent:box-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Package</span></button>
       <button type="button" class="wz-stepind is-locked" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listing</span></button>
-      <button type="button" class="wz-stepind is-locked" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Age rating</span></button>
+      <button type="button" class="wz-stepind is-locked" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Compliance</span></button>
       <button type="button" class="wz-stepind is-locked" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
       <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
       <div class="submit-checklist" id="submit-checklist">
@@ -2932,7 +2947,7 @@
         <div class="ez-rail__tabs">
           <button type="button" class="ez-rail__item" data-section="step-package">Package<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-listing">Store listing<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
-          <button type="button" class="ez-rail__item" data-section="step-rating">Age rating<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+          <button type="button" class="ez-rail__item" data-section="step-rating">Compliance<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-reach">Reach &amp; price<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
         </div>
         <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="subtle" size="small">
@@ -3317,37 +3332,78 @@
         </div>
       </div>
 
-      <!-- Step 3: age rating -->
+      <!-- Step 3: compliance — disclosures, then age rating -->
       <section class="ez-step is-collapsed" id="step-rating">
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-rating">3</span>
           <div>
-            <h2 class="ez-step__title">Age rating</h2>
-            <p class="ez-step__sub">Every app needs an age rating before it can be published.</p>
+            <h2 class="ez-step__title">Compliance</h2>
+            <p class="ez-step__sub">Tell us what’s inside your app, then set its age rating.</p>
             <p class="ez-step__summary" id="sum-rating"></p>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </div>
-        <div class="ez-rating">
-          <div class="iarc-badge">
-            <span class="iarc-badge__head">IARC</span>
-            <span class="iarc-badge__age" id="rating-age">—</span>
-          </div>
-          <div class="ez-rating__text">
-            <strong id="rating-label">Content rating</strong>
-            <p id="rating-desc">Answer a few quick questions about your app's content.</p>
-          </div>
-          <fluent-button id="rating-territories-btn" appearance="secondary" hidden>
-            <iconify-icon slot="start" icon="fluent:globe-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Preview ratings
-          </fluent-button>
-          <fluent-button id="rating-review-btn" appearance="primary">
-            <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Start questionnaire
-          </fluent-button>
+
+        <!-- Disclosures come first: they describe what's in the app, which is also what the
+             age-rating questionnaire asks about. Package-type rows are toggled in JS. -->
+        <div class="ez-substep">
+          <h3 class="ez-substep__title">Disclosures <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
+          <ul class="declarations__list">
+            <li class="declarations__item">
+              <span class="declarations__ico"><iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
+              <span class="declarations__answer">
+                <span class="declarations__yn" data-yn>No</span>
+                <fluent-switch data-declaration="genAi" id="decl-gen-ai"></fluent-switch>
+              </span>
+            </li>
+            <!-- MSIX only -->
+            <li class="declarations__item" id="decl-item-commerce">
+              <span class="declarations__ico"><iconify-icon icon="fluent:cart-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-ext-commerce" class="declarations__label">My app allows purchases outside the Microsoft Store</label>
+              <span class="declarations__answer">
+                <span class="declarations__yn" data-yn>No</span>
+                <fluent-switch data-declaration="externalCommerce" id="decl-ext-commerce"></fluent-switch>
+              </span>
+            </li>
+            <!-- Win32 only -->
+            <li class="declarations__item" id="decl-item-drivers" hidden>
+              <span class="declarations__ico"><iconify-icon icon="fluent:plug-connected-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-drivers" class="declarations__label">This product depends on non-Microsoft drivers or NT services</label>
+              <span class="declarations__answer">
+                <span class="declarations__yn" data-yn>No</span>
+                <fluent-switch data-declaration="drivers" id="decl-drivers"></fluent-switch>
+              </span>
+            </li>
+          </ul>
         </div>
 
-        <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> to use it instead of the questionnaire.</p>
+        <div class="ez-substep">
+          <h3 class="ez-substep__title">Age rating <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
+          <div class="ez-rating">
+            <div class="iarc-badge">
+              <span class="iarc-badge__head">IARC</span>
+              <span class="iarc-badge__age" id="rating-age">—</span>
+            </div>
+            <div class="ez-rating__text">
+              <strong id="rating-label">Content rating</strong>
+              <p id="rating-desc">Answer a few quick questions about your app's content.</p>
+            </div>
+            <fluent-button id="rating-territories-btn" appearance="secondary" hidden>
+              <iconify-icon slot="start" icon="fluent:globe-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Preview ratings
+            </fluent-button>
+            <fluent-button id="rating-review-btn" appearance="primary">
+              <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Start questionnaire
+            </fluent-button>
+          </div>
+
+          <!-- Filled by renderRatingBadgeStrip() once a rating exists. -->
+          <div class="ez-rating-badges" id="rating-badges" hidden></div>
+
+          <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> to use it instead of the questionnaire.</p>
+        </div>
 
       </section>
 
@@ -4906,33 +4962,7 @@
       <div class="ez-sd__summary" id="submit-summary"></div>
     </section>
 
-    <section class="ez-sd__section">
-      <h3 class="ez-sd__title">Disclosures</h3>
-      <ul class="declarations__list">
-        <li class="declarations__item">
-          <fluent-switch data-declaration="genAi" id="decl-gen-ai"></fluent-switch>
-          <div class="declarations__copy">
-            <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
-          </div>
-        </li>
-        <!-- MSIX only -->
-        <li class="declarations__item" id="decl-item-commerce">
-          <fluent-switch data-declaration="externalCommerce" id="decl-ext-commerce"></fluent-switch>
-          <div class="declarations__copy">
-            <label for="decl-ext-commerce" class="declarations__label">My app allows purchases outside the Microsoft Store</label>
-          </div>
-        </li>
-        <!-- Win32 only -->
-        <li class="declarations__item" id="decl-item-drivers" hidden>
-          <fluent-switch data-declaration="drivers" id="decl-drivers"></fluent-switch>
-          <div class="declarations__copy">
-            <label for="decl-drivers" class="declarations__label">This product depends on non-Microsoft drivers or NT services</label>
-          </div>
-        </li>
-      </ul>
-    </section>
-
-    <!-- Optional submission settings — under their own heading so they don't read as Disclosures. -->
+    <!-- Optional submission settings — disclosures now live on the Disclosures & age rating step. -->
     <section class="ez-sd__section">
       <h3 class="ez-sd__title">Review &amp; release</h3>
       <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
@@ -5830,7 +5860,7 @@
   // the final step's primary action opens the submit (review) dialog.
   // ===================================================================
   const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach'];
-  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Age rating', 'step-reach': 'Reach & price' };
+  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Compliance', 'step-reach': 'Reach & price' };
   const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
   let wzIndex = 0;
   function wzStepComplete(id) {
@@ -6617,8 +6647,19 @@
     if (!e.target.closest('#submit-checklist')) ckClosePanel();
   });
 
+  // Which disclosures apply depends on the package type: MSIX → external commerce,
+  // Win32 → driver/service dependency. Runs from updateGate now that the rows live on
+  // the step (they used to be toggled when the submit dialog opened).
+  function syncDisclosureItems() {
+    const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
+    const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
+    if (commerceItem) commerceItem.hidden = isWin32;
+    if (driversItem) driversItem.hidden = !isWin32;
+  }
+
   function updateGate() {
     markStep('step-package', state.pkg);
+    syncDisclosureItems();
     updatePrivacyChrome();
     if (typeof window.__refreshInfo === 'function') window.__refreshInfo();  // privacy-required → toggles the simple-mode row
     const listingDone = state.name && state.desc && state.category && state.shots.length > 0 && privacyOk();
@@ -6807,6 +6848,35 @@
   let contentAnswers = { ...DEFAULT_ANSWERS };
   let contentAnswersConfirmed = false;
 
+  // Compact inline version of the territory mapping for step 3 — just the badges. The full
+  // table (authority names, labels, sources) stays behind "Preview ratings".
+  function renderRatingBadgeStrip() {
+    const host = $('rating-badges');
+    if (!host) return;
+    if (!state.rating) { host.hidden = true; host.innerHTML = ''; return; }
+    const r = computeAgeRating(contentAnswers);
+    let idx = RATING_BAND_MINS.indexOf(r.min); if (idx < 0) idx = 0;
+    const sev = RATING_BAND_MINS[idx];
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    host.hidden = false;
+    host.innerHTML =
+      '<p class="ez-rating-badges__cap">How this maps across territories</p>' +
+      '<div class="ez-rating-badges__row">' +
+        RATING_AUTHORITIES.map(a => {
+          const cell = a.m[idx] || a.m[0];
+          const org = a.code === 'Microsoft' ? 'MS' : a.code;
+          const tip = a.code + ' \u00b7 ' + cell[1] + ' (' + a.region + ')';
+          return '<span title="' + esc(tip) + '">' + ratingBadgeHTML(cell[0], org, sev, a.code, tip) + '</span>';
+        }).join('') +
+      '</div>';
+    // Same official-art handling as the full table: show the licensed image when it exists,
+    // drop it (styled chip shows through) when it 404s — including the already-cached case.
+    host.querySelectorAll('.ez-terr-badge-img').forEach(img => {
+      img.addEventListener('load', () => img.classList.add('is-loaded'));
+      img.addEventListener('error', () => img.remove());
+      if (img.complete) { if (img.naturalWidth > 0) img.classList.add('is-loaded'); else img.remove(); }
+    });
+  }
   // -------------------------------------------------------------
   // Step 1: package — REAL .msix analysis (JSZip → AppxManifest.xml),
   // ported from the full flow. Filename heuristics are enriched by the
@@ -9971,6 +10041,7 @@
     }
     const tBtn = $('rating-territories-btn');
     if (tBtn) tBtn.hidden = !state.rating;   // "Preview ratings" only once a rating is set
+    renderRatingBadgeStrip();                // the result itself shows inline on the step
     ezRenderPreview();
     updateGate();
   }
@@ -10094,6 +10165,11 @@
       ['Markets', marketsVal, 'fluent:globe-20-regular'],
       ['Audience', audienceVal, 'fluent:people-20-regular']
     ];
+    // Disclosures moved to the Disclosures & age rating step — echo them here so the developer
+    // still confirms what they declared at the moment they submit.
+    const d = adv.declarations || {};
+    const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers'].filter(Boolean);
+    if (declared.length) rows.push(['Disclosures', declared.join(' \u00b7 '), 'fluent:shield-20-regular']);
     dl.innerHTML = rows.map(x =>
       '<span class="ez-sd__chip" title="' + x[0] + ': ' + esc(x[1]) + '">' +
         '<iconify-icon icon="' + x[2] + '" width="15" height="15" aria-hidden="true"></iconify-icon>' +
@@ -10171,11 +10247,6 @@
     const _cb = $('submit-confirm-btn');
     if (_cb) { _cb.disabled = false; _cb.innerHTML = '<iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Submit for review'; }
     buildSubmitSummary();
-    // Disclosures by package type: MSIX → external commerce; Win32 → driver/service dependency.
-    const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
-    const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
-    if (commerceItem) commerceItem.hidden = isWin32;
-    if (driversItem) driversItem.hidden = !isWin32;
     // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
     syncPublishHoldUI();
     renderTestCreds();
@@ -10452,11 +10523,20 @@
     window.__reachRefresh = { markets: applyMarkets, groups: renderGroupChips, price: applyPrice, audience: applyAudience };
   })();
 
-  // Disclosures (Advanced) -> adv.declarations
+  // Disclosures -> adv.declarations. The Yes/No label (same as the age-rating questionnaire)
+  // makes an off switch read as a deliberate "No"; the row tints once it's a Yes.
   document.querySelectorAll('[data-declaration]').forEach(sw => {
     const key = sw.dataset.declaration;
+    const row = sw.closest('.declarations__item');
+    const yn = row && row.querySelector('[data-yn]');
+    const paint = () => {
+      const on = !!sw.checked;
+      if (row) row.classList.toggle('is-on', on);
+      if (yn) yn.textContent = on ? 'Yes' : 'No';
+    };
     if (adv.declarations[key]) { try { sw.checked = true; } catch (e) {} sw.setAttribute('checked', ''); }
-    sw.addEventListener('change', () => { adv.declarations[key] = !!sw.checked; persistAdvanced(); });
+    paint();
+    sw.addEventListener('change', () => { adv.declarations[key] = !!sw.checked; paint(); persistAdvanced(); });
   });
 
   // IARC ID (Advanced) — paste an existing certificate instead of the questionnaire.
