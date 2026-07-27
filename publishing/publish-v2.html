@@ -2248,6 +2248,34 @@
   .ez-pkg-drop iconify-icon { color: var(--brand); margin-bottom: var(--sp-2); }
   .ez-pkg-drop__title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   .ez-pkg-drop__browse { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ---- Listing CSV import/export dialog ---- */
+  #csv-dialog::part(control) { max-width: 620px; }
+  #csv-dialog .csv-note { display: flex; align-items: flex-start; gap: var(--sp-8); padding: var(--sp-10) var(--sp-12); margin: 0 0 var(--sp-16); background: color-mix(in srgb, var(--brand) 8%, transparent); border-radius: var(--r-4); font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.5; }
+  #csv-dialog .csv-note code { font-family: var(--font-mono, ui-monospace, Consolas, monospace); font-size: 11.5px; background: color-mix(in srgb, var(--fg-1) 8%, transparent); padding: 1px 5px; border-radius: 3px; }
+  #csv-dialog .csv-note__link { background: none; border: 0; padding: 0; font: inherit; font-weight: var(--font-weight-semibold); color: var(--brand); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  #csv-dialog .ez-pkg-drop { padding: var(--sp-20) var(--sp-16); }
+  /* Parsed-file summary: one row per language found, with what will happen to it. */
+  .csv-result { margin-top: var(--sp-16); }
+  .csv-result__file { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-2); margin-bottom: var(--sp-8); }
+  .csv-result__file iconify-icon { color: var(--brand); flex: 0 0 auto; }
+  .csv-result__name { font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .csv-result__redo { margin-left: auto; background: none; border: 0; padding: 0; font: inherit; font-size: var(--font-size-base-200); color: var(--brand); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .csv-result__list { display: flex; flex-direction: column; border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; max-height: 240px; overflow-y: auto; }
+  .csv-row { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8) var(--sp-12); font-size: var(--font-size-base-200); }
+  .csv-row + .csv-row { border-top: 1px solid var(--stroke-2); }
+  .csv-row--skip { opacity: .65; }
+  .csv-row__name { font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .csv-row__code { color: var(--fg-4); font-size: 11.5px; }
+  .csv-row__fields { margin-left: auto; color: var(--fg-3); font-size: 11.5px; white-space: nowrap; }
+  .csv-row__st { font-size: 10.5px; font-weight: var(--font-weight-semibold); padding: 1px 7px; border-radius: 999px; white-space: nowrap; line-height: 1.6; }
+  .csv-row__st--new { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  .csv-row__st--upd { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 12%, transparent); }
+  .csv-row__st--skip { color: var(--status-warning, #e0a23a); background: color-mix(in srgb, var(--status-warning, #e0a23a) 14%, transparent); }
+  .csv-result__warn { display: flex; align-items: flex-start; gap: var(--sp-6); margin-top: var(--sp-10); font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.5; }
+  .csv-result__warn iconify-icon { flex: 0 0 auto; margin-top: 1px; }
+  .csv-error { display: flex; align-items: flex-start; gap: var(--sp-8); margin-top: var(--sp-16); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-4); font-size: var(--font-size-base-200); line-height: 1.5; color: var(--status-danger); background: color-mix(in srgb, var(--status-danger) 10%, transparent); }
+  .csv-error iconify-icon { flex: 0 0 auto; margin-top: 1px; }
   .ez-pkg-drop__hint { font-size: 12px; color: var(--fg-3); }
   .ez-pkg-or { display: flex; align-items: center; gap: var(--sp-12); margin: var(--sp-16) 0; color: var(--fg-3); font-size: 12px; }
   .ez-pkg-or::before, .ez-pkg-or::after { content: ''; flex: 1; height: 1px; background: var(--stroke-2); }
@@ -3045,8 +3073,8 @@
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
           <div class="ez-step__headtools">
-            <!-- One dropdown handles both jobs: its first item opens the add/remove
-                 dialog, and the added languages follow so you can switch between them. -->
+            <!-- One dropdown handles every language job: switch the editing language, open the
+                 add/remove dialog, and bulk import/export the per-language text as CSV. -->
             <div class="ez-step__lang" aria-label="Listing language">
               <fluent-menu id="lang-menu">
                 <fluent-menu-button slot="trigger" appearance="secondary" id="lang-menu-btn">
@@ -4468,6 +4496,42 @@
     <fluent-button slot="action" appearance="primary" id="lang-save-btn">
       <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Save changes
+    </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Import listing text from a CSV — one row per language. Parsed client-side, previewed
+     row-by-row, and only written to the listing when the developer confirms. -->
+<fluent-dialog id="csv-dialog" modal-type="modal" aria-labelledby="csv-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="csv-dialog-title">
+      <iconify-icon icon="fluent:arrow-upload-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      Import listing from CSV
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-csv-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <p class="csv-note">
+      <iconify-icon icon="fluent:info-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      <span>One row per language, with the columns <code>language</code>, <code>description</code>,
+        <code>short_description</code> and <code>features</code>. Languages that aren’t in your listing yet get added.
+        <button type="button" class="csv-note__link" id="csv-template-link">Download a blank template</button>.</span>
+    </p>
+
+    <input type="file" id="csv-file" accept=".csv,text/csv" hidden />
+    <label class="ez-pkg-drop" id="csv-drop" for="csv-file" tabindex="0" role="button" aria-label="Choose a CSV file">
+      <iconify-icon icon="fluent:document-table-24-regular" width="24" height="24" aria-hidden="true"></iconify-icon>
+      <span class="ez-pkg-drop__title">Drop your CSV here</span>
+      <span class="ez-pkg-method__desc">or <span class="ez-pkg-drop__browse">browse</span> for a file</span>
+    </label>
+
+    <div id="csv-result" hidden></div>
+
+    <fluent-button slot="action" appearance="secondary" data-csv-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="csv-apply" disabled>
+      <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      <span id="csv-apply-label">Import</span>
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -11971,12 +12035,20 @@ function openPriceScheduleDialog() {
       const codes = addedLocales();
       if (langMenuLabel) langMenuLabel.textContent = localeShortNameOf(L.activeLocale) + (L.activeLocale === DEFAULT_LOCALE ? ' (default)' : '');
       if (!langMenuList) return;
-      // First item opens the add/remove dialog; the added languages follow — so this one
-      // dropdown both switches the editing language and manages the language set.
+      // First item opens the add/remove dialog, then the CSV bulk actions (the file is one row
+      // per language, so it belongs here); the added languages follow for switching.
       const manageItem =
         '<fluent-menu-item data-lang-manage>' +
         '<iconify-icon slot="start" icon="fluent:translate-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
         'Add or manage languages\u2026' +
+        '</fluent-menu-item>' +
+        '<fluent-menu-item data-csv-import>' +
+        '<iconify-icon slot="start" icon="fluent:arrow-upload-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        'Import from CSV\u2026' +
+        '</fluent-menu-item>' +
+        '<fluent-menu-item data-csv-export>' +
+        '<iconify-icon slot="start" icon="fluent:arrow-download-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        'Export to CSV' +
         '</fluent-menu-item>' +
         '<fluent-divider role="separator" aria-hidden="true"></fluent-divider>';
       langMenuList.innerHTML = manageItem + codes.map(c =>
@@ -11985,6 +12057,10 @@ function openPriceScheduleDialog() {
       ).join('');
       const manageEl = langMenuList.querySelector('[data-lang-manage]');
       if (manageEl) manageEl.addEventListener('click', () => openLangDialog());
+      const csvImpEl = langMenuList.querySelector('[data-csv-import]');
+      if (csvImpEl) csvImpEl.addEventListener('click', () => csvOpenDialog());
+      const csvExpEl = langMenuList.querySelector('[data-csv-export]');
+      if (csvExpEl) csvExpEl.addEventListener('click', () => csvDoExport());
       langMenuList.querySelectorAll('fluent-menu-item[data-code]').forEach(it => it.addEventListener('click', () => switchLocale(it.dataset.code)));
     }
     function updateLockUI() {
@@ -12185,6 +12261,224 @@ function openPriceScheduleDialog() {
       if (added.length) announce('Now editing ' + localeShortNameOf(L.activeLocale) + '.');
       else if (activeRemoved) announce('Now editing ' + localeShortNameOf(L.activeLocale) + '.');
     });
+
+    // ===== Listing CSV import / export ==================================================
+    // Developers who keep their copy in a spreadsheet can round-trip the localized listing
+    // text: export one row per language, translate/edit offline, import it back. Only the
+    // three per-language fields travel (description, short description, features) — every
+    // other listing field is shared across languages, so it deliberately isn't in the file.
+    const CSV_COLS = ['language', 'description', 'short_description', 'features'];
+    // Header aliases, so a hand-written sheet doesn't have to match our column names exactly.
+    const CSV_ALIAS = {
+      language: 'language', locale: 'language', lang: 'language', languagecode: 'language', localecode: 'language',
+      description: 'description', desc: 'description', fulldescription: 'description', longdescription: 'description',
+      shortdescription: 'short_description', short: 'short_description', shortdesc: 'short_description', summary: 'short_description',
+      features: 'features', featurehighlights: 'features', highlights: 'features', bullets: 'features'
+    };
+    const csvNorm = (s) => String(s == null ? '' : s).trim().toLowerCase().replace(/[\s_\-.]/g, '');
+    const csvCell = (v) => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+
+    // Minimal RFC-4180 reader: quoted cells, "" escapes, embedded newlines, CRLF.
+    function csvParse(text) {
+      const rows = []; let row = [], cur = '', inQ = false;
+      const src = String(text || '').replace(/^\uFEFF/, '');
+      for (let i = 0; i < src.length; i++) {
+        const c = src[i];
+        if (inQ) {
+          if (c === '"') { if (src[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+          else cur += c;
+        } else if (c === '"') inQ = true;
+        else if (c === ',') { row.push(cur); cur = ''; }
+        else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+        else if (c !== '\r') cur += c;
+      }
+      if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+      return rows.filter(r => r.some(c => String(c).trim() !== ''));
+    }
+    // Accept a code ("de-DE", any case) or a name ("German (Germany)" / "German").
+    function csvResolveLocale(raw) {
+      const v = String(raw == null ? '' : raw).trim(); if (!v) return null;
+      const n = csvNorm(v);
+      let hit = SUPPORTED_LOCALES.find(l => csvNorm(l.code) === n);
+      if (!hit) hit = SUPPORTED_LOCALES.find(l => csvNorm(l.name) === n);
+      if (!hit) hit = SUPPORTED_LOCALES.find(l => csvNorm(localeShortNameOf(l.code)) === n);
+      return hit ? hit.code : null;
+    }
+    function csvBuild(withContent) {
+      if (withContent) captureActiveLocale();   // include whatever is open in the editor right now
+      const lines = [CSV_COLS.join(',')];
+      addedLocales().forEach(code => {
+        const b = (withContent && L.locales[code]) || emptyLangBucket();
+        lines.push([csvCell(code), csvCell(b.description || ''), csvCell(b.shortDesc || ''), csvCell(b.features || '')].join(','));
+      });
+      return lines.join('\r\n');
+    }
+    function csvDownload(name, text) {
+      // The BOM keeps Excel from mangling non-ASCII text when the file is opened.
+      const blob = new Blob(['\uFEFF' + text], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+    function csvFileName(suffix) {
+      const nm = ($('f-name') && $('f-name').value) || 'listing';
+      const slug = String(nm).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'listing';
+      return slug + '-listing' + (suffix || '') + '.csv';
+    }
+    function csvDoExport() {
+      const n = addedLocales().length;
+      csvDownload(csvFileName(), csvBuild(true));
+      announce('Listing exported for ' + n + ' language' + (n === 1 ? '' : 's') + '.');
+    }
+    function csvDoTemplate() {
+      csvDownload(csvFileName('-template'), csvBuild(false));
+      announce('Blank CSV template downloaded.');
+    }
+
+    // ---- Import dialog: parse → preview every row → only write on confirm ----
+    const csvDialog = $('csv-dialog'), csvFileInput = $('csv-file'), csvDrop = $('csv-drop');
+    const csvResult = $('csv-result'), csvApply = $('csv-apply'), csvApplyLabel = $('csv-apply-label');
+    let csvPending = null;   // [{ code, raw, name, status:'new'|'update'|'skip', description, shortDesc, features, fields[] }]
+
+    function csvSetApply(n) {
+      if (!csvApply) return;
+      if (n > 0) csvApply.removeAttribute('disabled'); else csvApply.setAttribute('disabled', '');
+      if (csvApplyLabel) csvApplyLabel.textContent = n > 0 ? ('Import ' + n + ' language' + (n === 1 ? '' : 's')) : 'Import';
+    }
+    function csvReset() {
+      csvPending = null; csvSetApply(0);
+      if (csvDrop) csvDrop.hidden = false;
+      if (csvResult) { csvResult.hidden = true; csvResult.innerHTML = ''; }
+    }
+    function csvShowError(msg) {
+      csvPending = null; csvSetApply(0);
+      if (csvDrop) csvDrop.hidden = false;      // keep the drop zone up so they can retry
+      if (!csvResult) return;
+      csvResult.hidden = false;
+      csvResult.innerHTML = '<div class="csv-error"><iconify-icon icon="fluent:error-circle-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + esc(msg) + '</span></div>';
+    }
+    function csvRenderResult(fileName) {
+      if (!csvResult) return;
+      const rows = csvPending || [];
+      const usable = rows.filter(r => r.status !== 'skip');
+      const chip = { new: ['csv-row__st--new', 'Adds language'], update: ['csv-row__st--upd', 'Updates'], skip: ['csv-row__st--skip', 'Not supported'] };
+      if (csvDrop) csvDrop.hidden = true;       // file is in — swap the drop zone for the result
+      csvResult.hidden = false;
+      csvResult.innerHTML =
+        '<div class="csv-result">' +
+          '<div class="csv-result__file">' +
+            '<iconify-icon icon="fluent:document-table-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+            '<span class="csv-result__name">' + esc(fileName) + '</span>' +
+            '<span>' + usable.length + ' of ' + rows.length + ' row' + (rows.length === 1 ? '' : 's') + ' ready</span>' +
+            '<button type="button" class="csv-result__redo" id="csv-redo">Choose another file</button>' +
+          '</div>' +
+          '<div class="csv-result__list" role="list">' +
+            rows.map(r => {
+              const c = chip[r.status];
+              return '<div class="csv-row' + (r.status === 'skip' ? ' csv-row--skip' : '') + '" role="listitem">' +
+                '<span class="csv-row__name">' + esc(r.name) + '</span>' +
+                '<span class="csv-row__code">' + esc(r.code || r.raw) + '</span>' +
+                '<span class="csv-row__st ' + c[0] + '">' + c[1] + '</span>' +
+                '<span class="csv-row__fields">' + (r.status === 'skip' ? 'Skipped' : esc(r.fields.join(' \u00b7 ') || 'No text')) + '</span>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+          (usable.length
+            ? '<p class="csv-result__warn"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+              '<span>Text in these languages will be replaced. Empty cells are left as they are.</span></p>'
+            : '') +
+        '</div>';
+      const redo = $('csv-redo');
+      if (redo) redo.addEventListener('click', () => { if (csvFileInput) csvFileInput.value = ''; csvReset(); });
+      csvSetApply(usable.length);
+    }
+    function csvHandleFile(file) {
+      if (!file) return;
+      if (!/\.csv$/i.test(file.name) && !/csv/i.test(file.type || '')) {
+        csvShowError('That doesn\u2019t look like a .csv file. Export your listing (or download the template) to see the expected format.'); return;
+      }
+      const rd = new FileReader();
+      rd.onerror = () => csvShowError('That file couldn\u2019t be read. Try exporting a fresh copy.');
+      rd.onload = () => {
+        const rows = csvParse(rd.result);
+        if (rows.length < 2) { csvShowError('This file has no data rows \u2014 it needs a header row plus one row per language.'); return; }
+        const head = rows[0].map(h => CSV_ALIAS[csvNorm(h)] || csvNorm(h));
+        const iLang = head.indexOf('language');
+        if (iLang < 0) { csvShowError('No \u201clanguage\u201d column found. The first row must name the columns \u2014 download the template to see the format.'); return; }
+        const iDesc = head.indexOf('description'), iShort = head.indexOf('short_description'), iFeat = head.indexOf('features');
+        if (iDesc < 0 && iShort < 0 && iFeat < 0) { csvShowError('No content columns found. Add at least one of description, short_description or features.'); return; }
+        const seen = {}, out = [];
+        rows.slice(1).forEach(r => {
+          const raw = String(r[iLang] == null ? '' : r[iLang]).trim(); if (!raw) return;
+          const code = csvResolveLocale(raw);
+          if (!code) { out.push({ code: '', raw: raw, name: raw, status: 'skip', fields: [] }); return; }
+          if (seen[code]) return;                       // first row wins if a language repeats
+          seen[code] = true;
+          const get = (i) => (i >= 0 && r[i] != null) ? String(r[i]).trim() : '';
+          // A pipe is the friendly hand-written alternative to real newlines inside one cell.
+          const rec = {
+            code: code, raw: raw, name: localeNameOf(code),
+            description: get(iDesc), shortDesc: get(iShort),
+            features: get(iFeat).replace(/\s*\|\s*/g, '\n').replace(/\r/g, '')
+          };
+          rec.fields = [rec.description && 'Description', rec.shortDesc && 'Short description', rec.features && 'Features'].filter(Boolean);
+          rec.status = (code === DEFAULT_LOCALE || L.locales[code]) ? 'update' : 'new';
+          out.push(rec);
+        });
+        if (!out.length) { csvShowError('No language rows found in this file.'); return; }
+        csvPending = out;
+        csvRenderResult(file.name);
+      };
+      rd.readAsText(file);
+    }
+    function csvApplyImport() {
+      const rows = (csvPending || []).filter(r => r.status !== 'skip');
+      if (!rows.length) return;
+      captureActiveLocale();                     // don't lose what's open in the editor
+      let added = 0;
+      rows.forEach(r => {
+        const b = L.locales[r.code] || (L.locales[r.code] = emptyLangBucket());
+        if (r.status === 'new') added++;
+        if (r.description) b.description = r.description;
+        if (r.shortDesc) b.shortDesc = r.shortDesc;
+        if (r.features) b.features = r.features;
+      });
+      loadActiveLocale();                        // pull the (possibly updated) active locale into the UI
+      renderLangSelector(); updateLockUI(); updateTranslatingBanner(); ezRenderPreview();
+      persistAdvanced();
+      if (typeof window.__syncDesc === 'function') window.__syncDesc();
+      if (typeof updateGate === 'function') updateGate();
+      csvCloseDialog();
+      announce('Imported ' + rows.length + ' language' + (rows.length === 1 ? '' : 's') + ' from CSV' + (added ? ', ' + added + ' newly added' : '') + '.');
+    }
+    function csvOpenDialog() {
+      if (!csvDialog) return;
+      if (csvFileInput) csvFileInput.value = '';
+      csvReset();
+      try { csvDialog.show(); } catch (e) {}
+      // fluent-dialog show() doesn't reliably open the inner native <dialog> — drive it directly.
+      try { const inner = csvDialog.shadowRoot && csvDialog.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
+    }
+    function csvCloseDialog() {
+      if (!csvDialog) return;
+      try { csvDialog.hide(); } catch (e) {}
+      try { const inner = csvDialog.shadowRoot && csvDialog.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {}
+    }
+    if (csvFileInput) csvFileInput.addEventListener('change', () => { csvReset(); csvHandleFile(csvFileInput.files && csvFileInput.files[0]); });
+    if (csvDrop) {
+      csvDrop.addEventListener('dragover', (e) => { e.preventDefault(); csvDrop.classList.add('is-drag'); });
+      csvDrop.addEventListener('dragleave', () => csvDrop.classList.remove('is-drag'));
+      csvDrop.addEventListener('drop', (e) => {
+        e.preventDefault(); csvDrop.classList.remove('is-drag'); csvReset();
+        csvHandleFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+      });
+    }
+    if (csvApply) csvApply.addEventListener('click', csvApplyImport);
+    if (csvDialog) csvDialog.querySelectorAll('[data-csv-close]').forEach(el => el.addEventListener('click', csvCloseDialog));
+    const csvTemplateLink = $('csv-template-link');
+    if (csvTemplateLink) csvTemplateLink.addEventListener('click', csvDoTemplate);
 
     // Expose hooks the main flow uses (mode switch + category lock).
     window.__advLocaleLocked = localeLocked;
