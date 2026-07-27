@@ -1939,9 +1939,30 @@
   }
   function closeSymHistory() { var d = $("histDialog"); if (d) d.hide(); }
   function readDropdownValue(sel) {
+    if (!sel) return null;
+    if (sel.classList && sel.classList.contains("segmented")) {
+      var p = sel.querySelector('button[aria-pressed="true"]');
+      return p ? p.getAttribute("data-val") : null;
+    }
     if (sel.value) return sel.value;
     var o = sel.querySelector('fluent-option[aria-selected="true"], fluent-option[selected]');
     return o ? o.getAttribute("value") : null;
+  }
+  // Set a dropdown/segmented value: native <select> (WDP), Fluent <fluent-dropdown>, or a .segmented toggle.
+  function setDropdownValue(sel, val) {
+    if (!sel) return;
+    if (sel.classList && sel.classList.contains("segmented")) {
+      var bs = sel.querySelectorAll("button");
+      for (var j = 0; j < bs.length; j++) bs[j].setAttribute("aria-pressed", bs[j].getAttribute("data-val") === val ? "true" : "false");
+      return;
+    }
+    if (sel.tagName === "SELECT") { sel.value = val; return; }
+    try { sel.value = val; } catch (e) {}
+    var opts = sel.querySelectorAll("fluent-option");
+    for (var i = 0; i < opts.length; i++) {
+      if (opts[i].getAttribute("value") === val) opts[i].setAttribute("selected", "");
+      else opts[i].removeAttribute("selected");
+    }
   }
 
   /* ---------------- cert + app creation ---------------- */
@@ -2120,7 +2141,9 @@
     resetPubSteps();
     var nm = $("pubName");
     nm.value = (a.storeName || a.name).replace(/\.[^.]+$/, "");
-    $("pubLang").value = a.storeLang || "en-US";
+    setDropdownValue($("pubLang"), a.storeLang || "en-US");
+    if ($("pubType")) setDropdownValue($("pubType"), a.type || "app");
+    syncGameNote();
     $("publishModal").hidden = false;
     document.addEventListener("keydown", escPub);
     checkPubName();
@@ -2132,17 +2155,31 @@
     if ($("pubTitle")) $("pubTitle").textContent = "Add a new app";
     resetPubSteps();
     $("pubName").value = "";
-    $("pubLang").value = "en-US";
+    setDropdownValue($("pubLang"), "en-US");
+    if ($("pubType")) setDropdownValue($("pubType"), "app");
+    syncGameNote();
     $("publishModal").hidden = false;
     document.addEventListener("keydown", escPub);
     checkPubName();
     setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
   }
   function closePublish() { $("publishModal").hidden = true; document.removeEventListener("keydown", escPub); publishId = null; resetPubSteps(); }
+  // Most games (MSIX/PWA) publish here; only Open GDK titles (e.g. Xbox) still need Partner Center.
+  var GAME_NOTE = '<iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' +
+    '<span>You can publish MSIX and PWA games here. Open GDK games, like those built for Xbox, go in ' +
+    '<a href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" ' +
+    'aria-label="Partner Center (opens in a new tab)">Partner Center' +
+    '<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a> for now.</span>';
+  function syncGameNote() {
+    var n = $("pubGameNote"); if (!n) return;
+    var isGame = $("pubType") && readDropdownValue($("pubType")) === "game";
+    n.className = "field__hint";
+    n.innerHTML = isGame ? GAME_NOTE : "";
+  }
   function checkPubName() {
     var v = ($("pubName").value || "").trim(), hint = $("pubNameHint"), btn = $("pubCreate");
     if (v.length < 2) {
-      hint.className = "field__hint"; hint.textContent = "Enter an app name to reserve.";
+      hint.className = "field__hint"; hint.textContent = "";
       btn.setAttribute("disabled", ""); return;
     }
     hint.className = "field__hint field__hint--ok";
@@ -2163,6 +2200,7 @@
     }
     a.storeName = name;
     a.storeLang = readDropdownValue($("pubLang")) || "en-US";
+    if ($("pubType")) a.type = readDropdownValue($("pubType")) || "app";
     a.storeCreated = a.storeCreated || today();
     if (!a.store) a.storeStatus = "in-progress";        // reserved → entering the flow
     save(); renderApps();                               // persist + reflect the new row
@@ -2174,7 +2212,11 @@
     var m = $("publishModal"); if (m) m.classList.remove("choosing");
   }
   function wirePublish() {
-    $("publishModal").addEventListener("click", function (e) { if (e.target.closest("[data-pubclose]")) closePublish(); });
+    $("publishModal").addEventListener("click", function (e) {
+      if (e.target.closest("[data-pubclose]")) { closePublish(); return; }
+      var seg = e.target.closest(".segmented button");
+      if (seg && seg.closest("#pubType")) { var bs = seg.parentElement.querySelectorAll("button"); for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", bs[i] === seg ? "true" : "false"); syncGameNote(); }
+    });
     $("pubCreate").addEventListener("click", doCreateApp);
     var nm = $("pubName");
     nm.addEventListener("input", checkPubName);
@@ -2517,11 +2559,14 @@
       var rsvName = decodeURIComponent(cm[1]);
       var lm = /[?&]lang=([^&#]+)/.exec(location.search);
       var rsvLang = lm ? decodeURIComponent(lm[1]) : "en-US";
+      var tm = /[?&]type=([^&#]+)/.exec(location.search);
+      var rsvType = tm ? decodeURIComponent(tm[1]) : "app";
       if (history.replaceState) history.replaceState(null, "", location.pathname + "#apps");
       setTimeout(function () {
         publishId = null;
         if ($("pubName")) $("pubName").value = rsvName;
-        if ($("pubLang")) $("pubLang").value = rsvLang;
+        if ($("pubLang")) setDropdownValue($("pubLang"), rsvLang);
+        if ($("pubType")) setDropdownValue($("pubType"), rsvType);
         doCreateApp();
       }, 60);
     }

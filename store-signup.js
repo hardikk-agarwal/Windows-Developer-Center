@@ -158,9 +158,48 @@
   }
 
   /* ---------- reserve-name dialog (mirrors the Store portal's reserve dialog) ---------- */
+  // Read/write a dropdown value whether it's a native <select> or a Fluent <fluent-dropdown>.
+  function ddGet(el) {
+    if (!el) return null;
+    if (el.classList && el.classList.contains("segmented")) {
+      var p = el.querySelector('button[aria-pressed="true"]');
+      return p ? p.getAttribute("data-val") : null;
+    }
+    if (el.value) return el.value;
+    var o = el.querySelector('fluent-option[aria-selected="true"], fluent-option[selected]');
+    return o ? o.getAttribute("value") : null;
+  }
+  function ddSet(el, val) {
+    if (!el) return;
+    if (el.classList && el.classList.contains("segmented")) {
+      var bs = el.querySelectorAll("button");
+      for (var j = 0; j < bs.length; j++) bs[j].setAttribute("aria-pressed", bs[j].getAttribute("data-val") === val ? "true" : "false");
+      return;
+    }
+    if (el.tagName === "SELECT") { el.value = val; return; }
+    try { el.value = val; } catch (e) {}
+    var opts = el.querySelectorAll("fluent-option");
+    for (var i = 0; i < opts.length; i++) {
+      if (opts[i].getAttribute("value") === val) opts[i].setAttribute("selected", "");
+      else opts[i].removeAttribute("selected");
+    }
+  }
+  // Most games (MSIX/PWA) publish here; only Open GDK titles (e.g. Xbox) still need Partner Center.
+  var GAME_NOTE = '<iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' +
+    '<span>You can publish MSIX and PWA games here. Open GDK games, like those built for Xbox, go in ' +
+    '<a href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" ' +
+    'aria-label="Partner Center (opens in a new tab)">Partner Center' +
+    '<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a> for now.</span>';
+  function syncGameNote() {
+    var n = $("pubGameNote"); if (!n) return;
+    n.className = "field__hint";
+    n.innerHTML = ddGet($("pubType")) === "game" ? GAME_NOTE : "";
+  }
   function openReserve() {
     if ($("pubName")) $("pubName").value = "";
-    if ($("pubLang")) $("pubLang").value = "en-US";
+    ddSet($("pubLang"), "en-US");
+    ddSet($("pubType"), "app");
+    syncGameNote();
     if ($("publishModal")) $("publishModal").hidden = false;
     document.addEventListener("keydown", escReserve);
     checkPubName();
@@ -173,7 +212,7 @@
     if (!hint || !btn) return;
     var v = ((n && n.value) || "").trim();
     if (v.length < 2) {
-      hint.className = "field__hint"; hint.textContent = "Enter an app name to reserve.";
+      hint.className = "field__hint"; hint.textContent = "";
       btn.setAttribute("disabled", ""); return;
     }
     hint.className = "field__hint field__hint--ok";
@@ -184,13 +223,18 @@
   // opens the publishing flow (Back there lands on the Apps page).
   function createApp() {
     var n = $("pubName"); var name = ((n && n.value) || "").trim(); if (name.length < 2) return;
-    var lang = ($("pubLang") && $("pubLang").value) || "en-US";
+    var lang = ddGet($("pubLang")) || "en-US";
+    var ptype = ddGet($("pubType")) || "app";
     seedStorePortal();
-    location.href = "store-portal.html?create=" + encodeURIComponent(name) + "&lang=" + encodeURIComponent(lang) + "#apps";
+    location.href = "store-portal.html?create=" + encodeURIComponent(name) + "&lang=" + encodeURIComponent(lang) + "&type=" + encodeURIComponent(ptype) + "#apps";
   }
   function wireReserve() {
     var modal = $("publishModal"); if (!modal) return;
-    modal.addEventListener("click", function (e) { if (e.target.closest("[data-pubclose]")) closeReserve(); });
+    modal.addEventListener("click", function (e) {
+      if (e.target.closest("[data-pubclose]")) { closeReserve(); return; }
+      var seg = e.target.closest(".segmented button");
+      if (seg && seg.closest("#pubType")) { var bs = seg.parentElement.querySelectorAll("button"); for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", bs[i] === seg ? "true" : "false"); syncGameNote(); }
+    });
     var create = $("pubCreate"); if (create) create.addEventListener("click", createApp);
     var n = $("pubName");
     if (n) {

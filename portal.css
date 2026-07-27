@@ -382,9 +382,13 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
   border-radius: var(--r-sm); padding: 2px; }
 .segmented button { border: 0; background: transparent; color: var(--text-3); font: 600 13px var(--font);
   padding: 5px 14px; border-radius: 3px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.segmented button[aria-pressed="true"] { background: var(--border); color: var(--text); }
 .segmented button[aria-pressed="true"][data-val="allow"] { background: var(--ok-bg); color: var(--ok); }
 .segmented button[aria-pressed="true"][data-val="block"] { background: var(--danger-bg); color: var(--danger); }
 .seg-label { font-size: 12px; color: var(--text-3); margin-right: 2px; }
+/* Reserve-dialog App/Game toggle: full-width, two equal halves, same 32px height as the inputs. */
+.field > .segmented { display: flex; width: 100%; }
+.field > .segmented button { flex: 1; justify-content: center; height: 26px; padding: 0 14px; }
 
 /* ---------- Analytics (real crash data from Windows reliability log) ---------- */
 .select { min-width: 220px; height: 32px; padding: 0 34px 0 12px; color: var(--text); cursor: pointer;
@@ -1071,6 +1075,7 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .modal__head { display: flex; align-items: center; justify-content: space-between; }
 .modal__head h2 { font-size: 20px; }
 .modal__intro { margin: 6px 0 18px; }
+.modal__head + .field { margin-top: 18px; } /* dialogs with no intro: keep the title off the first field */
 .mflow { display: flex; flex-direction: column; gap: 16px; }
 .mflow__row { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
 .mflow__row h3 { font-size: 15px; margin-bottom: 4px; }
@@ -1084,7 +1089,13 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .field fluent-text-input { max-width: none; } /* Fluent caps inputs at 400px; fill the field instead */
 .field__label { font-size: 13px; font-weight: 600; color: var(--text-2); }
 .field__hint { display: flex; align-items: center; gap: 7px; min-height: 16px; font-size: 12.5px; color: var(--text-3); }
+.field__hint:empty { display: none; } /* no dead space under a field whose hint is empty */
 .field__hint--ok { color: var(--ok); }
+.field__hint iconify-icon { flex: none; }
+/* Inline link inside a field hint (global `a` resets colour/underline, so restate them). */
+.field__hint a { color: var(--brand-soft); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.field__hint a:hover { color: var(--text); }
+.field__hint a iconify-icon { margin-left: 4px; vertical-align: -1px; }
 .filelist { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .fileitem { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-2);
   border: 1px solid var(--border); border-radius: var(--r-sm); }
