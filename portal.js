@@ -2232,6 +2232,9 @@
     if (!Array.isArray(ms)) ms = [];
     var mapped = {
       id: a.id, name: a.storeName || a.name, type: "win32", subtype: null,
+      // `type` above is the PACKAGE family, so the App/Game choice from the reservation rides
+      // separately — the flow uses it to pre-answer the age questionnaire's first question.
+      productKind: a.type === "game" ? "game" : "app",
       language: a.storeLang || "en-US",
       // published apps open straight to the live hub; only a freshly-submitted app is in-review
       status: a.storeStatus === "in-review" ? "in-review" : ((a.store || a.storeStatus === "published") ? "published" : "draft"),
@@ -2248,7 +2251,10 @@
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
-    location.href = "publishing/publish-v2.html?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
+    // Variant flows live side by side; publish-v2.html stays the default. Add ?flow=v3 to the
+    // portal URL to open the v3 variant instead — every entry into the flow funnels through here.
+    var flowFile = /[?&]flow=v3\b/.test(location.search) ? "publish-v3.html" : "publish-v2.html";
+    location.href = "publishing/" + flowFile + "?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
   }
 
   var STORE_MSA = { name: "Priya Nair", email: "priya.nair@outlook.com", initials: "PN" };

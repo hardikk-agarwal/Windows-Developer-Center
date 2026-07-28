@@ -1081,6 +1081,8 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .mflow__row h3 { font-size: 15px; margin-bottom: 4px; }
 .mflow__row .flow__num { width: 28px; height: 28px; font-size: 14px; }
 .modal__foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); }
+/* "Add a new app" is a short, single-purpose form — the rule adds weight without separating anything. */
+#publishModal .modal__foot { padding-top: 0; border-top: 0; }
 .modal__card--sm { width: min(480px, 96vw); }
 .dialog-titlesub { font-weight: 400; font-size: 14px; } /* app-name suffix in a fluent-dialog title */
 
@@ -1088,6 +1090,19 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field fluent-text-input { max-width: none; } /* Fluent caps inputs at 400px; fill the field instead */
 .field__label { font-size: 13px; font-weight: 600; color: var(--text-2); }
+/* Label + an info affordance on one line. The explanation rides in a tooltip so the short
+   Apple/Google-style name ("Default language") can stay short. */
+.field__labelrow { display: flex; align-items: center; gap: 6px; }
+.field__info { position: relative; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--text-3); cursor: help; line-height: 0; }
+.field__info:hover { color: var(--text); }
+.field__info:focus-visible { outline: 2px solid var(--brand-soft); outline-offset: 2px; border-radius: 3px; }
+.field__tip { position: absolute; top: calc(100% + 8px); left: -8px; z-index: 5; width: max-content; max-width: 260px;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2);
+  box-shadow: var(--sh-pop); color: var(--text-2); font-size: 12px; font-weight: 400; line-height: 1.45; text-align: left;
+  cursor: default; opacity: 0; visibility: hidden; transition: opacity .12s ease, visibility .12s ease; }
+.field__info:hover .field__tip,
+.field__info:focus-visible .field__tip { opacity: 1; visibility: visible; }
+@media (prefers-reduced-motion: reduce) { .field__tip { transition: none; } }
 .field__hint { display: flex; align-items: center; gap: 7px; min-height: 16px; font-size: 12.5px; color: var(--text-3); }
 .field__hint:empty { display: none; } /* no dead space under a field whose hint is empty */
 .field__hint--ok { color: var(--ok); }

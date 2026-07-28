@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Publish (Easy · Left-stepper V2) · Microsoft Store for developers</title>
+<title>Publish (Easy · Left-stepper V3) · Microsoft Store for developers</title>
 <!-- Theme bootstrap (sync, no FOUC) -->
 <script>
 (function(){
@@ -275,34 +275,6 @@
   .ez-type-msg { display: flex; align-items: center; gap: var(--sp-8); padding: var(--sp-8) var(--sp-12); margin-bottom: var(--sp-16); border-radius: var(--r-6); background: color-mix(in srgb, var(--status-warning) 10%, var(--canvas-tint)); border: 1px solid color-mix(in srgb, var(--status-warning) 45%, transparent); color: var(--fg-2); font-size: 12px; line-height: 1.4; }
   .ez-type-msg[hidden] { display: none; }
   .ez-type-msg iconify-icon { color: var(--status-warning); flex: 0 0 auto; }
-
-  /* ===== "Which package do I bring?" on-ramps — a top-right helper on the Package step
-     header. Collapsed by default; opens a dropdown that routes each source and shows its
-     value. Neutral; the drop zone always accepts anything. ===== */
-  .pkg-help { position: relative; margin-left: auto; flex: 0 0 auto; }
-  .pkg-help__toggle { display: inline-flex; align-items: center; gap: var(--sp-6); padding: var(--sp-6) var(--sp-10); border: 1px solid var(--stroke-2); background: var(--layer); color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; border-radius: var(--r-8); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
-  .pkg-help__toggle:hover { background: color-mix(in srgb, var(--fg-1) 5%, transparent); color: var(--fg-1); border-color: var(--stroke-1); }
-  .pkg-help__toggle > iconify-icon:first-child { color: var(--brand); }
-  .pkg-help__chev { transition: transform var(--dur-2) var(--ease-out); }
-  .pkg-help__toggle.is-open .pkg-help__chev { transform: rotate(180deg); }
-  .pkg-help__panel { position: absolute; top: calc(100% + var(--sp-8)); right: 0; width: min(440px, 88vw); z-index: 50; padding: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); box-shadow: var(--shadow-16); animation: aiHintIn .16s var(--ease-out) both; }
-  .pkg-help__panel[hidden] { display: none; }
-  .pkg-help__lead { margin: 0 0 var(--sp-12); font-size: 13px; line-height: 1.5; color: var(--fg-2); }
-  .pkg-help__lead strong { color: var(--fg-1); font-weight: 700; }
-  .pkg-help__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
-  .pkg-help__row { display: flex; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-10); border-radius: var(--r-8); cursor: pointer; transition: background var(--dur-2) var(--ease-out); }
-  .pkg-help__row:hover { background: color-mix(in srgb, var(--fg-1) 5%, transparent); }
-  .pkg-help__row:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
-  .pkg-help__ic { flex: 0 0 auto; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
-  .pkg-help__txt { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--fg-1); line-height: 1.4; }
-  .pkg-help__txt strong { font-weight: 600; }
-  .pkg-help__path { font-size: 12px; color: var(--fg-3); line-height: 1.4; }
-  .pkg-help__foot { display: flex; align-items: flex-start; gap: 6px; margin: var(--sp-10) 0 0; padding-top: var(--sp-10); border-top: 1px solid var(--stroke-3); font-size: 11.5px; line-height: 1.45; color: var(--fg-3); }
-  .pkg-help__foot iconify-icon { flex: 0 0 auto; margin-top: 1px; color: var(--brand); }
-  /* The step card has a transform (stacking context), so the dropdown's z-index is
-     trapped inside it and the later "Continue" nav paints on top. While the dropdown is
-     open, lift the whole step above that nav. */
-  #flow-wrap.wz-v2 #step-package.pkg-help-open { position: relative; z-index: 5; }
 
   /* ===== "Convert to MSIX?" benefit tip inside the Win32 Package details dialog ===== */
   .pkgd-msix-tip { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-16); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 7%, var(--canvas-tint)); font-size: 12.5px; line-height: 1.45; color: var(--fg-2); }
@@ -2341,6 +2313,36 @@
   .csv-error { display: flex; align-items: flex-start; gap: var(--sp-8); margin-top: var(--sp-16); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-4); font-size: var(--font-size-base-200); line-height: 1.5; color: var(--status-danger); background: color-mix(in srgb, var(--status-danger) 10%, transparent); }
   .csv-error iconify-icon { flex: 0 0 auto; margin-top: 1px; }
   .ez-pkg-drop__hint { font-size: 12px; color: var(--fg-3); }
+  /* ---- "What are you bringing?" — the guided front door to the Package step ----
+     Three self-identifying choice cards. Every card shows its icon, its artifact (".msix, .appx")
+     AND a one-line description at once, so a developer can compare all three and recognise
+     themselves without clicking — that's what lets this replace the old "not sure?" dropdown.
+     The card you pick decides which ways in appear below it. */
+  .pkg-what { margin-bottom: var(--sp-20); }
+  /* Header row: the question on the left, one calm "learn more" on the right — a single canonical
+     link beats three per-card links that would clutter the cards and invite leaving mid-decision. */
+  .pkg-what__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; margin: 0 0 var(--sp-10); }
+  .pkg-what__q { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .pkg-what__learn { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-base-200); color: var(--store-link); text-decoration: none; white-space: nowrap; }
+  .pkg-what__learn:hover { text-decoration: underline; }
+  .pkg-what__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); }
+  .pkgcard { position: relative; display: flex; flex-direction: column; gap: var(--sp-10); padding: var(--sp-16); text-align: left; background: var(--canvas-tint); border: 1px solid var(--stroke-2); border-radius: var(--r-12); cursor: pointer; font: inherit; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .pkgcard:hover { border-color: var(--stroke-1); background: color-mix(in srgb, var(--fg-1) 3%, var(--canvas-tint)); }
+  .pkgcard:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .pkgcard__top { display: flex; align-items: center; gap: var(--sp-10); }
+  .pkgcard__ic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 6%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .pkgcard__head { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .pkgcard__name { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  /* One crisp line explaining what to pick it for — earns its place instead of restating the name. */
+  .pkgcard__sub { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .pkgcard__badge { font-size: 10px; font-weight: var(--font-weight-semibold); letter-spacing: .02em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); }
+  /* Selected: brand border + tint, filled icon tile, and a check in the corner. */
+  .pkgcard.is-selected { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
+  .pkgcard.is-selected .pkgcard__ic { background: var(--brand); color: var(--fg-on-brand); }
+  .pkgcard__check { position: absolute; top: var(--sp-12); right: var(--sp-12); color: var(--brand); opacity: 0; transform: scale(.6); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
+  .pkgcard.is-selected .pkgcard__check { opacity: 1; transform: none; }
+  @media (max-width: 720px) { .pkg-what__cards { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .pkgcard, .pkgcard__ic, .pkgcard__check { transition: none; } }
   .ez-pkg-or { display: flex; align-items: center; gap: var(--sp-12); margin: var(--sp-16) 0; color: var(--fg-3); font-size: 12px; }
   .ez-pkg-or::before, .ez-pkg-or::after { content: ''; flex: 1; height: 1px; background: var(--stroke-2); }
   /* URL method: link field, then any contextual fields, then the Add action last */
@@ -3042,39 +3044,50 @@
           <span class="ez-step__num" id="num-package">1</span>
           <div>
             <h2 class="ez-step__title">Add your app package</h2>
-            <p class="ez-step__sub">Upload a file, or paste a link. We read the details for you.</p>
+            <p class="ez-step__sub">Tell us what you have and we’ll ask for exactly what we need.</p>
             <p class="ez-step__summary" id="sum-package"></p>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-          <!-- Top-right on-ramp helper: collapsed; opens a dropdown that routes each source + its value. -->
-          <div class="pkg-help" id="pkg-help">
-            <button type="button" class="pkg-help__toggle" id="pkg-help-toggle" aria-expanded="false" aria-controls="pkg-help-panel">
-              <iconify-icon icon="fluent:question-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              <span>Not sure which package to bring?</span>
-              <iconify-icon class="pkg-help__chev" icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+        </div>
+        <!-- The guided front door. Three self-describing cards — icon, the artifact you'd have,
+             and a one-line "what it is" — so you can compare all three and recognise yourself
+             without clicking. The choice decides which ways in appear below. -->
+        <div class="pkg-what" id="pkg-what">
+          <div class="pkg-what__head">
+            <span class="pkg-what__q" id="pkg-what-q">What are you bringing?</span>
+            <a class="pkg-what__learn" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener">Compare package types<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
+          </div>
+          <div class="pkg-what__cards" role="radiogroup" aria-labelledby="pkg-what-q" id="pkg-what-cards">
+            <button type="button" class="pkgcard is-selected" data-what="msix" role="radio" aria-checked="true" tabindex="0">
+              <iconify-icon class="pkgcard__check" icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon>
+              <span class="pkgcard__top">
+                <span class="pkgcard__ic"><iconify-icon icon="fluent:box-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                <span class="pkgcard__head">
+                  <span class="pkgcard__name">MSIX <span class="pkgcard__badge">Recommended</span></span>
+                  <span class="pkgcard__sub">Free hosting, signing and auto-updates</span>
+                </span>
+              </span>
             </button>
-            <div class="pkg-help__panel" id="pkg-help-panel" hidden>
-              <p class="pkg-help__lead">Pick the type of product you have.</p>
-              <ul class="pkg-help__list">
-                <li class="pkg-help__row" data-pkg-help="packaged" role="button" tabindex="0">
-                  <span class="pkg-help__ic"><iconify-icon icon="fluent:box-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>Any app packaged as MSIX</strong><span class="pkg-help__path">MSIX or .msixbundle, from any framework</span></span>
-                </li>
-                <li class="pkg-help__row" data-pkg-help="win32" role="button" tabindex="0">
-                  <span class="pkg-help__ic"><iconify-icon icon="fluent:desktop-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>A .msi / .exe installer</strong><span class="pkg-help__path">Classic Win32 setup — convert to MSIX, or ship as-is</span></span>
-                </li>
-                <li class="pkg-help__row" data-pkg-help="web" role="button" tabindex="0">
-                  <span class="pkg-help__ic"><iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>A live website</strong><span class="pkg-help__path">Web app or PWA — we package it as MSIX</span></span>
-                </li>
-                <li class="pkg-help__row" data-pkg-help="source" role="button" tabindex="0">
-                  <span class="pkg-help__ic"><iconify-icon icon="fluent:code-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-                  <span class="pkg-help__txt"><strong>Just source code, no package yet</strong><span class="pkg-help__path">No build yet — we’ll show you how</span></span>
-                </li>
-              </ul>
-              <p class="pkg-help__foot"><iconify-icon icon="fluent:info-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon><span>MSIX adds free hosting, code signing &amp; auto-updates from Microsoft.</span></p>
-            </div>
+            <button type="button" class="pkgcard" data-what="win32" role="radio" aria-checked="false" tabindex="-1">
+              <iconify-icon class="pkgcard__check" icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon>
+              <span class="pkgcard__top">
+                <span class="pkgcard__ic"><iconify-icon icon="fluent:desktop-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                <span class="pkgcard__head">
+                  <span class="pkgcard__name">Desktop installer</span>
+                  <span class="pkgcard__sub">Ship your existing .exe or .msi as-is</span>
+                </span>
+              </span>
+            </button>
+            <button type="button" class="pkgcard" data-what="pwa" role="radio" aria-checked="false" tabindex="-1">
+              <iconify-icon class="pkgcard__check" icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon>
+              <span class="pkgcard__top">
+                <span class="pkgcard__ic"><iconify-icon icon="fluent:globe-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                <span class="pkgcard__head">
+                  <span class="pkgcard__name">Web app</span>
+                  <span class="pkgcard__sub">Turn your website into an app</span>
+                </span>
+              </span>
+            </button>
           </div>
         </div>
         <!-- Identity reference (Package step, MSIX only): sits INSIDE the package card at the top of
@@ -5623,48 +5636,94 @@
     else if (typeof setActiveSection === 'function') setActiveSection('step-listing');
   });
 
-  // ---- "Not sure which file to bring?" — a neutral, collapsed on-ramp helper on the
-  // Package step. Frames MSIX as the single destination and routes each source to the
-  // right path (drop zone / website→MSIX / build guide). Never blocks the drop zone. ----
-  (function pkgHelp() {
-    const toggle = $('pkg-help-toggle'), panel = $('pkg-help-panel'), root = $('pkg-help');
-    if (!toggle || !panel || !root) return;
-    function setOpen(on) {
-      panel.toggleAttribute('hidden', !on);
-      toggle.setAttribute('aria-expanded', String(on));
-      toggle.classList.toggle('is-open', on);
-      const step = document.getElementById('step-package');
-      if (step) step.classList.toggle('pkg-help-open', on);
+  // ---- "What are you bringing?" — the guided front door to the Package step ----------------
+  // The developer names what they have first, and we show ONLY the way in that applies:
+  //   MSIX    -> upload (there's nothing to fetch from a URL)
+  //   Win32   -> upload, or link a hosted .exe/.msi installer
+  //   Web app -> link the website (we package it; there's no file to upload)
+  // Because each card names the artifact you'd be holding, this replaces the old
+  // "Not sure which package to bring?" dropdown — the options ARE the explanation.
+  const PKG_WHAT = {
+    msix: {
+      upload: true, url: false,
+      uploadTitle: 'Upload your MSIX package',
+      exts: '.msix, .appx',
+      accept: '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap',
+    },
+    win32: {
+      upload: true, url: true,
+      uploadTitle: 'Upload your installer',
+      exts: '.exe, .msi',
+      accept: '.exe,.msi',
+      urlTitle: 'Link a hosted installer',
+      urlDesc: 'A public .exe or .msi address — we’ll fetch it for you.',
+      urlPlaceholder: 'https://example.com/setup.exe',
+    },
+    pwa: {
+      upload: false, url: true,
+      urlTitle: 'Link your website',
+      urlDesc: 'We’ll package and sign it as a Store-ready app.',
+      urlPlaceholder: 'https://yourapp.com',
+    },
+  };
+  const PKG_WHAT_LABEL = { msix: 'MSIX', win32: 'Win32', pwa: 'Web app' };
+  let pkgWhat = 'msix';
+  // The identity reference is MSIX manifest data (AppxManifest.xml), so it follows the picker for
+  // MSIX only — never for Win32 or Web app.
+  function syncIdentityBanner() {
+    const banner = $('ez-pkg-identity-banner'); if (!banner) return;
+    const hasWin32Pkg = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
+    const onPkgStep = !!($('step-package') && $('step-package').classList.contains('is-wz-active'));
+    banner.classList.toggle('is-wz-show', onPkgStep && !hasWin32Pkg && pkgWhat === 'msix');
+  }
+  function applyPkgWhat(what, opts) {
+    const cfg = PKG_WHAT[what]; if (!cfg) return;
+    pkgWhat = what;
+    document.querySelectorAll('#pkg-what-cards .pkgcard').forEach(b => {
+      const on = b.dataset.what === what;
+      b.classList.toggle('is-selected', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;   // roving tabindex: only the selected card is in the tab order
+    });
+    // Show only the ways in that apply to this choice.
+    const drop = $('upload-zone'); if (drop) drop.hidden = !cfg.upload;
+    const urlPart = $('pkg-url-part'); if (urlPart) urlPart.hidden = !cfg.url;
+    const orDiv = $('pkg-or'); if (orDiv) orDiv.hidden = !(cfg.upload && cfg.url);
+    if (cfg.upload && drop) {
+      const t = drop.querySelector('.ez-pkg-method__title'); if (t) t.textContent = cfg.uploadTitle;
     }
-    toggle.addEventListener('click', (e) => { e.stopPropagation(); setOpen(panel.hasAttribute('hidden')); });
-    // Dismiss the dropdown on an outside click or Escape.
-    document.addEventListener('click', (e) => { if (!panel.hasAttribute('hidden') && !root.contains(e.target)) setOpen(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hasAttribute('hidden')) setOpen(false); });
-    function reduce() { return typeof reduceMotion === 'function' && reduceMotion(); }
-    // Open the "How to build your package" guide. The fluent-dialog wrapper's show()
-    // is unreliable for this dialog in the shipped build, so fall back to driving the
-    // inner native <dialog> directly when show() doesn't take.
-    function openBuildGuide() {
-      const dlg = $('build-guide-dialog');
-      if (!dlg) { const g = $('build-guide-btn'); if (g) g.click(); return; }
-      try { dlg.show(); } catch (e) {}
-      try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
-    }
-    function act(kind) {
-      if (kind === 'source') { openBuildGuide(); return; }
-      if (kind === 'web') {
-        const u = $('pkg-url-input');
-        if (u) { u.scrollIntoView({ block: 'center', behavior: reduce() ? 'auto' : 'smooth' }); try { u.focus(); } catch (e) {} }
-        return;
+    if (cfg.url && urlPart) {
+      const t = urlPart.querySelector('.ez-pkg-method__title'); if (t) t.textContent = cfg.urlTitle;
+      const d = urlPart.querySelector('.ez-pkg-url__hint'); if (d) d.textContent = cfg.urlDesc;
+      const i = $('pkg-url-input');
+      if (i) {
+        i.setAttribute('placeholder', cfg.urlPlaceholder);
+        i.setAttribute('aria-label', cfg.urlTitle);
+        if (!opts || !opts.keepValue) i.value = '';
       }
-      const z = $('upload-zone');   // packaged / win32 → nudge to the drop zone
-      if (z) { z.scrollIntoView({ block: 'center', behavior: reduce() ? 'auto' : 'smooth' }); try { z.focus(); } catch (e) {} }
+      const addBtn = $('pkg-url-add'); if (addBtn && (!opts || !opts.keepValue)) addBtn.disabled = true;
     }
-    root.addEventListener('click', (e) => { const row = e.target.closest('[data-pkg-help]'); if (row) { act(row.dataset.pkgHelp); setOpen(false); } });
-    root.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const row = e.target.closest('[data-pkg-help]'); if (!row) return;
-      e.preventDefault(); act(row.dataset.pkgHelp); setOpen(false);
+    updateUploadConstraints();
+    syncIdentityBanner();
+  }
+  (function wirePkgWhat() {
+    const cards = $('pkg-what-cards'); if (!cards) return;
+    const opts = () => [...cards.querySelectorAll('.pkgcard')];
+    const pick = (b) => {
+      if (!b || b.dataset.what === pkgWhat) return;
+      applyPkgWhat(b.dataset.what);
+      if (typeof announce === 'function') announce(PKG_WHAT_LABEL[b.dataset.what] + ' selected.');
+    };
+    cards.addEventListener('click', (e) => pick(e.target.closest('.pkgcard')));
+    // Arrow keys move within the radiogroup, as expected for role=radio.
+    cards.addEventListener('keydown', (e) => {
+      if (!/^Arrow(Right|Left|Down|Up)$/.test(e.key)) return;
+      const list = opts(); const i = list.findIndex(c => c.dataset.what === pkgWhat);
+      if (i < 0) return;
+      e.preventDefault();
+      const fwd = e.key === 'ArrowRight' || e.key === 'ArrowDown';
+      const next = list[(i + (fwd ? 1 : list.length - 1)) % list.length];
+      pick(next); next.focus();
     });
   })();
 
@@ -7313,14 +7372,19 @@
     return p ? (p.win32 ? 'win32' : 'msix') : null;
   }
   function updateUploadConstraints() {
+    // A package already present locks the family; before that, the "what are you bringing?"
+    // picker decides what we accept, so the developer only ever sees their own file types.
     const locked = lockedPkgType();
+    const picked = (!locked && typeof PKG_WHAT !== 'undefined' && PKG_WHAT[pkgWhat]) || null;
     const hint = $('pkg-drop-hint');
     if (hint) hint.textContent = locked === 'win32' ? '.exe, .msi'
-      : locked === 'msix' ? '.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap'
-      : '.msix, .msixbundle, .msixupload, .appx, .appxbundle, .appxupload, .xap, .exe, .msi';
+      : locked === 'msix' ? '.msix, .appx'
+      : picked && picked.exts ? picked.exts
+      : '.msix, .appx, .exe, .msi';
     const inp = $('pkg-file');
     if (inp) inp.accept = locked === 'win32' ? '.exe,.msi'
       : locked === 'msix' ? '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap'
+      : picked && picked.accept ? picked.accept
       : '.msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap,.exe,.msi';
   }
   function showTypeMsg(text) {
@@ -7676,21 +7740,26 @@
       }));
     });
     if (packages.length === 0) {
-      showAddUI('both');                       // empty: offer both methods
+      // Empty: ask what they're bringing, and show only the way in that applies to it.
+      const pi = $('pkg-input'); if (pi) pi.hidden = false;
+      const what = $('pkg-what'); if (what) what.hidden = false;
+      if (typeof applyPkgWhat === 'function') applyPkgWhat(pkgWhat);
     } else {
       const pi = $('pkg-input'); if (pi) pi.hidden = true;   // a package exists: collapse the add UI
+      const what = $('pkg-what'); if (what) what.hidden = true;   // …and the question is answered
     }
     const addMore = $('add-more-pkg');   // both methods produce a package, so the label is uniform
     // A packaged web app is a single submission — no "add another package" for it.
     if (addMore) addMore.hidden = packages.length === 0 || packages.some(p => p.fromPwa);
     updateUploadConstraints();   // drop-zone hint + accepted file types reflect the locked package type
     renderFamilyDistribution();  // per-family distribution toggles (only when packages span >1 family)
-    // The "Building a package?" identity banner is MSIX-only (AppxManifest.xml). Re-derived every render:
-    // show it on the Package step only while there's no confirmed Win32 installer — so removing them brings it back.
+    // The "Building a package?" identity banner is MSIX manifest data (AppxManifest.xml) — MSIX only,
+    // not Win32 or Web app. Re-derived every render: show it on the Package step only while there's
+    // no confirmed Win32 installer — so removing them brings it back.
     const idBannerPkg = $('ez-pkg-identity-banner'), flowWrapPkg = document.getElementById('flow-wrap');
     const hasWin32Pkg = packages.some(p => p.win32 && !p._pending);
     const onPkgStep = !!($('step-package') && $('step-package').classList.contains('is-wz-active'));
-    if (idBannerPkg) idBannerPkg.classList.toggle('is-wz-show', onPkgStep && !hasWin32Pkg);
+    if (idBannerPkg) idBannerPkg.classList.toggle('is-wz-show', onPkgStep && !hasWin32Pkg && pkgWhat === 'msix');
     if (flowWrapPkg) flowWrapPkg.classList.toggle('has-win32-pkg', hasWin32Pkg);
     // Win32 can't target a private audience — re-run the audience rule to reset it if needed.
     if (hasWin32Pkg && window.__reachRefresh && window.__reachRefresh.audience) window.__reachRefresh.audience();
@@ -12886,6 +12955,9 @@ function openPriceScheduleDialog() {
   renderRatingStep();
   ezRenderPreview();
   updateGate();
+  // Seed the package picker here, not from renderPackages — the first render runs before the
+  // picker's config exists, so the step would paint with the raw markup defaults.
+  try { applyPkgWhat('msix'); } catch (e) {}
 
   // Internal/placeholder branding: recognized demo apps show their real brand logo so the flow
   // looks authentic — feeds the header icon, the live-listing icon + hero hue, and every package
