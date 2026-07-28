@@ -1640,8 +1640,12 @@
   /* No inner scroller here — the dialog body is the only thing that scrolls, so a long
      questionnaire never puts a scrollbar inside a scrollbar. */
   #rating-questions-mount { margin: 0 0 var(--sp-8); }
-  .rating-section { margin-bottom: var(--sp-12); }
-  .rating-section__title { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); font-weight: 600; margin: 0 0 var(--sp-4); }
+  .rating-section { margin: 0 0 var(--sp-16); }
+  .rating-section__title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-3); font-weight: 600; margin: 0 0 var(--sp-6); }
+  /* Each section's questions sit in a settings-card: a short bold label + muted detail on the left,
+     Yes/No pinned right, hairlines between rows. Turns a wall of long sentences into a scannable list. */
+  .rating-qcard { border: 1px solid var(--stroke-3); border-radius: var(--r-8); background: var(--canvas-tint); overflow: hidden; }
+  .rating-qcard > * + * { border-top: 1px solid var(--stroke-3); }
   /* App type — the FIRST question. What you pick here decides which content sections you're
      asked about, so it's a radio list above the switches rather than one of them. Each option
      carries examples, because "is my app social?" is only obvious once you see the examples. */
@@ -1658,21 +1662,21 @@
   .apptype__name { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
   .apptype__desc { font-size: 12px; color: var(--fg-3); line-height: 1.45; }
   @media (prefers-reduced-motion: reduce) { .apptype__opt { transition: none; } }
-  .rating-question { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-6) 0; border-bottom: 1px solid var(--stroke-3); }
-  .rating-question[data-followup="true"] { padding-left: var(--sp-20); }
-  .rating-question__text { font-size: 13px; color: var(--fg-1); }
-  /* The game questions are full sentences, so they wrap — keep the switch pinned to the top
-     right rather than floating in the middle of a three-line question. */
-  .rating-question--long { align-items: flex-start; }
-  .rating-question--long .rating-question__text { line-height: 1.45; }
-  .rating-question--long .rating-question__switch-wrap { margin-top: 1px; }
+  .rating-question { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-16); padding: var(--sp-12) var(--sp-14); }
+  /* IARC's exact question text (verbatim — we can't alter it). Fills the row so the switch sits at the card edge. */
+  .rating-question__text { flex: 1 1 auto; min-width: 0; font-size: 13px; color: var(--fg-1); line-height: 1.45; }
+  /* Severity follow-ups drill down under their parent: indented + a faint tint, quieter text. */
+  .rating-question--sub { padding-left: calc(var(--sp-14) + var(--sp-20)); background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .rating-question--sub .rating-question__text { color: var(--fg-2); }
   .rating-scope-note { font-size: 12px; color: var(--fg-3); line-height: 1.45; margin: 0 0 var(--sp-12); }
   /* A one-of-N question inside the questionnaire (e.g. Communication vs Social). Reuses the
      App type radio look so there's a single "pick one" pattern in this dialog. */
-  .rating-choice { padding: var(--sp-6) 0 var(--sp-8); border-bottom: 1px solid var(--stroke-3); }
-  .rating-choice__q { font-size: 13px; color: var(--fg-1); line-height: 1.45; margin: 0 0 var(--sp-6); }
-  .rating-choice .apptype__opt { padding: var(--sp-6) var(--sp-8); }
-  .rating-question__switch-wrap { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; }
+  .rating-choice { padding: var(--sp-12) var(--sp-14); }
+  .rating-choice__q { font-size: 13.5px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.35; margin: 0 0 var(--sp-8); }
+  .rating-choice .apptype__list { gap: var(--sp-4); }
+  .rating-choice .apptype__opt { padding: var(--sp-8); border: 1px solid var(--stroke-3); border-radius: var(--r-6); }
+  .rating-choice .apptype__opt[aria-checked="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
+  .rating-question__switch-wrap { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; padding-top: 1px; }
   .rating-question__yes-label { font-size: 12px; color: var(--fg-3); min-width: 22px; text-align: right; }
   .rating-dialog__result { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-8); padding: var(--sp-12); border: 1px solid color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); border-radius: var(--r-8); background: var(--canvas-tint); }
   .rating-dialog__result-text strong { font-size: 14px; color: var(--fg-1); }
@@ -1723,10 +1727,27 @@
   .rating-terms__text { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
   .rating-terms__text a { color: var(--store-link); }
   .rating-terms fluent-checkbox { flex: 0 0 auto; }
-  /* The terms agreement is what unlocks Confirm, so it must never scroll out of view. Pin it to
-     the bottom of the dialog's scroll area as a sticky footer — the territory table scrolls
-     behind it (opaque dialog-surface background hides the rows) while the checkbox stays put. */
-  #rating-phase-preview .rating-terms { position: sticky; bottom: 0; z-index: 2; margin-top: 0; padding: var(--sp-12) 0 var(--sp-4); background: var(--layer); border-top: 1px solid var(--stroke-2); }
+  /* Inline age rating: mode radios up top, then a two-phase flow (questions -> Preview -> rating). */
+  .rating-mode { display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-24); margin-bottom: var(--sp-16); }
+  .rating-mode__opt { display: inline-flex; align-items: center; gap: var(--sp-8); padding: var(--sp-4) 0; background: none; border: 0; font: inherit; color: var(--fg-1); cursor: pointer; }
+  .rating-mode__opt:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
+  .rating-mode__dot { position: relative; flex: 0 0 auto; width: 16px; height: 16px; border: 1px solid var(--fg-3); border-radius: 50%; }
+  .rating-mode__opt[aria-checked="true"] .rating-mode__dot { border-color: var(--brand); }
+  .rating-mode__opt[aria-checked="true"] .rating-mode__dot::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--brand); }
+  .rating-mode__name { font-size: var(--font-size-base-300); }
+  .rating-mode__opt[aria-checked="true"] .rating-mode__name { font-weight: var(--font-weight-semibold); }
+  .rating-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-12); margin-top: var(--sp-16); }
+  .rating-back { display: inline-flex; align-items: center; gap: 4px; margin-bottom: var(--sp-12); background: none; border: 0; padding: 0; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--store-link); cursor: pointer; }
+  .rating-back:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
+  .ez-rating--result { margin: 0 0 var(--sp-16); }
+  .rating-terr__cap { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-8); }
+  /* "Edit answers" tucked into the confirmed view's territory-table header (right side). */
+  .rating-terr__edit { flex: 0 0 auto; margin-left: auto; display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 0; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--store-link); cursor: pointer; }
+  .rating-terr__edit:hover { text-decoration: underline; }
+  .rating-terr__edit:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
+  .rating-set-note { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--status-success); }
+  .rating-iarc__row { display: flex; align-items: center; gap: var(--sp-12); }
+  .rating-iarc__row fluent-text-input { flex: 1 1 auto; min-width: 0; max-width: 360px; }
   /* Fluent buttons set their own display, so the bare [hidden] attribute can leak through
      — force phase-toggled action buttons to actually hide. */
   fluent-button[hidden] { display: none !important; }
@@ -3443,29 +3464,113 @@
 
         <div class="ez-substep">
           <h3 class="ez-substep__title">Age rating <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
-          <div class="ez-rating">
-            <div class="iarc-badge">
-              <span class="iarc-badge__head">IARC</span>
-              <span class="iarc-badge__age" id="rating-age">—</span>
-            </div>
-            <div class="ez-rating__text">
-              <strong id="rating-label">Content rating</strong>
-              <p id="rating-desc">Answer a few quick questions about your app's content.</p>
-            </div>
-            <fluent-button id="rating-territories-btn" appearance="secondary" hidden>
-              <iconify-icon slot="start" icon="fluent:globe-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              Preview ratings
-            </fluent-button>
-            <fluent-button id="rating-review-btn" appearance="primary">
-              <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              Start questionnaire
-            </fluent-button>
+
+          <!-- Two ways in, chosen up front: answer the questionnaire, or paste an existing IARC ID. -->
+          <div class="rating-mode" role="radiogroup" aria-label="How do you want to set your age rating?" id="rating-mode">
+            <button type="button" class="rating-mode__opt" data-mode="questionnaire" role="radio" aria-checked="true">
+              <span class="rating-mode__dot" aria-hidden="true"></span>
+              <span class="rating-mode__name">Answer the IARC questionnaire</span>
+            </button>
+            <button type="button" class="rating-mode__opt" data-mode="iarcid" role="radio" aria-checked="false">
+              <span class="rating-mode__dot" aria-hidden="true"></span>
+              <span class="rating-mode__name">I already have an IARC ID</span>
+            </button>
           </div>
 
-          <!-- Filled by renderRatingBadgeStrip() once a rating exists. -->
-          <div class="ez-rating-badges" id="rating-badges" hidden></div>
+          <!-- ===== Questionnaire mode ===== -->
+          <div id="rating-questionnaire">
 
-          <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> to use it instead of the questionnaire.</p>
+            <!-- Phase 1: the questions -->
+            <div id="rating-phase-q">
+              <div class="apptype" id="rating-apptype">
+                <h4 class="rating-section__title">App type</h4>
+                <p class="apptype__lead">Which of these best describes your app? When you answer, don’t count advertising content.</p>
+                <div class="apptype__list" role="radiogroup" aria-label="App type" id="rating-apptype-list">
+                  <button type="button" class="apptype__opt" data-apptype="game" role="radio" aria-checked="false">
+                    <span class="apptype__dot" aria-hidden="true"></span>
+                    <span class="apptype__txt">
+                      <span class="apptype__name">Game</span>
+                      <span class="apptype__desc">A game or betting app — for example Candy Crush Saga, Temple Run, Mario Kart, The Sims, Angry Birds, casino games, interactive visual novels, management games, or daily fantasy sports.</span>
+                    </span>
+                  </button>
+                  <button type="button" class="apptype__opt" data-apptype="social" role="radio" aria-checked="false">
+                    <span class="apptype__dot" aria-hidden="true"></span>
+                    <span class="apptype__txt">
+                      <span class="apptype__name">Social or communication</span>
+                      <span class="apptype__desc">Its main purpose is meeting or talking to people — for example Facebook, X, Skype, or SMS.</span>
+                    </span>
+                  </button>
+                  <button type="button" class="apptype__opt" data-apptype="other" role="radio" aria-checked="true">
+                    <span class="apptype__dot" aria-hidden="true"></span>
+                    <span class="apptype__txt">
+                      <span class="apptype__name">All other app types</span>
+                      <span class="apptype__desc">Anything that isn’t a game, social or communication app — for example entertainment, stores, news, lifestyle, streaming, utilities, tools, emoji sets, fitness, magazines, and customizations.</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="rating-questions" id="rating-questions-mount"></div>
+
+              <div class="rating-actions">
+                <fluent-button id="rating-preview-btn" appearance="primary">
+                  Preview rating
+                  <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                </fluent-button>
+              </div>
+            </div>
+
+            <!-- Phase 2: the actual rating, revealed when Preview is clicked -->
+            <div id="rating-phase-p" hidden>
+              <button type="button" class="rating-back" id="rating-back-btn">
+                <iconify-icon icon="fluent:arrow-left-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>
+                Edit answers
+              </button>
+
+              <div class="ez-rating ez-rating--result">
+                <div class="iarc-badge">
+                  <span class="iarc-badge__head">IARC</span>
+                  <span class="iarc-badge__age" id="rating-age">—</span>
+                </div>
+                <div class="ez-rating__text">
+                  <strong id="rating-label">Content rating</strong>
+                  <p id="rating-desc"></p>
+                </div>
+              </div>
+
+              <p class="rating-terr__cap">How this maps across ratings authorities</p>
+              <div class="ez-rating-terr" id="rating-terr-inline"></div>
+
+              <div class="rating-terms">
+                <fluent-checkbox id="rating-terms-check" aria-describedby="rating-terms-text"></fluent-checkbox>
+                <span class="rating-terms__text" id="rating-terms-text">By checking this box, I agree to the <a href="https://www.globalratings.com" target="_blank" rel="noopener">IARC Terms of Use</a> and that I am the age of majority in my jurisdiction. <span class="field-mark field-mark--req" aria-label="required">*</span></span>
+              </div>
+
+              <div class="rating-actions">
+                <fluent-button id="rating-confirm-btn" appearance="primary" disabled>
+                  <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  Confirm rating
+                </fluent-button>
+                <span class="rating-set-note" id="rating-set-note" hidden><iconify-icon icon="fluent:checkmark-circle-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon> Age rating set</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== IARC ID mode ===== -->
+          <div id="rating-iarc-mode" hidden>
+            <div class="ez-field rating-iarc">
+              <label class="ez-field__label" for="rating-iarc-input">IARC certificate ID</label>
+              <div class="rating-iarc__row">
+                <fluent-text-input id="rating-iarc-input" placeholder="e.g. 2a1b3c4d-5e6f-7890" aria-label="IARC certificate ID"></fluent-text-input>
+                <fluent-button id="rating-iarc-apply" appearance="primary" disabled>Apply</fluent-button>
+              </div>
+              <p class="ez-field__hint">Enter the certificate ID from your existing IARC rating to use it instead of the questionnaire.</p>
+            </div>
+            <div class="ez-rating ez-rating--result" id="rating-iarcid-note" hidden>
+              <div class="iarc-badge"><span class="iarc-badge__head">IARC</span><span class="iarc-badge__age">✓</span></div>
+              <div class="ez-rating__text"><strong>Age rating set via IARC ID</strong><p id="rating-iarcid-desc"></p></div>
+            </div>
+          </div>
         </div>
 
       </section>
@@ -3768,93 +3873,8 @@
 </div><!-- /.app -->
 
 <!-- IARC age-rating questionnaire dialog -->
-<fluent-dialog id="rating-dialog" modal-type="modal" aria-labelledby="rating-dialog-title">
-  <fluent-dialog-body>
-    <span slot="title" id="rating-dialog-title">
-      <iconify-icon icon="fluent:shield-checkmark-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
-      Age rating questionnaire
-    </span>
-    <fluent-button slot="title-action" appearance="subtle" data-rating-dialog-close aria-label="Close">
-      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-    </fluent-button>
-
-    <!-- Phase 1: questionnaire -->
-    <div id="rating-phase-questions">
-      <p class="rating-dialog__intro" id="rating-dialog-intro">Answer these questions about your app's content. The rating updates as you change answers.</p>
-
-      <!-- Question 1. Pre-selected from the App/Game choice made when the name was reserved,
-           and it decides which sections appear below — a game gets fear + gambling, a social
-           app gets the user-interaction questions instead. -->
-      <div class="apptype" id="rating-apptype">
-        <h4 class="rating-section__title">App type</h4>
-        <p class="apptype__lead">Which of these best describes your app? When you answer, don’t count advertising content.</p>
-        <div class="apptype__list" role="radiogroup" aria-label="App type" id="rating-apptype-list">
-          <button type="button" class="apptype__opt" data-apptype="game" role="radio" aria-checked="false">
-            <span class="apptype__dot" aria-hidden="true"></span>
-            <span class="apptype__txt">
-              <span class="apptype__name">Game</span>
-              <span class="apptype__desc">A game or betting app — for example Candy Crush Saga, Temple Run, Mario Kart, The Sims, Angry Birds, casino games, interactive visual novels, management games, or daily fantasy sports.</span>
-            </span>
-          </button>
-          <button type="button" class="apptype__opt" data-apptype="social" role="radio" aria-checked="false">
-            <span class="apptype__dot" aria-hidden="true"></span>
-            <span class="apptype__txt">
-              <span class="apptype__name">Social or communication</span>
-              <span class="apptype__desc">Its main purpose is meeting or talking to people — for example Facebook, X, Skype, or SMS.</span>
-            </span>
-          </button>
-          <button type="button" class="apptype__opt" data-apptype="other" role="radio" aria-checked="true">
-            <span class="apptype__dot" aria-hidden="true"></span>
-            <span class="apptype__txt">
-              <span class="apptype__name">All other app types</span>
-              <span class="apptype__desc">Anything that isn’t a game, social or communication app — for example entertainment, stores, news, lifestyle, streaming, utilities, tools, emoji sets, fitness, magazines, and customizations.</span>
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <div class="rating-questions" id="rating-questions-mount"></div>
-    </div>
-
-    <!-- Phase 2: cross-territory preview (filled by renderRatingTerritories) + IARC terms agreement -->
-    <div id="rating-phase-preview" hidden>
-      <div class="ez-rating-terr is-dialog" id="rating-terr-quiz"></div>
-      <div class="rating-terms">
-        <fluent-checkbox id="rating-terms-check" aria-describedby="rating-terms-text"></fluent-checkbox>
-        <span class="rating-terms__text" id="rating-terms-text">By checking this box, I hereby agree to the <a href="https://www.globalratings.com" target="_blank" rel="noopener">IARC Terms of Use</a> and I agree that I am the age of majority in my jurisdiction. <span class="field-mark field-mark--req" aria-label="required">*</span></span>
-      </div>
-    </div>
-
-    <fluent-button slot="action" appearance="secondary" data-rating-dialog-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="secondary" id="rating-back-btn" hidden>
-      <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Back
-    </fluent-button>
-    <fluent-button slot="action" appearance="primary" id="rating-preview-btn">
-      <iconify-icon slot="start" icon="fluent:globe-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Preview rating
-    </fluent-button>
-    <fluent-button slot="action" appearance="primary" id="rating-confirm-btn" hidden>
-      <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Confirm rating
-    </fluent-button>
-  </fluent-dialog-body>
-</fluent-dialog>
-
-<!-- Read-only cross-territory ratings, opened from the confirmed Age-rating summary. -->
-<fluent-dialog id="rating-terr-dialog" modal-type="modal" aria-labelledby="rating-terr-dialog-title">
-  <fluent-dialog-body>
-    <span slot="title" id="rating-terr-dialog-title">
-      <iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
-      Age rating by territory
-    </span>
-    <fluent-button slot="title-action" appearance="subtle" data-terr-dialog-close aria-label="Close">
-      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-    </fluent-button>
-    <div class="ez-rating-terr is-dialog" id="rating-terr-view"></div>
-    <fluent-button slot="action" appearance="primary" data-terr-dialog-close>Close</fluent-button>
-  </fluent-dialog-body>
-</fluent-dialog>
+<!-- Age rating questionnaire + cross-territory preview are now INLINE in the Compliance step
+     (#step-rating > #rating-questionnaire). The old modal dialogs were removed. -->
 
 <!-- Package a website as an MSIX (PWA Builder-style). A website URL opens this: a quick
      manifest / service-worker / HTTPS report, the reserved identity applied automatically,
@@ -6850,35 +6870,35 @@
     // ("this doesn't cover user-generated content") is stated ONCE above the list rather than
     // repeated on all nine questions.
     { section: 'Violence, blood, or gory images', appTypes: ['game'], items: [
-      { id: 'gViolence',          text: 'Does the game contain inferences of, references to, or depictions of violence, blood, or gory images? This includes violence directed at the player’s character.', age: 0, parent: null },
+      { id: 'gViolence', text: 'Does the game contain inferences of, references to, or depictions of violence, blood, or gory images? This includes violence directed at the player’s character.', age: 0, parent: null },
       { id: 'gViolenceFantasy',   text: 'Is the violence stylized, cartoon, or fantasy?',        age: 7,  parent: 'gViolence', descriptor: 'Fantasy violence' },
       { id: 'gViolenceRealistic', text: 'Does the violence look realistic?',                     age: 12, parent: 'gViolence', descriptor: 'Realistic violence' },
       { id: 'gViolenceBlood',     text: 'Does it show blood or gore?',                           age: 16, parent: 'gViolence', descriptor: 'Blood and gore' },
       { id: 'gViolenceExtreme',   text: 'Does it include torture, cruelty, or sadism?',          age: 18, parent: 'gViolence', descriptor: 'Extreme violence' },
     ]},
     { section: 'Fear', appTypes: ['game'], items: [
-      { id: 'gFear',         text: 'Does the game contain pictures or sounds likely to be scary, horrifying, or disturbing?', age: 0, parent: null },
+      { id: 'gFear', text: 'Does the game contain pictures or sounds likely to be scary, horrifying, or disturbing?', age: 0, parent: null },
       { id: 'gFearChildren', text: 'Is it likely to frighten young children?',   age: 7,  parent: 'gFear', descriptor: 'Fear' },
       { id: 'gFearHorror',   text: 'Is it sustained horror or intense terror?',  age: 16, parent: 'gFear', descriptor: 'Horror' },
     ]},
     { section: 'Sexuality, suggestiveness, or dating', appTypes: ['game'], items: [
-      { id: 'gSexual',           text: 'Does the game contain inferences of, references to, or depictions of sexuality, sexual violence, suggestiveness, dating games, revealing attire, or nudity?', age: 0, parent: null },
+      { id: 'gSexual', text: 'Does the game contain inferences of, references to, or depictions of sexuality, sexual violence, suggestiveness, dating games, revealing attire, or nudity?', age: 0, parent: null },
       { id: 'gSexualSuggestive', text: 'Is it suggestive themes, revealing attire, or dating?',        age: 12, parent: 'gSexual', descriptor: 'Sexual themes' },
       { id: 'gSexualNudity',     text: 'Does it include nudity?',                                     age: 16, parent: 'gSexual', descriptor: 'Nudity' },
       { id: 'gSexualExplicit',   text: 'Does it include explicit sexual activity or sexual violence?', age: 18, parent: 'gSexual', descriptor: 'Explicit sexual content' },
     ]},
     { section: 'Gambling', appTypes: ['game'], items: [
-      { id: 'gGambling',          text: 'Does the game contain gambling, simulations of casino gambling or bingo, or gambling themes?', age: 0, parent: null },
+      { id: 'gGambling', text: 'Does the game contain gambling, simulations of casino gambling or bingo, or gambling themes?', age: 0, parent: null },
       { id: 'gGamblingSimulated', text: 'Is it simulated, with nothing of real value at stake?', age: 12, parent: 'gGambling', descriptor: 'Simulated gambling' },
       { id: 'gGamblingReal',      text: 'Can players wager or win money of real value?',          age: 18, parent: 'gGambling', descriptor: 'Real-money gambling' },
     ]},
     { section: 'Language', appTypes: ['game'], items: [
-      { id: 'gLanguage',       text: 'Does the game contain any potentially offensive language?', age: 0, parent: null },
+      { id: 'gLanguage', text: 'Does the game contain any potentially offensive language?', age: 0, parent: null },
       { id: 'gLanguageMild',   text: 'Is it mild and occasional?',              age: 7,  parent: 'gLanguage', descriptor: 'Mild language' },
       { id: 'gLanguageStrong', text: 'Is it strong or explicit profanity?',     age: 16, parent: 'gLanguage', descriptor: 'Strong language' },
     ]},
     { section: 'Controlled substance', appTypes: ['game'], items: [
-      { id: 'gSubstance',        text: 'Does the game contain any reference to, or use of, drugs, alcohol, or tobacco?', age: 0, parent: null },
+      { id: 'gSubstance', text: 'Does the game contain any reference to, or use of, drugs, alcohol, or tobacco?', age: 0, parent: null },
       { id: 'gSubstanceRef',     text: 'Is it a reference only, with no use shown?', age: 7,  parent: 'gSubstance', descriptor: 'Substance references' },
       { id: 'gSubstanceUse',     text: 'Is use shown on screen?',                    age: 12, parent: 'gSubstance', descriptor: 'Substance use' },
       { id: 'gSubstanceGlorify', text: 'Does it glorify or encourage use?',          age: 18, parent: 'gSubstance', descriptor: 'Glorifies substance use' },
@@ -6892,11 +6912,11 @@
     // The last four are territory rules rather than age bands — they drive where the game can be
     // sold, so they're informational here and surface as disclosures instead of raising the age.
     { section: 'Miscellaneous', appTypes: ['game'], items: [
-      { id: 'gUsersInteract',   text: 'Does the game natively allow users to interact or exchange content with other users through voice, text, images, or audio?', age: 0, parent: null, descriptor: 'Users interact',  informational: true },
-      { id: 'gSharesLocation',  text: 'Does the game share the user’s current and precise physical location with other users?',                                  age: 0, parent: null, descriptor: 'Shares location', informational: true },
-      { id: 'gNaziSymbols',     text: 'Does the game contain swastikas, other Nazi symbols, or propaganda deemed unconstitutional in Germany?',                   age: 0, parent: null, descriptor: 'Restricted symbols (Germany)', informational: true },
-      { id: 'gKoreaNational',   text: 'Does the game contain content that could substantially erode the national identity of the Republic of Korea by describing anti-national acts or distorting historical facts?', age: 0, parent: null, descriptor: 'Restricted content (Korea)', informational: true },
-      { id: 'gTerrorism',       text: 'Does the game advocate committing acts of terrorism?',                                                                     age: 18, parent: null, descriptor: 'Advocates terrorism' },
+      { id: 'gUsersInteract', text: 'Does the game natively allow users to interact or exchange content with other users through voice, text, images, or audio?', age: 0, parent: null, descriptor: 'Users interact',  informational: true },
+      { id: 'gSharesLocation', text: 'Does the game share the user’s current and precise physical location with other users?',                                  age: 0, parent: null, descriptor: 'Shares location', informational: true },
+      { id: 'gNaziSymbols', text: 'Does the game contain swastikas, other Nazi symbols, or propaganda deemed unconstitutional in Germany?',                   age: 0, parent: null, descriptor: 'Restricted symbols (Germany)', informational: true },
+      { id: 'gKoreaNational', text: 'Does the game contain content that could substantially erode the national identity of the Republic of Korea by describing anti-national acts or distorting historical facts?', age: 0, parent: null, descriptor: 'Restricted content (Korea)', informational: true },
+      { id: 'gTerrorism', text: 'Does the game advocate committing acts of terrorism?',                                                                     age: 18, parent: null, descriptor: 'Advocates terrorism' },
       { id: 'gCrimeTechniques', text: 'Does the game contain realistic descriptions of crimes (e.g. robbery, kidnapping), or techniques that could be used in criminal offenses?', age: 16, parent: null, descriptor: 'Criminal techniques' },
     ]},
 
@@ -6909,11 +6929,11 @@
         { value: 'communication', name: 'Communication', desc: 'Used to talk to people the user already knows, one-on-one or in small groups — like Skype, SMS, or Gmail.', age: 0,  descriptor: null },
         { value: 'social',        name: 'Social',        desc: 'Used to post and share with large groups, or to meet new people — like Facebook, X, Instagram, or Tinder.', age: 12, descriptor: 'Social networking' },
       ]},
-      { id: 'socialLocation',    text: 'Does the app share the user’s current and precise physical location with other users?', age: 0, parent: null, descriptor: 'Shares location',     informational: true },
-      { id: 'socialDigital',     text: 'Does the app allow users to purchase digital goods?',                                    age: 0, parent: null, descriptor: 'In-app purchases',    informational: true },
-      { id: 'socialBlock',       text: 'Does the app include the ability to block users or user-generated content?',             age: 0, parent: null, descriptor: 'Users can block',     informational: true },
-      { id: 'socialReport',      text: 'Does the app include the ability to report users or user-generated content?',            age: 0, parent: null, descriptor: 'Users can report',    informational: true },
-      { id: 'socialChatMod',     text: 'Does the app include chat moderation?',                                                  age: 0, parent: null, descriptor: 'Chat moderation',     informational: true },
+      { id: 'socialLocation', text: 'Does the app share the user’s current and precise physical location with other users?', age: 0, parent: null, descriptor: 'Shares location',     informational: true },
+      { id: 'socialDigital', text: 'Does the app allow users to purchase digital goods?',                                    age: 0, parent: null, descriptor: 'In-app purchases',    informational: true },
+      { id: 'socialBlock', text: 'Does the app include the ability to block users or user-generated content?',             age: 0, parent: null, descriptor: 'Users can block',     informational: true },
+      { id: 'socialReport', text: 'Does the app include the ability to report users or user-generated content?',            age: 0, parent: null, descriptor: 'Users can report',    informational: true },
+      { id: 'socialChatMod', text: 'Does the app include chat moderation?',                                                  age: 0, parent: null, descriptor: 'Chat moderation',     informational: true },
       { id: 'socialFriendsOnly', text: 'Can interactions in the app be limited to invited friends only?',                        age: 0, parent: null, descriptor: 'Friends-only option', informational: true },
     ]},
 
@@ -6922,7 +6942,7 @@
     // and what it reaches out to online — so those are three distinct questions rather than one
     // "does your app contain…". Only the packaged-content one opens severity follow-ups.
     { section: 'Downloaded app', appTypes: ['other'], items: [
-      { id: 'aDownloaded',    text: 'Does the app contain any ratings-relevant content (e.g. sex, violence, language) downloaded as part of the app package — its code or assets?', age: 0, parent: null },
+      { id: 'aDownloaded', text: 'Does the app contain any ratings-relevant content (e.g. sex, violence, language) downloaded as part of the app package — its code or assets?', age: 0, parent: null },
       { id: 'aDownMild',      text: 'Is it mild — cartoon violence, mild language, or suggestive themes?',   age: 7,  parent: 'aDownloaded', descriptor: 'Mild content' },
       { id: 'aDownStrong',    text: 'Is it strong — realistic violence, nudity, or explicit language?',      age: 16, parent: 'aDownloaded', descriptor: 'Strong content' },
       { id: 'aDownExplicit',  text: 'Is it explicit — graphic violence or explicit sexual content?',         age: 18, parent: 'aDownloaded', descriptor: 'Explicit content' },
@@ -6931,7 +6951,7 @@
       { id: 'aUserSharing', text: 'Does the app natively allow users to interact or exchange content with other users through voice, text, images, or audio?', age: 0, parent: null, descriptor: 'Users interact', informational: true },
     ]},
     { section: 'Online content', appTypes: ['other'], items: [
-      { id: 'aOnlineContent',    text: 'Does the app feature or promote content that isn’t part of the initial download but can be reached from the app? For example movies in Netflix, listings in Amazon Shopping, songs in Spotify, generated AI content, or articles in the New York Times.', age: 0, parent: null, descriptor: 'Online content', informational: true },
+      { id: 'aOnlineContent', text: 'Does the app feature or promote content that isn’t part of the initial download but can be reached from the app? For example movies in Netflix, listings in Amazon Shopping, songs in Spotify, generated AI content, or articles in the New York Times.', age: 0, parent: null, descriptor: 'Online content', informational: true },
       { id: 'aOnlineUnfiltered', text: 'Can that content be unfiltered or unmoderated?', age: 12, parent: 'aOnlineContent', descriptor: 'Unfiltered online content' },
     ]},
     { section: 'Age-restricted products or activities', appTypes: ['other'], items: [
@@ -6939,8 +6959,8 @@
     ]},
     { section: 'Miscellaneous', appTypes: ['other'], items: [
       { id: 'aSharesLocation', text: 'Does the app share the user’s current and precise physical location with other users?', age: 0,  parent: null, descriptor: 'Shares location',          informational: true },
-      { id: 'aDigitalGoods',   text: 'Does the app allow users to purchase digital goods?',                                  age: 0,  parent: null, descriptor: 'In-app purchases',         informational: true },
-      { id: 'aCashRewards',    text: 'Does the app include cash rewards, gift cards, play-to-earn features, convertible cryptocurrency rewards, or the issuance of transferable digital assets (e.g. NFTs)?', age: 0, parent: null, descriptor: 'Cash-convertible rewards', informational: true },
+      { id: 'aDigitalGoods', text: 'Does the app allow users to purchase digital goods?',                                  age: 0,  parent: null, descriptor: 'In-app purchases',         informational: true },
+      { id: 'aCashRewards', text: 'Does the app include cash rewards, gift cards, play-to-earn features, convertible cryptocurrency rewards, or the issuance of transferable digital assets (e.g. NFTs)?', age: 0, parent: null, descriptor: 'Cash-convertible rewards', informational: true },
       { id: 'aBrowser',        text: 'Is the app a web browser or search engine?',                                           age: 12, parent: null, descriptor: 'Browser or search engine' },
       { id: 'aNewsEdu',        text: 'Is the app primarily a news or educational product?',                                  age: 0,  parent: null, descriptor: 'News or educational',     informational: true },
     ]},
@@ -10265,43 +10285,93 @@
   });
 
   // -------------------------------------------------------------
-  // Step 3: real IARC age-rating questionnaire
+  // Step 3: real IARC age-rating questionnaire — inline, two ways in (questionnaire / IARC ID),
+  // and within the questionnaire a two-phase flow: answer -> Preview -> the actual rating.
   // -------------------------------------------------------------
+  let ratingMode = 'questionnaire';   // 'questionnaire' | 'iarcid'
+  let ratingPreview = false;          // questionnaire phase: false = questions, true = rating
+
+  // Editing answers invalidates a prior confirmation: the rating must be re-confirmed for the new
+  // answers before Compliance counts as complete. Also clears the terms tick so Confirm re-gates.
+  function resetRatingConfirmation() {
+    if (!contentAnswersConfirmed) return;
+    contentAnswersConfirmed = false;
+    const tc = $('rating-terms-check'); if (tc) tc.checked = false;
+  }
+
   function renderRatingStep() {
     const r = computeAgeRating(contentAnswers);
-    if (adv.iarcId) {
-      setText('rating-age', '✓');
-      setText('rating-label', 'Age rating set via IARC ID');
-      setText('rating-desc', 'Certificate ' + adv.iarcId);
-      state.rating = true;
-    } else if (contentAnswersConfirmed) {
-      setText('rating-age', r.age);
-      setText('rating-label', r.label);
-      setText('rating-desc', r.descriptors.length ? r.descriptors.join(' · ') : 'No content descriptors');
-      state.rating = true;
+    const qMode = ratingMode === 'questionnaire';
+    document.querySelectorAll('#rating-mode .rating-mode__opt').forEach(b => {
+      const on = b.dataset.mode === ratingMode;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    const qn = $('rating-questionnaire'), im = $('rating-iarc-mode');
+    if (qn) qn.hidden = !qMode;
+    if (im) im.hidden = qMode;
+
+    // Once the questionnaire rating is CONFIRMED, collapse to just the territory table (with an
+    // "Edit answers" action in its header). The mode radios, result badge, caption, terms and
+    // Confirm all go — so the confirmed view is simply: "Age rating" heading -> the table.
+    const collapsed = qMode && ratingPreview && contentAnswersConfirmed;
+    const modeEl = $('rating-mode');
+    if (modeEl) modeEl.hidden = collapsed;
+
+    if (qMode) {
+      // Phase toggle: questions vs the revealed rating.
+      const pq = $('rating-phase-q'), pp = $('rating-phase-p');
+      if (pq) pq.hidden = ratingPreview;
+      if (pp) pp.hidden = !ratingPreview;
+      if (ratingPreview) {
+        setText('rating-age', r.age);
+        setText('rating-label', r.label);
+        setText('rating-desc', r.descriptors.length ? r.descriptors.join(' · ') : 'No content descriptors');
+        renderRatingTerritories('rating-terr-inline', '');   // '' = label from the questionnaire, never a stray IARC ID
+        // Confirmed view = table only: hide the badge, caption, terms, actions and the top back link,
+        // and put "Edit answers" in the table header instead. Otherwise keep the full review layout.
+        const badge = pp.querySelector('.ez-rating--result');
+        const cap = pp.querySelector('.rating-terr__cap');
+        const terms = pp.querySelector('.rating-terms');
+        const actions = pp.querySelector('.rating-actions');
+        const backTop = $('rating-back-btn');
+        if (badge) badge.hidden = collapsed;
+        if (cap) cap.hidden = collapsed;
+        if (terms) terms.hidden = collapsed;
+        if (actions) actions.hidden = collapsed;
+        if (backTop) backTop.hidden = collapsed;
+        if (collapsed) {
+          const head = pp.querySelector('#rating-terr-inline .ez-rating-terr__head');
+          if (head && !head.querySelector('.rating-terr__edit')) {
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'rating-terr__edit'; b.setAttribute('data-edit-answers', '');
+            b.innerHTML = '<iconify-icon icon="fluent:edit-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon> Edit answers';
+            head.appendChild(b);
+          }
+        }
+        const cb = $('rating-confirm-btn'), note = $('rating-set-note'), tc = $('rating-terms-check');
+        if (cb) { cb.hidden = contentAnswersConfirmed; cb.disabled = !(tc && tc.checked); }
+        if (note) note.hidden = !contentAnswersConfirmed;
+      }
+      state.rating = contentAnswersConfirmed;
     } else {
-      setText('rating-age', '—');
-      setText('rating-label', 'Content rating');
-      setText('rating-desc', "Answer a few quick questions about your app's content.");
-      state.rating = false;
+      // IARC ID mode.
+      const idNote = $('rating-iarcid-note');
+      if (adv.iarcId) {
+        if (idNote) idNote.hidden = false;
+        setText('rating-iarcid-desc', 'Certificate ' + adv.iarcId);
+        state.rating = true;
+      } else {
+        if (idNote) idNote.hidden = true;
+        state.rating = false;
+      }
     }
-    const btn = $('rating-review-btn');
-    if (btn) {
-      btn.innerHTML = '<iconify-icon slot="start" icon="' + (contentAnswersConfirmed ? 'fluent:edit-20-regular' : 'fluent:clipboard-text-20-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' + (contentAnswersConfirmed ? 'Edit answers' : 'Start questionnaire');
-      btn.setAttribute('appearance', state.rating ? 'secondary' : 'primary');  // primary only when the rating still needs doing
-    }
-    const tBtn = $('rating-territories-btn');
-    if (tBtn) tBtn.hidden = !state.rating;   // "Preview ratings" only once a rating is set
-    renderRatingBadgeStrip();                // the result itself shows inline on the step
     ezRenderPreview();
     updateGate();
   }
 
-  const ratingDialog = $('rating-dialog');
   const ratingMount  = $('rating-questions-mount');
   let suppressDialogChange = false;
-  let ratingDraft = null;
-  let ratingAppTypeDraft = null;   // so Cancel restores the app type too, not just the answers
 
   function renderRatingQuestions(answers) {
     if (!ratingMount) return;
@@ -10327,21 +10397,24 @@
         const parentYes = !q.parent || !!answers[q.parent];
         const checked = !!answers[q.id];
         if (isFollowup && !parentYes) return '';
-        const longText = q.text.length > 90;
-        return '<div class="rating-question' + (longText ? ' rating-question--long' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
+        // Show IARC's exact question wording verbatim — we can't alter it. Readability comes from the
+        // section grouping / cards / follow-up indentation, not from paraphrasing the question.
+        return '<div class="rating-question' + (isFollowup ? ' rating-question--sub' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
           '<span class="rating-question__text">' + q.text + '</span>' +
           '<span class="rating-question__switch-wrap">' +
             '<span class="rating-question__yes-label">' + (checked ? 'Yes' : 'No') + '</span>' +
             '<fluent-switch ' + (checked ? 'checked' : '') + ' data-rating-q="' + q.id + '"></fluent-switch>' +
           '</span></div>';
       }).join('');
-      return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4>' + itemsHtml + '</div>';
+      return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4><div class="rating-qcard">' + itemsHtml + '</div></div>';
     }).join('');
     ratingMount.querySelectorAll('[data-rating-choice]').forEach(list => {
       list.addEventListener('click', (e) => {
         const b = e.target.closest('[data-choice-value]'); if (!b) return;
         contentAnswers[list.dataset.ratingChoice] = b.dataset.choiceValue;
+        resetRatingConfirmation();
         list.querySelectorAll('[data-choice-value]').forEach(x => x.setAttribute('aria-checked', x === b ? 'true' : 'false'));
+        renderRatingStep();
       });
     });
     ratingMount.querySelectorAll('[data-rating-q]').forEach(sw => {
@@ -10349,6 +10422,7 @@
         if (suppressDialogChange) return;
         const id = sw.dataset.ratingQ;
         contentAnswers[id] = !!sw.checked;
+        resetRatingConfirmation();
         const isParent = IARC_QUESTIONS.some(s => s.items.some(q => q.parent === id));
         if (isParent) {
           renderRatingQuestions(contentAnswers);
@@ -10356,6 +10430,7 @@
           const label = sw.closest('.rating-question') && sw.closest('.rating-question').querySelector('.rating-question__yes-label');
           if (label) label.textContent = sw.checked ? 'Yes' : 'No';
         }
+        renderRatingStep();
       });
     });
   }
@@ -10374,63 +10449,65 @@
       const b = e.target.closest('.apptype__opt');
       if (!b || b.dataset.apptype === ratingAppType) return;
       ratingAppType = b.dataset.apptype;
+      resetRatingConfirmation();
       renderAppTypeChoice();
       suppressDialogChange = true;
       renderRatingQuestions(contentAnswers);
       setTimeout(() => { suppressDialogChange = false; }, 0);
+      renderRatingStep();
       if (typeof announce === 'function') announce(APP_TYPE_LABEL[ratingAppType] + ' selected. Questions updated.');
     });
   })();
 
-  // Two-phase dialog: answer questions → Preview rating (cross-territory) → Confirm.
-  function ratingPhase(phase) {
-    const prev = phase === 'preview';
-    const q = $('rating-phase-questions'); if (q) q.hidden = prev;
-    const p = $('rating-phase-preview');   if (p) p.hidden = !prev;
-    const pb = $('rating-preview-btn'); if (pb) pb.hidden = prev;
-    const bb = $('rating-back-btn');    if (bb) bb.hidden = !prev;
-    const cb = $('rating-confirm-btn'); if (cb) cb.hidden = !prev;
-    if (prev) {
-      renderRatingTerritories('rating-terr-quiz');
-      const tc = $('rating-terms-check'); if (tc) tc.checked = false;   // fresh agreement each time
-      if (cb) cb.disabled = true;
+  // ---- Age-rating wiring (inline). The mode radios choose questionnaire vs IARC ID; the
+  // questionnaire runs answer -> Preview -> Confirm, all in place (no dialog). ----
+  (function wireRating() {
+    const modeGroup = $('rating-mode');
+    if (modeGroup) modeGroup.addEventListener('click', (e) => {
+      const b = e.target.closest('.rating-mode__opt'); if (!b || b.dataset.mode === ratingMode) return;
+      ratingMode = b.dataset.mode;
+      renderRatingStep();
+    });
+    // Preview reveals the actual rating; Back returns to the questions.
+    const pv = $('rating-preview-btn'), back = $('rating-back-btn');
+    if (pv) pv.addEventListener('click', () => {
+      ratingPreview = true; renderRatingStep();
+      const p = $('rating-phase-p');
+      if (p) { try { p.scrollIntoView({ block: 'nearest', behavior: (typeof reduceMotion === 'function' && reduceMotion()) ? 'auto' : 'smooth' }); } catch (e) {} }
+    });
+    if (back) back.addEventListener('click', () => { ratingPreview = false; renderRatingStep(); });
+    // "Edit answers" also lives in the confirmed view's territory-table header (injected on render).
+    const terr = $('rating-terr-inline');
+    if (terr) terr.addEventListener('click', (e) => {
+      if (e.target.closest('[data-edit-answers]')) { ratingPreview = false; renderRatingStep(); }
+    });
+    // Terms gate Confirm; unticking after confirming un-sets the rating.
+    const tc = $('rating-terms-check');
+    if (tc) tc.addEventListener('change', () => {
+      if (!tc.checked && contentAnswersConfirmed) contentAnswersConfirmed = false;
+      renderRatingStep();
+    });
+    const cf = $('rating-confirm-btn');
+    if (cf) cf.addEventListener('click', () => {
+      contentAnswersConfirmed = true;
+      renderRatingStep();
+      if (typeof announce === 'function') announce('Age rating set: ' + computeAgeRating(contentAnswers).label + '.');
+    });
+    // IARC ID (inline) — Apply sets it; clearing the field and applying removes it.
+    const iarcInput = $('rating-iarc-input'), iarcApply = $('rating-iarc-apply');
+    if (iarcInput) {
+      iarcInput.value = adv.iarcId || '';
+      const sync = () => { if (iarcApply) iarcApply.disabled = !(iarcInput.value || '').trim() && !adv.iarcId; };
+      iarcInput.addEventListener('input', sync); sync();
+      iarcInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && iarcApply && !iarcApply.disabled) iarcApply.click(); });
     }
-  }
-  function openRatingDialog() {
-    ratingDraft = { ...contentAnswers };
-    ratingAppTypeDraft = ratingAppType;
-    suppressDialogChange = true;
-    renderAppTypeChoice();
-    renderRatingQuestions(contentAnswers);
-    setTimeout(() => { suppressDialogChange = false; }, 0);
-    const intro = $('rating-dialog-intro');
-    if (intro) intro.textContent = contentAnswersConfirmed
-      ? 'These are your confirmed answers. Change anything to update the rating.'
-      : "Answer these questions about your app's content. The rating updates as you change answers.";
-    ratingPhase('questions');
-    try { ratingDialog.show(); } catch (e) {}
-  }
-  function closeRatingDialog(restore) {
-    if (restore && ratingDraft) { contentAnswers = ratingDraft; ratingAppType = ratingAppTypeDraft; }
-    ratingDraft = null;
-    try { ratingDialog.hide(); } catch (e) {}
-  }
-
-  $('rating-review-btn').addEventListener('click', openRatingDialog);
-  ratingDialog.querySelectorAll('[data-rating-dialog-close]').forEach(el => el.addEventListener('click', () => closeRatingDialog(true)));
-  if ($('rating-preview-btn')) $('rating-preview-btn').addEventListener('click', () => ratingPhase('preview'));
-  if ($('rating-back-btn')) $('rating-back-btn').addEventListener('click', () => ratingPhase('questions'));
-  if ($('rating-terms-check')) $('rating-terms-check').addEventListener('change', () => {
-    const cb = $('rating-confirm-btn'), tc = $('rating-terms-check');
-    if (cb) cb.disabled = !(tc && tc.checked);   // Confirm unlocks only with the terms agreed
-  });
-  $('rating-confirm-btn').addEventListener('click', () => {
-    contentAnswersConfirmed = true;
-    ratingDraft = null;
-    renderRatingStep();
-    announce('Age rating set: ' + computeAgeRating(contentAnswers).label + '.');
-    try { ratingDialog.hide(); } catch (e) {}
-  });
+    if (iarcApply) iarcApply.addEventListener('click', () => {
+      adv.iarcId = (iarcInput && iarcInput.value || '').trim();
+      if (typeof persistAdvanced === 'function') persistAdvanced();
+      renderRatingStep();
+      if (typeof announce === 'function') announce(adv.iarcId ? 'Age rating set via IARC ID.' : 'IARC ID cleared.');
+    });
+  })();
 
   // -------------------------------------------------------------
   // Submit → confirmation dialog (disclosures for both modes; Advanced adds
@@ -10877,16 +10954,7 @@
     });
   })();
 
-  // Read-only "Preview ratings" — opens the cross-territory list from the confirmed summary.
-  (function ratingTerrView() {
-    const dlg = $('rating-terr-dialog'), openBtn = $('rating-territories-btn');
-    if (!dlg) return;
-    if (openBtn) openBtn.addEventListener('click', () => {
-      renderRatingTerritories('rating-terr-view');
-      try { dlg.show(); } catch (e) {}
-    });
-    dlg.querySelectorAll('[data-terr-dialog-close]').forEach(b => b.addEventListener('click', () => { try { dlg.hide(); } catch (e) {} }));
-  })();
+  // "Preview ratings" is now inline in the Compliance step (the collapsible territory table).
 
 
   // ===== Reach & price dialogs (Advanced), ported from variant B =====
@@ -12952,6 +13020,13 @@ function openPriceScheduleDialog() {
   // Init
   syncName();
   renderShots();
+  // Age rating is inline now — render the app-type + questions once, then the live result.
+  // suppress guards against fluent-switch upgrade firing a spurious change during the first paint.
+  suppressDialogChange = true;
+  renderAppTypeChoice();
+  renderRatingQuestions(contentAnswers);
+  setTimeout(() => { suppressDialogChange = false; }, 0);
+  if (adv.iarcId) ratingMode = 'iarcid';   // restore the path the user last chose
   renderRatingStep();
   ezRenderPreview();
   updateGate();

@@ -1668,8 +1668,12 @@
   /* No inner scroller here — the dialog body is the only thing that scrolls, so a long
      questionnaire never puts a scrollbar inside a scrollbar. */
   #rating-questions-mount { margin: 0 0 var(--sp-8); }
-  .rating-section { margin-bottom: var(--sp-12); }
-  .rating-section__title { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); font-weight: 600; margin: 0 0 var(--sp-4); }
+  .rating-section { margin: 0 0 var(--sp-16); }
+  .rating-section__title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-3); font-weight: 600; margin: 0 0 var(--sp-6); }
+  /* Each section's questions sit in a settings-card: IARC's exact question text on the left, Yes/No
+     pinned right, hairlines between rows. Turns a wall of long sentences into a scannable grouped list. */
+  .rating-qcard { border: 1px solid var(--stroke-3); border-radius: var(--r-8); background: var(--canvas-tint); overflow: hidden; }
+  .rating-qcard > * + * { border-top: 1px solid var(--stroke-3); }
   /* App type — the FIRST question. What you pick here decides which content sections you're
      asked about, so it's a radio list above the switches rather than one of them. Each option
      carries examples, because "is my app social?" is only obvious once you see the examples. */
@@ -1686,21 +1690,21 @@
   .apptype__name { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
   .apptype__desc { font-size: 12px; color: var(--fg-3); line-height: 1.45; }
   @media (prefers-reduced-motion: reduce) { .apptype__opt { transition: none; } }
-  .rating-question { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-6) 0; border-bottom: 1px solid var(--stroke-3); }
-  .rating-question[data-followup="true"] { padding-left: var(--sp-20); }
-  .rating-question__text { font-size: 13px; color: var(--fg-1); }
-  /* The game questions are full sentences, so they wrap — keep the switch pinned to the top
-     right rather than floating in the middle of a three-line question. */
-  .rating-question--long { align-items: flex-start; }
-  .rating-question--long .rating-question__text { line-height: 1.45; }
-  .rating-question--long .rating-question__switch-wrap { margin-top: 1px; }
+  .rating-question { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-16); padding: var(--sp-12) var(--sp-14); }
+  /* IARC's exact question text (verbatim — we can't alter it). Fills the row so the switch sits at the card edge. */
+  .rating-question__text { flex: 1 1 auto; min-width: 0; font-size: 13px; color: var(--fg-1); line-height: 1.45; }
+  /* Severity follow-ups drill down under their parent: indented + a faint tint, quieter text. */
+  .rating-question--sub { padding-left: calc(var(--sp-14) + var(--sp-20)); background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .rating-question--sub .rating-question__text { color: var(--fg-2); }
   .rating-scope-note { font-size: 12px; color: var(--fg-3); line-height: 1.45; margin: 0 0 var(--sp-12); }
   /* A one-of-N question inside the questionnaire (e.g. Communication vs Social). Reuses the
      App type radio look so there's a single "pick one" pattern in this dialog. */
-  .rating-choice { padding: var(--sp-6) 0 var(--sp-8); border-bottom: 1px solid var(--stroke-3); }
-  .rating-choice__q { font-size: 13px; color: var(--fg-1); line-height: 1.45; margin: 0 0 var(--sp-6); }
-  .rating-choice .apptype__opt { padding: var(--sp-6) var(--sp-8); }
-  .rating-question__switch-wrap { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; }
+  .rating-choice { padding: var(--sp-12) var(--sp-14); }
+  .rating-choice__q { font-size: 13.5px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.35; margin: 0 0 var(--sp-8); }
+  .rating-choice .apptype__list { gap: var(--sp-4); }
+  .rating-choice .apptype__opt { padding: var(--sp-8); border: 1px solid var(--stroke-3); border-radius: var(--r-6); }
+  .rating-choice .apptype__opt[aria-checked="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
+  .rating-question__switch-wrap { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; padding-top: 1px; }
   .rating-question__yes-label { font-size: 12px; color: var(--fg-3); min-width: 22px; text-align: right; }
   .rating-dialog__result { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-8); padding: var(--sp-12); border: 1px solid color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); border-radius: var(--r-8); background: var(--canvas-tint); }
   .rating-dialog__result-text strong { font-size: 14px; color: var(--fg-1); }
@@ -10258,15 +10262,16 @@
         const parentYes = !q.parent || !!answers[q.parent];
         const checked = !!answers[q.id];
         if (isFollowup && !parentYes) return '';
-        const longText = q.text.length > 90;
-        return '<div class="rating-question' + (longText ? ' rating-question--long' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
+        // Show IARC's exact question wording verbatim — readability comes from the section grouping /
+        // cards / follow-up indentation, not from paraphrasing the question.
+        return '<div class="rating-question' + (isFollowup ? ' rating-question--sub' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
           '<span class="rating-question__text">' + q.text + '</span>' +
           '<span class="rating-question__switch-wrap">' +
             '<span class="rating-question__yes-label">' + (checked ? 'Yes' : 'No') + '</span>' +
             '<fluent-switch ' + (checked ? 'checked' : '') + ' data-rating-q="' + q.id + '"></fluent-switch>' +
           '</span></div>';
       }).join('');
-      return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4>' + itemsHtml + '</div>';
+      return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4><div class="rating-qcard">' + itemsHtml + '</div></div>';
     }).join('');
     ratingMount.querySelectorAll('[data-rating-choice]').forEach(list => {
       list.addEventListener('click', (e) => {
