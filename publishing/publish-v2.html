@@ -377,19 +377,28 @@
   .audience-link-row__url { flex: 1 1 auto; min-width: 0; font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace; font-size: var(--font-size-base-200); color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: transparent; }
   .markets-choose-row .market-chip { display: inline-flex; align-items: center; gap: var(--sp-4); padding: 2px var(--sp-8); border: 1px solid var(--stroke-2); border-radius: 999px; font-size: var(--font-size-base-200); color: var(--fg-2); background: var(--subtle); }
   .markets-choose-row .market-chip iconify-icon { color: var(--fg-3); }
-  /* Native <select> for currency — avoids the fluent-dropdown popup's overflow (which overlapped the
-     amount field and swallowed clicks) and its mis-positioned open list; the OS renders the option
-     list natively, on top and correctly placed. */
-  .price-currency-select { box-sizing: border-box; width: 96px; height: 32px; flex: 0 0 auto; padding: 0 var(--sp-8); font: inherit; font-size: var(--font-size-base-200); color: var(--fg-1); background: var(--layer); border: 1px solid var(--stroke-1); border-radius: var(--r-4); cursor: pointer; }
-  .price-currency-select:hover { border-color: color-mix(in srgb, var(--fg-1) 28%, var(--stroke-1)); }
-  .price-currency-select:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  /* Currency picker — Fluent dropdown, matching the amount input and the rest of the flow. */
+  .price-currency-dropdown { width: 96px; flex: 0 0 auto; }
   .price-win32-note { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 32%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--subtle)); font-size: var(--font-size-base-200); line-height: 1.45; color: var(--fg-2); max-width: 520px; }
   .price-win32-note[hidden] { display: none; }
   .price-win32-note > iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
-  .price-advanced { margin-top: var(--sp-12); }
-  .price-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8) var(--sp-20); }
-  .price-tool-btn { white-space: nowrap; }
-  .price-sale-wrap { display: inline-flex; align-items: center; }
+  .price-advanced { margin-top: var(--sp-16); }
+  .price-adv__label { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-8); }
+  .price-adv__tag { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-4); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 1px 7px; }
+  /* Advanced pricing tools as a clean settings-card: icon tile + title + one-line description + chevron. */
+  .price-toolcard { max-width: 520px; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); overflow: hidden; }
+  .price-toolcard > *:not(:first-child) { border-top: 1px solid var(--stroke-2); }
+  .price-tool { display: flex; align-items: center; gap: var(--sp-12); width: 100%; padding: var(--sp-10) var(--sp-12); background: none; border: 0; font: inherit; text-align: left; cursor: pointer; transition: background var(--dur-2) var(--ease-out); }
+  .price-tool:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
+  .price-tool:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  .price-tool__ic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--r-6); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .price-tool__txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .price-tool__title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .price-tool__desc { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .price-tool__chev { flex: 0 0 auto; color: var(--fg-3); }
+  .price-tool:hover .price-tool__chev { color: var(--fg-1); }
+  .price-sale-wrap { display: block; }
+  @media (prefers-reduced-motion: reduce) { .price-tool { transition: none; } }
   .price-trial-row { margin-top: var(--sp-16); padding-top: var(--sp-12); border-top: 1px dashed var(--stroke-3); display: flex; flex-direction: column; gap: var(--sp-8); }
   .price-trial-row__head { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-300); }
   .price-trial-row__head iconify-icon { color: var(--fg-3); }
@@ -3542,50 +3551,66 @@
               <div class="price-field">
                 <label for="price-amount" class="price-field__label">Base price</label>
                 <div class="price-field__inputs">
-                  <select id="price-currency" class="price-currency-select" aria-label="Currency">
-                    <option value="USD" selected>USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="JPY">JPY</option>
-                    <option value="CAD">CAD</option>
-                    <option value="AUD">AUD</option>
-                    <option value="NZD">NZD</option>
-                    <option value="INR">INR</option>
-                    <option value="BRL">BRL</option>
-                    <option value="MXN">MXN</option>
-                    <option value="CHF">CHF</option>
-                    <option value="SEK">SEK</option>
-                    <option value="NOK">NOK</option>
-                    <option value="DKK">DKK</option>
-                    <option value="SGD">SGD</option>
-                    <option value="HKD">HKD</option>
-                    <option value="CNY">CNY</option>
-                    <option value="KRW">KRW</option>
-                    <option value="ZAR">ZAR</option>
-                    <option value="AED">AED</option>
-                  </select>
+                  <fluent-dropdown id="price-currency" class="price-currency-dropdown" aria-label="Currency">
+                    <fluent-listbox>
+                      <fluent-option value="USD" selected>USD</fluent-option>
+                      <fluent-option value="EUR">EUR</fluent-option>
+                      <fluent-option value="GBP">GBP</fluent-option>
+                      <fluent-option value="JPY">JPY</fluent-option>
+                      <fluent-option value="CAD">CAD</fluent-option>
+                      <fluent-option value="AUD">AUD</fluent-option>
+                      <fluent-option value="NZD">NZD</fluent-option>
+                      <fluent-option value="INR">INR</fluent-option>
+                      <fluent-option value="BRL">BRL</fluent-option>
+                      <fluent-option value="MXN">MXN</fluent-option>
+                      <fluent-option value="CHF">CHF</fluent-option>
+                      <fluent-option value="SEK">SEK</fluent-option>
+                      <fluent-option value="NOK">NOK</fluent-option>
+                      <fluent-option value="DKK">DKK</fluent-option>
+                      <fluent-option value="SGD">SGD</fluent-option>
+                      <fluent-option value="HKD">HKD</fluent-option>
+                      <fluent-option value="CNY">CNY</fluent-option>
+                      <fluent-option value="KRW">KRW</fluent-option>
+                      <fluent-option value="ZAR">ZAR</fluent-option>
+                      <fluent-option value="AED">AED</fluent-option>
+                    </fluent-listbox>
+                  </fluent-dropdown>
                   <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="text" inputmode="decimal" value="4.99"></fluent-text-input>
                 </div>
                 <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
               </div>
             </div>
-            <!-- Pricing tools (paid MSIX/PWA): per-market overrides, scheduled changes, and sales —
-                 one consistent row; sale chips render below. Sales stay hidden for Win32. -->
+            <!-- Advanced pricing (paid MSIX/PWA): per-market overrides, scheduled changes, and sales —
+                 a clean, optional settings card. Each row opens its dialog; sale chips render below.
+                 Sales stay hidden for Win32. Button ids + label spans preserved for the price JS. -->
             <div class="price-advanced" id="price-advanced" hidden>
-              <div class="price-tools">
-                <fluent-button type="button" appearance="transparent" class="link-btn--ai price-tool-btn" id="price-overrides-btn">
-                  <iconify-icon slot="start" icon="fluent:globe-clock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-                  <span id="price-overrides-label">See &amp; customize local prices</span>
-                </fluent-button>
-                <fluent-button type="button" appearance="transparent" class="link-btn--ai price-tool-btn" id="price-schedule-btn">
-                  <iconify-icon slot="start" icon="fluent:calendar-clock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-                  <span id="price-schedule-label">Schedule a price change</span>
-                </fluent-button>
+              <p class="price-adv__label">Advanced pricing <span class="price-adv__tag">Optional</span></p>
+              <div class="price-toolcard">
+                <button type="button" class="price-tool" id="price-overrides-btn">
+                  <span class="price-tool__ic"><iconify-icon icon="fluent:globe-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                  <span class="price-tool__txt">
+                    <span class="price-tool__title" id="price-overrides-label">See &amp; customize local prices</span>
+                    <span class="price-tool__desc">Override the auto-converted price in specific markets.</span>
+                  </span>
+                  <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+                </button>
+                <button type="button" class="price-tool" id="price-schedule-btn">
+                  <span class="price-tool__ic"><iconify-icon icon="fluent:calendar-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                  <span class="price-tool__txt">
+                    <span class="price-tool__title" id="price-schedule-label">Schedule a price change</span>
+                    <span class="price-tool__desc">Change your base price on a future date.</span>
+                  </span>
+                  <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+                </button>
                 <div class="price-sale-wrap" id="price-sale-wrap">
-                  <fluent-button type="button" appearance="transparent" class="link-btn--ai price-tool-btn" id="price-sale-btn">
-                    <iconify-icon slot="start" icon="fluent:tag-multiple-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-                    <span>Add a sale price</span>
-                  </fluent-button>
+                  <button type="button" class="price-tool" id="price-sale-btn">
+                    <span class="price-tool__ic"><iconify-icon icon="fluent:tag-multiple-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                    <span class="price-tool__txt">
+                      <span class="price-tool__title">Add a sale price</span>
+                      <span class="price-tool__desc">Run a limited-time discount with a start and end date.</span>
+                    </span>
+                    <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+                  </button>
                 </div>
               </div>
               <div class="price-sales" id="price-sales"></div>
@@ -5165,6 +5190,25 @@
   })();
 
   const $ = (id) => document.getElementById(id);
+  // Fluent v3 dropdowns hardcode min-width:160px on their shadow `.control` and expose no ::part,
+  // so a narrow host (the 96px currency picker) can't shrink it — the control overflows and overlaps
+  // the amount field beside it. Inject a shadow style to release that min-width. Idempotent; retries
+  // once after upgrade if the shadow root isn't ready.
+  function tightenCurrencyDropdown(dd) {
+    if (!dd) return;
+    const inject = () => {
+      if (!dd.shadowRoot) return false;
+      if (dd.shadowRoot.querySelector('style[data-tighten]')) return true;
+      const s = document.createElement('style');
+      s.setAttribute('data-tighten', '');
+      s.textContent = '.control{min-width:0 !important}';
+      dd.shadowRoot.appendChild(s);
+      return true;
+    };
+    if (!inject() && window.customElements) {
+      customElements.whenDefined('fluent-dropdown').then(() => requestAnimationFrame(inject));
+    }
+  }
   const announce = (msg) => { const a = $('sr-announcer'); if (a) a.textContent = msg; };
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -10733,6 +10777,7 @@
     });
 
     const curEl = $('price-currency'), amtEl = $('price-amount'), durEl = $('price-trial-duration');
+    if (curEl) tightenCurrencyDropdown(curEl);
     if (curEl) curEl.addEventListener('change', () => { adv.price.currency = curEl.value || 'USD'; persistAdvanced(); updateGate(); });
     if (amtEl) amtEl.addEventListener('input', () => { adv.price.amount = parseFloat(amtEl.value) || 0; persistAdvanced(); updateGate(); });
     if (durEl) durEl.addEventListener('change', () => { adv.trial.duration = durEl.value || '7'; applyTrial(); persistAdvanced(); });
@@ -11605,6 +11650,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
         lb.appendChild(opt);
       });
     }
+    tightenCurrencyDropdown(priceSaleCurrency);
   }
   function setSaleType(t, sync) {
     priceSaleType = (t === 'percent') ? 'percent' : 'price';
