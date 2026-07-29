@@ -1346,6 +1346,15 @@
   .ez-store-shots img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); background: var(--canvas-tint); display: block; }
   .ez-store-shots__empty { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: var(--sp-6); padding: var(--sp-24); border: 1px dashed var(--stroke-2); border-radius: var(--r-8); color: var(--fg-3); font-size: 12px; text-align: center; }
 
+  /* AI Autofill "watch it write" — each live-listing field pulses with a brand glow as the AI
+     fills it, one after another from top to bottom (see runAutofill's staggered fill). */
+  @keyframes aiFillPulse {
+    0%   { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 60%, transparent), 0 6px 20px 0 color-mix(in srgb, var(--brand) 32%, transparent); background-color: color-mix(in srgb, var(--brand) 16%, transparent); }
+    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0), 0 0 0 0 rgba(0,0,0,0); background-color: transparent; }
+  }
+  .ai-filling { animation: aiFillPulse 0.95s ease-out; border-radius: var(--r-6); }
+  @media (prefers-reduced-motion: reduce) { .ai-filling { animation: none !important; } }
+
   /* ---- Autofill-with-AI dialog ---- */
   .ez-ai-dialog__intro { font-size: 13px; line-height: 18px; color: var(--fg-2); margin: 0 0 var(--sp-12); }
   .ez-ai-dialog__input { width: 100%; min-width: 100%; box-sizing: border-box; }
@@ -9692,31 +9701,44 @@
       descText = idea.charAt(0).toUpperCase() + idea.slice(1).replace(/\.$/, '') +
         '. Built for Windows, it stays fast and out of your way, with a clean design that fits light and dark themes. No clutter; just what you need to get going quickly.';
     }
-    fDesc.value = descText;
-    syncDesc();
+    // Build every value first, then apply them one-by-one (top to bottom) so the developer can
+    // WATCH the AI populate the live listing. __advApplyAI accepts subsets, so we stagger it.
+    let catToApply = null;
     if (!descOnly && listing && listing.category) {
       const opt = fCategory.querySelector('fluent-option[value="' + listing.category + '"]');
-      if (opt) { fCategory.value = listing.category; syncCategory(); }
+      if (opt) catToApply = listing.category;
     }
-    // Optional listing fields (short description, subcategory, features, search terms) now show
-    // inline by default (the "make your listing stand out" banner is retired), so a full Autofill
-    // populates them too. Only the description-only draft (descOnly) leaves them alone; `auto`
-    // (draft-from-site) also fills them.
-    if (auto || !descOnly) {
-      const adv2 = {
-        shortDescription: (listing && listing.shortDescription) || deriveShort(descText),
-        subcategory: (listing && listing.subcategory) || '',
-        features: (listing && listing.features) || ['Fast and lightweight', 'Clean, modern design that fits light and dark themes', 'Works offline'],
-        keywords: (listing && listing.keywords) || Array.from(new Set(((app.name || 'app') + ' app windows tool utility').toLowerCase().split(/\s+/).filter(w => w.length > 2)))
-      };
-      if (typeof window.__advApplyAI === 'function') window.__advApplyAI(adv2);
-    }
-    ezRenderPreview();
+    const adv2 = (auto || !descOnly) ? {
+      shortDescription: (listing && listing.shortDescription) || deriveShort(descText),
+      subcategory: (listing && listing.subcategory) || '',
+      features: (listing && listing.features) || ['Fast and lightweight', 'Clean, modern design that fits light and dark themes', 'Works offline'],
+      keywords: (listing && listing.keywords) || Array.from(new Set(((app.name || 'app') + ' app windows tool utility').toLowerCase().split(/\s+/).filter(w => w.length > 2)))
+    } : null;
+    const canAdv = !!(adv2 && typeof window.__advApplyAI === 'function');
+    // Reset the button + close the dialog BEFORE filling, so nothing covers the live listing while
+    // the AI "writes" it field-by-field. Then pulse-and-fill each field from top to bottom.
     if (!auto && btn) {
       btn.disabled = false;
       btn.innerHTML = '<iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> <span id="ai-autofill-label">' + (descOnly ? 'Draft description' : 'Autofill') + '</span>';
       closeAiDialog();
     }
+    const fillSteps = [];
+    if (catToApply) fillSteps.push({ sel: '#ez-pv-category', run: () => { fCategory.value = catToApply; syncCategory(); } });
+    if (canAdv) fillSteps.push({ sel: '#ez-pv-short', run: () => window.__advApplyAI({ shortDescription: adv2.shortDescription, subcategory: adv2.subcategory }) });
+    fillSteps.push({ sel: '#ez-pv-desc', run: () => { fDesc.value = descText; syncDesc(); } });
+    if (canAdv) fillSteps.push({ sel: '#ez-pv-features', run: () => window.__advApplyAI({ features: adv2.features, keywords: adv2.keywords }) });
+    const rmFill = (typeof reduceMotion === 'function' && reduceMotion());
+    for (const fs of fillSteps) {
+      let fel = document.querySelector(fs.sel);
+      if (fel && !rmFill) { try { fel.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
+      try { fs.run(); } catch (e) {}
+      fel = document.querySelector(fs.sel);
+      if (fel) fel.classList.add('ai-filling');
+      await new Promise(r => setTimeout(r, rmFill ? 0 : 480));
+    }
+    if (!rmFill) await new Promise(r => setTimeout(r, 600));
+    document.querySelectorAll('.ai-filling').forEach(el => el.classList.remove('ai-filling'));
+    ezRenderPreview();
     announce(descOnly ? 'Description drafted with AI.'
       : 'Listing drafted with AI: description, category, short summary, features, and search terms.');
   }
