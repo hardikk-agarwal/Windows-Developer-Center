@@ -13,9 +13,24 @@
   function position(el) {
     const r = el.getBoundingClientRect();
     const tt = tooltip.getBoundingClientRect();
-    const vw = window.innerWidth;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const placement = el.getAttribute('data-tooltip-placement');
 
-    // Prefer right of element; flip to left if it would overflow
+    // Opt-in vertical placement (data-tooltip-placement="top" | "bottom"): centered above/below the
+    // element, flipping to the other side if there's no room. Better for icons inside horizontal
+    // controls, where a right-side tooltip would overlap neighbouring items.
+    if (placement === 'top' || placement === 'bottom') {
+      let left = r.left + r.width / 2 - tt.width / 2;
+      left = Math.max(8, Math.min(left, vw - tt.width - 8));
+      let top = placement === 'bottom' ? r.bottom + GAP : r.top - tt.height - GAP;
+      if (placement === 'bottom' && top + tt.height > vh - 8) top = r.top - tt.height - GAP;
+      if (placement === 'top' && top < 8) top = r.bottom + GAP;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top  = Math.max(8, top) + 'px';
+      return;
+    }
+
+    // Default: prefer right of element; flip to left if it would overflow
     let left = r.right + GAP;
     if (left + tt.width > vw - 8) left = r.left - tt.width - GAP;
     const top = r.top + r.height / 2 - tt.height / 2;

@@ -2251,10 +2251,10 @@
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
-    // Variant flows live side by side; publish-v2.html stays the default. Add ?flow=v3 (left-stepper)
-    // or ?flow=v4 (non-gated open canvas) to the portal URL to open that variant instead — every entry
-    // into the flow funnels through here.
-    var flowMatch = /[?&]flow=(v3|v4)\b/.exec(location.search);
+    // Variant flows live side by side; publish-v2.html stays the default. Add ?flow=v3 (left-stepper),
+    // ?flow=v4 (non-gated open canvas) or ?flow=v5 (progressive easy/advanced canvas) to the portal URL
+    // to open that variant instead — every entry into the flow funnels through here.
+    var flowMatch = /[?&]flow=(v3|v4|v5)\b/.exec(location.search);
     var flowFile = flowMatch ? "publish-" + flowMatch[1] + ".html" : "publish-v2.html";
     location.href = "publishing/" + flowFile + "?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
   }

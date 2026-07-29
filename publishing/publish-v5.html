@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Publish (Open canvas · V4) · Microsoft Store for developers</title>
+<title>Publish (Progressive · V5) · Microsoft Store for developers</title>
 <!-- Theme bootstrap (sync, no FOUC) -->
 <script>
 (function(){
@@ -107,9 +107,17 @@
   .ez-step__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; }
   .ez-step__action { margin-left: auto; flex: 0 0 auto; }
   /* Listing step head: group the language switcher with the Autofill action so they sit
-     together on the right — the language dropdown to the left of the Autofill button. */
-  .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); }
+     together on the right — the language dropdown to the left of the Autofill button.
+     flex-shrink:0 so the toolbar never compresses/clips its buttons — the title/sub block
+     (flex:1 1 auto, min-width:0) absorbs the shrink instead. */
+  .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); flex-shrink: 0; }
   .ez-step__headtools .ez-step__action { margin-left: 0; }
+  /* The status pill ("N left" / "Review" / "Done") keeps its natural width too. */
+  #flow-wrap.is-progressive .ez-step__prog { flex-shrink: 0; }
+  /* The listing-header Preview is an icon-only Play button — keep it a compact 32px square
+     instead of Fluent's ~96px default (mirrors the icon-only title-action close buttons). */
+  #listing-preview-btn { min-width: 32px; width: 32px; padding: 0; }
+  #listing-preview-btn::part(control) { min-width: 32px; padding: 0; }
   .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
   /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
      — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
@@ -703,6 +711,12 @@
   .ez-store-features-empty iconify-icon { color: color-mix(in srgb, var(--brand) 70%, var(--fg-3)); flex: 0 0 auto; }
   #ez-features-section.is-empty .ez-store-features { display: none; }
   #ez-features-section.is-empty .ez-store-features-empty { display: inline-flex; }
+  /* Collapsed Features (empty & not being edited): drop the section header + dashed box, leaving just
+     a compact "+ add" button. Opening it (is-editing) restores the header so you get the title + AI. */
+  #ez-features-section.is-empty:not(.is-editing) .ez-card-section__head { display: none; }
+  #ez-features-section.is-empty:not(.is-editing) .ez-store-features-empty { width: fit-content; border: 0; border-radius: 0; padding: var(--sp-4) 0; color: var(--store-link); font-weight: var(--font-weight-semibold); }
+  #ez-features-section.is-empty:not(.is-editing) .ez-store-features-empty:hover { background: transparent; border-color: transparent; text-decoration: underline; }
+  #ez-features-section.is-empty:not(.is-editing) .ez-store-features-empty iconify-icon { color: var(--store-link); }
   /* System requirements — hidden everywhere. Three ids out-specify the wizard's
      `#flow-wrap.is-wizard #step-listing.is-more .ez-card-section.adv-only` !important rule. */
   #flow-wrap #step-listing #ez-sysreq-section { display: none !important; }
@@ -745,6 +759,10 @@
   .ez-info-val--empty:hover, .ez-info-val--empty:hover > iconify-icon { color: var(--store-link); }
   .ez-info-val--req { color: var(--store-link); }
   .ez-info-val--req > iconify-icon { color: var(--store-link); }
+  /* Collapsed "Additional information": a quiet toggle that reveals the low-value metadata grid. */
+  .ez-info-more { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: var(--sp-6); width: fit-content; margin-top: var(--sp-2); padding: var(--sp-6) 0; background: none; border: 0; font: inherit; font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--store-link); cursor: pointer; }
+  .ez-info-more:hover { text-decoration: underline; }
+  .ez-info-more > iconify-icon { flex: 0 0 auto; }
   .ez-info-static { color: var(--fg-1); font-weight: 600; }
   .ez-info-notset { color: var(--fg-3); font-weight: 500; }
   /* Inline editors inside the info grid get a visible box (the live-PDP inline edits are borderless). */
@@ -1312,28 +1330,6 @@
   [data-theme="light"] .ez-hero-empty:hover { color: var(--fg-1); background: linear-gradient(to left, rgba(0,0,0,.05), transparent 82%); }
   .ez-store-hero__top { display: flex; align-items: flex-start; gap: var(--sp-16); }
   .ez-store-hero__icon { width: 72px; height: 72px; flex: 0 0 auto; border-radius: var(--r-12); background: linear-gradient(135deg, hsl(var(--ez-hue, 320), 80%, 60%), hsl(var(--ez-hue, 320), 70%, 40%)); background-size: cover; background-position: center; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
-  /* ===== Game mode (app.productKind === 'game') ===== */
-  #flow-wrap.is-game .v4-type .seg__opt[data-v4type="win32"] { display: none !important; }   /* games = MSIX + PWA only */
-  #flow-wrap.is-game .ez-store-hero__icon { width: 76px; height: 114px; border-radius: var(--r-8); }   /* 2:3 portrait poster */
-  /* Genre picker (games only): a compact checkbox grid, capped at 3 selections. */
-  .genre-dialog__lead { font-size: 13px; color: var(--fg-2); margin: 0 0 var(--sp-12); line-height: 1.5; }
-  .genre-dialog__count { color: var(--fg-3); white-space: nowrap; }
-  /* Package-type change guard dialog: bulleted list of what a MSIX↔Win32 switch changes. */
-  .pkgtype-change__lead { font-size: 13px; color: var(--fg-2); margin: 0 0 var(--sp-12); line-height: 1.5; }
-  .pkgtype-change__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-10); }
-  .pkgtype-change__list li { display: flex; align-items: flex-start; gap: var(--sp-8); font-size: 13px; color: var(--fg-1); line-height: 1.45; }
-  .pkgtype-change__list li iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
-  .genre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px var(--sp-16); max-height: 44vh; overflow-y: auto; margin: 0 calc(-1 * var(--sp-4)); padding: 0 var(--sp-4); }
-  @media (max-width: 520px) { .genre-grid { grid-template-columns: 1fr; } }
-  .genre-opt { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8); border-radius: var(--r-6); cursor: pointer; user-select: none; transition: background var(--dur-2) var(--ease-out); }
-  .genre-opt:hover { background: color-mix(in srgb, var(--fg-1) 5%, transparent); }
-  .genre-opt:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-  .genre-opt__box { flex: 0 0 auto; width: 18px; height: 18px; border: 1.5px solid var(--stroke-1); border-radius: var(--r-4); display: inline-flex; align-items: center; justify-content: center; color: transparent; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
-  .genre-opt.is-on .genre-opt__box { background: var(--brand-bg); border-color: var(--brand-bg); color: var(--fg-on-brand); }
-  .genre-opt__label { font-size: 13.5px; color: var(--fg-1); }
-  .genre-opt.is-disabled { opacity: .4; cursor: default; }
-  .genre-opt.is-disabled:hover { background: none; }
-  @media (prefers-reduced-motion: reduce) { .genre-opt, .genre-opt__box { transition: none; } }
   .ez-store-hero__heading { min-width: 0; padding-top: 2px; }
   .ez-store-hero__name { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 600; color: #fff; margin: 0; letter-spacing: -.2px; word-break: break-word; }
   .ez-store-hero__publisher { display: inline-block; font-size: 13px; color: var(--store-link); margin: var(--sp-2) 0 0; }
@@ -2334,6 +2330,80 @@
   #flow-wrap.is-canvas .wz-forward { display: none !important; }
   /* v4 “What are you publishing?” type chooser — drives the package-dependent bits without the file. */
   #flow-wrap.is-canvas #pkg-help { display: none !important; }
+
+  /* ============================================================================
+     v5 "PROGRESSIVE CANVAS" — Easy by default, Advanced on intent. Builds on the v4
+     open canvas (is-canvas is also set). Easy shows only the required-to-publish fields;
+     an Easy/Advanced toggle + inline per-section reveals surface the deeper options.
+     ============================================================================ */
+  /* Inline "go deeper" disclosure. COLLAPSED: a light, self-describing row (names what's inside).
+     OPEN: it flattens into a slim section header with a top divider, so the revealed fields flow
+     directly beneath it — never a card nested inside a card. */
+  .v5-reveal { display: flex; align-items: center; gap: var(--sp-10); width: 100%; text-align: left; padding: var(--sp-10) var(--sp-12); margin: var(--sp-16) 0 var(--sp-4); border: 1px dashed var(--stroke-3); border-radius: var(--r-10); background: transparent; color: var(--fg-1); cursor: pointer; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .v5-reveal:hover { background: var(--subtle); border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); }
+  .v5-reveal:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .v5-reveal__ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-6); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); flex: 0 0 auto; }
+  .v5-reveal__text { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
+  .v5-reveal__title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .v5-reveal__sub { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .v5-reveal__state { font-size: var(--font-size-base-200); color: var(--fg-3); font-weight: var(--font-weight-semibold); flex: 0 0 auto; }
+  .v5-reveal__chev { color: var(--fg-3); flex: 0 0 auto; transition: transform var(--dur-2) var(--ease-out); }
+  /* Open → flat header with a divider; no box, no fill, no sub-label. */
+  .v5-reveal.is-open { border: 0; border-top: 1px solid var(--stroke-2); border-radius: 0; background: transparent; padding: var(--sp-14) 0 var(--sp-2); margin: var(--sp-20) 0 var(--sp-6); }
+  .v5-reveal.is-open:hover { background: transparent; }
+  .v5-reveal.is-open .v5-reveal__ico { width: 18px; height: 18px; background: transparent; border-radius: 0; }
+  .v5-reveal.is-open .v5-reveal__sub { display: none; }
+  .v5-reveal.is-open .v5-reveal__state { font-weight: 400; }
+  .v5-reveal.is-open .v5-reveal__chev { transform: rotate(180deg); }
+  /* The reveal already names the group, so drop the card's own inner "Advanced pricing" heading. */
+  #flow-wrap.is-progressive .price-adv__label { display: none; }
+  @media (prefers-reduced-motion: reduce) { .v5-reveal, .v5-reveal__chev { transition: none; } }
+  /* Staggered rise for fields as they're revealed. */
+  @keyframes v5AdvIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  #flow-wrap.is-progressive .wz-adv-in { animation: v5AdvIn .34s var(--ease-out) both; }
+  @media (prefers-reduced-motion: reduce) { #flow-wrap.is-progressive .wz-adv-in { animation: none; } }
+  /* Reach: the "Markets & audience" reveal spans the reach grid; Easy hides the two advanced rows
+     (markets, audience) so only Price leads. The stray separator on the row after them is dropped. */
+  .reach-grid > .v5-reveal { grid-column: 1 / -1; margin: 0 0 var(--sp-8); }
+  #flow-wrap.is-progressive:not(.is-reach-adv) .reach-adv-row { display: none !important; }
+  #flow-wrap.is-progressive:not(.is-reach-adv) .reach-grid > .reach-adv-row + .reach-row { border-top: 0; padding-top: 0; }
+
+  /* v5 ACCORDION (Easy): non-open sections collapse to slim, clickable summary cards; the open
+     section shows fully. */
+  #flow-wrap.is-progressive .ez-step.is-collapsed { cursor: pointer; padding: var(--sp-20) var(--sp-24); }
+  #flow-wrap.is-progressive .ez-step.is-collapsed > *:not(.ez-step__head) { display: none !important; }
+  /* The Package identity + restricted-caps banners force themselves visible via .is-wz-show (2 IDs +
+     !important), which out-specifies the rule above — so hide them explicitly when the card is collapsed. */
+  #flow-wrap.is-progressive .ez-step.is-collapsed #ez-pkg-identity-banner,
+  #flow-wrap.is-progressive .ez-step.is-collapsed #pkg-caps-notice { display: none !important; }
+  #flow-wrap.is-progressive .ez-step.is-collapsed .ez-step__head { margin-bottom: 0; }
+  /* The chevron's base margin-left:auto competed with the progress pill's auto margin (flex split
+     the gap, floating the pill mid-card). Give the chevron a fixed gap so the pill's auto margin
+     alone right-aligns the pill + chevron together. */
+  /* Chevron shows on EVERY accordion card so any card can collapse. Collapsed cards expand on
+     click; the open card collapses (→ all closed) when its header/chevron is clicked. */
+  #flow-wrap.is-progressive .ez-step .ez-step__expand { display: inline-flex !important; color: var(--fg-3); margin-left: var(--sp-12); cursor: pointer; transition: transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  #flow-wrap.is-progressive .ez-step.is-open .ez-step__expand { transform: rotate(180deg); }
+  /* Let the title/summary block grow so the chevron (and pill) always land at the right edge —
+     even on a done card that has no pill (nothing else would push the chevron right). */
+  #flow-wrap.is-progressive .ez-step .ez-step__head > div:has(> .ez-step__title) { flex: 1 1 auto; min-width: 0; }
+  #flow-wrap.is-progressive .ez-step.is-collapsed.ez-step--done .ez-step__summary { display: block !important; }
+  #flow-wrap.is-progressive .ez-step.is-collapsed.ez-step--done .ez-step__sub { display: none; }
+  #flow-wrap.is-progressive .ez-step.is-collapsed:hover { border-color: var(--stroke-1); background: var(--subtle); }
+  #flow-wrap.is-progressive .ez-step.is-collapsed:hover .ez-step__expand { color: var(--fg-1); }
+  /* The open card's header row is its collapse toggle. */
+  #flow-wrap.is-progressive .ez-step.is-open .ez-step__head { cursor: pointer; }
+  #flow-wrap.is-progressive .ez-step.is-open .ez-step__head:hover .ez-step__expand { color: var(--fg-1); }
+  /* In the accordion the OPEN card is distinguished by being expanded, so drop the v4 "current
+     section" brand ring — every card border reads the same neutral stroke. */
+  #flow-wrap.is-progressive #editor > .ez-step.is-wz-active { border-color: var(--stroke-3); }
+  /* …and the same for the section-icon badge: the open card's icon reads the same neutral badge as
+     the collapsed ones (green still wins once the section is done) — no lone brand-blue icon. The
+     .is-wizard.is-progressive pair out-specifies the v4 "active section" brand rule below. */
+  #flow-wrap.is-wizard.is-progressive .ez-step.is-wz-active .ez-step__num { background: var(--subtle); color: var(--fg-3); }
+  #flow-wrap.is-wizard.is-progressive .ez-step.is-wz-active.ez-step--done .ez-step__num { background: var(--status-success); color: var(--fg-on-brand); }
+  /* The closing "Ready to submit?" bar duplicates the rail Submit in the compact accordion. */
+  #flow-wrap.is-progressive .v4-finish { display: none !important; }
   .v4-type { margin: 0 0 var(--sp-16); }
   .v4-type__q { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
   .v4-type .seg { display: flex; width: 100%; max-width: 520px; }
@@ -2873,6 +2943,70 @@
     #flow-wrap.wz-v2.is-wizard .wz-stepind { width: auto; }
   }
 
+  /* ============================================================================
+     v5 SINGLE COLUMN — the accordion cards ARE the navigation, so the left rail is
+     retired: its identity + Submit + "Show all" fold into a slim sticky TOP BAR, and
+     the four section cards flow in one centered column. Each card owns its own progress
+     (see .ez-step__prog). Scoped to the editing view; the submitted view is untouched. */
+  #flow-wrap.is-progressive.wz-v2.is-wizard { max-width: 940px; }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) { display: block; }
+  /* Left rail → horizontal top bar. */
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .wz-banner {
+    position: sticky; top: 0; z-index: 30;
+    flex-direction: row; align-items: center; gap: var(--sp-16);
+    padding: var(--sp-12) var(--sp-16); margin: 0 0 var(--sp-20);
+    border-radius: var(--r-12);
+    box-shadow: 0 6px 16px -12px rgba(0,0,0,.5);
+  }
+  /* The redundant step-list + connector stepper is gone (cards carry it now). */
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) #wz-steps { display: none; }
+  /* Identity grows; actions sit at the right. */
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .ez-head { flex: 1 1 auto; min-width: 0; margin: 0; }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .ez-head__row { flex-direction: row; align-items: center; gap: var(--sp-12); }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .ez-apphead { flex: 1 1 auto; min-width: 0; }
+  /* Preview + Submit: inline, natural width (not the rail's full-width block). */
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .wz-preview-btn { width: auto; margin: 0; order: 3; flex: 0 0 auto; }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .wz-preview-btn::part(control) { width: auto; }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .wz-banner__action { align-items: center; margin: 0; padding: 0; order: 4; flex: 0 0 auto; }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .wz-banner__action fluent-button { width: auto; }
+  #flow-wrap.is-progressive .wz-layout:not(:has(#editor[hidden])) .wz-banner__action fluent-button::part(control) { width: auto; }
+  /* Per-section progress pill in each card header. */
+  .ez-step__prog { flex: 0 0 auto; align-self: center; margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-4); padding: 3px var(--sp-8) 3px var(--sp-6); border-radius: var(--r-full); font-size: 12px; font-weight: var(--font-weight-semibold); line-height: 1; white-space: nowrap; cursor: pointer; border: 1px solid transparent; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .ez-step__prog > iconify-icon { flex: 0 0 auto; }
+  .ez-step__prog:hover, .ez-step__prog:focus-visible { outline: none; border-color: color-mix(in srgb, currentColor 40%, transparent); }
+  .ez-step__prog--left { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
+  .ez-step__prog--review { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+  .ez-step__prog--done { background: color-mix(in srgb, var(--status-success) 16%, transparent); color: var(--status-success); }
+  #flow-wrap:not(.is-progressive) .ez-step__prog { display: none; }
+  /* The pill lives just before the expand chevron; give the head room. */
+  #flow-wrap.is-progressive .ez-step__head { align-items: center; }
+
+  /* Genre picker (games only): a compact checkbox grid, capped at 3 selections. */
+  .genre-dialog__lead { font-size: 13px; color: var(--fg-2); margin: 0 0 var(--sp-12); line-height: 1.5; }
+  .genre-dialog__count { color: var(--fg-3); white-space: nowrap; }
+  /* Package-type change guard dialog: bulleted list of what a MSIX↔Win32 switch changes. */
+  .pkgtype-change__lead { font-size: 13px; color: var(--fg-2); margin: 0 0 var(--sp-12); line-height: 1.5; }
+  .pkgtype-change__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-10); }
+  .pkgtype-change__list li { display: flex; align-items: flex-start; gap: var(--sp-8); font-size: 13px; color: var(--fg-1); line-height: 1.45; }
+  .pkgtype-change__list li iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
+  .genre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px var(--sp-16); max-height: 44vh; overflow-y: auto; margin: 0 calc(-1 * var(--sp-4)); padding: 0 var(--sp-4); }
+  @media (max-width: 520px) { .genre-grid { grid-template-columns: 1fr; } }
+  .genre-opt { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8); border-radius: var(--r-6); cursor: pointer; user-select: none; transition: background var(--dur-2) var(--ease-out); }
+  .genre-opt:hover { background: color-mix(in srgb, var(--fg-1) 5%, transparent); }
+  .genre-opt:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  .genre-opt__box { flex: 0 0 auto; width: 18px; height: 18px; border: 1.5px solid var(--stroke-1); border-radius: var(--r-4); display: inline-flex; align-items: center; justify-content: center; color: transparent; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .genre-opt.is-on .genre-opt__box { background: var(--brand-bg); border-color: var(--brand-bg); color: var(--fg-on-brand); }
+  .genre-opt__label { font-size: 13.5px; color: var(--fg-1); }
+  .genre-opt.is-disabled { opacity: .4; cursor: default; }
+  .genre-opt.is-disabled:hover { background: none; }
+  @media (prefers-reduced-motion: reduce) { .genre-opt, .genre-opt__box { transition: none; } }
+
+  /* ===== Game mode (app.productKind === 'game') ===== */
+  /* Games don't ship as classic desktop installers — only MSIX + PWA are supported. */
+  #flow-wrap.is-game .v4-type .seg__opt[data-v4type="win32"] { display: none !important; }
+  /* A game's Store logo is a 2:3 portrait poster (like Roblox), not a square tile. */
+  #flow-wrap.is-game .ez-store-hero__icon { width: 76px; height: 114px; border-radius: var(--r-8); }
+
   /* ---- Enhance / Advanced disclosure (replaces the plain "advanced options" toggle) ----
      The header names exactly what's inside (chips) and differentiates Listing (optional
      enhancements) from Reach & price (advanced/pro); expanding highlights the revealed fields. */
@@ -3026,14 +3160,6 @@
             </div>
           </div>
         </div>
-        <div class="ez-mode" role="group" aria-label="Publishing mode">
-          <button type="button" class="ez-mode__opt ez-mode__opt--active" data-mode="easy" aria-pressed="true" title="Only the required fields">
-            <iconify-icon icon="fluent:flash-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon> Easy
-          </button>
-          <button type="button" class="ez-mode__opt" data-mode="advanced" id="go-advanced" aria-pressed="false" title="More pricing and listing options: set a price, free trials, specific markets, extra languages, trailers, system requirements">
-            <iconify-icon icon="fluent:options-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Advanced
-          </button>
-        </div>
         <!-- Contextual header actions (submitted view only): Withdraw while in review, View in Store once published. -->
         <div class="wz-head-actions" id="wz-head-actions">
           <fluent-button appearance="secondary" id="head-withdraw-btn" hidden>
@@ -3062,14 +3188,17 @@
       <button type="button" class="wz-stepind is-locked" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listing</span></button>
       <button type="button" class="wz-stepind is-locked" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Compliance</span></button>
       <button type="button" class="wz-stepind is-locked" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem" aria-disabled="true"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
-      <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
-      <div class="submit-checklist" id="submit-checklist">
-        <fluent-button appearance="subtle" size="small" class="submit-checklist__toggle" id="submit-checklist-toggle" aria-expanded="false" aria-controls="submit-checklist-panel">
-          <span class="submit-checklist__summary" id="submit-checklist-summary">Checklist</span>
-          <iconify-icon slot="end" class="submit-checklist__chev" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-        </fluent-button>
-        <div class="submit-checklist__panel" id="submit-checklist-panel" role="region" aria-label="What's left to submit for review" hidden></div>
-      </div>
+    </div>
+
+    <!-- Submit-readiness checklist: kept in the DOM (its panel feeds the cert-fix tracker) but hidden
+         in v5 — the header stays identity + Preview + Submit. -->
+    <div class="submit-checklist" id="submit-checklist">
+      <fluent-button appearance="subtle" size="large" class="submit-checklist__toggle" id="submit-checklist-toggle" aria-expanded="false" aria-controls="submit-checklist-panel">
+        <iconify-icon slot="start" class="submit-checklist__ico" icon="fluent:task-list-square-ltr-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+        <span class="submit-checklist__summary" id="submit-checklist-summary">Checklist</span>
+        <iconify-icon slot="end" class="submit-checklist__chev" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      </fluent-button>
+      <div class="submit-checklist__panel" id="submit-checklist-panel" role="region" aria-label="What's left to submit for review" hidden></div>
     </div>
 
     <!-- Preview: opens the read-only, customer-facing Store listing (with an Edit CTA) — anytime. -->
@@ -3182,9 +3311,9 @@
         <div class="v4-type" id="v4-type">
           <p class="v4-type__q">What are you publishing?</p>
           <div class="seg" role="radiogroup" aria-label="What are you publishing?" id="v4-type-seg">
-            <button class="seg__opt seg__opt--active" data-v4type="msix" role="radio" aria-checked="true" type="button">MSIX app<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX app: The modern Windows package (.msix, .appx) — free hosting, code signing and automatic updates." data-tooltip="The modern Windows package (.msix, .appx) — free hosting, code signing and automatic updates."></iconify-icon></button>
-            <button class="seg__opt" data-v4type="win32" role="radio" aria-checked="false" type="button">Desktop installer<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Desktop installer: A classic .exe or .msi installer. You run your own commerce, and a few listing options differ." data-tooltip="A classic .exe or .msi installer. You run your own commerce, and a few listing options differ."></iconify-icon></button>
-            <button class="seg__opt" data-v4type="pwa" role="radio" aria-checked="false" type="button">Web app<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Web app: A live website we package into a Store-ready app. For your listing and pricing it behaves just like MSIX." data-tooltip="A live website we package into a Store-ready app. For your listing and pricing it behaves just like MSIX."></iconify-icon></button>
+            <button class="seg__opt seg__opt--active" data-v4type="msix" role="radio" aria-checked="true" type="button">MSIX app<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX app: Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall." data-tooltip="Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall."></iconify-icon></button>
+            <button class="seg__opt" data-v4type="win32" role="radio" aria-checked="false" type="button">Desktop installer<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Desktop installer: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates."></iconify-icon></button>
+            <button class="seg__opt" data-v4type="pwa" role="radio" aria-checked="false" type="button">Web app<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Web app: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip="Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build."></iconify-icon></button>
           </div>
           <p class="v4-type__lock" id="v4-type-lock"><iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>Set by your package.</span></p>
         </div>
@@ -3234,9 +3363,9 @@
       </section>
 
       <!-- Step 2: listing -->
-      <!-- is-more is permanent: the "Make your listing stand out" banner is retired, so every
-           optional listing field (cover image, trailer, feature highlights, extra languages) shows
-           inline by default instead of being gated behind a disclosure. -->
+      <!-- v5 Progressive: is-more is permanent again — the optional listing affordances (cover, trailer,
+           feature highlights, extra languages, credits) show as quiet in-context "+ add" hints inside the
+           live card (no bundled "More options" reveal). The collapsed accordion still hides the whole body. -->
       <section class="ez-step is-collapsed is-more" id="step-listing">
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-listing">2</span>
@@ -3246,6 +3375,11 @@
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
           <div class="ez-step__headtools">
+            <!-- Preview the read-only, customer-facing listing right from here (mirrors the top-bar Preview).
+                 Icon-only Play button to keep the header uncluttered; label lives in the tooltip + aria-label. -->
+            <fluent-button id="listing-preview-btn" class="ez-step__action" appearance="subtle" aria-label="Preview listing" data-tooltip="Preview listing" data-tooltip-placement="bottom">
+              <iconify-icon icon="fluent:play-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+            </fluent-button>
             <!-- One dropdown handles every language job: switch the editing language, open the
                  add/remove dialog, and bulk import/export the per-language text as CSV. -->
             <div class="ez-step__lang" aria-label="Listing language">
@@ -3573,7 +3707,9 @@
           <div>
             <h2 class="ez-step__title">Reach &amp; price</h2>
             <p class="ez-step__sub">Choose where your app is available and what it costs.</p>
+            <p class="ez-step__summary" id="sum-reach"></p>
           </div>
+          <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </div>
         <p class="v4-tailored" id="reach-tailored"><iconify-icon icon="fluent:sparkle-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>Tailored to your <b id="reach-tailored-type">MSIX app</b></span></p>
 
@@ -3677,6 +3813,18 @@
                 <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
               </div>
             </div>
+            <!-- v5 Progressive: base price is the Easy essential; the deeper pricing intent (per-market
+                 prices, scheduled changes, sales, free trial) lives behind this reveal. Shown only when
+                 the Store handles payment (paid, non-Win32); applyPrice() toggles its visibility. -->
+            <button type="button" class="v5-reveal" id="v5-reveal-pricing" aria-expanded="false" aria-controls="price-advanced price-trial-row" hidden>
+              <span class="v5-reveal__ico"><iconify-icon icon="fluent:money-settings-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <span class="v5-reveal__text">
+                <span class="v5-reveal__title">Advanced pricing &amp; free trial</span>
+                <span class="v5-reveal__sub">Per-market prices · Scheduled changes · Limited-time sales · Free trial</span>
+              </span>
+              <span class="v5-reveal__state">Show</span>
+              <iconify-icon class="v5-reveal__chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+            </button>
             <!-- Advanced pricing (paid MSIX/PWA): per-market overrides, scheduled changes, and sales —
                  a clean, optional settings card. Each row opens its dialog; sale chips render below.
                  Sales stay hidden for Win32. Button ids + label spans preserved for the price JS. -->
@@ -5303,9 +5451,8 @@
   const apps   = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
   let app = apps.find(a => a.id === appId) || apps[apps.length - 1] || { id: appId, name: 'Untitled app', status: 'draft' };
 
-  // A Game (the App/Game choice made when the name was reserved → app.productKind === 'game') swaps
-  // the Listing "Category" single-select for a "Genre(s)" multi-select of up to 3 game genres, hides
-  // the Win32 "Desktop installer" package type (games are MSIX + PWA only), and uses a 2:3 logo.
+  // v5: a Game (the App/Game choice made when the name was reserved → app.productKind === 'game')
+  // swaps the Listing "Category" single-select for a "Genre(s)" multi-select of up to 3 game genres.
   // ?kind=game forces it on for demos (there's no seeded game app).
   const IS_GAME = !!(app && app.productKind === 'game') || /[?&]kind=game\b/i.test(location.search);
   const GAME_GENRES = ['Action + adventure', 'Card + board', 'Casino', 'Classics', 'Educational', 'Family + kids', 'Fighting', 'Multi-Player Online Battle Arena', 'Music', 'Other', 'Platformer', 'Puzzle + trivia', 'Racing + flying', 'Role playing', 'Shooter', 'Simulation', 'Sports', 'Strategy', 'Tools', 'Word'];
@@ -5595,9 +5742,12 @@
   let mode = 'easy';
   // Variant D is always the guided wizard: it locks to the easy-mode field set and
   // wraps those steps in wizard chrome (progress bar + Back/Next). No mode toggle.
-  (function () { const w = document.getElementById('flow-wrap'); if (w) { w.classList.add('is-wizard'); if (/publish-v4\.html/i.test(location.pathname)) w.classList.add('is-canvas'); if (IS_GAME) w.classList.add('is-game'); } })();
+  (function () { const w = document.getElementById('flow-wrap'); if (w) { w.classList.add('is-wizard'); if (/publish-v[45]\.html/i.test(location.pathname)) w.classList.add('is-canvas'); if (/publish-v5\.html/i.test(location.pathname)) w.classList.add('is-progressive'); if (IS_GAME) w.classList.add('is-game'); } })();
   // v4 "Open canvas": non-gated — every section is visible and editable at once, no package required first.
   const IS_CANVAS = !!(document.getElementById('flow-wrap') && document.getElementById('flow-wrap').classList.contains('is-canvas'));
+  // v5 "Progressive canvas": Easy-by-default (only required fields visible) with an Easy/Advanced
+  // toggle + per-section intent reveals. Builds on the v4 open canvas (IS_CANVAS is also true).
+  const IS_PROGRESSIVE = !!(document.getElementById('flow-wrap') && document.getElementById('flow-wrap').classList.contains('is-progressive'));
   // v4 canvas: the package TYPE (a lightweight choice) drives every package-dependent bit
   // (disclosures, pricing note, listing media, audience) — decoupled from the actual binary.
   // A real package, once added, always OVERRIDES the choice (its type wins and locks the chooser).
@@ -5753,7 +5903,67 @@
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
   }
+  // v5 Progressive: Easy/Advanced is an inline reveal layer over the open canvas. It flips the
+  // advanced (.adv-only) listing fields + advanced pricing/trial WITHOUT collapsing to the
+  // one-section-at-a-time Advanced layout. Keeps data-mode="easy" (canvas stays fully visible)
+  // and drives dedicated reveal classes (.is-more on listing, .is-price-adv on the wrap).
+  function v5RevealListingEls() {
+    const listing = $('step-listing'); if (!listing) return [];
+    let els = [];
+    try { els = Array.prototype.slice.call(listing.querySelectorAll('.adv-only')); } catch (e) { return []; }
+    return els.filter(el => el && el.getClientRects && el.getClientRects().length && !(el.parentElement && el.parentElement.closest('.adv-only')));
+  }
+  // Staggered rise for fields as a section is revealed.
+  function v5RiseIn(els) {
+    if (!IS_PROGRESSIVE) return;
+    if (typeof reduceMotion === 'function' && reduceMotion()) return;
+    (els || []).filter(el => el && el.getClientRects && el.getClientRects().length).forEach((el, i) => {
+      const d = Math.min(i, 6) * 55;
+      el.classList.remove('wz-adv-in'); void el.offsetWidth;
+      el.style.animationDelay = d + 'ms';
+      el.classList.add('wz-adv-in');
+      setTimeout(() => { el.classList.remove('wz-adv-in'); el.style.animationDelay = ''; }, d + 400);
+    });
+  }
+  // Reflect the reveals + the global accelerator from the DOM (single source of truth).
+  function updateReachSummary() {
+    const sub = document.getElementById('v5-reveal-reach-sub'); if (!sub) return;
+    const mk = document.querySelector('#step-reach [data-choice="markets"] .seg__opt--active')?.dataset.value;
+    const aud = document.querySelector('#step-reach [data-choice="audience"] .seg__opt--active')?.dataset.value;
+    const mkTxt = (mk === 'choose') ? 'Selected markets' : 'All 240 markets';
+    const audTxt = (aud === 'link') ? 'Direct link' : (aud === 'private' ? 'Private group' : 'Public');
+    sub.textContent = mkTxt + ' \u00b7 ' + audTxt;
+  }
+  function syncV5Reveals() {
+    if (!IS_PROGRESSIVE) return;
+    // Only the advanced-pricing disclosure remains a reveal (listing shows contextual adds inline;
+    // markets/audience are inline). Just keep that one button's open/closed chrome in sync.
+    const pricingBtn = $('v5-reveal-pricing');
+    if (pricingBtn) {
+      const open = !!(document.getElementById('flow-wrap') && document.getElementById('flow-wrap').classList.contains('is-price-adv'));
+      pricingBtn.classList.toggle('is-open', open);
+      pricingBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const st = pricingBtn.querySelector('.v5-reveal__state'); if (st) st.textContent = open ? 'Hide' : 'Show';
+    }
+  }
+  // Global Easy/Advanced master: expand or collapse every reveal at once.
+  function setV5Mode(adv) {
+    adv = !!adv;
+    const wrap = $('flow-wrap');
+    const listing = $('step-listing');
+    if (listing) listing.classList.toggle('is-more', adv);   // listing optional affordances (via is-more rules)
+    if (wrap) wrap.classList.toggle('is-price-adv', adv);    // advanced pricing tools + free trial
+    try { window.__reachRefresh?.price?.(); } catch (e) {}   // reflect pricing reveal + gate
+    if (typeof window.__langSync === 'function') { try { window.__langSync(); } catch (e) {} }
+    syncV5Reveals();
+    if (adv) { v5RiseIn(v5RevealListingEls()); v5RiseIn([$('price-advanced'), $('price-trial-row')]); }
+    if (typeof updateGate === 'function') updateGate();
+    if (typeof ezRenderPreview === 'function') ezRenderPreview();
+    if (typeof renderShots === 'function') renderShots();
+    announce(adv ? 'Advanced \u2014 all options shown.' : 'Easy \u2014 just the essentials.');
+  }
   function setMode(m) {
+    if (IS_PROGRESSIVE) { setV5Mode(m === 'advanced'); return; }
     mode = (m === 'advanced') ? 'advanced' : 'easy';
     applyModeChrome();
     // Language management is available in Easy mode too, so keep the active editing
@@ -5769,6 +5979,47 @@
   document.querySelectorAll('.ez-mode__opt').forEach(b => {
     b.addEventListener('click', () => setMode(b.dataset.mode));
   });
+  // v5 Progressive: wire the two inline "go deeper" reveals (independent of the global master).
+  if (IS_PROGRESSIVE) (function wireV5Reveals() {
+    const listingBtn = document.getElementById('v5-reveal-listing');
+    if (listingBtn) listingBtn.addEventListener('click', () => {
+      const listing = document.getElementById('step-listing'); if (!listing) return;
+      const open = !listing.classList.contains('is-more');
+      listing.classList.toggle('is-more', open);
+      if (typeof window.__langSync === 'function') { try { window.__langSync(); } catch (e) {} }
+      syncV5Reveals();
+      if (open) v5RiseIn(v5RevealListingEls());
+      if (typeof updateGate === 'function') updateGate();
+      announce(open ? 'More listing options shown.' : 'Listing options hidden.');
+    });
+    const pricingBtn = document.getElementById('v5-reveal-pricing');
+    if (pricingBtn) pricingBtn.addEventListener('click', () => {
+      const wrap = document.getElementById('flow-wrap'); if (!wrap) return;
+      const open = !wrap.classList.contains('is-price-adv');
+      wrap.classList.toggle('is-price-adv', open);
+      try { window.__reachRefresh?.price?.(); } catch (e) {}
+      syncV5Reveals();
+      if (open) v5RiseIn([document.getElementById('price-advanced'), document.getElementById('price-trial-row')]);
+      announce(open ? 'Advanced pricing shown.' : 'Advanced pricing hidden.');
+    });
+    // Markets & audience reveal.
+    const reachBtn = document.getElementById('v5-reveal-reach');
+    if (reachBtn) reachBtn.addEventListener('click', () => {
+      const wrap = document.getElementById('flow-wrap'); if (!wrap) return;
+      const open = !wrap.classList.contains('is-reach-adv');
+      wrap.classList.toggle('is-reach-adv', open);
+      syncV5Reveals();
+      if (open) v5RiseIn(Array.prototype.slice.call(document.querySelectorAll('#step-reach .reach-adv-row')));
+      if (typeof updateGate === 'function') updateGate();
+      announce(open ? 'Markets and audience shown.' : 'Markets and audience hidden.');
+    });
+    // Keep the reach summary fresh when markets/audience change (defer so the active seg updates first).
+    const reachGrid = document.querySelector('#step-reach .reach-grid');
+    if (reachGrid) reachGrid.addEventListener('click', (e) => {
+      if (e.target.closest('[data-choice="markets"] .seg__opt, [data-choice="audience"] .seg__opt')) setTimeout(updateReachSummary, 0);
+    });
+    syncV5Reveals();
+  })();
   applyModeChrome();
 
   // Floating design switcher (demo) — hop between the flow designs (A/B/C/D),
@@ -5846,7 +6097,11 @@
   function buildListingPreviewNode() {
     const src = $('ez-live');
     if (!src) return null;
+    // The Additional-information grid is collapsed while editing; expand it just for the capture so
+    // any values the developer set are in the finished preview, then restore the editing state.
+    const _prevInfoOpen = (typeof window.__setInfoExpanded === 'function') ? window.__setInfoExpanded(true) : undefined;
     const clone = src.cloneNode(true);
+    if (typeof window.__setInfoExpanded === 'function') window.__setInfoExpanded(_prevInfoOpen);
     // No duplicate ids in the document.
     clone.removeAttribute('id');
     clone.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
@@ -5854,7 +6109,7 @@
     clone.querySelectorAll(
       '.ez-hero-media__remove, .ez-trailer-add-btn, input[type="file"], ' +
       '.ez-pv-shot__del, .ez-pv-shot-add, .ez-shots-arrow, ' +
-      '.ez-store-features-empty, .ez-whatsnew-empty, .ez-hero-empty, .ez-ai-chip'
+      '.ez-store-features-empty, .ez-whatsnew-empty, .ez-hero-empty, .ez-ai-chip, .ez-info-more'
     ).forEach(n => n.remove());
     // Neutralize the click-to-edit "Additional information" cells (privacy policy,
     // license terms, etc.). Unset "Add …" prompts are dropped (a customer sees nothing
@@ -5949,6 +6204,7 @@
   }
   if ($('ez-preview-open')) $('ez-preview-open').addEventListener('click', openListingPreview);
   if ($('wz-preview-open')) $('wz-preview-open').addEventListener('click', openListingPreview);
+  if ($('listing-preview-btn')) $('listing-preview-btn').addEventListener('click', openListingPreview);
   if (listingPreviewDlg) listingPreviewDlg.querySelectorAll('[data-listing-preview-close]').forEach(b => b.addEventListener('click', closeListingPreview));
   // "Edit listing" leaves the read-only preview and opens the Store listing tab to edit.
   if ($('lpv-edit-listing')) $('lpv-edit-listing').addEventListener('click', () => {
@@ -6211,6 +6467,13 @@
       const r = computeAgeRating(contentAnswers);
       return 'Rated ' + r.age + ' · ' + r.label;
     }
+    if (id === 'step-reach') {
+      const seg = c => document.querySelector('#step-reach [data-choice="' + c + '"] .seg__opt--active')?.dataset.value;
+      const price = seg('price') === 'paid' ? 'Paid' : 'Free';
+      const mk = seg('markets') === 'choose' ? 'Selected markets' : 'All 240 markets';
+      const a = seg('audience'); const aud = a === 'link' ? 'Direct link' : (a === 'private' ? 'Private' : 'Public');
+      return price + ' · ' + mk + ' · ' + aud;
+    }
     return '';
   }
   function scrollEasyOpenIntoView() {
@@ -6220,8 +6483,80 @@
     try { window.scrollTo({ top: Math.max(0, y), behavior: reduceMotion() ? 'auto' : 'smooth' }); }
     catch (e) { window.scrollTo(0, Math.max(0, y)); }
   }
+  let v5PrevOpen = null;
+  // v5 accordion: reflect the open section in the left-rail stepper (nothing is locked).
+  function syncV5Rail() {
+    document.querySelectorAll('#wz-steps .wz-stepind').forEach(el => {
+      const on = el.dataset.wz === easyOpen;
+      el.classList.toggle('is-current', on);
+      el.classList.remove('is-locked');
+      el.removeAttribute('aria-disabled');
+      el.setAttribute('aria-current', on ? 'step' : 'false');
+    });
+  }
+  // v5: every section header carries ONE consistent status pill — "N left" (amber), "Review" (brand,
+  // reach on defaults you haven't looked at), or "Done" (green) — using the same language as the footer
+  // gate. Hovering or keyboard-focusing the pill reveals that section's actionable checklist (wzStepMini).
+  function updateSectionProg(s, id, collapsed, isDone) {
+    const head = s.querySelector('.ez-step__head'); if (!head) return;
+    let pill = head.querySelector('.ez-step__prog');
+    if (!pill) {
+      pill = document.createElement('span');
+      pill.className = 'ez-step__prog';
+      pill.tabIndex = 0;
+      pill.dataset.section = id;
+      head.insertBefore(pill, head.querySelector('.ez-step__headtools') || head.querySelector('.ez-step__expand') || null);
+    }
+    let leftN = 0, doneCount = 0;
+    try {
+      (typeof ckSection === 'function' ? ckSection(id) : []).forEach(it => {
+        if (ckRequired(it)) { if (ckDone(it)) doneCount++; else leftN++; }
+      });
+    } catch (e) {}
+    let variant, label, icon;
+    if (leftN > 0) { variant = 'left'; label = leftN + ' left'; icon = doneCount > 0 ? 'fluent:circle-half-fill-16-filled' : 'fluent:circle-16-regular'; }
+    else if (id === 'step-reach' && typeof reachVisited !== 'undefined' && !reachVisited) { variant = 'review'; label = 'Review'; icon = 'fluent:eye-16-regular'; }
+    else { variant = 'done'; label = 'Done'; icon = 'fluent:checkmark-circle-16-filled'; }
+    pill.className = 'ez-step__prog ez-step__prog--' + variant;
+    pill.innerHTML = '<iconify-icon icon="' + icon + '" width="14" height="14" aria-hidden="true"></iconify-icon><span>' + label + '</span>';
+    pill.setAttribute('aria-label', (WZ_SECTION_NAMES[id] || 'Section') + ' \u2014 ' + label + '. Show checklist.');
+  }
   function renderEasySteps(opts) {
     if (mode !== 'easy') return;
+    if (IS_PROGRESSIVE) {
+      // v5 Easy = accordion: one open section, the rest collapse to slim summary cards.
+      // (is-adv is never set now that the global "show all" control was removed, so showAll stays false.)
+      const showAll = document.getElementById('flow-wrap').classList.contains('is-adv');
+      const done = {};
+      WZ_STEPS.forEach(id => { done[id] = (typeof wzStepComplete === 'function') ? wzStepComplete(id) : false; });
+      // Auto-advance only when the section you're ON just became complete (edited to done) — not
+      // when you navigate to a section that's already complete (e.g. Reach on valid defaults).
+      if (!showAll && easyOpen === v5PrevOpen && done[easyOpen] && !easyPrevDone[easyOpen]) {
+        const next = WZ_STEPS.find(id => !done[id]);        // jump to the next unfinished section
+        if (next && next !== easyOpen) easyOpen = next;
+      }
+      easyPrevDone = done;
+      WZ_STEPS.forEach(id => {
+        const s = $(id); if (!s) return;
+        const collapsed = !showAll && id !== easyOpen;
+        s.classList.toggle('is-collapsed', collapsed);
+        s.classList.toggle('is-open', !collapsed);
+        s.classList.toggle('ez-step--done', !!done[id]);
+        const sum = s.querySelector('.ez-step__summary');
+        if (sum) sum.textContent = done[id] ? easyStepSummary(id) : '';
+        updateSectionProg(s, id, collapsed, !!done[id]);
+      });
+      // The detached keywords/privacy card belongs to the listing — only show it with that section.
+      const extrasCard = $('listing-extras-card');
+      if (extrasCard) extrasCard.hidden = !(showAll || easyOpen === 'step-listing');
+      syncV5Rail();
+      if (v5PrevOpen !== null && v5PrevOpen !== easyOpen) {
+        const o = $(easyOpen);
+        if (o) { try { o.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); } catch (e) {} }
+      }
+      v5PrevOpen = easyOpen;
+      return;
+    }
     if (document.getElementById('flow-wrap').classList.contains('is-wizard')) {
       // Wizard: the progress bar + Back/Next own which step shows. Keep every step
       // expanded (no accordion collapse) and just refresh the summary text.
@@ -6254,19 +6589,26 @@
     if (moved || (opts && opts.scroll)) scrollEasyOpenIntoView();
   }
   function setEasyOpen(id) {
-    if (EASY_STEPS.indexOf(id) < 0) return;
+    const list = IS_PROGRESSIVE ? WZ_STEPS : EASY_STEPS;
+    if (id !== null && list.indexOf(id) < 0) return;   // null = collapse every card (accordion "all closed")
     easyOpen = id;
+    if (IS_PROGRESSIVE) {
+      if (id !== null) { wzIndex = WZ_STEPS.indexOf(id); if (id === 'step-reach') reachVisited = true; }
+      if (typeof updateGate === 'function') { updateGate(); return; }   // re-renders the accordion + rail chrome
+    }
     renderEasySteps({ scroll: true });
   }
-  // Click a collapsed step to expand it (Easy mode only). The guard makes this a
-  // no-op on the open step, so editing its body never collapses it.
+  // Click a collapsed step to expand it; click the OPEN step's header (chevron/title, not its body
+  // fields or toolbar buttons) to collapse it — leaving the accordion fully closed. Body edits on
+  // the open card never collapse it because they aren't inside .ez-step__head.
   EASY_STEPS.forEach(id => {
     const s = $(id);
     if (!s) return;
     s.addEventListener('click', (e) => {
-      if (mode !== 'easy' || !s.classList.contains('is-collapsed')) return;
+      if (mode !== 'easy') return;
       if (e.target.closest('button, fluent-button, a, input, select, textarea')) return;
-      setEasyOpen(id);
+      if (s.classList.contains('is-collapsed')) { setEasyOpen(id); return; }
+      if (IS_PROGRESSIVE && e.target.closest('.ez-step__head')) setEasyOpen(null);
     });
   });
 
@@ -6326,7 +6668,9 @@
     WZ_STEPS.forEach(id => {
       const s = $(id); if (!s) return;
       s.classList.toggle('is-wz-active', id === cur);
-      s.classList.add('is-open'); s.classList.remove('is-collapsed');
+      // v5 Progressive: the Easy accordion (renderEasySteps) owns collapse — don't force every
+      // section open here, or the accordion would always be fully expanded.
+      if (!IS_PROGRESSIVE) { s.classList.add('is-open'); s.classList.remove('is-collapsed'); }
     });
     // The "Make your listing stand out" enhance bar is retired: every optional listing field
     // (cover image, trailer, feature highlights, extra languages) now shows inline by default.
@@ -6335,7 +6679,9 @@
     const moreBar = $('wz-more-bar');
     if (moreBar) moreBar.hidden = true;
     const listingStep = $('step-listing');
-    if (listingStep) listingStep.classList.add('is-more');
+    // v5 Progressive: don't force the Listing step open — Easy mode keeps the advanced listing
+    // fields hidden until the Advanced toggle / "More listing options" reveal adds is-more.
+    if (listingStep && !IS_PROGRESSIVE) listingStep.classList.add('is-more');
     // Detached privacy + search-keywords card: only on the Listing step.
     const extrasCard = $('listing-extras-card');
     if (extrasCard) extrasCard.hidden = IS_CANVAS ? false : (cur !== 'step-listing');
@@ -6517,7 +6863,7 @@
   // ---- Step hover checklist (v2 vertical rail): hovering a step previews what's still left in
   // that section; each row jumps straight to the field. Clicking the step itself navigates. ----
   (function wzStepMini() {
-    let el = null, hideT = null;
+    let el = null, hideT = null, curId = null;
     function ensure() {
       if (el) return el;
       el = document.createElement('div');
@@ -6571,22 +6917,48 @@
         '<ul class="wz-mini__list">' + req.map(rowHtml).join('') + '</ul>' + optHtml;
     }
     function show(node, id) {
-      if (!window.matchMedia('(min-width: 981px)').matches) return;   // vertical rail only
+      if (!window.matchMedia('(min-width: 981px)').matches) return;   // pointer/desktop only
       if (!ckSection(id).length) return;
+      if (curId === id && el && !el.hidden) { clearTimeout(hideT); return; }   // already open for this section — don't rebuild (avoids flicker on re-hover)
       const m = ensure(); clearTimeout(hideT);
-      m.innerHTML = build(id); m.hidden = false; m.style.visibility = 'hidden';
+      m.innerHTML = build(id); m.hidden = false; m.style.visibility = 'hidden'; curId = id;
       const r = node.getBoundingClientRect(), mh = m.offsetHeight, mw = m.offsetWidth;
-      const top = Math.max(8, Math.min(r.top + r.height / 2 - mh / 2, window.innerHeight - mh - 8));
-      let left = r.right + 10; if (left + mw > window.innerWidth - 8) left = r.left - mw - 10;
+      let top, left;
+      if (typeof IS_PROGRESSIVE !== 'undefined' && IS_PROGRESSIVE && node.classList.contains('ez-step__prog')) {
+        top = r.bottom + 8; left = r.right - mw;                                     // v5: drop the checklist straight under the pill…
+        if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 8);    // …flip above if there's no room below
+        if (left < 8) left = 8;
+      } else {
+        top = Math.max(8, Math.min(r.top + r.height / 2 - mh / 2, window.innerHeight - mh - 8));
+        left = r.right + 10; if (left + mw > window.innerWidth - 8) left = r.left - mw - 10;
+      }
       m.style.top = top + 'px'; m.style.left = left + 'px'; m.style.visibility = '';
     }
-    function hide() { if (el) el.hidden = true; }
+    function hide() { if (el) el.hidden = true; curId = null; }
     function hideSoon() { clearTimeout(hideT); hideT = setTimeout(hide, 140); }
     document.querySelectorAll('#wz-steps .wz-stepind').forEach((node) => {
       node.addEventListener('mouseenter', () => { if (!node.classList.contains('is-locked')) show(node, node.dataset.wz); });
       node.addEventListener('mouseleave', hideSoon);
       node.addEventListener('focus', () => { if (!node.classList.contains('is-locked')) show(node, node.dataset.wz); });
       node.addEventListener('blur', hideSoon);
+    });
+    // v5: the left rail is hidden, so the per-section progress pills are the checklist trigger.
+    // Delegated (pills are re-created on every render) — hover or keyboard-focus a pill to preview
+    // what's left in that section; each row jumps to the field.
+    document.addEventListener('mouseover', (e) => {
+      const pill = e.target.closest && e.target.closest('.ez-step__prog'); if (!pill || !pill.dataset.section) return;
+      show(pill, pill.dataset.section);
+    });
+    document.addEventListener('mouseout', (e) => {
+      const pill = e.target.closest && e.target.closest('.ez-step__prog'); if (!pill) return;
+      if (e.relatedTarget && pill.contains(e.relatedTarget)) return;   // moving within the pill — keep it open
+      hideSoon();
+    });
+    document.addEventListener('focusin', (e) => {
+      const pill = e.target.closest && e.target.closest('.ez-step__prog'); if (pill && pill.dataset.section) show(pill, pill.dataset.section);
+    });
+    document.addEventListener('focusout', (e) => {
+      const pill = e.target.closest && e.target.closest('.ez-step__prog'); if (pill) hideSoon();
     });
     window.addEventListener('scroll', hide, true);
   })();
@@ -6933,10 +7305,9 @@
     const curLeft = ckSection(cur).filter(it => ckRequired(it) && !ckDone(it)).length;
     const summaryText =
       noPkg ? 'Add a package to start'
-      : ready ? 'Ready to submit for review'
-      : (allItemsDone && !reachVisited) ? 'Open Reach & price to finish'
-      : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
-      : (totalLeft + ' to finish before review');
+      : ready ? 'Ready to submit'
+      : (allItemsDone && !reachVisited) ? 'Review Reach & price'
+      : (totalLeft + (totalLeft === 1 ? ' item left' : ' items left'));
     if (summaryEl) summaryEl.textContent = summaryText;
     const railSummaryEl = document.getElementById('submit-rail-summary');
     if (railSummaryEl) railSummaryEl.textContent = summaryText;
@@ -7113,6 +7484,7 @@
     const listingDone = state.name && state.desc && state.category && state.shots.length > 0 && privacyOk();
     markStep('step-listing', listingDone);
     markStep('step-rating', state.rating);
+    if (typeof wzStepComplete === 'function') markStep('step-reach', wzStepComplete('step-reach'));  // v5: Reach earns a checkmark on valid defaults too
     refreshDefaultsLine();
     syncRail();
     renderEasySteps();
@@ -9060,7 +9432,7 @@
     // AI autofill hint — only on the listing step, only while the description is empty.
     function dismissAi() { if (aiHint) aiHint.hidden = true; mark(AKEY); }
     function maybeAi() {
-      if (IS_CANVAS) { if (aiHint) aiHint.hidden = true; return; }   // v4 open canvas: no first-run coachmark on Autofill with AI
+      if (IS_CANVAS) { if (aiHint) aiHint.hidden = true; return; }   // open canvas / v5: no floating coachmark (it overlapped the card) — the "Autofill with AI" button + inline "Draft with AI" carry it
       if (!aiHint || seen(AKEY)) return;
       if (!step || step.offsetParent === null) return;   // only when the listing step is actually visible
       if (state && state.desc) { mark(AKEY); aiHint.hidden = true; return; }  // nothing to draft
@@ -10534,6 +10906,7 @@
     genreDraft = selectedGenres.slice();
     renderGenreGrid();
     try { if (typeof genreDialog.show === 'function') genreDialog.show(); } catch (e) {}
+    // Fluent's .show() is occasionally a no-op; make sure the native dialog is actually open.
     try { const inner = genreDialog.shadowRoot && genreDialog.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
   }
   function closeGenreDialog() {
@@ -11134,8 +11507,16 @@
       const storePaid = paid && !win32;   // paid AND the Store handles the money
       const note = $('price-win32-note'); if (note) note.hidden = !(paid && win32);
       $('price-paid-row').hidden = !storePaid;
-      $('price-advanced').hidden = !storePaid;
-      $('price-trial-row').hidden = !storePaid;
+      // v5 Progressive: the base price is essential (Easy), but the advanced pricing tools
+      // (per-market, schedule, sale) and the free trial are the "deeper" pricing intent — shown
+      // only when the #price-advanced reveal is open (.is-price-adv) or in non-progressive variants.
+      const advPricing = !IS_PROGRESSIVE || document.getElementById('flow-wrap')?.classList.contains('is-price-adv');
+      $('price-advanced').hidden = !(storePaid && advPricing);
+      $('price-trial-row').hidden = !(storePaid && advPricing);
+      // The pricing reveal itself appears whenever the Store handles payment; syncV5Reveals sets its open state.
+      const v5pr = document.getElementById('v5-reveal-pricing');
+      if (v5pr) v5pr.hidden = !(IS_PROGRESSIVE && storePaid);
+      if (IS_PROGRESSIVE && typeof syncV5Reveals === 'function') { try { syncV5Reveals(); } catch (e) {} }
       $('price-default-hint').hidden = paid;
       const oc = Object.keys(adv.price.overrides || {}).length;
       const pol = $('price-overrides-label');
@@ -12401,6 +12782,7 @@ function openPriceScheduleDialog() {
     function editFeatures() {
       const body = featSection && featSection.querySelector('.ez-card-section__body');
       if (!body || body.querySelector('textarea')) return;
+      if (featSection) featSection.classList.add('is-editing');   // reveal the section header (title + Draft with AI) while editing
       const ta = document.createElement('textarea');
       ta.className = 'live-edit-input'; ta.rows = 5; ta.value = L.features || ''; ta.placeholder = 'One feature per line';
       ta.style.cssText = 'width:100%;background:transparent;border:0;outline:none;color:inherit;font:inherit;resize:vertical;';
@@ -12412,6 +12794,7 @@ function openPriceScheduleDialog() {
         ta.remove();
         if (featList) featList.hidden = false;
         if (featAdd) featAdd.style.display = '';
+        if (featSection) featSection.classList.remove('is-editing');
         renderFeatures();
       }
       ta.addEventListener('blur', done);
@@ -12481,12 +12864,14 @@ function openPriceScheduleDialog() {
       return '<div class="ez-info-item"><iconify-icon class="ez-info-item__icon" icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon><span class="ez-info-item__label">' + label + '</span><span class="ez-info-item__value">' + valueHtml + '</span></div>';
     }
     const infoGrid = $('ez-pv-info');
+    let listingInfoOpen = false;   // the low-value metadata grid (developer/subcategory/languages/support) is collapsed behind a toggle by default
     function renderInfo() {
       if (!infoGrid) return;
       // Don't clobber an open inline editor (dropdown / text field).
       if (infoGrid.querySelector('fluent-dropdown, select, input, textarea')) return;
-      const fw = document.getElementById('flow-wrap');
-      const advanced = !!(($('step-listing') && $('step-listing').classList.contains('is-more')) || (fw && fw.getAttribute('data-mode') === 'advanced'));
+      // Developer / subcategory / languages / support are low-value metadata — collapsed behind a
+      // "More details" toggle by default (listingInfoOpen); the actionable terms row stays visible.
+      const advanced = listingInfoOpen;
       const section = $('ez-info-section');
       const PLUS = '<iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon>';
       // Editable value with a clear state: filled -> solid value (click to edit); empty -> muted
@@ -12511,10 +12896,11 @@ function openPriceScheduleDialog() {
       const termsVal = '<span class="ez-info-item__line">' + privCell + '</span>' +
         (showLicense ? '<span class="ez-info-item__line">' + licCell + '</span>' : '');
       const termsRow = infoItem('fluent:document-bullet-list-20-regular', 'Additional terms', termsVal);
-      // Simple mode: just the Additional terms (privacy + license) — the developer-actionable items.
+      const infoMoreToggle = (open) => '<button type="button" class="ez-info-more" id="ez-info-toggle" aria-expanded="' + (open ? 'true' : 'false') + '"><iconify-icon icon="fluent:chevron-' + (open ? 'up' : 'down') + '-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + (open ? 'Show fewer details' : 'More details \u2014 developer, subcategory, languages, support') + '</span></button>';
+      // Collapsed: just the actionable Additional terms (privacy + license) + a toggle to reveal the rest.
       if (!advanced) {
         if (section) section.hidden = false;
-        infoGrid.innerHTML = termsRow;
+        infoGrid.innerHTML = termsRow + infoMoreToggle(false);
         return;
       }
       if (section) section.hidden = false;
@@ -12542,9 +12928,12 @@ function openPriceScheduleDialog() {
         infoItem('fluent:tag-multiple-20-regular', 'Subcategory', subVal) +
         infoItem('fluent:globe-20-regular', 'Supported languages', langsVal) +
         infoItem('fluent:person-support-20-regular', 'Support', supVal) +
-        termsRow;
+        termsRow + infoMoreToggle(true);
     }
     window.__refreshInfo = renderInfo;
+    // The "full listing" preview needs the metadata grid rendered (so set values are captured); this
+    // flips it open, returning the previous state so the caller can restore the editing view.
+    window.__setInfoExpanded = function (v) { const prev = listingInfoOpen; listingInfoOpen = !!v; renderInfo(); return prev; };
     function editSubcat() {
       if (localeLocked() && !sharedEditAck) { ensureSharedEdit(editSubcat); return; }
       const target = $('ez-info-subcat'); if (!target) return;
@@ -12678,6 +13067,7 @@ function openPriceScheduleDialog() {
       dlg.querySelectorAll('[data-field-edit-close]').forEach(el => el.addEventListener('click', () => { fieldEditCommit = null; try { dlg.hide(); } catch (e) {} }));  // X cancels
     })();
     if (infoGrid) infoGrid.addEventListener('click', (e) => {
+      if (e.target.closest('#ez-info-toggle')) { e.preventDefault(); listingInfoOpen = !listingInfoOpen; renderInfo(); return; }
       if (e.target.closest('#ez-info-subcat')) { e.preventDefault(); editSubcat(); }
       else if (e.target.closest('#ez-info-privacy')) { e.preventDefault(); openPrivacyDialog(); }
       else if (e.target.closest('#ez-info-developed')) { e.preventDefault(); openFieldDialog({ title: 'Developed by', hint: 'An individual or a company name — whoever developed the app.', value: L.developedBy || '', placeholder: 'e.g. Jane Doe or Acme Inc.', onCommit: (v) => { L.developedBy = v; } }); }
@@ -13340,7 +13730,7 @@ function openPriceScheduleDialog() {
   // v4 canvas: scroll-spy — as you scroll the open canvas, highlight the section you're in (rail
   // "current" + the section's brand ring) without hijacking the scroll. Capture-phase catches the
   // inner scroll container's events (the page scrolls inside .main, not the window).
-  if (IS_CANVAS) (function canvasSpy() {
+  if (IS_CANVAS && !IS_PROGRESSIVE) (function canvasSpy() {
     let raf = 0, cur = -1;
     function spy() {
       raf = 0;
@@ -13393,6 +13783,21 @@ function openPriceScheduleDialog() {
   })();
 
   showWzStep(0, { scroll: false }); // start the wizard on step 1 (Package)
+
+  // v5 Progressive: the Easy accordion opens on the first unfinished section; a click on any
+  // collapsed card (including Reach & price, which isn't in EASY_STEPS) opens it.
+  if (IS_PROGRESSIVE) (function v5AccordionInit() {
+    const rSec = document.getElementById('step-reach');
+    if (rSec) rSec.addEventListener('click', (e) => {
+      if (e.target.closest('button, fluent-button, a, input, select, textarea, .v5-reveal')) return;
+      if (rSec.classList.contains('is-collapsed')) { setEasyOpen('step-reach'); return; }
+      if (e.target.closest('.ez-step__head')) setEasyOpen(null);   // collapse the open Reach card via its header
+    });
+    // Reach ships on valid defaults, but it should NOT read complete until the developer has
+    // actually opened (reviewed) it — so leave reachVisited false; opening the card marks it done.
+    const fi = WZ_STEPS.find(id => !wzStepComplete(id)) || 'step-package';
+    setEasyOpen(fi);
+  })();
 </script>
 </body>
 </html>
