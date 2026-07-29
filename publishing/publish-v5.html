@@ -1398,7 +1398,12 @@
   .ez-whatsnew-empty[hidden] { display: none; }
   .ez-whatsnew-draftrow { display: flex; justify-content: flex-end; margin-top: var(--sp-8); }
   #whatsnew-dialog fluent-textarea { width: 100%; }
-  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; }
+  /* Clean, consistent field: a full rounded border (brand on focus), replacing Fluent's default
+     faint box + harsh 2px blue bottom underline (::after focus indicator) that clashed with the
+     rounded corners and read as a floating blue line in dark mode. */
+  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); transition: border-color var(--dur-2) var(--ease-out); }
+  #whatsnew-dialog fluent-textarea::part(root):focus-within { border-color: var(--brand); }
+  #whatsnew-dialog fluent-textarea::part(root)::after { display: none; }
   #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; box-sizing: border-box; resize: vertical; }
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
@@ -2818,23 +2823,23 @@
   .snav--foot { border-top: 1px solid var(--colorNeutralStroke2, #272c3a); padding-top: 10px; }
   .snav--foot a { color: var(--colorNeutralForeground3, #8b909e); font-weight: 500; }
 
-  /* Live-app management hub (shown once published) — soft, borderless filled tiles in a 2-up grid.
-     Definition comes from a gentle fill + translucent hairline (no hard stroke), so the edges read soft. */
+  /* Live-app management hub (shown once published) — grouped soft panels: each group is one rounded
+     surface holding its actions as rows with hairline dividers (Windows 11 Settings pattern). */
   .live-hub { display: flex; flex-direction: column; gap: var(--sp-20); }
   .live-group { display: flex; flex-direction: column; gap: var(--sp-10); }
   .live-group__title { margin: 0 0 0 2px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--fg-3); }
-  .live-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
-  .live-tile { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-16); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); text-decoration: none; color: var(--fg-1); transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
-  .live-tile:hover { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 7%, var(--layer)); border-color: color-mix(in srgb, var(--fg-1) 13%, transparent); transform: translateY(-2px); box-shadow: 0 16px 34px -22px rgba(0, 0, 0, .6); }
-  .live-tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .live-tile__ico { width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .live-tile:hover .live-tile__ico { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
-  .live-tile__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .live-tile__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
-  .live-tile__t span { font-size: 12.5px; line-height: 16px; color: var(--fg-3); }
-  .live-tile__arw { flex: 0 0 auto; color: var(--fg-4); opacity: 0; transform: translateX(-4px); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .live-tile:hover .live-tile__arw { opacity: 1; transform: translateX(0); color: var(--brand); }
-  @media (max-width: 640px) { .live-grid { grid-template-columns: 1fr; } }
+  .live-panel { background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); overflow: hidden; }
+  .live-row { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-14) var(--sp-16); text-decoration: none; color: var(--fg-1); position: relative; transition: background var(--dur-2) var(--ease-out); }
+  .live-row + .live-row { border-top: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); }
+  .live-row:hover { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
+  .live-row:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  .live-row__ico { width: 38px; height: 38px; flex: 0 0 auto; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .live-row:hover .live-row__ico { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+  .live-row__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .live-row__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .live-row__t span { font-size: 12.5px; line-height: 16px; color: var(--fg-3); }
+  .live-row__chev { flex: 0 0 auto; color: var(--fg-4); transition: transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .live-row:hover .live-row__chev { color: var(--fg-2); transform: translateX(2px); }
 
   /* Adaptive app-status card — sits above the hub and answers "what's happening with my app now?"
      Morphs between Live (published), Update in review, and Needs attention. */
@@ -2877,9 +2882,9 @@
   .asc-btn--primary:hover { background: color-mix(in srgb, var(--brand) 88%, #000); text-decoration: none; }
   .asc-btn--ghost { background: transparent; border-color: var(--stroke-1); color: var(--fg-1); }
   .asc-btn--ghost:hover { background: var(--subtle); text-decoration: none; }
-  /* "Update your app" tile while its update is certifying — muted, non-interactive. */
-  .live-tile--busy { opacity: .7; cursor: default; }
-  .live-tile--busy .live-tile__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  /* "Update your app" row while its update is certifying — muted, non-interactive. */
+  .live-row--busy { opacity: .7; cursor: default; }
+  .live-row--busy .live-row__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
 
   /* A just-published app has no telemetry yet — one compact "no analytics yet" placeholder instead
      of a wall of empty metric cards. The 3-up dashboard (.live-stat*) would return once data exists. */

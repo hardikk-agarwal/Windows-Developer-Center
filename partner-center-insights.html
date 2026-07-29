@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en-us" class="he-theme-dark" dir="ltr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Overview | Windows Desktop | Insights | Partner Center</title>
+<style>
+/* ===================================================================
+   Microsoft Partner Center — Insights / Overview (Windows Desktop)
+   Faithful recreation of the Harmony Enablers dark theme.
+   =================================================================== */
+:root{
+  --shell:#0b0b0b;          /* top header bar            */
+  --canvas:#121212;         /* page + left nav           */
+  --card:#1a1a1a;           /* card surface              */
+  --card-border:#2f2f2f;
+  --hover:#242424;
+  --selected:#2d2d2d;
+
+  --text:#f3f2f1;           /* headings / near-white     */
+  --text-2:#c8c6c4;         /* body                      */
+  --text-3:#a19f9d;         /* muted / section labels    */
+  --text-4:#8a8886;
+
+  --link:#6cb8f6;
+  --brand:#0f6cbd;
+  --brand-hover:#1f7ad0;
+
+  --grid:#2a2a2a;
+  --axis:#9d9b99;
+
+  /* categorical (HE dark) */
+  --c1:#4f9bf5; --c2:#e06ab4; --c3:#9b8be8; --c4:#e5a93b; --c5:#4fc5cd;
+
+  --font:"Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,
+         system-ui,"Helvetica Neue",Arial,sans-serif;
+
+  --header-h:48px;
+  --nav-w:236px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font);
+  background:var(--canvas);
+  color:var(--text-2);
+  font-size:14px;
+  line-height:1.4;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--link);text-decoration:none;}
+a:hover{text-decoration:underline;}
+button{font-family:inherit;}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:12px;height:12px;}
+::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:6px;border:3px solid var(--canvas);}
+::-webkit-scrollbar-thumb:hover{background:#4a4a4a;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ===================== Top header ===================== */
+.shell{
+  position:sticky;top:0;z-index:100;
+  height:var(--header-h);
+  background:var(--shell);
+  display:flex;align-items:center;
+  padding:0 12px 0 4px;
+  border-bottom:1px solid #000;
+  gap:4px;
+}
+.shell .icon-btn{
+  width:40px;height:40px;border:none;background:transparent;color:#e6e6e6;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;
+}
+.shell .icon-btn:hover{background:#1f1f1f;}
+.brand{
+  color:#fff;font-size:15px;font-weight:600;white-space:nowrap;
+  padding-left:4px;letter-spacing:.2px;
+}
+.shell-search{
+  flex:1;display:flex;justify-content:center;
+  padding:0 12px;
+}
+.shell-search .box{
+  width:100%;max-width:640px;height:32px;
+  background:#2b2b2b;border:1px solid #3a3a3a;border-radius:4px;
+  display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--text-3);
+}
+.shell-search .box input{
+  flex:1;background:transparent;border:none;outline:none;color:var(--text-2);
+  font-size:13px;
+}
+.shell-search .box input::placeholder{color:var(--text-4);}
+.shell-right{display:flex;align-items:center;gap:2px;}
+.avatar{
+  width:32px;height:32px;border-radius:50%;margin-left:6px;
+  background:conic-gradient(from 200deg,#f25022,#ffb900,#7fba00,#00a4ef,#8661c5,#f25022);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;
+  border:1px solid #000;cursor:pointer;
+}
+
+/* ===================== Breadcrumb ===================== */
+.crumbs{
+  height:36px;display:flex;align-items:center;gap:6px;
+  padding:0 20px;color:var(--text-3);font-size:13px;
+  background:var(--canvas);
+}
+.crumbs a{color:var(--text-3);}
+.crumbs a:hover{color:var(--text-2);}
+.crumbs .sep{color:var(--text-4);}
+.crumbs .current{color:var(--text-2);}
+
+/* ===================== Layout ===================== */
+.layout{display:flex;align-items:flex-start;}
+.nav{
+  width:var(--nav-w);flex:0 0 var(--nav-w);
+  position:sticky;top:var(--header-h);
+  height:calc(100vh - var(--header-h));
+  overflow-y:auto;
+  background:var(--canvas);
+  padding:6px 0 40px;
+  font-size:13px;
+}
+.nav .item{
+  display:block;padding:6px 16px 6px 20px;color:var(--text-2);
+  cursor:pointer;border-left:2px solid transparent;white-space:nowrap;
+}
+.nav .item:hover{background:var(--hover);text-decoration:none;}
+.nav .item.selected{
+  background:var(--selected);border-left-color:var(--link);color:#fff;font-weight:600;
+}
+.nav .section{
+  padding:14px 16px 4px 20px;color:var(--text-3);font-weight:600;font-size:12px;
+}
+.nav .item.top{font-weight:600;color:var(--text);padding-top:10px;}
+
+/* ===================== Main ===================== */
+.main{
+  flex:1;min-width:0;padding:8px 24px 60px;
+}
+.page-title{
+  display:flex;align-items:baseline;gap:10px;margin:8px 0 14px;
+}
+.page-title h1{
+  margin:0;font-size:22px;font-weight:600;color:var(--text);
+}
+.page-title h1 .light{color:var(--text-3);font-weight:400;}
+.page-title .ctx{color:var(--text-3);font-size:13px;}
+
+/* command toolbar */
+.toolbar{
+  display:flex;align-items:center;gap:2px;margin-bottom:16px;flex-wrap:wrap;
+}
+.cmd{
+  display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;
+  background:transparent;border:none;color:var(--text-2);cursor:pointer;border-radius:4px;
+  font-size:13px;
+}
+.cmd:hover{background:var(--hover);}
+.cmd svg{flex:0 0 auto;}
+
+/* ===================== Announcement / migration banner ===================== */
+.announce{
+  position:relative;display:flex;align-items:center;gap:16px;
+  padding:16px 46px 16px 18px;margin:6px 0 18px;border-radius:8px;overflow:hidden;
+  border:1px solid rgba(79,155,245,.35);
+  background:
+    radial-gradient(130% 150% at 0% 0%, rgba(79,155,245,.22), rgba(79,155,245,0) 58%),
+    linear-gradient(120deg, rgba(15,108,189,.22), rgba(79,197,205,.08) 70%);
+}
+.announce::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--c1),var(--c5));
+}
+.announce .badge-icon{
+  flex:0 0 auto;width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0f6cbd,#4fc5cd);
+  box-shadow:0 4px 14px rgba(15,108,189,.35);
+}
+.announce .txt{flex:1;min-width:0;}
+.announce .txt .row1{display:flex;align-items:center;gap:9px;margin-bottom:3px;}
+.announce .txt h3{margin:0;font-size:15px;font-weight:600;color:#fff;}
+.announce .pill{
+  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:#08222e;background:linear-gradient(135deg,#8fd3ff,#4fc5cd);
+  padding:2px 8px;border-radius:10px;line-height:1.4;
+}
+.announce .txt p{margin:0;font-size:13px;color:var(--text-2);line-height:1.45;max-width:780px;}
+.announce .note{
+  display:flex;align-items:flex-start;gap:7px;margin-top:9px;
+  font-size:12px;color:var(--text-3);line-height:1.4;max-width:780px;
+}
+.announce .note svg{flex:0 0 auto;margin-top:1px;color:var(--c1);}
+.announce .note b{color:var(--text-2);font-weight:600;}
+.announce .cta{display:flex;align-items:center;gap:16px;flex:0 0 auto;}
+.announce .cta .btn-primary{height:34px;display:inline-flex;align-items:center;gap:6px;}
+.announce .cta .link-cta{color:#cfe6ff;font-size:13px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.announce .cta .link-cta:hover{color:#fff;}
+.announce .dismiss{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;border:none;background:transparent;
+  color:var(--text-3);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.announce .dismiss:hover{background:rgba(255,255,255,.10);color:#fff;}
+@media(max-width:960px){
+  .announce{flex-wrap:wrap;}
+  .announce .cta{width:100%;justify-content:flex-start;padding-left:60px;}
+}
+.card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:4px;
+  margin-bottom:16px;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;min-height:44px;
+}
+.card-head h2{margin:0;font-size:15px;font-weight:600;color:var(--text);}
+.card-head .actions{display:flex;align-items:center;gap:2px;}
+.round-btn{
+  width:28px;height:28px;border:none;background:transparent;color:var(--text-3);
+  border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.round-btn:hover{background:var(--hover);color:var(--text-2);}
+.card-body{padding:0 14px 14px;}
+
+/* primary button + search row */
+.grid-controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;}
+.btn-primary{
+  height:32px;padding:0 16px;background:var(--brand);color:#fff;border:1px solid var(--brand);
+  border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex:0 0 auto;
+}
+.btn-primary:hover{background:var(--brand-hover);border-color:var(--brand-hover);}
+.search-box{
+  width:280px;height:32px;background:#202020;border:1px solid #3a3a3a;border-radius:4px;
+  display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--text-3);
+}
+.search-box input{flex:1;background:transparent;border:none;outline:none;color:var(--text-2);font-size:13px;}
+.search-box input::placeholder{color:var(--text-4);}
+
+/* table */
+table.he-table{width:100%;min-width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;}
+table.he-table th,table.he-table td{
+  text-align:left;padding:9px 8px;border-bottom:1px solid var(--card-border);
+  font-size:13px;vertical-align:middle;
+}
+table.he-table th:nth-child(1),table.he-table td:nth-child(1){width:46%;}
+table.he-table th:nth-child(2),table.he-table td:nth-child(2){width:27%;}
+table.he-table th:nth-child(3),table.he-table td:nth-child(3){width:27%;}
+table.he-table th{
+  color:var(--text);font-weight:600;font-size:12px;position:sticky;top:0;
+  border-bottom:1px solid #3a3a3a;
+}
+table.he-table th.sortable{cursor:pointer;}
+table.he-table th .caret{margin-left:4px;color:var(--text-3);font-size:10px;}
+table.he-table td{color:var(--text-2);}
+table.he-table td.name{color:var(--text);}
+table.he-table tbody tr:hover{background:var(--hover);}
+table.he-table td .lnk{color:var(--link);cursor:pointer;background:none;border:none;padding:0;font-size:13px;font-family:inherit;}
+table.he-table td .lnk:hover{text-decoration:underline;}
+
+/* pagination */
+.pager{
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:14px 0 4px;color:var(--text-2);font-size:13px;
+}
+.pager button{
+  min-width:28px;height:28px;padding:0 8px;background:transparent;border:none;color:var(--text-2);
+  border-radius:4px;cursor:pointer;font-size:13px;
+}
+.pager button:hover{background:var(--hover);}
+.pager button.active{color:var(--link);font-weight:600;text-decoration:underline;}
+.pager .nav-lbl{display:inline-flex;align-items:center;gap:4px;}
+.pager .dots{color:var(--text-3);padding:0 2px;}
+
+/* feedback row */
+.fb-row{display:flex;gap:8px;padding:10px 0 2px;}
+.fb-row button{
+  width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:4px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.fb-row button:hover{background:var(--hover);color:var(--text-2);}
+
+/* chart grid */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:1100px){.chart-grid{grid-template-columns:1fr;}}
+.chart-wrap{width:100%;}
+.chart-wrap svg{width:100%;height:auto;display:block;}
+.chart-wrap svg .grid{stroke:var(--grid);stroke-width:1;}
+.chart-wrap svg .ylab,.chart-wrap svg .xlab{fill:var(--axis);font-size:11px;font-family:var(--font);}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;padding:14px 4px 4px;justify-content:center;}
+.legend .li{display:inline-flex;align-items:center;gap:6px;color:var(--text-2);font-size:12px;}
+.legend .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;}
+
+/* ===================== MSA "Pick an account" picker (dark, full-screen) ===================== */
+.msa-backdrop{
+  position:fixed;inset:0;z-index:1000;display:none;
+  align-items:center;justify-content:center;padding:24px;overflow:auto;
+  background:
+    radial-gradient(1100px 760px at 72% -12%, rgba(15,108,189,.20), transparent 58%),
+    radial-gradient(900px 700px at 0% 112%, rgba(79,197,205,.12), transparent 55%),
+    #1b1b1b;
+}
+.msa-backdrop.open{display:flex;}
+.msa-card{
+  width:440px;max-width:100%;
+  background:#2b2b2b;color:#fff;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 40px rgba(0,0,0,.6);
+  border-radius:8px;
+  padding:44px;
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  animation:msaIn .2s ease;
+}
+@keyframes msaIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+.msa-brand{display:flex;align-items:center;gap:8px;margin-bottom:22px;}
+.msa-brand span{color:#c8c8c8;font-size:15px;font-weight:600;}
+.msa-title{font-size:24px;font-weight:600;color:#fff;margin:0 0 12px;}
+.msa-list{border-top:1px solid rgba(255,255,255,.12);}
+.msa-acct{
+  display:flex;align-items:center;gap:12px;padding:13px 4px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+.msa-acct:hover{background:rgba(255,255,255,.06);}
+.msa-acct:focus-visible{outline:2px solid #4f9bf5;outline-offset:-2px;}
+.msa-ava{
+  width:40px;height:40px;flex:0 0 auto;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:600;
+}
+.msa-meta{flex:1;min-width:0;}
+.msa-nm{font-size:15px;color:#fff;line-height:1.25;}
+.msa-em{font-size:13px;color:#b0b0b0;line-height:1.35;}
+.msa-status{font-size:12px;color:#6ccb5f;margin-top:1px;}
+.msa-x{
+  border:none;background:transparent;color:#b0b0b0;width:28px;height:28px;border-radius:2px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+}
+.msa-x:hover{background:rgba(255,255,255,.12);color:#fff;}
+.msa-another .msa-ava{background:#3a3a3a;color:#c8c8c8;border:1px solid rgba(255,255,255,.16);}
+.msa-note{margin-top:20px;font-size:12px;color:#9a9a9a;line-height:1.4;}
+</style>
+</head>
+<body>
+
+<!-- ===================== Top shell header ===================== -->
+<header class="shell">
+  <button class="icon-btn" aria-label="Menu" title="Menu">
+    <svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 5h16M2 10h16M2 15h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+  </button>
+  <span class="brand">Microsoft Partner Center</span>
+  <div class="shell-search">
+    <div class="box">
+      <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <input type="text" placeholder="Search" aria-label="Search" />
+    </div>
+  </div>
+  <div class="shell-right">
+    <button class="icon-btn" aria-label="Notifications" title="Notifications">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2a4 4 0 0 0-4 4v3l-1.2 2.2A.5.5 0 0 0 4.2 12h9.6a.5.5 0 0 0 .4-.8L13 9V6a4 4 0 0 0-4-4Z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M7.2 13.5a1.8 1.8 0 0 0 3.6 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+    </button>
+    <button class="icon-btn" aria-label="Feedback" title="Feedback">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 3.5h12a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H7l-3.5 2.5V13H3a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+    </button>
+    <button class="icon-btn" aria-label="Settings" title="Settings">
+      <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 1.8v2M9 14.2v2M1.8 9h2M14.2 9h2M3.9 3.9l1.4 1.4M12.7 12.7l1.4 1.4M14.1 3.9l-1.4 1.4M5.3 12.7l-1.4 1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </button>
+    <div class="avatar" title="Account">HA</div>
+  </div>
+</header>
+
+<!-- ===================== Breadcrumb ===================== -->
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a href="#">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <span class="current">Insights</span>
+</nav>
+
+<!-- ===================== Body layout ===================== -->
+<div class="layout">
+
+  <!-- Left navigation -->
+  <aside class="nav" aria-label="Insights navigation">
+    <a class="item top" href="#">Overview</a>
+
+    <div class="section">Commercial marketplace</div>
+    <a class="item" href="#">Summary</a>
+    <a class="item" href="#">Revenue</a>
+    <a class="item" href="#">Orders</a>
+    <a class="item" href="#">Usage</a>
+    <a class="item" href="#">Customers</a>
+    <a class="item" href="#">Marketplace insights</a>
+    <a class="item" href="#">Customer retention</a>
+    <a class="item" href="#">License</a>
+    <a class="item" href="#">Quality of service</a>
+    <a class="item" href="#">Ratings &amp; reviews</a>
+
+    <div class="section">Microsoft 365 and Copilot</div>
+    <a class="item" href="#">Acquisitions</a>
+    <a class="item" href="#">Usage</a>
+    <a class="item" href="#">Teams apps usage</a>
+    <a class="item" href="#">Ratings &amp; reviews</a>
+
+    <div class="section">Apps and games</div>
+    <a class="item" href="#">Summary</a>
+    <a class="item" href="#">Acquisitions</a>
+    <a class="item" href="#">Add-on acquisitions</a>
+    <a class="item" href="#">Usage</a>
+    <a class="item" href="#">Health</a>
+    <a class="item" href="#">Reviews</a>
+    <a class="item" href="#">Highlights</a>
+    <a class="item" href="#">Insights</a>
+    <a class="item" href="#">Product page experiments</a>
+
+    <div class="section">XDP Analytics</div>
+    <a class="item" href="#">Download reports</a>
+
+    <div class="section">Windows Desktop Applications</div>
+    <a class="item selected" href="#">Overview</a>
+    <a class="item" href="#">Downloads hub</a>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Migration announcement banner -->
+    <div class="announce" id="migrateBanner" role="region" aria-label="Insights is moving">
+      <div class="badge-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M4 20V14M9.5 20V10M15 20v-6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18.6 2.6l.95 2.25 2.25.95-2.25.95-.95 2.25-.95-2.25L15.4 5.8l2.25-.95.95-2.25Z" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="txt">
+        <div class="row1">
+          <h3>Insights is moving to a new home &mdash; richer analytics for your apps</h3>
+          <span class="pill">New</span>
+        </div>
+        <p>We&rsquo;re upgrading to a redesigned experience with deeper, more accurate data across installs, health, and engagement&mdash;so you can understand and grow your apps faster. Your current reports stay available during the transition.</p>
+        <div class="note">
+          <svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 7.2v3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="5.2" r=".9" fill="currentColor"/></svg>
+          <span>No <b>Microsoft Store developer account</b> yet? We&rsquo;ll redirect you to create one. Already have one? Just sign in with that account to continue.</span>
+        </div>
+      </div>
+      <div class="cta">
+        <button class="btn-primary" id="ctaExplore" type="button">Explore the new Insights
+          <svg width="14" height="14" viewBox="0 0 16 16"><path d="M3 8h9m0 0L8.5 4.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <a href="#" id="ctaLearn" class="link-cta">See what&rsquo;s changing
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M4 2.5 7.5 6 4 9.5" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <button class="dismiss" type="button" aria-label="Dismiss" title="Dismiss" onclick="document.getElementById('migrateBanner').remove()">
+        <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="page-title">
+      <h1><span class="light">Insights</span> | Overview</h1>
+      <span class="ctx">Windows Desktop</span>
+    </div>
+
+    <!-- Command toolbar -->
+    <div class="toolbar">
+      <button class="cmd">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2v7m0 0 3-3m-3 3-3-3M3 13h10" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5 5 6.5l3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="cmd">
+        <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="4" cy="8" r="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="4" r="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 7.2l5.2-2.4M5.4 8.8l5.2 2.4" stroke="currentColor" stroke-width="1.2"/></svg>
+        Share
+      </button>
+      <button class="cmd">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 6.5 9.5 4v8L2 9.5H2Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 5.5c2 0 2 5 0 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        Notifications
+      </button>
+      <button class="cmd">
+        <svg width="16" height="16" viewBox="0 0 16 16"><ellipse cx="8" cy="4" rx="5" ry="2" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        Data refresh details
+      </button>
+      <button class="cmd">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 3h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6l-3 2.2V11H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        Got feedback?
+      </button>
+    </div>
+
+    <!-- All applications card -->
+    <section class="card">
+      <div class="card-head">
+        <h2>All applications</h2>
+        <div class="actions">
+          <button class="round-btn" title="Info" aria-label="Info">
+            <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 7.2v3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="5.2" r=".9" fill="currentColor"/></svg>
+          </button>
+          <button class="round-btn" title="More" aria-label="More">
+            <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12.5" cy="8" r="1.3" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="grid-controls">
+          <button class="btn-primary">Add desktop applications</button>
+          <div class="search-box">
+            <input type="text" id="tableSearch" placeholder="Type to search" aria-label="Type to search" />
+            <svg width="15" height="15" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M10.5 10.5l3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+
+        <table class="he-table" id="appsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th class="col-num sortable">Failures (30 days) <span class="caret">&#9660;</span></th>
+              <th class="col-num">Installs (30 days)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">ADOBE ACROCEF</td><td><button class="lnk">129.05M</button></td><td><button class="lnk">3.43B</button></td></tr>
+            <tr><td class="name">ADOBE ACROBAT</td><td><button class="lnk">36.51M</button></td><td><button class="lnk">3.41B</button></td></tr>
+            <tr><td class="name">ACROBAT COLLABORATION SYNCHRONIZER</td><td><button class="lnk">14.65M</button></td><td><button class="lnk">3.35B</button></td></tr>
+            <tr><td class="name">ADOBE CREATIVE CLOUD</td><td><button class="lnk">8.88M</button></td><td><button class="lnk">6.25M</button></td></tr>
+            <tr><td class="name">ADOBE NOTIFICATION HELPER</td><td><button class="lnk">7.18M</button></td><td><button class="lnk">20.62M</button></td></tr>
+            <tr><td class="name">ADOBE ACROBAT READER</td><td><button class="lnk">6.91M</button></td><td><button class="lnk">489.86M</button></td></tr>
+            <tr><td class="name">CREATIVE CLOUD UI HELPER</td><td><button class="lnk">6.59M</button></td><td><button class="lnk">6.21M</button></td></tr>
+            <tr><td class="name">ADOBE CRASH REPORTER SERVICE</td><td><button class="lnk">5.99M</button></td><td><button class="lnk">2.92B</button></td></tr>
+            <tr><td class="name">ADOBE READER AND ACROBAT MANAGER</td><td><button class="lnk">4.58M</button></td><td><button class="lnk">3.63B</button></td></tr>
+            <tr><td class="name">ADOBE CEF HELPER</td><td><button class="lnk">3.72M</button></td><td><button class="lnk">57.01M</button></td></tr>
+          </tbody>
+        </table>
+
+        <div class="pager">
+          <button class="nav-lbl"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M6.5 2 3.5 5l3 3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Previous</button>
+          <button class="active">1</button>
+          <button>2</button>
+          <button>3</button>
+          <button>4</button>
+          <button>5</button>
+          <span class="dots">..</span>
+          <button>58</button>
+          <button class="nav-lbl">Next <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3.5 2 6.5 5l-3 3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+
+        <div class="fb-row">
+          <button title="Helpful" aria-label="Helpful">
+            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 7v6H3a.5.5 0 0 1-.5-.5v-5A.5.5 0 0 1 3 7h2Zm0 0 2.5-4.5c.7-1.2 2.5-.7 2.5.7V6h3a1 1 0 0 1 1 1.2l-1 5a1 1 0 0 1-1 .8H5" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+          </button>
+          <button title="Not helpful" aria-label="Not helpful">
+            <svg width="16" height="16" viewBox="0 0 16 16"><path d="M11 9V3h2a.5.5 0 0 1 .5.5v5A.5.5 0 0 1 13 9h-2Zm0 0-2.5 4.5c-.7 1.2-2.5.7-2.5-.7V10H3a1 1 0 0 1-1-1.2l1-5A1 1 0 0 1 4 3h7" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two chart cards -->
+    <div class="chart-grid">
+      <section class="card">
+        <div class="card-head">
+          <h2>Failures (30 days)</h2>
+          <div class="actions">
+            <button class="round-btn" title="Info" aria-label="Info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 7.2v3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="5.2" r=".9" fill="currentColor"/></svg></button>
+            <button class="round-btn" title="More" aria-label="More"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12.5" cy="8" r="1.3" fill="currentColor"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><svg id="chartFailures" role="img" aria-label="Failures line chart"></svg></div>
+          <div class="legend" id="legendFailures"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Installs (30 days)</h2>
+          <div class="actions">
+            <button class="round-btn" title="Info" aria-label="Info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 7.2v3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="5.2" r=".9" fill="currentColor"/></svg></button>
+            <button class="round-btn" title="More" aria-label="More"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12.5" cy="8" r="1.3" fill="currentColor"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><svg id="chartInstalls" role="img" aria-label="Installs line chart"></svg></div>
+          <div class="legend" id="legendInstalls"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== MSA "Pick an account" picker ===================== -->
+<div class="msa-backdrop" id="msaPicker" role="dialog" aria-modal="true" aria-label="Pick an account">
+  <div class="msa-card">
+    <div class="msa-brand">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <rect x="1" y="1" width="8.4" height="8.4" fill="#F25022"/>
+        <rect x="10.6" y="1" width="8.4" height="8.4" fill="#7FBA00"/>
+        <rect x="1" y="10.6" width="8.4" height="8.4" fill="#00A4EF"/>
+        <rect x="10.6" y="10.6" width="8.4" height="8.4" fill="#FFB900"/>
+      </svg>
+      <span>Microsoft</span>
+    </div>
+    <h2 class="msa-title">Pick an account</h2>
+    <div class="msa-list">
+      <!-- Has a Microsoft Store developer account → straight to the populated WDP portal -->
+      <div class="msa-acct" data-go="portal.html?demo=wdp#apps" role="button" tabindex="0">
+        <div class="msa-ava" style="background:linear-gradient(135deg,#0f6cbd,#4fc5cd)">AT</div>
+        <div class="msa-meta">
+          <div class="msa-nm">Alex Taylor</div>
+          <div class="msa-em">alex.taylor@outlook.com</div>
+          <div class="msa-status">Signed in</div>
+        </div>
+        <button class="msa-x" title="Forget" aria-label="Forget this account" onclick="event.stopPropagation();this.closest('.msa-acct').remove();">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <!-- No Store developer account yet → WDP developer account onboarding (skip its sign-in) -->
+      <div class="msa-acct" data-go="signup.html?signedin=1&amp;name=Sam%20Rivera&amp;email=sam.rivera%40outlook.com" role="button" tabindex="0">
+        <div class="msa-ava" style="background:linear-gradient(135deg,#8661c5,#e06ab4)">SR</div>
+        <div class="msa-meta">
+          <div class="msa-nm">Sam Rivera</div>
+          <div class="msa-em">sam.rivera@outlook.com</div>
+        </div>
+        <button class="msa-x" title="Forget" aria-label="Forget this account" onclick="event.stopPropagation();this.closest('.msa-acct').remove();">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="msa-acct msa-another" data-go="signup.html?signedin=1" role="button" tabindex="0">
+        <div class="msa-ava">
+          <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4 16.5c0-3 2.7-4.8 6-4.8s6 1.8 6 4.8" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        </div>
+        <div class="msa-meta"><div class="msa-nm">Use another account</div></div>
+      </div>
+    </div>
+    <p class="msa-note">Accounts with a Microsoft Store developer account go straight to Insights. New accounts are guided through developer onboarding first.</p>
+  </div>
+</div>
+
+<script>
+/* ---------- categorical palette ---------- */
+const C = ['#4f9bf5','#e06ab4','#9b8be8','#e5a93b','#4fc5cd'];
+
+/* ---------- data (30 daily points, Jul 1..29) ---------- */
+const xLabels = [
+  {i:0,t:'Jul'},{i:4,t:'5'},{i:8,t:'9'},{i:12,t:'13'},
+  {i:16,t:'17'},{i:20,t:'21'},{i:24,t:'25'},{i:28,t:'29'}
+];
+
+const failures = {
+  yMax:7,
+  yTicks:[0,1,2,3,4,5,6,7],
+  yLabels:['0','1M','2M','3M','4M','5M','6M','7M'],
+  series:[
+    {name:'ADOBE ACROCEF', color:C[0], data:[4.6,5.2,5.6,5.9,5.6,2.2,1.1,3.9,5.4,5.9,6.0,5.6,2.1,1.0,4.1,5.5,5.9,6.0,5.6,2.2,1.1,3.9,5.5,5.9,6.1,5.4,2.0,1.4,0.4]},
+    {name:'ADOBE ACROBAT', color:C[1], data:[1.0,1.2,1.4,1.5,1.4,0.6,0.3,0.9,1.3,1.5,1.6,1.4,0.5,0.3,1.0,1.4,1.5,1.6,1.4,0.6,0.3,0.9,1.3,1.5,1.6,1.4,0.5,0.4,0.15]},
+    {name:'ACROBAT COLLABORATION SY...', color:C[2], data:[0.7,0.8,0.85,0.9,0.85,0.4,0.2,0.6,0.8,0.9,0.9,0.85,0.35,0.2,0.7,0.85,0.9,0.9,0.85,0.4,0.2,0.6,0.8,0.9,0.9,0.85,0.35,0.25,0.1]},
+    {name:'ADOBE CREATIVE CLOUD', color:C[3], data:[0.35,0.4,0.42,0.45,0.42,0.2,0.1,0.3,0.4,0.45,0.45,0.42,0.18,0.1,0.35,0.42,0.45,0.45,0.42,0.2,0.1,0.3,0.4,0.45,0.45,0.42,0.18,0.12,0.05]},
+    {name:'ADOBE NOTIFICATION HELPER', color:C[4], data:[0.25,0.28,0.3,0.32,0.3,0.15,0.08,0.22,0.28,0.32,0.32,0.3,0.14,0.08,0.25,0.3,0.32,0.32,0.3,0.15,0.08,0.22,0.28,0.32,0.32,0.3,0.14,0.1,0.04]}
+  ]
+};
+
+const installs = {
+  yMax:180,
+  yTicks:[0,30,60,90,120,150,180],
+  yLabels:['0','30M','60M','90M','120M','150M','180M'],
+  series:[
+    {name:'ADOBE READER AND ACROBAT...', color:C[0], data:[171,172,170,173,172,174,171,172,170,173,172,174,171,172,170,173,172,171,6,2,2,3,2,2,3,2,2,3,2]},
+    {name:'ADOBE ACROCEF', color:C[1], data:[4,4,3,4,4,5,4,4,3,4,4,5,4,4,3,4,4,4,3,2,2,3,2,2,3,2,2,3,2]},
+    {name:'ADOBE WEBINSTALLER', color:C[2], data:[3,3,2,3,3,3,3,3,2,3,3,3,3,3,2,3,3,3,2,1,1,2,1,1,2,1,1,2,1]},
+    {name:'ADOBE ACROBAT TEXT EXTRACT...', color:C[3], data:[2,2,1.5,2,2,2,2,2,1.5,2,2,2,2,2,1.5,2,2,2,1.5,1,1,1.2,1,1,1.2,1,1,1.2,1]},
+    {name:'ADOBE PDF BROKER PROCESS F...', color:C[4], data:[1.2,1.2,1,1.2,1.2,1.3,1.2,1.2,1,1.2,1.2,1.3,1.2,1.2,1,1.2,1.2,1.2,1,0.6,0.6,0.8,0.6,0.6,0.8,0.6,0.6,0.8,0.6]}
+  ]
+};
+
+function renderChart(svgId, cfg){
+  const svg = document.getElementById(svgId);
+  const W=560,H=210,padL=44,padR=14,padT=12,padB=28;
+  const x0=padL,x1=W-padR,y0=padT,y1=H-padB;
+  const plotW=x1-x0, plotH=y1-y0;
+  const n = cfg.series[0].data.length;
+  const xOf = i => x0 + (i/(n-1))*plotW;
+  const yOf = v => y1 - (v/cfg.yMax)*plotH;
+  let p = [];
+
+  // horizontal gridlines + y labels
+  cfg.yTicks.forEach((t,idx)=>{
+    const y = yOf(t);
+    p.push(`<line class="grid" x1="${x0}" y1="${y}" x2="${x1}" y2="${y}"/>`);
+    p.push(`<text class="ylab" x="${x0-8}" y="${y+4}" text-anchor="end">${cfg.yLabels[idx]}</text>`);
+  });
+  // x labels
+  xLabels.forEach(l=>{
+    p.push(`<text class="xlab" x="${xOf(l.i)}" y="${y1+18}" text-anchor="middle">${l.t}</text>`);
+  });
+  // series lines + markers
+  cfg.series.forEach(s=>{
+    const pts = s.data.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ');
+    p.push(`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="1.6"/>`);
+    s.data.forEach((v,i)=>{
+      p.push(`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(v).toFixed(1)}" r="1.9" fill="${s.color}"/>`);
+    });
+  });
+
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML = p.join('');
+}
+
+function renderLegend(id, cfg){
+  document.getElementById(id).innerHTML = cfg.series.map(s=>
+    `<span class="li"><span class="dot" style="background:${s.color}"></span>${s.name}</span>`
+  ).join('');
+}
+
+renderChart('chartFailures', failures);
+renderChart('chartInstalls', installs);
+renderLegend('legendFailures', failures);
+renderLegend('legendInstalls', installs);
+
+/* ---------- simple table filter ---------- */
+document.getElementById('tableSearch').addEventListener('input', function(e){
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#appsTable tbody tr').forEach(tr=>{
+    const name = tr.querySelector('.name').textContent.toLowerCase();
+    tr.style.display = name.includes(q) ? '' : 'none';
+  });
+});
+
+/* ---------- MSA account picker (banner CTA) ---------- */
+(function(){
+  const picker = document.getElementById('msaPicker');
+  const open  = () => { picker.classList.add('open'); document.body.style.overflow = 'hidden'; };
+  const close = () => { picker.classList.remove('open'); document.body.style.overflow = ''; };
+
+  const cta = document.getElementById('ctaExplore');
+  if (cta) cta.addEventListener('click', open);
+  const learn = document.getElementById('ctaLearn');
+  if (learn) learn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+
+  // Route each account: established dev → populated WDP portal; new dev → onboarding.
+  picker.querySelectorAll('.msa-acct[data-go]').forEach(function(el){
+    const go = () => { window.location.href = el.getAttribute('data-go'); };
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+
+  // Dismiss on backdrop click or Escape.
+  picker.addEventListener('click', function(e){ if (e.target === picker) close(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && picker.classList.contains('open')) close(); });
+})();
+</script>
+</body>
+</html>

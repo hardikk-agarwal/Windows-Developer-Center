@@ -1429,11 +1429,38 @@
   .ez-whatsnew-empty[hidden] { display: none; }
   .ez-whatsnew-draftrow { display: flex; justify-content: flex-end; margin-top: var(--sp-8); }
   #whatsnew-dialog fluent-textarea { width: 100%; }
-  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; }
+  /* Clean, consistent field: a full rounded border (brand on focus), replacing Fluent's default
+     faint box + harsh 2px blue bottom underline (::after focus indicator) that clashed with the
+     rounded corners and read as a floating blue line in dark mode. */
+  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); transition: border-color var(--dur-2) var(--ease-out); }
+  #whatsnew-dialog fluent-textarea::part(root):focus-within { border-color: var(--brand); }
+  #whatsnew-dialog fluent-textarea::part(root)::after { display: none; }
   #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; box-sizing: border-box; resize: vertical; }
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
   .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
+
+  /* ---- "What's changed in this update" summary (UPDATE flow only) ---- */
+  #flow-wrap:not(.is-update-flow) #upd-changes { display: none !important; }
+  .upd-changes { margin: 0 0 var(--sp-20); padding: var(--sp-16); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); }
+  .upd-changes[hidden] { display: none; }
+  .upd-changes__head { display: flex; align-items: flex-start; gap: var(--sp-12); }
+  .upd-changes__ico { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+  .upd-changes__hgroup { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .upd-changes__title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .upd-changes__sub { font-size: 12.5px; line-height: 16px; color: var(--fg-2); }
+  .upd-changes__list { list-style: none; margin: var(--sp-14) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
+  .upd-changes--empty { padding-bottom: var(--sp-14); }
+  .upd-changes--empty .upd-changes__list { display: none; }
+  .upd-changes__jump { display: flex; align-items: center; gap: var(--sp-12); width: 100%; text-align: left; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: var(--layer); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); cursor: pointer; font: inherit; color: var(--fg-1); transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .upd-changes__jump:hover { background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
+  .upd-changes__ic { flex: 0 0 auto; width: 28px; height: 28px; border-radius: var(--r-8); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .upd-changes__txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .upd-changes__txt strong { font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  .upd-changes__txt span { font-size: 12px; color: var(--fg-3); }
+  .upd-changes__go { flex: 0 0 auto; color: var(--fg-4); }
+  /* Left-stepper: brand dot marking a section changed in this update. */
+  .wz-stepind.is-changed .wz-stepind__label::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: var(--sp-6); vertical-align: middle; background: var(--brand); }
 
   /* ---- "Publish with Copilot": agentic ZIP intake (entry, intake dialog, run overlay, summary) ---- */
   .cpx-entry { display: flex; align-items: center; gap: var(--sp-14); width: 100%; text-align: left; cursor: pointer;
@@ -2713,23 +2740,23 @@
   .snav--foot { border-top: 1px solid var(--colorNeutralStroke2, #272c3a); padding-top: 10px; }
   .snav--foot a { color: var(--colorNeutralForeground3, #8b909e); font-weight: 500; }
 
-  /* Live-app management hub (shown once published) — soft, borderless filled tiles in a 2-up grid.
-     Definition comes from a gentle fill + translucent hairline (no hard stroke), so the edges read soft. */
+  /* Live-app management hub (shown once published) — grouped soft panels: each group is one rounded
+     surface holding its actions as rows with hairline dividers (Windows 11 Settings pattern). */
   .live-hub { display: flex; flex-direction: column; gap: var(--sp-20); }
   .live-group { display: flex; flex-direction: column; gap: var(--sp-10); }
   .live-group__title { margin: 0 0 0 2px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--fg-3); }
-  .live-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
-  .live-tile { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-16); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); text-decoration: none; color: var(--fg-1); transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
-  .live-tile:hover { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 7%, var(--layer)); border-color: color-mix(in srgb, var(--fg-1) 13%, transparent); transform: translateY(-2px); box-shadow: 0 16px 34px -22px rgba(0, 0, 0, .6); }
-  .live-tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .live-tile__ico { width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .live-tile:hover .live-tile__ico { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
-  .live-tile__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .live-tile__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
-  .live-tile__t span { font-size: 12.5px; line-height: 16px; color: var(--fg-3); }
-  .live-tile__arw { flex: 0 0 auto; color: var(--fg-4); opacity: 0; transform: translateX(-4px); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .live-tile:hover .live-tile__arw { opacity: 1; transform: translateX(0); color: var(--brand); }
-  @media (max-width: 640px) { .live-grid { grid-template-columns: 1fr; } }
+  .live-panel { background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); overflow: hidden; }
+  .live-row { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-14) var(--sp-16); text-decoration: none; color: var(--fg-1); position: relative; transition: background var(--dur-2) var(--ease-out); }
+  .live-row + .live-row { border-top: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); }
+  .live-row:hover { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
+  .live-row:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  .live-row__ico { width: 38px; height: 38px; flex: 0 0 auto; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .live-row:hover .live-row__ico { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+  .live-row__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .live-row__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .live-row__t span { font-size: 12.5px; line-height: 16px; color: var(--fg-3); }
+  .live-row__chev { flex: 0 0 auto; color: var(--fg-4); transition: transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .live-row:hover .live-row__chev { color: var(--fg-2); transform: translateX(2px); }
 
   /* Adaptive app-status card — sits above the hub and answers "what's happening with my app now?"
      Morphs between Live (published), Update in review, and Needs attention. */
@@ -2772,9 +2799,9 @@
   .asc-btn--primary:hover { background: color-mix(in srgb, var(--brand) 88%, #000); text-decoration: none; }
   .asc-btn--ghost { background: transparent; border-color: var(--stroke-1); color: var(--fg-1); }
   .asc-btn--ghost:hover { background: var(--subtle); text-decoration: none; }
-  /* "Update your app" tile while its update is certifying — muted, non-interactive. */
-  .live-tile--busy { opacity: .7; cursor: default; }
-  .live-tile--busy .live-tile__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  /* "Update your app" row while its update is certifying — muted, non-interactive. */
+  .live-row--busy { opacity: .7; cursor: default; }
+  .live-row--busy .live-row__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
 
   /* A just-published app has no telemetry yet — one compact "no analytics yet" placeholder instead
      of a wall of empty metric cards. The 3-up dashboard (.live-stat*) would return once data exists. */
@@ -3133,6 +3160,19 @@
         </fluent-button>
       </nav>
     <div id="editor">
+
+      <!-- "What's changed in this update" — UPDATE flow only. Lists sections that differ from the
+           live listing (populated by renderUpdateChanges); each row jumps to that step. -->
+      <div class="upd-changes" id="upd-changes" hidden>
+        <div class="upd-changes__head">
+          <span class="upd-changes__ico"><iconify-icon icon="fluent:edit-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+          <div class="upd-changes__hgroup">
+            <strong class="upd-changes__title">What's changed in this update</strong>
+            <span class="upd-changes__sub" id="upd-changes-sub">Edit any section to update your live listing.</span>
+          </div>
+        </div>
+        <ul class="upd-changes__list" id="upd-changes-list"></ul>
+      </div>
 
       <!-- Certification fix tracker — visible only while resolving a failed submission
            (certFixActive). Lists each issue with jump-to-field + mark-fixed + progress. -->
@@ -6018,6 +6058,62 @@
   let inUpdateFlow = false;
   let whatsNewPrompted = false;
   let updateBaselineIds = new Set();
+  // ---- "What's changed in this update" tracking ------------------------------
+  // There's no server-side live-version snapshot, so on entering the update flow we snapshot each
+  // section's data signature; every render diffs the current data against it to know what changed.
+  let updateSnapshot = null;
+  let updateChangedSet = new Set();
+  function updSectionSig(sec) {
+    try {
+      if (sec === 'step-package') return JSON.stringify((packages || []).filter(function (p) { return !p._pending; }).map(function (p) { return [p.id, p.version || '', (p.arches || []).join('/'), (p.devices || []).join('/'), !!p.win32]; }));
+      if (sec === 'step-listing') return JSON.stringify([state.name || '', state.desc || '', state.category || '', (state.shots || []).length, (userIconDataUrl || pkgIconDataUrl || '').length, adv.listing]);
+      if (sec === 'step-rating') return JSON.stringify([state.rating || '', adv.declarations, adv.iarcId || '']);
+      if (sec === 'step-reach') return JSON.stringify([adv.markets, adv.audience, adv.price, adv.trial, adv.schedule, adv.publishHold]);
+    } catch (e) {}
+    return '';
+  }
+  function captureUpdateBaseline() { updateSnapshot = {}; WZ_STEPS.forEach(function (s) { updateSnapshot[s] = updSectionSig(s); }); updateChangedSet = new Set(); }
+  function recomputeUpdateChanges() {
+    if (!inUpdateFlow || !updateSnapshot) { updateChangedSet = new Set(); return; }
+    var next = new Set();
+    WZ_STEPS.forEach(function (s) { if (updSectionSig(s) !== updateSnapshot[s]) next.add(s); });
+    updateChangedSet = next;
+  }
+  function updChangeDesc(sec) {
+    if (sec === 'step-package') { var np = (packages || []).filter(function (p) { return !p._pending && !updateBaselineIds.has(p.id); }); return np.length ? ('New version ' + (np[0].version || '')).trim() : 'Package updated'; }
+    if (sec === 'step-listing') return (adv.listing.whatsNew || '').trim() ? 'Release notes + listing edits' : 'Store listing edited';
+    if (sec === 'step-rating') return 'Compliance updated';
+    if (sec === 'step-reach') return 'Reach & price updated';
+    return 'Updated';
+  }
+  function renderUpdateChanges() {
+    recomputeUpdateChanges();
+    var card = document.getElementById('upd-changes');
+    if (!card) return;
+    if (!inUpdateFlow) { card.hidden = true; return; }
+    card.hidden = false;
+    var changed = WZ_STEPS.filter(function (s) { return updateChangedSet.has(s); });
+    var sub = document.getElementById('upd-changes-sub');
+    if (sub) sub.textContent = changed.length
+      ? ('You\u2019re changing ' + changed.length + ' section' + (changed.length === 1 ? '' : 's') + ' vs your live listing.')
+      : 'No changes yet \u2014 edit any section to update your live listing.';
+    card.classList.toggle('upd-changes--empty', changed.length === 0);
+    var list = document.getElementById('upd-changes-list');
+    if (list) list.innerHTML = changed.map(function (s) {
+      return '<li class="upd-changes__item"><button type="button" class="upd-changes__jump" data-wz-jump="' + s + '">' +
+        '<span class="upd-changes__ic"><iconify-icon icon="' + (WZ_SECTION_ICON[s] || 'fluent:edit-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="upd-changes__txt"><strong>' + WZ_SECTION_NAMES[s] + '</strong><span>' + updChangeDesc(s) + '</span></span>' +
+        '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button></li>';
+    }).join('');
+    try { if (typeof updateWzChrome === 'function') updateWzChrome(); } catch (e) {}
+  }
+  window.renderUpdateChanges = renderUpdateChanges;
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-wz-jump]');
+    if (!b) return;
+    var idx = WZ_STEPS.indexOf(b.getAttribute('data-wz-jump'));
+    if (idx >= 0 && typeof showWzStep === 'function') showWzStep(idx);
+  });
   function persistAdvanced() { /* intentionally session-only — a hard refresh resets Advanced settings */ }
   // One-line summary of the effective reach & price settings (used by the gate
   // and the Easy defaults line). Reads `adv`, so it reflects any overrides.
@@ -6224,6 +6320,7 @@
   }
   function updateWzChrome() {
     const reachable = Math.max(wzFurthestReachable(), wzIndex);
+    try { recomputeUpdateChanges(); } catch (e) {}
     document.querySelectorAll('#wz-steps .wz-stepind').forEach((el, i) => {
       const id = el.dataset.wz;
       const isCurrent = i === wzIndex;
@@ -6234,6 +6331,7 @@
       el.classList.toggle('is-done', !locked && status === 'complete');
       el.classList.toggle('is-progress', !locked && status === 'in-progress');
       el.classList.toggle('is-notstarted', !locked && status === 'not-started');
+      el.classList.toggle('is-changed', inUpdateFlow && !locked && updateChangedSet.has(id));
       el.setAttribute('aria-current', isCurrent ? 'step' : 'false');
       el.setAttribute('aria-disabled', locked ? 'true' : 'false');
       // Guidance: locked tabs explain the prerequisite on hover (and on click, below).
@@ -6774,6 +6872,7 @@
       : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
       : (totalLeft + ' to finish before review');
     if (summaryEl) summaryEl.textContent = summaryText;
+    try { renderUpdateChanges(); } catch (e) {}
     const railSummaryEl = document.getElementById('submit-rail-summary');
     if (railSummaryEl) railSummaryEl.textContent = summaryText;
     const railWrap = document.getElementById('submit-rail');
@@ -9103,6 +9202,7 @@
     const ta = $('whatsnew-input');
     adv.listing.whatsNew = ta ? (ta.value || '').trim() : '';
     renderWhatsNew();
+    try { renderUpdateChanges(); } catch (e) {}
     try { $('whatsnew-dialog').hide(); } catch (e) {}
     if (typeof announce === 'function') announce(adv.listing.whatsNew ? "What's new saved to your listing." : "You can add what's new later from your listing.");
   }
@@ -10756,10 +10856,12 @@
     whatsNewPrompted = false;
     try { document.getElementById('flow-wrap').classList.add('is-update-flow'); } catch (e) {}
     try { updateBaselineIds = new Set(packages.map(function (p) { return p.id; })); } catch (e) { updateBaselineIds = new Set(); }
+    try { captureUpdateBaseline(); } catch (e) {}
     $('state-done').hidden = true;
     $('editor').hidden = false;
     $('submit-bar').hidden = false;
     try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
+    try { renderUpdateChanges(); } catch (e) {}
     announce('Update started \u2014 change anything you need, then submit for review again.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   };

@@ -506,4 +506,17 @@
   $("msaTile").addEventListener("click", showWiz);
   var other = $("msaOther"); if (other) other.addEventListener("click", showWiz);
   wireReserve();
+
+  // Deep-link from an external account picker (e.g. the Partner Center Insights migration flow):
+  // the user has ALREADY chosen an account there, so skip this page's own MSA sign-in and go
+  // straight to enrollment — no second sign-in. Optional name/email carry the chosen identity.
+  var q = location.search;
+  if (/[?&](signedin=1|from=insights)\b/.test(q)) {
+    var nmM = /[?&]name=([^&#]+)/.exec(q), emM = /[?&]email=([^&#]+)/.exec(q);
+    if (nmM) { MSA.name = decodeURIComponent(nmM[1]); MSA.initials = initials(MSA.name); }
+    if (emM) { MSA.email = decodeURIComponent(emM[1]); store.email = MSA.email; }
+    var av = $("hdrAvatar");
+    if (av && nmM) { av.textContent = MSA.initials; av.setAttribute("title", MSA.name); av.setAttribute("aria-label", MSA.name); }
+    showWiz();
+  }
 })();

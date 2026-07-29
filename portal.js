@@ -2550,8 +2550,20 @@
 
   wire();
   renderAll();
+  // Deep-link from the Partner Center Insights migration flow: "?demo=wdp" signs in as the WDP
+  // developer (Alex Taylor), then seeds the REAL code signing certificate + auto-discovers the
+  // signed apps with crash analytics — landing on a fully populated portal. The query is stripped
+  // afterwards so a later refresh reuses the persisted session instead of re-seeding.
+  var demoWdp = /[?&]demo=wdp\b/.exec(location.search);
+  if (!STORE && demoWdp) {
+    state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
+    state.certs = []; state.apps = []; save();
+    if (history.replaceState) history.replaceState(null, "", location.pathname + (location.hash || "#apps"));
+    showApp();
+    seedWdpDemo();
+  }
   // Arriving from the marketing page (#signin) always shows the MSA sign-in first.
-  if (location.hash === "#signin") { state.signedIn = false; save(); showSignin(); }
+  else if (location.hash === "#signin") { state.signedIn = false; save(); showSignin(); }
   else if (state.signedIn && state.account) {
     showApp();
     // WDP path: arriving from signup with a freshly-added certificate → scan + populate its

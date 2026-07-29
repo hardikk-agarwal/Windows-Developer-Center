@@ -83,24 +83,24 @@
       ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#"]
     ] }
   ];
-  function liveCard(c, opts) {
-    // While an update is certifying, the "Update your app" tile becomes a non-interactive status
+  function liveRow(c, opts) {
+    // While an update is certifying, the "Update your app" row becomes a non-interactive status
     // chip — you can't stack a second submission on a pending one.
     if (opts && opts.updating && c[4] === "update") {
-      return '<div class="live-tile live-tile--busy" aria-disabled="true"><span class="live-tile__ico"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner></span>' +
-        '<span class="live-tile__t"><strong>Update in review</strong><span>Your new version is being certified.</span></span></div>';
+      return '<div class="live-row live-row--busy" aria-disabled="true"><span class="live-row__ico"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner></span>' +
+        '<span class="live-row__t"><strong>Update in review</strong><span>Your new version is being certified.</span></span></div>';
     }
     var act = c[4] ? ' data-live-action="' + c[4] + '"' : '';
-    return '<a class="live-tile" href="' + c[3] + '"' + act + '><span class="live-tile__ico"><iconify-icon icon="' + c[0] + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
-      '<span class="live-tile__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
-      '<iconify-icon class="live-tile__arw" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
+    return '<a class="live-row" href="' + c[3] + '"' + act + '><span class="live-row__ico"><iconify-icon icon="' + c[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+      '<span class="live-row__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
+      '<iconify-icon class="live-row__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
   }
   // The management hub — the developer's home for a live app. Always present once shipped; only the
   // status card above it changes (live / update in review / needs attention).
   function hubHTML(opts) {
     var groups = LIVE_GROUPS.map(function (g) {
-      return '<section class="live-group live-group--' + (g.accent || 'brand') + '"><h3 class="live-group__title">' + esc(g.title) + '</h3>' +
-        '<div class="live-grid">' + g.cards.map(function (c) { return liveCard(c, opts); }).join("") + '</div></section>';
+      return '<section class="live-group"><h3 class="live-group__title">' + esc(g.title) + '</h3>' +
+        '<div class="live-panel">' + g.cards.map(function (c) { return liveRow(c, opts); }).join("") + '</div></section>';
     }).join("");
     return '<div class="live-hub">' + groups + '</div>';
   }
