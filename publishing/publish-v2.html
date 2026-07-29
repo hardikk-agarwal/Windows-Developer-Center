@@ -405,6 +405,28 @@
   .price-trial-row__head strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
   .price-trial-row .seg { align-self: flex-start; }
   .price-trial-row__duration { display: inline-flex; align-items: center; gap: var(--sp-8); }
+  /* Advanced-pricing reveal (ported from V5): collapses per-market prices, scheduling, sales and
+     free trial behind one toggle so the default paid view stays simple (base price + inline link). */
+  .v5-reveal { display: flex; align-items: center; gap: var(--sp-10); width: 100%; text-align: left; padding: var(--sp-10) var(--sp-12); margin: var(--sp-16) 0 var(--sp-4); border: 1px dashed var(--stroke-3); border-radius: var(--r-10); background: transparent; color: var(--fg-1); cursor: pointer; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .v5-reveal[hidden] { display: none; }
+  .v5-reveal:hover { background: var(--subtle); border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); }
+  .v5-reveal__ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-6); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); flex: 0 0 auto; }
+  .v5-reveal__text { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
+  .v5-reveal__title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .v5-reveal__sub { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .v5-reveal__state { font-size: var(--font-size-base-200); color: var(--fg-3); font-weight: var(--font-weight-semibold); flex: 0 0 auto; }
+  .v5-reveal__chev { color: var(--fg-3); flex: 0 0 auto; transition: transform var(--dur-2) var(--ease-out); }
+  .v5-reveal.is-open { border: 0; border-top: 1px solid var(--stroke-2); border-radius: 0; background: transparent; padding: var(--sp-14) 0 var(--sp-2); margin: var(--sp-20) 0 var(--sp-6); }
+  .v5-reveal.is-open:hover { background: transparent; }
+  .v5-reveal.is-open .v5-reveal__ico { width: 18px; height: 18px; background: transparent; border-radius: 0; }
+  .v5-reveal.is-open .v5-reveal__sub { display: none; }
+  .v5-reveal.is-open .v5-reveal__state { font-weight: 400; }
+  .v5-reveal.is-open .v5-reveal__chev { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { .v5-reveal, .v5-reveal__chev { transition: none; } }
+  /* Inline "See & customize" link inside the auto-converted price hint — opens the per-market dialog. */
+  .price-hint-link { display: inline; background: none; border: 0; padding: 0; font: inherit; color: var(--brand); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  .price-hint-link:hover { text-decoration: underline; }
+  .price-hint-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
   .link-btn--ai { color: var(--brand); }
   .link-btn--ai iconify-icon { color: var(--brand); }
   /* link-style Fluent buttons (transparent) keep the brand AI accent + a compact, link-like look */
@@ -3599,9 +3621,20 @@
                   </fluent-dropdown>
                   <fluent-text-input id="price-amount" placeholder="e.g. 4.99" type="text" inputmode="decimal" value="4.99"></fluent-text-input>
                 </div>
-                <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets.</span>
+                <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets. <button type="button" class="price-hint-link" id="price-hint-customize">See &amp; customize</button></span>
               </div>
             </div>
+            <!-- Advanced pricing & free trial collapse behind this reveal (ported from V5) so the
+                 default paid view is just base price + the inline "See & customize" link. -->
+            <button type="button" class="v5-reveal" id="price-adv-reveal" aria-expanded="false" aria-controls="price-advanced price-trial-row" hidden>
+              <span class="v5-reveal__ico"><iconify-icon icon="fluent:money-settings-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <span class="v5-reveal__text">
+                <span class="v5-reveal__title">Advanced pricing &amp; free trial</span>
+                <span class="v5-reveal__sub">Per-market prices &middot; Scheduled changes &middot; Limited-time sales &middot; Free trial</span>
+              </span>
+              <span class="v5-reveal__state">Show</span>
+              <iconify-icon class="v5-reveal__chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+            </button>
             <!-- Advanced pricing (paid MSIX/PWA): per-market overrides, scheduled changes, and sales —
                  a clean, optional settings card. Each row opens its dialog; sale chips render below.
                  Sales stay hidden for Win32. Button ids + label spans preserved for the price JS. -->
@@ -10878,8 +10911,18 @@
       const storePaid = paid && !win32;   // paid AND the Store handles the money
       const note = $('price-win32-note'); if (note) note.hidden = !(paid && win32);
       $('price-paid-row').hidden = !storePaid;
-      $('price-advanced').hidden = !storePaid;
-      $('price-trial-row').hidden = !storePaid;
+      // Advanced pricing (per-market, scheduling, sales) + free trial collapse behind the reveal
+      // (is-price-adv on flow-wrap) so the default paid view is just base price. Ported from V5.
+      const advOpen = !!document.getElementById('flow-wrap')?.classList.contains('is-price-adv');
+      $('price-advanced').hidden = !(storePaid && advOpen);
+      $('price-trial-row').hidden = !(storePaid && advOpen);
+      const advRevealBtn = $('price-adv-reveal');
+      if (advRevealBtn) {
+        advRevealBtn.hidden = !storePaid;
+        advRevealBtn.classList.toggle('is-open', advOpen);
+        advRevealBtn.setAttribute('aria-expanded', advOpen ? 'true' : 'false');
+        const stEl = advRevealBtn.querySelector('.v5-reveal__state'); if (stEl) stEl.textContent = advOpen ? 'Hide' : 'Show';
+      }
       $('price-default-hint').hidden = paid;
       const oc = Object.keys(adv.price.overrides || {}).length;
       const pol = $('price-overrides-label');
@@ -10920,6 +10963,15 @@
     const po = $('price-overrides-btn'); if (po) po.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
     const ps = $('price-schedule-btn'); if (ps) ps.addEventListener('click', () => { if (typeof openPriceScheduleDialog === 'function') openPriceScheduleDialog(); });
     const psale = $('price-sale-btn'); if (psale) psale.addEventListener('click', () => { if (window.openPriceSaleDialog) window.openPriceSaleDialog(); });
+    // Advanced-pricing reveal toggle (is-price-adv on flow-wrap) + the inline "See & customize" link.
+    const advReveal = $('price-adv-reveal');
+    if (advReveal) advReveal.addEventListener('click', () => {
+      const wrap = document.getElementById('flow-wrap');
+      if (wrap) wrap.classList.toggle('is-price-adv', !wrap.classList.contains('is-price-adv'));
+      applyPrice();
+    });
+    const phc = $('price-hint-customize');
+    if (phc) phc.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
 
     if (curEl) curEl.value = adv.price.currency;
     if (amtEl) amtEl.value = adv.price.amount;
