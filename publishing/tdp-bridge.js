@@ -70,24 +70,77 @@
   // state, set the header pill to Published, and persist that to portal + flow state.
   // A published app shows a live-app management hub — NOT the certification timeline.
   var LIVE_GROUPS = [
-    { title: "Updates", cards: [
+    { title: "Updates", accent: "brand", cards: [
       ["fluent:arrow-upload-20-regular", "Update your app", "Submit a new package or version.", "#", "update"],
       ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#"]
     ] },
-    { title: "Insights & growth", cards: [
+    { title: "Insights & growth", accent: "growth", cards: [
       ["fluent:data-histogram-20-regular", "View analytics", "Installs, usage, ratings and health.", "../" + PORTAL_FILE + "#analytics"],
       ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#"]
     ] },
-    { title: "Listing & monetization", cards: [
+    { title: "Listing & monetization", accent: "mon", cards: [
       ["fluent:share-20-regular", "Share listing", "Copy your Store listing link.", "#"],
       ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#"]
     ] }
   ];
-  function liveCard(c) {
+  function liveCard(c, opts) {
+    // While an update is certifying, the "Update your app" tile becomes a non-interactive status
+    // chip — you can't stack a second submission on a pending one.
+    if (opts && opts.updating && c[4] === "update") {
+      return '<div class="live-tile live-tile--busy" aria-disabled="true"><span class="live-tile__ico"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner></span>' +
+        '<span class="live-tile__t"><strong>Update in review</strong><span>Your new version is being certified.</span></span></div>';
+    }
     var act = c[4] ? ' data-live-action="' + c[4] + '"' : '';
-    return '<a class="live-row" href="' + c[3] + '"' + act + '><span class="live-card__ico"><iconify-icon icon="' + c[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
-      '<span class="live-card__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
-      '<iconify-icon class="live-card__chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></a>';
+    return '<a class="live-tile" href="' + c[3] + '"' + act + '><span class="live-tile__ico"><iconify-icon icon="' + c[0] + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<span class="live-tile__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
+      '<iconify-icon class="live-tile__arw" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
+  }
+  // The management hub — the developer's home for a live app. Always present once shipped; only the
+  // status card above it changes (live / update in review / needs attention).
+  function hubHTML(opts) {
+    var groups = LIVE_GROUPS.map(function (g) {
+      return '<section class="live-group live-group--' + (g.accent || 'brand') + '"><h3 class="live-group__title">' + esc(g.title) + '</h3>' +
+        '<div class="live-grid">' + g.cards.map(function (c) { return liveCard(c, opts); }).join("") + '</div></section>';
+    }).join("");
+    return '<div class="live-hub">' + groups + '</div>';
+  }
+  // Adaptive status card that answers "what's happening with my app right now?"
+  function liveStatusCard() {
+    return '<div class="app-status-card app-status-card--live">' +
+      '<span class="app-status-card__ico"><iconify-icon icon="fluent:checkmark-circle-20-filled" width="24" height="24" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="app-status-card__body"><strong class="app-status-card__title">Live in the Microsoft Store</strong>' +
+        '<span class="app-status-card__sub"><strong>' + esc(appName()) + '</strong> is published and available to customers.</span></div>' +
+      '<span class="app-status-card__badge app-status-card__badge--live"><span class="asc-dot"></span>Live</span>' +
+    '</div>';
+  }
+  function reviewStatusCard() {
+    var stages = [["Submitted", "done"], ["Pre-processing", "done"], ["Certification", "current"], ["Publishing", "todo"]];
+    var strip = stages.map(function (s, i) {
+      var dot = s[1] === "done" ? '<iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>'
+              : s[1] === "current" ? '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>'
+              : String(i + 1);
+      return '<span class="cert-strip__stage cert-strip__stage--' + s[1] + '"><span class="cert-strip__dot">' + dot + '</span><span class="cert-strip__lbl">' + s[0] + '</span></span>';
+    }).join('<span class="cert-strip__sep" aria-hidden="true"></span>');
+    return '<div class="app-status-card app-status-card--review">' +
+      '<div class="app-status-card__head"><span class="app-status-card__ico"><fluent-spinner size="small" aria-hidden="true"></fluent-spinner></span>' +
+        '<div class="app-status-card__body"><strong class="app-status-card__title">Update in review</strong>' +
+          '<span class="app-status-card__sub">Your new version is being certified. Your live version stays up until it passes \u2014 we\u2019ll email you when it\u2019s done.</span></div>' +
+        '<span class="app-status-card__badge app-status-card__badge--review"><span class="asc-dot"></span>In review</span></div>' +
+      '<div class="cert-strip">' + strip + '</div>' +
+    '</div>';
+  }
+  function attentionStatusCard() {
+    var n = CERT_ISSUES.length; var word = n === 1 ? "issue" : "issues";
+    return '<div class="app-status-card app-status-card--attention">' +
+      '<div class="app-status-card__head"><span class="app-status-card__ico"><iconify-icon icon="fluent:error-circle-20-filled" width="24" height="24" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="app-status-card__body"><strong class="app-status-card__title">Your update needs attention</strong>' +
+          '<span class="app-status-card__sub">We found ' + n + ' ' + word + ' in the new version. Your live app is unaffected \u2014 fix these and resubmit.</span></div>' +
+        '<span class="app-status-card__badge app-status-card__badge--attention"><span class="asc-dot"></span>Action needed</span></div>' +
+      '<div class="app-status-card__actions">' +
+        '<a class="asc-btn asc-btn--ghost" href="#" data-cert-report><iconify-icon icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</a>' +
+        '<a class="asc-btn asc-btn--primary" href="#" data-fix="step-listing"><iconify-icon icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</a>' +
+      '</div>' +
+    '</div>';
   }
   // ---- Certification result data (plain language + Partner Center policy refs) ----
   // Each issue: what's wrong, how to fix, which step to jump to, and the policy number
@@ -131,20 +184,19 @@
     '</div>';
   }
 
-  function passHTML() {
-    var groups = LIVE_GROUPS.map(function (g) {
-      return '<div class="live-card-list"><h3 class="live-card-list__title">' + esc(g.title) + '</h3>' +
-        g.cards.map(liveCard).join("") + '</div>';
-    }).join("");
-    return '<div class="cert-pass">' +
-      '<span class="cert-pass__badge"><iconify-icon icon="fluent:checkmark-circle-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
-      '<div class="cert-pass__text">' +
-        '<strong class="cert-pass__title">Certification passed</strong>' +
-        '<span class="cert-pass__sub"><strong>' + esc(appName()) + '</strong> is now live in the Microsoft Store.</span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="live-hub">' + groups + '</div>';
+  // A just-published app has no telemetry yet. Instead of a wall of empty "0 / —" cards, show ONE
+  // compact placeholder that sets expectations; the full metric dashboard would replace this once
+  // real data exists.
+  function liveStatsHTML() {
+    return '<div class="live-metrics-empty">' +
+      '<span class="live-metrics-empty__ico"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="live-metrics-empty__text"><strong>No analytics yet</strong>' +
+        '<span>Installs, ratings and health will appear here as customers discover your app — usually within a day or two of going live.</span></div>' +
+    '</div>';
   }
+  // The published "app overview": at-a-glance stats + the management hub. The app header already
+  // carries the Published pill + "View in Store", so we don't repeat a separate green "Live" card here.
+  function passHTML() { return liveStatsHTML() + hubHTML(); }
 
   // ---- Certification result view state machine ----
   var certTimer = null;
@@ -175,20 +227,32 @@
     if (s && Array.isArray(s.apps)) { var ta = s.apps.filter(function (a) { return a.id === id; })[0]; if (ta) { ta.store = store; ta.storeStatus = storeStatus; try { localStorage.setItem(TDP_KEY, JSON.stringify(s)); } catch (e) {} } }
   }
 
+  // "Has this app ever gone live?" — set the first time certification passes. Distinguishes a FIRST
+  // submission (full certification timeline, no hub yet) from an UPDATE to a live app (keep the hub,
+  // show a compact status card above it).
+  function everLive() { try { return localStorage.getItem("tdp.everLive." + id) === "1"; } catch (e) { return false; } }
+  function markEverLive() { try { localStorage.setItem("tdp.everLive." + id, "1"); } catch (e) {} }
   function showProgress() {
     var done = $id("state-done"); if (done) done.__result = "progress";
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
-    if (prog) prog.hidden = false;
-    if (res) { res.hidden = true; res.innerHTML = ""; }
-    if (act) act.hidden = false;
+    var isUpdate = everLive();   // updating a live app → keep the hub, fold the timeline into a compact status card
+    if (isUpdate) {
+      if (prog) prog.hidden = true;
+      if (res) { res.hidden = false; res.innerHTML = reviewStatusCard() + liveStatsHTML() + hubHTML({ updating: true }); }
+    } else {
+      if (prog) prog.hidden = false;
+      if (res) { res.hidden = true; res.innerHTML = ""; }
+    }
+    if (act) act.hidden = isUpdate;
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
     setPill("In review", "in-review");
-    setNotify(true);
+    setNotify(!isUpdate);   // first submission keeps the notify banner; the update card already says "we'll email you"
     setHeadActions("progress");
     setSwitch("progress");
   }
   function showPassed() {
     var done = $id("state-done"); if (done) done.__result = "passed";
+    markEverLive();
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
     if (prog) prog.hidden = true;
     if (res) { res.hidden = false; res.innerHTML = passHTML(); }
@@ -203,14 +267,18 @@
   function showFailed() {
     var done = $id("state-done"); if (done) done.__result = "failed";
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
+    var isUpdate = everLive();   // the live app is unaffected — only the UPDATE needs attention
     if (prog) prog.hidden = true;
-    if (res) { res.hidden = false; res.innerHTML = failHTML(); }
+    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (attentionStatusCard() + liveStatsHTML() + hubHTML()) : failHTML(); }
     if (act) act.hidden = true;
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
-    setPill("Action needed", "rejected");
-    setMsStatus("rejected"); setPortalStore(false, "rejected");
-    setNotify(true);
-    setHeadActions("failed");
+    if (isUpdate) {
+      setPill("Published", "published"); setMsStatus("published"); setPortalStore(true, "published");
+      setNotify(false); setHeadActions("passed");   // header still offers "View in Store" — the app is live
+    } else {
+      setPill("Action needed", "rejected"); setMsStatus("rejected"); setPortalStore(false, "rejected");
+      setNotify(true); setHeadActions("failed");
+    }
     setSwitch("failed");
   }
   function resolveTo(view) { clearCertTimer(); if (view === "passed") showPassed(); else if (view === "failed") showFailed(); else showProgress(); }

@@ -104,12 +104,18 @@
 
   /* Steps */
   .ez-step { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-24); margin-bottom: var(--sp-16); }
-  .ez-step__head { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; }
+  .ez-step__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; } /* flex-wrap: on narrow widths the toolbar drops below the title instead of clipping */
   .ez-step__action { margin-left: auto; flex: 0 0 auto; }
   /* Listing step head: group the language switcher with the Autofill action so they sit
-     together on the right — the language dropdown to the left of the Autofill button. */
-  .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); }
+     together on the right — the language dropdown to the left of the Autofill button.
+     flex-shrink:0 so the toolbar never compresses/clips its buttons; on narrow widths the
+     header (flex-wrap) drops the whole toolbar to its own line below the title instead. */
+  .ez-step__headtools { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-12); flex-shrink: 0; }
   .ez-step__headtools .ez-step__action { margin-left: 0; }
+  /* The title/sub block flexes (basis 0 so it never forces a wrap on its own); it grows to
+     fill the row and keeps the toolbar inline top-right on normal widths, then yields so the
+     toolbar wraps below on narrow/mobile widths instead of clipping. */
+  #step-listing .ez-step__head > div:has(> .ez-step__title) { flex: 1 1 0; min-width: 0; }
   .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
   /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
      — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
@@ -2707,21 +2713,76 @@
   .snav--foot { border-top: 1px solid var(--colorNeutralStroke2, #272c3a); padding-top: 10px; }
   .snav--foot a { color: var(--colorNeutralForeground3, #8b909e); font-weight: 500; }
 
-  /* Live-app management hub (shown once published, instead of the certification timeline). */
+  /* Live-app management hub (shown once published) — soft, borderless filled tiles in a 2-up grid.
+     Definition comes from a gentle fill + translucent hairline (no hard stroke), so the edges read soft. */
   .live-hub { display: flex; flex-direction: column; gap: var(--sp-20); }
-  .live-card-list { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); overflow: hidden; }
-  .live-card-list__title { margin: 0; padding: var(--sp-12) var(--sp-16); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); border-bottom: 1px solid var(--stroke-2); }
-  .live-row { display: flex; gap: var(--sp-12); align-items: center; padding: var(--sp-12) var(--sp-16); text-decoration: none; color: var(--fg-1);
-    border-bottom: 1px solid var(--stroke-2); transition: background var(--dur-2) var(--ease-out); }
-  .live-row:last-child { border-bottom: 0; }
-  .live-row:hover { background: var(--subtle); text-decoration: none; }
-  .live-card__ico { width: 38px; height: 38px; flex: 0 0 auto; border-radius: var(--r-8); display: grid; place-items: center;
-    background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
-  .live-card__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .live-card__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
-  .live-card__t span { font-size: 12.5px; color: var(--fg-3); }
-  .live-card__chev { flex: 0 0 auto; color: var(--fg-3); }
-  .live-row:hover .live-card__chev { color: var(--fg-1); }
+  .live-group { display: flex; flex-direction: column; gap: var(--sp-10); }
+  .live-group__title { margin: 0 0 0 2px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--fg-3); }
+  .live-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
+  .live-tile { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-16); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); text-decoration: none; color: var(--fg-1); transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+  .live-tile:hover { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 7%, var(--layer)); border-color: color-mix(in srgb, var(--fg-1) 13%, transparent); transform: translateY(-2px); box-shadow: 0 16px 34px -22px rgba(0, 0, 0, .6); }
+  .live-tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .live-tile__ico { width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .live-tile:hover .live-tile__ico { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+  .live-tile__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .live-tile__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .live-tile__t span { font-size: 12.5px; line-height: 16px; color: var(--fg-3); }
+  .live-tile__arw { flex: 0 0 auto; color: var(--fg-4); opacity: 0; transform: translateX(-4px); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .live-tile:hover .live-tile__arw { opacity: 1; transform: translateX(0); color: var(--brand); }
+  @media (max-width: 640px) { .live-grid { grid-template-columns: 1fr; } }
+
+  /* Adaptive app-status card — sits above the hub and answers "what's happening with my app now?"
+     Morphs between Live (published), Update in review, and Needs attention. */
+  .app-status-card { border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-14) var(--sp-16); margin-bottom: var(--sp-20); background: var(--layer); }
+  .app-status-card--live { display: flex; align-items: center; gap: var(--sp-12); background: color-mix(in srgb, var(--status-success) 8%, var(--layer)); border-color: color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); }
+  .app-status-card--review { background: color-mix(in srgb, var(--brand) 7%, var(--layer)); border-color: color-mix(in srgb, var(--brand) 30%, var(--stroke-2)); }
+  .app-status-card--attention { background: color-mix(in srgb, var(--status-danger) 8%, var(--layer)); border-color: color-mix(in srgb, var(--status-danger) 32%, var(--stroke-2)); }
+  .app-status-card__head { display: flex; align-items: flex-start; gap: var(--sp-12); }
+  .app-status-card__ico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+  .app-status-card--live .app-status-card__ico { background: color-mix(in srgb, var(--status-success) 18%, transparent); color: var(--status-success); }
+  .app-status-card--review .app-status-card__ico { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
+  .app-status-card--attention .app-status-card__ico { background: color-mix(in srgb, var(--status-danger) 16%, transparent); color: var(--status-danger); }
+  .app-status-card__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .app-status-card__title { font-size: 14.5px; font-weight: 600; color: var(--fg-1); }
+  .app-status-card__sub { font-size: 12.5px; line-height: 17px; color: var(--fg-2); }
+  .app-status-card__badge { flex: 0 0 auto; align-self: center; display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11.5px; font-weight: 600; padding: 3px 10px 3px 8px; border-radius: var(--r-full); }
+  .app-status-card__badge .asc-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+  .app-status-card__badge--live { background: color-mix(in srgb, var(--status-success) 15%, transparent); color: var(--status-success); }
+  .app-status-card__badge--live .asc-dot { background: var(--status-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-success) 22%, transparent); }
+  .app-status-card__badge--review { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+  .app-status-card__badge--review .asc-dot { background: var(--brand); animation: ascDotPulse 1.4s ease-in-out infinite; }
+  .app-status-card__badge--attention { background: color-mix(in srgb, var(--status-danger) 15%, transparent); color: var(--status-danger); }
+  .app-status-card__badge--attention .asc-dot { background: var(--status-danger); }
+  @keyframes ascDotPulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  @media (prefers-reduced-motion: reduce) { .app-status-card__badge--review .asc-dot { animation: none; } }
+  /* Compact certification stage strip inside the "update in review" card. */
+  .cert-strip { display: flex; align-items: center; margin-top: var(--sp-12); padding-top: var(--sp-12); border-top: 1px solid color-mix(in srgb, var(--brand) 18%, var(--stroke-2)); overflow-x: auto; }
+  .cert-strip__stage { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; }
+  .cert-strip__dot { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: 0 0 auto; background: var(--subtle); color: var(--fg-3); border: 1px solid var(--stroke-2); }
+  .cert-strip__stage--done .cert-strip__dot { background: var(--status-success); color: #fff; border-color: transparent; }
+  .cert-strip__stage--current .cert-strip__dot { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, transparent); }
+  .cert-strip__lbl { font-size: 12px; font-weight: 500; color: var(--fg-2); white-space: nowrap; }
+  .cert-strip__stage--current .cert-strip__lbl { color: var(--fg-1); font-weight: 600; }
+  .cert-strip__stage--todo .cert-strip__lbl { color: var(--fg-4); }
+  .cert-strip__sep { flex: 1 1 auto; height: 2px; min-width: 14px; margin: 0 var(--sp-8); border-radius: 1px; background: var(--stroke-2); }
+  /* Attention-card actions. */
+  .app-status-card__actions { display: flex; gap: var(--sp-8); margin-top: var(--sp-12); flex-wrap: wrap; }
+  .asc-btn { display: inline-flex; align-items: center; gap: var(--sp-6); padding: var(--sp-8) var(--sp-14); border-radius: var(--r-8); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .asc-btn--primary { background: var(--brand); color: #fff; }
+  .asc-btn--primary:hover { background: color-mix(in srgb, var(--brand) 88%, #000); text-decoration: none; }
+  .asc-btn--ghost { background: transparent; border-color: var(--stroke-1); color: var(--fg-1); }
+  .asc-btn--ghost:hover { background: var(--subtle); text-decoration: none; }
+  /* "Update your app" tile while its update is certifying — muted, non-interactive. */
+  .live-tile--busy { opacity: .7; cursor: default; }
+  .live-tile--busy .live-tile__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+
+  /* A just-published app has no telemetry yet — one compact "no analytics yet" placeholder instead
+     of a wall of empty metric cards. The 3-up dashboard (.live-stat*) would return once data exists. */
+  .live-metrics-empty { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-16); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); margin-bottom: var(--sp-20); }
+  .live-metrics-empty__ico { flex: 0 0 auto; width: 36px; height: 36px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-3); }
+  .live-metrics-empty__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .live-metrics-empty__text strong { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
+  .live-metrics-empty__text span { font-size: 12px; line-height: 1.45; color: var(--fg-3); }
 
   /* Hide the demo design-variant (A/B/C/D) switcher in the integrated portal. */
   .design-switch { display: none !important; }
