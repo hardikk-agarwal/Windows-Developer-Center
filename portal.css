@@ -681,6 +681,10 @@ fluent-badge[appearance="outline"][color="subtle"] { background-color: var(--sur
 .filtopt { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: var(--r-sm); cursor: pointer; font-size: 13px; color: var(--text-2); }
 .filtopt:hover { background: var(--hover); }
 .filtopt__t { flex: 1 1 auto; }
+.filtsave { display: flex; align-items: center; gap: 9px; margin-top: 14px; padding: 12px 8px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-2); cursor: pointer; }
+.filtsave fluent-checkbox { flex: none; }
+.filtsave__t { flex: 1 1 auto; }
+.ca-filtersbtn.is-saved iconify-icon[slot="start"] { color: var(--brand); }
 .geobars { display: flex; flex-direction: column; gap: 12px; padding: 2px 0; }
 .geobar { display: grid; grid-template-columns: 150px 1fr auto; align-items: center; gap: 14px; font-size: 13px; }
 .geobar__label { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -900,6 +904,13 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .symstate__ok { color: var(--ok); }
 .symstate__err { color: var(--danger); }
 .symerr { font-family: var(--mono); font-size: 12px; color: var(--danger); background: var(--danger-bg); padding: 6px 12px; border-radius: var(--r-sm); }
+.symdiag { align-self: stretch; text-align: left; display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+.symdiag__group { display: flex; flex-direction: column; gap: 4px; }
+.symdiag__h { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.symdiag__h--err { color: var(--danger); }
+.symdiag__h--warn { color: var(--warn); }
+.symdiag__list { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+.symdiag__list li { margin: 2px 0; }
 .symstate .spinner { width: 34px; height: 34px; border: 3px solid var(--border-2); border-top-color: var(--brand); border-radius: 50%; animation: caspin .8s linear infinite; }
 @keyframes caspin { to { transform: rotate(360deg); } }
 @media (max-width: 760px) { .ai-insight { flex-wrap: wrap; } .ai-insight__cta { margin-left: 0; } .ca-apphead { flex-direction: column; align-items: flex-start; } }
@@ -999,6 +1010,10 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .empty strong { color: var(--text); font-size: 16px; }
 .empty .muted { max-width: 420px; }
 .empty .btn { margin-top: 8px; }
+.empty__ways { list-style: none; margin: 4px 0 2px; padding: 0; max-width: 520px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.empty__ways li { position: relative; padding: 12px 14px 12px 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); font-size: 13.5px; line-height: 1.5; color: var(--text-2); }
+.empty__ways li strong { font-size: 13.5px; }
+.empty__cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
 .cellspan { padding: 28px 16px !important; text-align: center; color: var(--text-3); }
 
 /* ---------- Status card: not-verified variant ---------- */

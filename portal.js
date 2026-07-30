@@ -767,7 +767,15 @@
     notuploaded: { label: "Not uploaded",  cls: "idle", ico: "fluent:circle-16-regular" },
     action:      { label: "Action needed", cls: "warn", ico: "fluent:warning-16-filled" }
   };
-  var SYM_ERR = { code: "SYM_E_PDB_MISMATCH", msg: "The PDB signature (GUID/age) in this upload doesn\u2019t match the binaries you shipped for this version. Rebuild so the symbols match the exact binary, then re-upload the full package (.exe/.dll + .pdb)." };
+  var SYM_ERR = {
+    code: "SYM_E_PDB_MISMATCH",
+    summary: "We couldn\u2019t publish these symbols. Fix the issues below, then re-upload the full package (.exe/.dll + matching .pdb).",
+    errors: ["No PDB matched any uploaded binary by GUID + Age. Nothing to publish."],
+    warnings: [
+      "No matching PDB (GUID a2ddf6fa-3046-4ec0-880b-dc28157533ef, Age 8) found for binary \u2018App.exe\u2019 (expected \u2018App.pdb\u2019).",
+      "No matching PDB (GUID e148a7fd-6eb1-3566-fc1a-c2ce89835038, Age 35) found for binary \u2018AppModule.dll\u2019 (expected \u2018AppModule.pdb\u2019)."
+    ]
+  };
   // Crash Health is available for every app; the Store analytics (acquisition,
   // usage, ratings) are LOCKED until the app is published to the Microsoft Store.
   var ANA_TABS = [
@@ -787,12 +795,20 @@
   }
 
   function emptyAnalyticsHTML() {
+    if (STORE) {
+      return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
+        '<strong>No analytics yet</strong>' +
+        '<p class="muted">Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings, and performance.</p></div>';
+    }
     return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
-      '<strong>No analytics yet</strong>' +
-      '<p class="muted">' + (STORE
-        ? 'Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings, and performance.'
-        : 'Add a certificate so your apps appear here, then explore crash and hang analytics.') +
-      '</p></div>';
+      '<strong>Unlock crash &amp; hang analytics</strong>' +
+      '<p class="muted">We don\u2019t see any apps for you yet. Analytics unlock when we can connect your apps \u2014 in one of two ways:</p>' +
+      '<ul class="empty__ways">' +
+        '<li><strong>Add your code signing certificate.</strong> We\u2019ll surface every app you\u2019ve signed and start showing crash &amp; hang analytics.</li>' +
+        '<li><strong>Onboard to the Microsoft Store.</strong> Publishing unlocks the full picture \u2014 crashes, acquisition, usage, and ratings &amp; reviews.</li>' +
+      '</ul>' +
+      '<div class="empty__cta"><fluent-button appearance="primary" data-openmodal><iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
+      '<fluent-button appearance="outline" data-nav-marketing="1">Learn about publishing to Store</fluent-button></div></div>';
   }
 
   /* ---- seeded dummy data (stable + distinct per app) ---- */
@@ -856,7 +872,8 @@
     });
     if (!msix) {   // symbol-status variety only matters for Win32; MSIX is always resolved
       if (!versions.some(function (v) { return v.sym === "action"; })) versions[Math.min(2, nver - 1)].sym = "action";
-      if (!versions.some(function (v) { return v.sym === "notuploaded"; })) versions[nver - 1].sym = "notuploaded";
+      var actionIdx = -1; for (var ai = 0; ai < versions.length; ai++) { if (versions[ai].sym === "action") { actionIdx = ai; break; } }
+      if (!versions.some(function (v) { return v.sym === "notuploaded"; })) { var nIdx = nver - 1; if (nIdx === actionIdx) nIdx = Math.max(0, nver - 2); versions[nIdx].sym = "notuploaded"; }
       if (versions[0].sym === "notuploaded") versions[0].sym = "processing";   // newest is being worked on
     }
     var symbolHealth = msix ? 100 : Math.round(versions.filter(function (v) { return v.sym === "resolved"; }).length / nver * 100);
@@ -887,6 +904,17 @@
       var nv = verNums[0], flagged = 0;
       for (var fi = 0; fi < failures.length && flagged < 2; fi++) {
         if (failures[fi].ver === nv) { failures[fi].isNew = true; if (failures[fi].dPct < 65) failures[fi].dPct = +(72 + fi * 9).toFixed(1); flagged++; }
+      }
+    })();
+    (function () {   // surface the "action needed" build's crashes in the table, shown Unresolved
+      var av = versions.filter(function (v) { return v.sym === "action"; })[0];
+      if (msix || !av || failures.some(function (x) { return x.ver === av.ver; })) return;
+      var t = failures.filter(function (x) { return !x.resolved; })[0] || failures[failures.length - 1];
+      t.ver = av.ver;
+      if (t.resolved) {
+        var kk = FAIL_KINDS[0], cm = kk.p.match(/_([0-9a-fA-F]{8})_/);
+        t.resolved = false; t.fn = "!Unknown"; t.name = kk.p + hexTok(rnd, 8) + "_" + base + ".exe" + kk.s;
+        if (cm) t.code = "0x" + cm[1].toUpperCase();
       }
     })();
     // Symbol upload history (per-app audit trail, visible to the whole team).
@@ -978,8 +1006,7 @@
     }).join("") + '</div>';
   }
   function apanel(title, body, sub) {
-    return '<section class="apanel"><header class="apanel__head"><h3>' + title + '</h3>' +
-      '<iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></header>' +
+    return '<section class="apanel"><header class="apanel__head"><h3>' + title + '</h3></header>' +
       (sub ? '<p class="apanel__sub muted">' + sub + '</p>' : "") + '<div class="apanel__body">' + body + '</div></section>';
   }
   function sumCard(label, val, sub, series, color, tag) {
@@ -1322,7 +1349,7 @@
     var custom = anaRange === "custom" ? '<span class="cacustom"><input type="date" class="cadate" id="caFrom"' + (anaCustom && anaCustom.from ? ' value="' + anaCustom.from + '"' : "") + '><span class="muted">to</span><input type="date" class="cadate" id="caTo"' + (anaCustom && anaCustom.to ? ' value="' + anaCustom.to + '"' : "") + '><fluent-button size="small" appearance="primary" data-ca-apply="1">Apply</fluent-button></span>' : "";
     var updated = '<span class="ca-updated" title="Crash data is aggregated from Windows with about 4 hours of data delay by design, so the most recent hours may still be filling in. Real-time data is not available.">' +
       '<iconify-icon icon="fluent:history-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Updated ' + refreshed + '</span>';
-    var fc = filterCount(), filtersBtn = '<fluent-button id="anaFiltersBtn" appearance="outline" data-ca-filters="1"><iconify-icon slot="start" icon="fluent:filter-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
+    var fc = filterCount(), savedOn = anaSaveFilters, filtersBtn = '<fluent-button id="anaFiltersBtn" class="ca-filtersbtn' + (savedOn ? ' is-saved' : '') + '" appearance="outline" data-ca-filters="1"' + (savedOn ? ' title="Filter settings saved for future sessions"' : '') + '><iconify-icon slot="start" icon="' + (savedOn ? 'fluent:filter-16-filled' : 'fluent:filter-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
     return anaQuickFiltersHTML() + '<span class="anafb__end">' + updated + dateSel + custom + filtersBtn + '</span>';
   }
   // Quick filters surfaced outside the drawer. Only cross-tab dimensions (version, market,
@@ -1446,9 +1473,8 @@
       '</details></section>';
   }
   function failuresPanel(app, d) {
-    return '<section class="apanel" id="ca-failsec"><header class="apanel__head"><h3>Failures</h3>' +
-      '<iconify-icon class="apanel__i" icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></header>' +
-      '<p class="apanel__sub muted">Grouped by failure signature. Sorted by impact \u2014 select one to see its stack trace.</p>' +
+    return '<section class="apanel" id="ca-failsec"><header class="apanel__head"><h3>Failures</h3></header>' +
+      '<p class="apanel__sub muted">Grouped by failure signature and sorted by hits by default. Sort by version, symbol status, or devices to change the view. Select a row to see its stack trace.</p>' +
       '<div class="failctl"><fluent-text-input id="failSearch" appearance="outline" class="failsearch" placeholder="Search failures\u2026" value="' + esc(anaSearch) + '"><iconify-icon slot="start" icon="fluent:search-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></fluent-text-input>' + failSegHTML() + '</div>' +
       '<div id="failTableHost">' + failTableInner(app) + '</div></section>';
   }
@@ -1472,9 +1498,10 @@
     if (anaCause) list = list.filter(function (f) { return causeCat(f).key === anaCause; });
     if (anaSearch) { var q = anaSearch.toLowerCase(); list = list.filter(function (f) { return f.name.toLowerCase().indexOf(q) >= 0 || f.ver.toLowerCase().indexOf(q) >= 0; }); }
     var key = anaSort.key, dir = anaSort.dir === "asc" ? 1 : -1;
-    list.sort(function (a, b) { return (a[key] - b[key]) * dir; });
+    var symRank = function (f) { return f.resolved ? 0 : 1; };
+    list.sort(function (a, b) { return (key === "ver" ? cmpVer(a.ver, b.ver) : key === "sym" ? symRank(a) - symRank(b) : a[key] - b[key]) * dir; });
     var per = 6, pages = Math.max(1, Math.ceil(list.length / per)), pg = Math.max(0, Math.min(anaPage, pages - 1));
-    function sortTh(label, k) { var on = anaSort.key === k; return '<th class="num th-sort" data-anasort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (anaSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
+    function sortTh(label, k, num) { var on = anaSort.key === k; return '<th class="' + (num === false ? "" : "num ") + 'th-sort" data-anasort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (anaSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
     var rows = list.slice(pg * per, pg * per + per).map(function (f) {
       return '<tr class="failrow" data-failure="' + f.id + '" tabindex="0" role="button" aria-label="View ' + esc(f.name) + '">' +
         '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
@@ -1484,7 +1511,7 @@
     }).join("");
     if (!list.length) rows = '<tr><td colspan="' + (msix ? 5 : 6) + '" class="cellspan">No failures match your search or filters.</td></tr>';
     var causeChip = anaCause ? '<div class="failcausechip"><iconify-icon icon="fluent:filter-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Category: <strong>' + esc(causeLabelByKey(app, anaCause)) + '</strong></span><button class="failcausechip__x" data-cause-clear="1" aria-label="Clear category filter" title="Clear category filter"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button></div>' : "";
-    return causeChip + '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th><th>Version</th>' + (msix ? "" : '<th>Symbols</th>') + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    return causeChip + '<div class="table-wrap"><table class="atable atable--fail"><thead><tr><th>Failure</th><th>Type</th>' + sortTh("Version", "ver", false) + (msix ? "" : sortTh("Symbols", "sym", false)) + sortTh("Hits", "hits") + sortTh("Devices", "devices") + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
       pagerHTML(pg, pages, "data-anapage", list.length, "failures");
   }
   function renderFailTableHost() { var h = $("failTableHost"); if (h) h.innerHTML = failTableInner(appById(analyticsAppId) || state.apps[0]); }
@@ -1515,11 +1542,11 @@
     if (!d.history.length) return '<div class="empty empty--sm"><strong>No uploads yet</strong><p class="muted">Upload symbols to start building your audit trail.</p></div>';
     var rows = d.history.map(function (h) {
       return '<tr><td><span class="symfile-cell"><iconify-icon icon="fluent:folder-zip-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span class="mono">' + esc(h.file) + '</span></span></td>' +
-        '<td><span class="mono">' + esc(h.ver) + '</span></td><td>' + symPill(h.status) + '</td>' +
+        '<td><span class="mono">' + esc(h.ver) + '</span></td>' +
         '<td><div class="histby">' + esc(h.by) + '</div><div class="histby__date muted">' + esc(h.date) + '</div></td>' +
         '<td class="atable__act"><fluent-link data-dl-sym="' + h.id + '"><iconify-icon icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Download</fluent-link></td></tr>';
     }).join("");
-    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Symbol package</th><th>Version</th><th>Status</th><th>Uploaded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Symbol package</th><th>Version</th><th>Uploaded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   function srcFile(fn) { var b = (fn.split("::")[0] || fn).toLowerCase().replace(/[^a-z]/g, ""); return (b || "module") + ".cpp"; }
   function stackFrames(app, f) {
@@ -1732,8 +1759,7 @@
       failureLogPanel(app, f);
   }
   function failureLogPanel(app, f) {
-    return '<section class="apanel" id="ca-logsec"><header class="apanel__head"><h3>Failure log</h3>' +
-      '<iconify-icon class="apanel__i" icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></header>' +
+    return '<section class="apanel" id="ca-logsec"><header class="apanel__head"><h3>Failure log</h3></header>' +
       '<p class="apanel__sub muted">Every reported occurrence from the last 30 days \u2014 open its stack trace or download the crash dump (.cab) to debug locally.</p>' +
       '<div class="failctl"><fluent-text-input id="failLogSearch" appearance="outline" class="failsearch" placeholder="Search occurrences\u2026" value="' + esc(anaLogQuery) + '"><iconify-icon slot="start" icon="fluent:search-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></fluent-text-input></div>' +
       '<div id="failLogHost">' + failLogInner(app, f) + '</div></section>';
@@ -1785,7 +1811,12 @@
       '<div class="symfoot"><fluent-button appearance="subtle" data-sym-close="1">Cancel</fluent-button><fluent-button appearance="primary" data-sym-start="1"' + (symUp.file ? "" : " disabled") + '>Upload &amp; validate</fluent-button></div>';
     else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries. This usually takes a few minutes \u2014 you can close this and come back; we\u2019ll keep working \u2014 and we\u2019ll email you the moment it\u2019s done.</p></div>';
     else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols accepted for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed. Your <strong>future</strong> crashes will start showing resolved stack traces within the next <strong>24 hours</strong>. Crashes that already happened stay unresolved. We\u2019ll email you when processing finishes \u2014 whether it resolves or needs your attention.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
-    else html = '<div class="symstate"><iconify-icon class="symstate__err" icon="fluent:error-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Action needed' + (symUp.ver ? " on " + esc(symUp.ver) : "") + '</strong><p class="muted">' + esc(SYM_ERR.msg) + '</p><div class="symerr"><span class="mono">' + SYM_ERR.code + '</span></div><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-retry="1">Upload again</fluent-button></div></div>';
+    else html = '<div class="symstate symstate--err"><iconify-icon class="symstate__err" icon="fluent:error-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Action needed' + (symUp.ver ? " on " + esc(symUp.ver) : "") + '</strong><p class="muted">' + esc(SYM_ERR.summary) + '</p>' +
+      '<div class="symdiag">' +
+        '<div class="symdiag__group"><span class="symdiag__h symdiag__h--err">Errors</span><ul class="symdiag__list">' + SYM_ERR.errors.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") + '</ul></div>' +
+        '<div class="symdiag__group"><span class="symdiag__h symdiag__h--warn">Warnings</span><ul class="symdiag__list">' + SYM_ERR.warnings.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") + '</ul></div>' +
+      '</div>' +
+      '<div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-retry="1">Upload again</fluent-button></div></div>';
     body.innerHTML = html;
     var br = $("symBrowse"), fi = $("symFile");
     if (br && fi) br.addEventListener("click", function () { fi.click(); });
@@ -1844,6 +1875,7 @@
   }
   function renderAnalytics() {
     var panelEl = $("analyticsPanel"), controls = $("anaControls");
+    loadSavedFilters();
     // Store portal: analytics only exist for apps live in the Store (or brought in via cert).
     var liveApps = STORE ? state.apps.filter(function (a) { return a.store || a.discovered; }) : state.apps;
     if (!liveApps.length) { if (controls) controls.hidden = true; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
@@ -1898,6 +1930,19 @@
     { key: "arch", label: "Architecture", values: ["x64", "arm64", "x86"] }
   ];
   function filterCount() { var n = 0, k; for (k in anaFilters) if (anaFilters.hasOwnProperty(k)) n += (anaFilters[k] || []).length; return n; }
+  // Save filter settings for future sessions (Crash Analytics only) — client-side, no backend.
+  var anaSaveFilters = false, _caFiltLoaded = false, CA_FILTKEY = "tdp.ca.filters.v1";
+  function loadSavedFilters() {
+    if (_caFiltLoaded) return; _caFiltLoaded = true;
+    try { var s = JSON.parse(localStorage.getItem(CA_FILTKEY)); if (s && s.filters) { anaFilters = s.filters; anaSaveFilters = true; } } catch (e) {}
+  }
+  function persistSavedFilters() {
+    try { if (anaSaveFilters) localStorage.setItem(CA_FILTKEY, JSON.stringify({ filters: anaFilters })); else localStorage.removeItem(CA_FILTKEY); } catch (e) {}
+  }
+  function resetFilters() {
+    anaFilters = {}; anaSaveFilters = false; persistSavedFilters();
+    closeFilterFlyout(); renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel();
+  }
   function removeFilter(k, v) {
     if (anaFilters[k]) { anaFilters[k] = anaFilters[k].filter(function (x) { return x !== v; }); if (!anaFilters[k].length) delete anaFilters[k]; }
     renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel();
@@ -1915,26 +1960,30 @@
   function openFilterFlyout() {
     var app = appById(analyticsAppId), body = $("filterDrawerBody"); if (!app || !body) return;
     var appvers = anaData(app).versions.map(function (v) { return v.ver; });
-    body.innerHTML = FILTER_CATS.map(function (c) {
+    var cats = FILTER_CATS.map(function (c) {
       var vals = c.key === "appver" ? appvers : c.values, sel = (anaFilters[c.key] || []).length;
       var opts = vals.map(function (v) { var on = (anaFilters[c.key] || []).indexOf(v) >= 0;
         return '<label class="filtopt"><fluent-checkbox data-fk="' + esc(c.key) + '" value="' + esc(v) + '"' + (on ? " checked" : "") + '></fluent-checkbox><span class="filtopt__t">' + esc(v) + '</span></label>'; }).join("");
       return '<details class="filtsec"' + (sel ? " open" : "") + '><summary>' + esc(c.label) + (sel ? ' <fluent-counter-badge count="' + sel + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</summary><div class="filtsec__body">' + opts + '</div></details>';
     }).join("");
+    var saveRow = '<label class="filtsave"><fluent-checkbox id="caSaveToggle"' + (anaSaveFilters ? " checked" : "") + '></fluent-checkbox><span class="filtsave__t">Save these settings for future sessions</span></label>';
+    body.innerHTML = cats + saveRow;
     var d = $("filterDrawer"); if (d) d.show();
   }
   function closeFilterFlyout() { var d = $("filterDrawer"); if (d) d.hide(); }
   function clearFilterDrawer() { var body = $("filterDrawerBody"); if (body) Array.prototype.forEach.call(body.querySelectorAll("fluent-checkbox"), function (cb) { cb.checked = false; }); }
   function applyFiltersFromDrawer() {
     var body = $("filterDrawerBody"), next = {};
-    if (body) Array.prototype.forEach.call(body.querySelectorAll("fluent-checkbox"), function (cb) { if (cb.checked) { var k = cb.getAttribute("data-fk"); (next[k] = next[k] || []).push(cb.getAttribute("value")); } });
-    anaFilters = next; closeFilterFlyout(); renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel();
+    if (body) Array.prototype.forEach.call(body.querySelectorAll("fluent-checkbox"), function (cb) { if (cb.id === "caSaveToggle") return; if (cb.checked) { var k = cb.getAttribute("data-fk"); (next[k] = next[k] || []).push(cb.getAttribute("value")); } });
+    var st = $("caSaveToggle"); anaSaveFilters = !!(st && st.checked);
+    anaFilters = next; persistSavedFilters();
+    closeFilterFlyout(); renderAnaFilter(); renderAnaChips(); anaPage = 0; renderAnalyticsPanel();
   }
   // ----- Symbol upload history dialog (#histDialog) -----
   function openSymHistory(app) {
     var body = $("histDialogBody"), sub = $("histDialogSub"); if (!body) return;
     if (sub) sub.textContent = " \u00b7 " + app.name;
-    body.innerHTML = '<p class="muted symmodal__lead">Every upload for this app, visible to your whole team \u2014 with the original package to re-download.</p>' + symbolHistoryTable(app);
+    body.innerHTML = symbolHistoryTable(app);
     var d = $("histDialog"); if (d) d.show();
   }
   function closeSymHistory() { var d = $("histDialog"); if (d) d.hide(); }
@@ -2394,6 +2443,7 @@
         // Store: the certs section IS the entry for adding your first cert, so always open the
         // dialog. WDP: before verifying, route to the overview's verify flow.
         if (STORE || state.verified) openModal(); else goView("overview"); return; }
+      if (e.target.closest("[data-nav-marketing]")) { location.href = "wdp-marketing.html"; return; }
       if (e.target.closest("[data-newapp]")) { openNewApp(); return; }
       if (e.target.closest("[data-rescan]")) { rescanApps(); return; }
       if (e.target.closest("[data-hero-dismiss]")) {
@@ -2496,7 +2546,7 @@
     });
     var _filtD = $("filterDrawer"); if (_filtD) _filtD.addEventListener("click", function (e) {
       if (e.target.closest("[data-filter-close]")) { closeFilterFlyout(); return; }
-      if (e.target.closest("[data-filter-clearall]")) { clearFilterDrawer(); return; }
+      if (e.target.closest("[data-filter-reset]")) { resetFilters(); return; }
       if (e.target.closest("[data-filter-apply]")) { applyFiltersFromDrawer(); return; }
     });
     var occD = $("occDialog");
