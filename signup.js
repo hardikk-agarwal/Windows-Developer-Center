@@ -63,21 +63,14 @@
   var MSA = { name: "Alex Taylor", email: "alex.taylor@outlook.com", initials: "AT" };
 
   var PHASES = [
-    { title: "Create developer account" },
-    { title: "Enroll" }
+    { title: "Create developer account" }
   ];
   var STEPS = [
     { key: "account",  phase: 0, title: "Account type",
       head: "Choose your account type", headSub: "Tell us whether you're publishing as an individual or a company." },
     { key: "identity", phase: 0, title: "Identity verification" },
     { key: "profile",  phase: 0, title: "Profile details" },
-    { key: "setup",    phase: 0, title: "Account setup" },
-    { key: "path",     phase: 1, title: "Choose your path",
-      head: "How do you want to enroll?", headSub: "Both make you a Windows Developer Program member. Publishing to the Store unlocks the most complete set — pick one now, do the other anytime from your portal." },
-    { key: "verify",   phase: 1, title: "Submit signed binary",
-      head: "Verify with your certificate", headSub: "Download your binary, sign it with your certificate, and submit it to join the program." },
-    { key: "app",      phase: 1, title: "Create your first app",
-      head: "Your developer account is ready", headSub: "Create your first app and publish it to the Microsoft Store to unlock the complete benefit set and reach millions." }
+    { key: "setup",    phase: 0, title: "Account setup" }
   ];
   function idxOf(key) { for (var i = 0; i < STEPS.length; i++) if (STEPS[i].key === key) return i; return -1; }
 
@@ -286,12 +279,12 @@
     return '<div class="status-card wiz-hero">' +
       '<img class="status-card__illo" data-theme-image="badge" src="assets/badge.png" alt="" />' +
       '<div class="status-card__body">' +
-        '<span class="pill pill--ok"><span class="verified-dot"></span>Member</span>' +
-        '<h2>Your account is ready</h2>' +
-        '<p class="muted">Your certificate is confirmed. Apps you sign now install without friction across Windows, with crash analytics and a reputation that follows every release.</p>' +
+        '<span class="pill pill--ok"><span class="verified-dot"></span>Account created</span>' +
+        '<h2>Your developer account is ready</h2>' +
+        '<p class="muted">Your account is set up. Continue to your developer portal to publish apps, add a signing certificate, and track your app health.</p>' +
       '</div>' +
       '<div class="status-card__action">' +
-        '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:open-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Go to developer portal</fluent-button>' +
+        '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:open-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Continue to developer portal</fluent-button>' +
       '</div>' +
     '</div>' +
     perksHTML();
@@ -315,8 +308,8 @@
   function render() {
     renderRail();
     if (done) {
-      $("wizTitle").textContent = "You’re enrolled in the Windows Developer Program";
-      $("wizSub").textContent = "Your developer account is active and enrolled in the program.";
+      $("wizTitle").textContent = "Your developer account is ready";
+      $("wizSub").textContent = "Your account is created. Continue to your developer portal to get started.";
       $("wizBody").innerHTML = bodyDone();
       $("wizFootbar").innerHTML = "";
       wireDone();
@@ -342,8 +335,7 @@
   // Demo: skip the account-creation sub-steps; account → path fork → chosen branch.
   function next() {
     var k = STEPS[cur].key;
-    if (k === "account") { if (!acctType) return; cur = idxOf("path"); render(); window.scrollTo(0, 0); return; }
-    if (k === "path") { if (!verifyPath) return; cur = idxOf(verifyPath === "store" ? "app" : "verify"); render(); window.scrollTo(0, 0); return; }
+    if (k === "account") { if (!acctType) return; done = true; render(); window.scrollTo(0, 0); return; }
   }
 
   // Generate the account-tied verification binary (same as the portal's download).
@@ -420,9 +412,24 @@
     // download→sign→upload flow waits there (seedPortal with no cert keeps verified=false).
     var later = $("goLater"); if (later) later.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
   }
+  // Where the developer came from decides the landing page. WDP marketing -> the WDP portal's
+  // Certificates page (add a signing certificate next). Store -> the Store portal's Apps page.
+  // Otherwise -> the developer portal overview.
+  function portalSource() {
+    var q = location.search || "", r = document.referrer || "";
+    if (/[?&]from=store\b/.test(q) || r.indexOf("store-developer") >= 0) return "store";
+    if (/[?&]from=wdp\b/.test(q) || r.indexOf("wdp-marketing") >= 0) return "wdp";
+    return "";
+  }
   function wireDone() {
     // Open the portal instantly; it scans + populates this cert's apps on load (its own skeleton).
-    var gp = $("goPortal"); if (gp) gp.addEventListener("click", function () { seedPortal(); location.href = "portal.html"; });
+    var gp = $("goPortal");
+    if (gp) gp.addEventListener("click", function () {
+      var src = portalSource();
+      if (src === "store") { seedStorePortal(); location.href = "store-portal.html#apps"; return; }
+      seedPortal();
+      location.href = src === "wdp" ? "portal.html#certificates" : "portal.html";
+    });
   }
 
   // Land in the WDP portal already signed in. A freshly-created account starts from a

@@ -1411,10 +1411,10 @@
   /* Clean, consistent field: a full rounded border (brand on focus), replacing Fluent's default
      faint box + harsh 2px blue bottom underline (::after focus indicator) that clashed with the
      rounded corners and read as a floating blue line in dark mode. */
-  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); transition: border-color var(--dur-2) var(--ease-out); }
+  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; width: 100%; box-sizing: border-box; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); transition: border-color var(--dur-2) var(--ease-out); }
   #whatsnew-dialog fluent-textarea::part(root):focus-within { border-color: var(--brand); }
   #whatsnew-dialog fluent-textarea::part(root)::after { display: none; }
-  #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; box-sizing: border-box; resize: vertical; }
+  #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; width: 100%; box-sizing: border-box; resize: vertical; }
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
   .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }

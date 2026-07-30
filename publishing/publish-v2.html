@@ -1432,10 +1432,10 @@
   /* Clean, consistent field: a full rounded border (brand on focus), replacing Fluent's default
      faint box + harsh 2px blue bottom underline (::after focus indicator) that clashed with the
      rounded corners and read as a floating blue line in dark mode. */
-  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); transition: border-color var(--dur-2) var(--ease-out); }
+  #whatsnew-dialog fluent-textarea::part(root) { min-height: 132px; height: auto; width: 100%; box-sizing: border-box; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); transition: border-color var(--dur-2) var(--ease-out); }
   #whatsnew-dialog fluent-textarea::part(root):focus-within { border-color: var(--brand); }
   #whatsnew-dialog fluent-textarea::part(root)::after { display: none; }
-  #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; box-sizing: border-box; resize: vertical; }
+  #whatsnew-dialog fluent-textarea::part(control) { min-height: 120px; width: 100%; box-sizing: border-box; resize: vertical; }
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 13px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
   .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
@@ -1459,8 +1459,9 @@
   .upd-changes__txt strong { font-size: 13px; font-weight: 600; color: var(--fg-1); }
   .upd-changes__txt span { font-size: 12px; color: var(--fg-3); }
   .upd-changes__go { flex: 0 0 auto; color: var(--fg-4); }
-  /* Left-stepper: brand dot marking a section changed in this update. */
-  .wz-stepind.is-changed .wz-stepind__label::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: var(--sp-6); vertical-align: middle; background: var(--brand); }
+  /* Left-stepper: "Updated" pill marking a section changed in this update (the actionable signal;
+     unchanged sections recede to a muted check instead of green — see the .is-update-flow overrides). */
+  .wz-stepind__updated { margin-left: auto; flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
 
   /* ---- "Publish with Copilot": agentic ZIP intake (entry, intake dialog, run overlay, summary) ---- */
   .cpx-entry { display: flex; align-items: center; gap: var(--sp-14); width: 100%; text-align: left; cursor: pointer;
@@ -1688,6 +1689,28 @@
   #submit-dialog .ez-sd__radio-date[disabled] { opacity: .5; }
   #submit-dialog fluent-textarea { display: block; width: 100%; }
   #submit-dialog fluent-textarea::part(root), #submit-dialog fluent-textarea::part(control) { width: 100%; }
+  /* ---- Gradual rollout: simplified % control (submit dialog) + post-submit status card ---- */
+  #submit-dialog .ez-sd__check { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); cursor: pointer; }
+  #submit-dialog .ez-sd__check input { flex: 0 0 auto; margin-top: 2px; width: 16px; height: 16px; accent-color: var(--brand); }
+  #submit-dialog .ez-sd__check-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  #submit-dialog .ez-sd__check-text strong { font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  #submit-dialog .ez-sd__check-note { font-size: 11.5px; line-height: 15px; color: var(--fg-3); }
+  #submit-dialog .ez-rollout-pct { margin: var(--sp-10) 0 0 var(--sp-24); }
+  .ez-rollout-presets { display: inline-flex; margin-top: var(--sp-4); border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; }
+  .ez-rollout-preset { padding: var(--sp-6) var(--sp-12); background: var(--layer); border: 0; border-right: 1px solid var(--stroke-2); color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .ez-rollout-preset:last-child { border-right: 0; }
+  .ez-rollout-preset:hover { background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); color: var(--fg-1); }
+  .ez-rollout-preset.is-active { background: var(--brand); color: #fff; }
+  .cert-rollout { margin-bottom: var(--sp-16); padding: var(--sp-16); border: 1px solid color-mix(in srgb, var(--brand) 26%, transparent); border-radius: var(--r-12); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
+  .cert-rollout[hidden] { display: none; }
+  .cert-rollout__head { display: flex; align-items: flex-start; gap: var(--sp-12); }
+  .cert-rollout__ico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
+  .cert-rollout__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .cert-rollout__text strong { font-size: 14px; color: var(--fg-1); }
+  .cert-rollout__text span { font-size: 12.5px; line-height: 17px; color: var(--fg-2); }
+  .cert-rollout__badge { flex: 0 0 auto; align-self: center; font-size: 13px; font-weight: 700; color: var(--brand); background: color-mix(in srgb, var(--brand) 15%, transparent); padding: 3px 10px; border-radius: var(--r-full); font-variant-numeric: tabular-nums; }
+  .cert-rollout__ctl { display: flex; align-items: center; gap: var(--sp-10); margin-top: var(--sp-12); padding-top: var(--sp-12); border-top: 1px solid color-mix(in srgb, var(--brand) 18%, var(--stroke-2)); flex-wrap: wrap; }
+  .cert-rollout__ctl .ez-sd__field-label { margin: 0; }
 
   /* ---- Image edit dialog (crop + zoom + AI improve), shared by logo & screenshots ---- */
   .link-btn { background: transparent; border: 0; padding: 0; color: var(--brand); font-family: inherit; font-size: var(--font-size-base-200); cursor: pointer; text-align: left; display: inline-flex; align-items: center; gap: var(--sp-4); }
@@ -2886,6 +2909,14 @@
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-progress .wz-stepind__dot { color: var(--status-warning); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--status-warning) 55%, transparent); }
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-locked { opacity: .55; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind:not(.is-locked):hover { background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
+  /* UPDATE FLOW: reframe the stepper as CHANGED vs UNCHANGED, not done vs todo. Everything is already
+     valid (it's live), so "all green" is noise — unchanged sections recede to a muted check, and the
+     sections you've actually changed carry the brand accent + "Updated" pill. */
+  #flow-wrap.wz-v2.is-update-flow .wz-stepind:not(:last-of-type)::before { background: var(--stroke-2); }
+  #flow-wrap.wz-v2.is-update-flow .wz-stepind.is-done:not(.is-changed):not(.is-current) .wz-stepind__dot { color: var(--fg-3); background: color-mix(in srgb, var(--fg-1) 8%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg-1) 18%, transparent); }
+  #flow-wrap.wz-v2.is-update-flow .wz-stepind.is-done:not(.is-changed):not(.is-current) { color: var(--fg-3); }
+  #flow-wrap.wz-v2.is-update-flow .wz-stepind.is-changed .wz-stepind__dot { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--brand) 55%, transparent); }
+  #flow-wrap.wz-v2.is-update-flow .wz-stepind.is-changed:not(.is-current) { color: var(--fg-1); }
 
   /* Redundant in v2 (the stepper carries status). */
   #flow-wrap.wz-v2 #submit-checklist { display: none !important; }
@@ -3871,6 +3902,28 @@
         <button type="button" class="cert-switch__opt is-active" data-cert-view="progress">In review</button>
         <button type="button" class="cert-switch__opt" data-cert-view="passed">Passed</button>
         <button type="button" class="cert-switch__opt" data-cert-view="failed">Needs attention</button>
+      </div>
+
+      <!-- Gradual-rollout status + live % control (update flow, when gradual). Toggled by renderCertRollout(). -->
+      <div class="cert-rollout" id="cert-rollout" hidden>
+        <div class="cert-rollout__head">
+          <span class="cert-rollout__ico"><iconify-icon icon="fluent:arrow-trending-lines-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+          <div class="cert-rollout__text">
+            <strong>Gradual rollout</strong>
+            <span>Once this update is approved, it goes to <strong id="cert-rollout-pct">10%</strong> of your customers first. Raise it — or go to everyone — anytime, right here.</span>
+          </div>
+          <span class="cert-rollout__badge" id="cert-rollout-badge">10%</span>
+        </div>
+        <div class="cert-rollout__ctl">
+          <span class="ez-sd__field-label">Roll out to</span>
+          <div class="ez-rollout-presets" id="cert-rollout-presets" role="group" aria-label="Rollout percentage">
+            <button type="button" class="ez-rollout-preset" data-pct="5">5%</button>
+            <button type="button" class="ez-rollout-preset" data-pct="10">10%</button>
+            <button type="button" class="ez-rollout-preset" data-pct="25">25%</button>
+            <button type="button" class="ez-rollout-preset" data-pct="50">50%</button>
+            <button type="button" class="ez-rollout-preset" data-pct="100">Everyone</button>
+          </div>
+        </div>
       </div>
 
       <!-- In-progress certification timeline -->
@@ -5298,6 +5351,29 @@
           </div>
         </div>
       </details>
+      <!-- Gradual rollout — UPDATE flow only (shown via JS). Simplified from Partner Center:
+           a plain-language gradual toggle + preset %, plus an optional "mandatory" flag. -->
+      <details class="ez-sd__sub" id="submit-rollout" hidden>
+        <summary class="ez-sd__sub-head">
+          <span class="ez-sd__sub-title">Rollout</span>
+          <span class="ez-sd__sub-val" id="rollout-summary">All customers at once</span>
+          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+        </summary>
+        <div class="ez-sd__sub-body">
+          <label class="ez-sd__check"><input type="checkbox" id="rollout-gradual" /><span class="ez-sd__check-text"><strong>Roll out gradually</strong><span class="ez-sd__check-note">Release to a share of your Windows&nbsp;10/11 customers first, then ramp up to everyone — so you can watch for issues before a full release.</span></span></label>
+          <div class="ez-rollout-pct" id="rollout-pct-field" hidden>
+            <span class="ez-sd__field-label">Start with</span>
+            <div class="ez-rollout-presets" id="rollout-presets" role="group" aria-label="Initial rollout percentage">
+              <button type="button" class="ez-rollout-preset" data-pct="5">5%</button>
+              <button type="button" class="ez-rollout-preset is-active" data-pct="10">10%</button>
+              <button type="button" class="ez-rollout-preset" data-pct="25">25%</button>
+              <button type="button" class="ez-rollout-preset" data-pct="50">50%</button>
+            </div>
+            <p class="ez-sd__field-note">You can raise this — or pause — anytime from the app overview.</p>
+          </div>
+          <label class="ez-sd__check"><input type="checkbox" id="rollout-mandatory" /><span class="ez-sd__check-text"><strong>Make this update mandatory</strong><span class="ez-sd__check-note">Nudges customers to update sooner (UWP on Windows&nbsp;10/11).</span></span></label>
+        </div>
+      </details>
     </section>
 
     <fluent-button slot="action" appearance="secondary" data-submit-close>Cancel</fluent-button>
@@ -6031,6 +6107,8 @@
     audience: { mode: 'public', groups: [] },
     price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, schedule: null, sales: [] },
     trial: { mode: 'none', duration: '7' },
+    // Gradual rollout of an UPDATE (Windows 10/11): release to a % of customers first, then ramp.
+    rollout: { gradual: false, percent: 10, mandatory: false },
     schedule: { end: { mode: 'never', date: '' } },
     // Submit-time publishing hold (MSIX only): 'auto' = publish on cert pass,
     // 'manual' = wait for the dev to click Publish, 'date' = hold until a date.
@@ -6351,6 +6429,12 @@
         if (!badge) { badge = document.createElement('span'); badge.className = 'wz-stepind__badge'; badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
         badge.textContent = leftN;
       } else if (badge) { badge.remove(); }
+      // Update flow: a changed-and-still-valid section gets an "Updated" pill (the actionable signal).
+      let upd = el.querySelector('.wz-stepind__updated');
+      if (inUpdateFlow && !locked && status === 'complete' && updateChangedSet.has(id)) {
+        if (!upd) { upd = document.createElement('span'); upd.className = 'wz-stepind__updated'; el.appendChild(upd); }
+        upd.textContent = 'Updated';
+      } else if (upd) { upd.remove(); }
     });
     // The tabs are the navigation; the footer carries overall readiness + the single
     // primary action (Submit for review), enabled only when every section is complete.
@@ -6359,8 +6443,8 @@
     // The action lives in the header now, so the readiness caption stays compact (a count);
     // the full "Finish X, Y and Z" detail rides on the Submit button's tooltip.
     if (gateText) gateText.textContent = incomplete.length
-      ? incomplete.length + ' section' + (incomplete.length === 1 ? '' : 's') + ' left'
-      : 'Ready to submit';
+      ? incomplete.length + ' section' + (incomplete.length === 1 ? '' : 's') + (inUpdateFlow ? ' to fix' : ' left')
+      : (inUpdateFlow ? 'Ready to resubmit' : 'Ready to submit');
     if (gate) gate.classList.toggle('ez-gate--ready', incomplete.length === 0);
     if (submit) {
       submit.disabled = incomplete.length > 0;
@@ -6865,12 +6949,24 @@
     // can act on right now. Once this page is clear, fall back to the overall count so
     // they still know more remains before review; green "Ready" only when nothing's left anywhere.
     const curLeft = ckSection(cur).filter(it => ckRequired(it) && !ckDone(it)).length;
-    const summaryText =
-      noPkg ? 'Add a package to start'
-      : ready ? 'Ready to submit for review'
-      : (allItemsDone && !reachVisited) ? 'Open Reach & price to finish'
-      : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
-      : (totalLeft + ' to finish before review');
+    // In the UPDATE flow the frame is "what changed", not "what's left" (it's all already valid/live).
+    let summaryText;
+    if (inUpdateFlow) {
+      try { recomputeUpdateChanges(); } catch (e) {}
+      const nChanged = WZ_STEPS.filter(function (s) { return updateChangedSet.has(s); }).length;
+      summaryText =
+        noPkg ? 'Add a package to start'
+        : !allItemsDone ? (totalLeft + (totalLeft === 1 ? ' item' : ' items') + ' to fix before resubmitting')
+        : nChanged === 0 ? 'No changes yet'
+        : (nChanged + (nChanged === 1 ? ' section changed' : ' sections changed'));
+    } else {
+      summaryText =
+        noPkg ? 'Add a package to start'
+        : ready ? 'Ready to submit for review'
+        : (allItemsDone && !reachVisited) ? 'Open Reach & price to finish'
+        : curLeft > 0 ? (curLeft + (curLeft === 1 ? ' item left on this page' : ' items left on this page'))
+        : (totalLeft + ' to finish before review');
+    }
     if (summaryEl) summaryEl.textContent = summaryText;
     try { renderUpdateChanges(); } catch (e) {}
     const railSummaryEl = document.getElementById('submit-rail-summary');
@@ -10793,12 +10889,60 @@
     const d = adv.declarations || {};
     const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers'].filter(Boolean);
     if (declared.length) rows.push(['Disclosures', declared.join(' \u00b7 '), 'fluent:shield-20-regular']);
+    if (inUpdateFlow && adv.rollout && adv.rollout.gradual) rows.push(['Rollout', 'Gradual \u00b7 ' + (adv.rollout.percent || 10) + '%' + (adv.rollout.mandatory ? ' \u00b7 Mandatory' : ''), 'fluent:arrow-trending-lines-20-regular']);
+    else if (inUpdateFlow && adv.rollout && adv.rollout.mandatory) rows.push(['Rollout', 'All at once \u00b7 Mandatory', 'fluent:arrow-trending-lines-20-regular']);
     dl.innerHTML = rows.map(x =>
       '<span class="ez-sd__chip" title="' + x[0] + ': ' + esc(x[1]) + '">' +
         '<iconify-icon icon="' + x[2] + '" width="15" height="15" aria-hidden="true"></iconify-icon>' +
         '<span>' + esc(x[1]) + '</span>' +
       '</span>').join('');
   }
+  // ---- Gradual rollout (UPDATE flow): simplified % control + post-submit management ----
+  function rolloutSummaryText() {
+    var r = adv.rollout || {};
+    if (!r.gradual) return r.mandatory ? 'All customers \u00b7 Mandatory' : 'All customers at once';
+    return 'Gradual \u00b7 ' + (r.percent || 10) + '% first' + (r.mandatory ? ' \u00b7 Mandatory' : '');
+  }
+  function syncRolloutDialog() {
+    var r = adv.rollout || (adv.rollout = { gradual: false, percent: 10, mandatory: false });
+    var wrap = $('submit-rollout'); if (wrap) wrap.hidden = !inUpdateFlow;
+    var g = $('rollout-gradual'); if (g) g.checked = !!r.gradual;
+    var m = $('rollout-mandatory'); if (m) m.checked = !!r.mandatory;
+    var pf = $('rollout-pct-field'); if (pf) pf.hidden = !r.gradual;
+    var presets = $('rollout-presets');
+    if (presets) presets.querySelectorAll('.ez-rollout-preset').forEach(function (b) { b.classList.toggle('is-active', parseInt(b.dataset.pct, 10) === r.percent); });
+    var s = $('rollout-summary'); if (s) s.textContent = rolloutSummaryText();
+  }
+  function persistRollout() {
+    try { var all = JSON.parse(localStorage.getItem('msstore.apps') || '[]'); var i = all.findIndex(function (a) { return a.id === app.id; }); if (i >= 0) { all[i].rollout = adv.rollout; localStorage.setItem('msstore.apps', JSON.stringify(all)); } } catch (e) {}
+  }
+  function renderCertRollout() {
+    var card = $('cert-rollout'); if (!card) return;
+    var r = adv.rollout || {};
+    var show = inUpdateFlow && r.gradual && (r.percent || 0) < 100;
+    card.hidden = !show;
+    if (!show) return;
+    var pct = r.percent || 10;
+    var pctEl = $('cert-rollout-pct'); if (pctEl) pctEl.textContent = pct + '%';
+    var badge = $('cert-rollout-badge'); if (badge) badge.textContent = pct + '%';
+    var presets = $('cert-rollout-presets');
+    if (presets) presets.querySelectorAll('.ez-rollout-preset').forEach(function (b) { b.classList.toggle('is-active', parseInt(b.dataset.pct, 10) === pct); });
+  }
+  // In the update flow the post-submit "Withdraw submission" reads as "Cancel update" (the live version stays up).
+  function relabelUpdateCancel() {
+    if (!inUpdateFlow) return;
+    var b = $('withdraw-btn'); if (b) b.innerHTML = '<iconify-icon slot="start" icon="fluent:dismiss-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Cancel update';
+    var strip = $('cert-actions');
+    if (strip) { var t = strip.querySelector('.submit-strip__title'); if (t) t.textContent = 'Cancel this update?'; var d = strip.querySelector('.submit-strip__desc'); if (d) d.textContent = 'Your live version stays published \u2014 you can cancel the update until it goes live.'; }
+  }
+  (function wireRollout() {
+    var g = $('rollout-gradual'), m = $('rollout-mandatory'), presets = $('rollout-presets');
+    if (g) g.addEventListener('change', function () { adv.rollout.gradual = g.checked; syncRolloutDialog(); buildSubmitSummary(); });
+    if (m) m.addEventListener('change', function () { adv.rollout.mandatory = m.checked; syncRolloutDialog(); buildSubmitSummary(); });
+    if (presets) presets.addEventListener('click', function (e) { var b = e.target.closest('.ez-rollout-preset'); if (!b) return; adv.rollout.percent = parseInt(b.dataset.pct, 10) || 10; syncRolloutDialog(); buildSubmitSummary(); });
+    var cp = $('cert-rollout-presets');
+    if (cp) cp.addEventListener('click', function (e) { var b = e.target.closest('.ez-rollout-preset'); if (!b) return; var pct = parseInt(b.dataset.pct, 10) || 10; adv.rollout.percent = pct; if (pct >= 100) adv.rollout.gradual = false; persistRollout(); renderCertRollout(); if (typeof announce === 'function') announce(pct >= 100 ? 'Now rolling out to all customers.' : ('Rollout updated to ' + pct + '% of customers.')); });
+  })();
   function doSubmit() {
     const cbtn = $('submit-confirm-btn');
     if (cbtn) { cbtn.disabled = true; cbtn.innerHTML = '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Submitting…'; }
@@ -10813,6 +10957,7 @@
           // table — the portal's mergePublishIcons + tdp-bridge syncBack read msstore.apps[id].icon.
           const finalLogo = userIconDataUrl || pkgIconDataUrl;
           if (finalLogo) all[idx].icon = finalLogo;
+          all[idx].rollout = adv.rollout;
           localStorage.setItem('msstore.apps', JSON.stringify(all));
         }
       } catch (e) {}
@@ -10822,6 +10967,7 @@
       $('editor').hidden = true;
       $('submit-bar').hidden = true;
       $('state-done').hidden = false;
+      try { renderCertRollout(); relabelUpdateCancel(); } catch (e) {}
       const pill = $('app-status');
       if (pill) { pill.textContent = 'In review'; pill.className = 'status-pill status-pill--in-review'; }
       announce('Submitted for review. Certification in progress.');
@@ -10872,6 +11018,7 @@
     const _cb = $('submit-confirm-btn');
     if (_cb) { _cb.disabled = false; _cb.innerHTML = '<iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Submit for review'; }
     buildSubmitSummary();
+    try { syncRolloutDialog(); } catch (e) {}
     // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
     syncPublishHoldUI();
     renderTestCreds();
