@@ -2221,10 +2221,10 @@
     });
   }
 
-  /* ---------------- Publish to Store → reserve name, then the full v4 flow ----------------
+  /* ---------------- Publish to Store → reserve name, then the full publishing flow ----------------
      Step 1: "Publish to Store" opens the reserve-name dialog (app name + default language).
      Step 2: "Create app" reserves it, marks the app in-progress in the table, and hands off
-     to the embedded v4 publishing flow (publishing/publish-v2.html). Created apps can be
+     to the embedded publishing flow (publishing/publish-v6.html by default). Created apps can be
      re-opened later by clicking their row. On submit, tdp-bridge.js writes the result back
      so the table shows "In Store". */
   var publishId = null;
@@ -2346,11 +2346,11 @@
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
-    // Variant flows live side by side; publish-v2.html stays the default. Add ?flow=v3 (left-stepper),
-    // ?flow=v4 (non-gated open canvas) or ?flow=v5 (progressive easy/advanced canvas) to the portal URL
-    // to open that variant instead — every entry into the flow funnels through here.
-    var flowMatch = /[?&]flow=(v3|v4|v5)\b/.exec(location.search);
-    var flowFile = flowMatch ? "publish-" + flowMatch[1] + ".html" : "publish-v2.html";
+    // Variant flows live side by side; publish-v6.html (unified: V2 layout, non-gated, V5 package
+    // chooser) is the default. Add ?flow=v2/v3/v4/v5/v6 to the portal URL to open a specific variant
+    // instead — every entry into the flow funnels through here.
+    var flowMatch = /[?&]flow=(v2|v3|v4|v5|v6)\b/.exec(location.search);
+    var flowFile = flowMatch ? "publish-" + flowMatch[1] + ".html" : "publish-v6.html";
     location.href = "publishing/" + flowFile + "?id=" + encodeURIComponent(a.id) + (STORE ? "&from=store" : "&from=wdp");
   }
 
