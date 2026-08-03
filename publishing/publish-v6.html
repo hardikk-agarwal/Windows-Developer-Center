@@ -466,6 +466,12 @@
      the right. The Yes/No label matches the age-rating questionnaire, so an off switch reads as
      a deliberate "No" rather than an unanswered question. */
   .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border: 1px solid var(--stroke-3); border-radius: var(--r-12); background: var(--canvas-tint); overflow: hidden; }
+  .declarations__answer .decl-seg { flex: 0 0 auto; }
+  .declarations__answer .decl-seg .seg__opt { padding: var(--sp-4) var(--sp-14); font-size: 12.5px; }
+  /* The "answer required" outline shows only after the step has been seen and left with a blank
+     answer (list gets .is-flagged) — an untouched required field shouldn't look like an error. */
+  .declarations__list.is-flagged .declarations__item.is-unanswered .decl-seg { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--status-warning) 55%, transparent); }
+  .ez-store-hero__cta .ez-store-cta { cursor: default; }
   .declarations__item { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); transition: background var(--dur-2) var(--ease-out); }
   .declarations__item + .declarations__item { border-top: 1px solid var(--stroke-3); }
   /* Higher specificity than the flex rule above, so a hidden row actually stays hidden. */
@@ -653,6 +659,11 @@
      Add the scroll on the dialog element itself (where the body's sticky title + actions
      are designed to pin) — NOT on fluent-dialog-body, which clips the top. */
   fluent-dialog::part(control), fluent-dialog::part(dialog) { max-height: 92vh; overflow: auto; }
+  /* Global dialog chrome so a new dialog never needs its own copies: the title-action button is a
+     compact 32px square (fluent-button's default min-width is 96px), and text inputs fill the dialog
+     width (fluent-text-input's control defaults to a fixed width). Per-dialog rules still override. */
+  fluent-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  fluent-dialog fluent-text-input::part(root), fluent-dialog fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
   /* More breathing room above the (sticky) footer actions — Fluent's default gap is tight. */
   fluent-dialog-body::part(actions) { padding-top: var(--sp-16); }
   /* License terms editor dialog — same chrome; a roomy full-width textarea for long terms. */
@@ -846,7 +857,7 @@
   #listing-preview-dialog,
   #listing-preview-dialog::part(control),
   #listing-preview-dialog::part(dialog) { width: min(900px, 96vw); max-width: min(900px, 96vw); }
-  #listing-preview-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  #listing-preview-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; margin-inline-start: 0; }
   #listing-preview-dialog .lpv-body { max-height: 72vh; overflow-y: auto; overflow-x: hidden; }
   /* The clone is for viewing only: kill leftover edit/CTA affordances. */
   .lpv-card .ez-store-hero__icon,
@@ -857,6 +868,11 @@
   .lpv-card .lpv-empty { color: var(--fg-4); font-style: italic; }
   .lpv-card .lpv-shots-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6); width: 100%; min-height: 132px; padding: var(--sp-20); border: 1px dashed var(--stroke-2); border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 3%, transparent); color: var(--fg-4); font-size: var(--font-size-base-200); text-align: center; }
   .lpv-card .lpv-shots-empty iconify-icon { color: var(--fg-4); }
+  /* Preview-language dropdown — a Fluent dropdown in the title bar, just left of the close button.
+     The dialog title part is flex/space-between, so margin-left:auto eats the gap on its left and
+     keeps the dropdown grouped tight against the close button instead of floating in the centre. */
+  .lpv-lang-dd { min-width: 150px; max-width: 240px; align-self: center; margin-left: auto; }
+  .lpv-lang-dd[hidden] { display: none; }
 
   /* ===== Manifest identity: banner above the upload card + its dialog ===== */
   .manifest-identity-prompt { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: nowrap; margin: 0 0 var(--sp-16); padding: var(--sp-8) var(--sp-12); background: color-mix(in srgb, var(--brand) 5%, transparent); border: 1px solid color-mix(in srgb, var(--brand) 16%, transparent); border-radius: var(--r-4); font-size: var(--font-size-base-200); color: var(--fg-2); }
@@ -926,25 +942,50 @@
   .build-guide__subnote a:hover { text-decoration: underline; }
   /* ===== "Package your website" (PWA → MSIX) dialog ===== */
   #pwa-pkg-dialog::part(control), #pwa-pkg-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  /* fluent-dialog-body's content parts default to min-width:auto, so nowrap content (e.g. the app
+     name) grows them past the dialog and forces a horizontal scrollbar — let them shrink. */
+  #pwa-pkg-dialog fluent-dialog-body::part(root), #pwa-pkg-dialog fluent-dialog-body::part(content) { min-width: 0; }
   .pwapkg__intro { margin: 0 0 var(--sp-12); font-size: 13px; color: var(--fg-2); line-height: 1.5; }
   .pwapkg__intro strong { color: var(--fg-1); font-weight: 600; }
-  .pwapkg__preview { display: block; text-decoration: none; border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--subtle); }
-  .pwapkg__preview-hero { height: 128px; background-size: cover; background-position: center top; background-color: var(--canvas-tint); }
-  .pwapkg__preview-hero[hidden] { display: none; }
-  .pwapkg__preview-body { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-10) var(--sp-12); }
-  .pwapkg__preview-favicon { width: 28px; height: 28px; border-radius: var(--r-4); flex: 0 0 auto; background: #fff; object-fit: contain; }
-  .pwapkg__preview-text { min-width: 0; display: flex; flex-direction: column; }
-  .pwapkg__preview-title { font-size: 13px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pwapkg__preview-host { font-size: 12px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Website preview + app identity as ONE card: a browser-framed banner with the app logo
+     overlapping its bottom-left (avatar style) and the name / change-logo in a footer strip. */
+  .pwapkg__site { border: 1px solid var(--stroke-2); border-radius: var(--r-12); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--layer); }
+  .pwapkg__chrome { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8) var(--sp-10); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); border-bottom: 1px solid var(--stroke-3); }
+  .pwapkg__dots { display: inline-flex; gap: 5px; flex: 0 0 auto; }
+  .pwapkg__dots i { width: 9px; height: 9px; border-radius: 50%; }
+  .pwapkg__dots i:nth-child(1) { background: #ff5f57; }
+  .pwapkg__dots i:nth-child(2) { background: #febc2e; }
+  .pwapkg__dots i:nth-child(3) { background: #28c840; }
+  .pwapkg__omni { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; padding: 3px var(--sp-10); border-radius: 999px; background: var(--canvas-tint); border: 1px solid var(--stroke-3); font-size: 11.5px; color: var(--fg-3); text-decoration: none; }
+  .pwapkg__omni span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pwapkg__omni:hover { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); }
+  .pwapkg__omni-lock { color: var(--status-success); flex: 0 0 auto; }
+  .pwapkg__omni-open { flex: 0 0 auto; opacity: .7; }
+  .pwapkg__shot { position: relative; height: 150px; background: var(--canvas-tint); overflow: hidden; }
+  .pwapkg__shot-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 26%, var(--canvas-tint)), var(--canvas-tint)); }
+  .pwapkg__shot-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: 0; transition: opacity var(--dur-3, .5s) var(--ease-out); }
+  .pwapkg__shot-img.is-loaded { opacity: 1; }
+  .pwapkg__foot { position: relative; display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); padding-left: 94px; min-height: 46px; background: var(--layer); }
+  .pwapkg__logo { position: absolute; left: var(--sp-14); top: -30px; width: 64px; height: 64px; padding: 0; border: 0; border-radius: var(--r-12); background: #fff; cursor: pointer; overflow: hidden; box-shadow: 0 0 0 3px var(--layer), 0 8px 22px rgba(0,0,0,.45); transition: box-shadow var(--dur-2) var(--ease-out); }
+  .pwapkg__logo:hover, .pwapkg__logo:focus-visible { box-shadow: 0 0 0 3px var(--layer), 0 0 0 5px color-mix(in srgb, var(--brand) 60%, transparent), 0 8px 22px rgba(0,0,0,.45); outline: none; }
+  .pwapkg__logo-img { width: 100%; height: 100%; object-fit: contain; display: block; background: #fff; }
+  .pwapkg__logo-edit { position: absolute; right: 0; bottom: 0; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--brand); color: #fff; border-top-left-radius: var(--r-8); }
+  .pwapkg__app-text { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+  .pwapkg__app-name { font-size: 15px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pwapkg__app-sub { font-size: 12px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pwapkg__logo-change { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--brand); background: transparent; border: 0; cursor: pointer; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-4); }
+  .pwapkg__logo-change:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
   .pwapkg__scan { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-16) 0; color: var(--fg-2); font-size: 13px; }
-  .pwapkg__checks { list-style: none; padding: 0; margin: 0 0 var(--sp-12); display: flex; flex-direction: column; gap: var(--sp-8); }
-  .pwapkg__checks li { display: flex; align-items: center; gap: var(--sp-8); font-size: 13px; font-weight: 600; color: var(--fg-1); }
-  .pwapkg__checks li iconify-icon, .pwapkg__checks li fluent-spinner { flex: 0 0 auto; }
-  .pwapkg__check--ok iconify-icon { color: var(--status-success); }
-  .pwapkg__check--warn iconify-icon { color: var(--status-warning, #e0a23a); }
-  .pwapkg__check--info iconify-icon { color: var(--brand); }
-  .pwapkg__check--pending { color: var(--fg-2); }
-  .pwapkg__check-detail { font-weight: 400; color: var(--fg-3); }
+  .pwapkg__checks { list-style: none; padding: 0; margin: 0 0 var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-12); }
+  .pwapkg__checks li { display: flex; align-items: flex-start; gap: var(--sp-10); }
+  .pwapkg__checks li > iconify-icon, .pwapkg__checks li > fluent-spinner { flex: 0 0 auto; margin-top: 1px; }
+  .pwapkg__check-text { display: flex; flex-direction: column; min-width: 0; }
+  .pwapkg__check-label { font-size: 13px; font-weight: 600; color: var(--fg-1); line-height: 1.35; }
+  .pwapkg__check-detail { font-size: 12px; font-weight: 400; color: var(--fg-3); line-height: 1.35; }
+  .pwapkg__check--ok > iconify-icon { color: var(--status-success); }
+  .pwapkg__check--warn > iconify-icon { color: var(--status-warning, #e0a23a); }
+  .pwapkg__check--info > iconify-icon { color: var(--brand); }
+  .pwapkg__check--pending .pwapkg__check-label { color: var(--fg-2); }
   /* Auto-draft toast — "Drafted from your site", with Undo (fixed, always visible regardless of step) */
   .ez-draft-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1200; display: flex; align-items: center; gap: var(--sp-10); max-width: min(560px, calc(100vw - 32px)); padding: var(--sp-10) var(--sp-10) var(--sp-10) var(--sp-16); border-radius: 12px; background: color-mix(in srgb, var(--brand) 14%, var(--layer)); border: 1px solid color-mix(in srgb, var(--brand) 34%, var(--stroke-2)); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 13.5px; color: var(--fg-1); }
   .ez-draft-toast[hidden] { display: none; }
@@ -952,11 +993,17 @@
   .ez-draft-toast__text { flex: 1 1 auto; min-width: 0; }
   .ez-draft-toast__actions { display: flex; align-items: center; gap: var(--sp-4); flex: 0 0 auto; }
   .ez-draft-toast #draft-dismiss { min-width: 32px; }
-  .pwapkg__identity { padding-top: var(--sp-12); border-top: 1px solid var(--stroke-3); }
-  .pwapkg__identity-label { display: block; font-size: 12px; color: var(--fg-3); margin-bottom: var(--sp-4); }
-  .pwapkg__identity-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--sp-12); margin: 0; }
+  .pwapkg__identity-rows { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4) var(--sp-12); margin: var(--sp-6) 0 0; align-items: baseline; }
   .pwapkg__identity-rows dt { font-size: 12px; color: var(--fg-3); white-space: nowrap; }
   .pwapkg__identity-rows dd { margin: 0; font-size: 12px; color: var(--fg-1); font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  /* Opt in/out of drafting the listing from the site. */
+  .pwapkg__prefill { display: flex; align-items: flex-start; gap: var(--sp-12); margin-top: var(--sp-12); padding: var(--sp-12); border: 1px solid var(--stroke-3); border-radius: var(--r-8); background: var(--subtle); cursor: pointer; }
+  .pwapkg__prefill[hidden] { display: none; }
+  .pwapkg__prefill-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+  .pwapkg__prefill-title { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 13px; font-weight: 600; color: var(--fg-1); }
+  .pwapkg__prefill-title iconify-icon { color: var(--brand); flex: 0 0 auto; }
+  .pwapkg__prefill-hint { font-size: 12px; color: var(--fg-3); margin-top: 2px; line-height: 1.45; }
+  .pwapkg__prefill fluent-switch { flex: 0 0 auto; margin-top: 2px; }
 
   /* ===== Restricted capabilities dialog (justification) ===== */
   #restricted-caps-dialog, #restricted-caps-dialog::part(control), #restricted-caps-dialog::part(dialog) { width: min(560px, 92vw); max-width: min(560px, 92vw); }
@@ -1237,6 +1284,26 @@
   .cert-stage__desc { font-size: 12px; color: var(--fg-3); margin: var(--sp-2) 0 0; }
   .cert-stage__time { font-size: 12px; color: var(--fg-4); flex: 0 0 auto; }
   .cert-eta { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-24); padding: var(--sp-12) var(--sp-16); background: rgba(71,158,245,.08); border: 1px solid var(--brand-tint-40); border-radius: var(--r-4); font-size: 13px; color: var(--fg-2); }
+  /* Post-update: the in-progress timeline collapses to a compact one-row summary (the developer has
+     seen it before and the live-app hub is the real surface); a first submission stays expanded. */
+  .cert-card__headtext { flex: 1 1 auto; min-width: 0; }
+  .cert-card__toggle { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--sp-4); background: transparent; border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: var(--sp-4) var(--sp-10) var(--sp-4) var(--sp-12); font: inherit; font-size: 12px; font-weight: 600; color: var(--fg-2); cursor: pointer; white-space: nowrap; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .cert-card__toggle:hover { background: var(--subtle); color: var(--fg-1); }
+  .cert-card__toggle[hidden] { display: none; }
+  #cert-progress .cert-strip--summary { display: none; }
+  .cert-card .cert-strip--summary { display: none; }
+  .cert-strip--summary .cert-strip__eta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--fg-3); white-space: nowrap; padding-left: var(--sp-12); }
+  .cert-strip--summary .cert-strip__eta--fail { color: var(--status-danger); }
+  .cert-strip__stage--fail .cert-strip__dot { background: var(--status-danger); color: #fff; border-color: transparent; }
+  .cert-card.is-collapsed { padding: var(--sp-20) var(--sp-24); }
+  .cert-card.is-collapsed .cert-card__head { margin-bottom: 0; align-items: center; }
+  .cert-card.is-collapsed .cert-card__icon { width: 40px; height: 40px; }
+  .cert-card.is-collapsed .cert-card__title { font-size: 17px; line-height: 22px; }
+  .cert-card.is-collapsed .cert-card__sub { font-size: 13px; }
+  .cert-card.is-collapsed .cert-stages, .cert-card.is-collapsed .cert-eta { display: none; }
+  .cert-card.is-collapsed .cert-strip--summary { display: flex; }
+  /* Space the fail card off the live-app stats/hub that follow it in #cert-result. */
+  #cert-result .cert-card { margin-bottom: var(--sp-20); }
   .cert-eta iconify-icon { color: var(--brand); flex: 0 0 auto; }
   .submit-strip { display: flex; align-items: center; gap: var(--sp-16); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-20); }
   .submit-strip__text { flex: 1; }
@@ -1286,7 +1353,8 @@
   .cert-failbar fluent-button { flex: 0 0 auto; }
   /* Certification issues fold into the header submit-checklist as distinct rows: a mark-fixed
      toggle + the plain-language fix, so the one checklist is where "what's left" always lives. */
-  .ez-ckcert { display: flex; align-items: flex-start; gap: var(--sp-6); width: 100%; padding: var(--sp-6); background: color-mix(in srgb, var(--status-danger) 6%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 22%, transparent); border-radius: var(--r-6); }
+  .ez-ckcert { display: flex; align-items: flex-start; gap: var(--sp-10); width: 100%; padding: var(--sp-12) var(--sp-14); background: var(--subtle); border: 1px solid var(--stroke-3); border-radius: var(--r-8); transition: border-color var(--dur-2) var(--ease-out); }
+  .ez-ckcert:hover { border-color: var(--stroke-2); }
   .ez-ckcert.is-done { background: color-mix(in srgb, var(--status-success) 7%, var(--layer)); border-color: color-mix(in srgb, var(--status-success) 26%, transparent); }
   .ez-ckcert__mark { appearance: none; border: 0; background: none; padding: 2px; margin: 1px 0 0; color: var(--status-danger); cursor: pointer; flex: 0 0 auto; display: inline-flex; border-radius: var(--r-full); }
   .ez-ckcert.is-done .ez-ckcert__mark { color: var(--status-success); }
@@ -1294,11 +1362,11 @@
   .ez-ckcert__go { appearance: none; border: 0; background: none; padding: 0; margin: 0; font: inherit; text-align: left; cursor: pointer; flex: 1; min-width: 0; display: block; }
   .ez-ckcert__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--fg-1); }
   .ez-ckcert.is-done .ez-ckcert__label { text-decoration: line-through; text-decoration-color: var(--fg-4); color: var(--fg-3); }
-  .ez-ckcert__fix { display: block; font-size: 12px; color: var(--fg-2); margin-top: 1px; }
+  .ez-ckcert__fix { display: block; font-size: 12px; color: var(--fg-2); margin-top: 3px; }
   .ez-ckcert__fix b { color: var(--fg-1); font-weight: 600; }
   .ez-ckcert__go:hover .ez-ckcert__label { text-decoration: underline; }
   /* Visible in-editor certification fix tracker (#cert-fixbar) — the failed-submission "what to fix". */
-  .cert-fixbar { margin: 0 0 var(--sp-20); padding: var(--sp-16) var(--sp-20); border: 1px solid color-mix(in srgb, var(--status-danger) 30%, var(--stroke-2)); border-radius: var(--r-12); background: color-mix(in srgb, var(--status-danger) 6%, var(--layer)); }
+  .cert-fixbar { margin: 0 0 var(--sp-20); padding: var(--sp-16) var(--sp-20); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); }
   .cert-fixbar[hidden] { display: none; }
   .cert-fixbar.is-done { border-color: color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); background: color-mix(in srgb, var(--status-success) 6%, var(--layer)); }
   .cert-fixbar__head { display: flex; align-items: center; gap: var(--sp-12); }
@@ -1310,9 +1378,12 @@
   .cert-fixbar__report { appearance: none; border: 0; background: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--brand); cursor: pointer; text-decoration: underline; }
   .cert-fixbar__count { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--fg-2); white-space: nowrap; align-self: flex-start; }
   .cert-fixbar__bar { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg-1) 12%, transparent); margin: var(--sp-12) 0; overflow: hidden; }
-  .cert-fixbar__bar span { display: block; height: 100%; background: var(--status-danger); border-radius: 2px; transition: width var(--dur-3) var(--ease-out); }
+  .cert-fixbar__bar span { display: block; height: 100%; background: var(--brand); border-radius: 2px; transition: width var(--dur-3) var(--ease-out); }
   .cert-fixbar.is-done .cert-fixbar__bar span { background: var(--status-success); }
   .cert-fixbar__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
+  .ez-ckcert__mark--static { cursor: default; color: var(--status-warning); }
+  .ez-ckcert--manual.is-done .ez-ckcert__mark--static { color: var(--status-success); }
+  .ez-ckcert__tag { display: inline-block; margin-left: var(--sp-6); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--status-warning); background: color-mix(in srgb, var(--status-warning) 15%, transparent); padding: 1px 7px; border-radius: var(--r-full); vertical-align: 1px; }
   /* Small banner at the top of the checklist panel while resolving certification issues. */
   .ck-certnote { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-8); padding: var(--sp-8) var(--sp-10); font-size: 12px; line-height: 16px; color: var(--fg-2); background: color-mix(in srgb, var(--status-danger) 8%, var(--layer)); border: 1px solid color-mix(in srgb, var(--status-danger) 22%, transparent); border-radius: var(--r-6); }
   .ck-certnote iconify-icon { color: var(--status-danger); flex: 0 0 auto; margin-top: 1px; }
@@ -1624,6 +1695,7 @@
 
   /* Use the ACTUAL Copilot logo (colorful swirl) on a light disc — not a purple gradient + sparkle. */
   .cpx-logo { display: block; object-fit: contain; }
+  iconify-icon.cpx-logo { color: var(--brand); }
   .cpx-fab { background: var(--layer); color: var(--fg-1); border: 1px solid var(--stroke-2); box-shadow: 0 12px 30px -10px rgba(0,0,0,.5); }
   .cpx-fab:hover { border-color: color-mix(in srgb, var(--brand) 55%, var(--stroke-2)); box-shadow: 0 16px 40px -10px rgba(0,0,0,.55); }
   .cpx-fab .cpx-logo { width: 22px; height: 22px; }
@@ -1843,8 +1915,9 @@
   .rating-choice .apptype__list { gap: var(--sp-4); }
   .rating-choice .apptype__opt { padding: var(--sp-8); border: 1px solid var(--stroke-3); border-radius: var(--r-6); }
   .rating-choice .apptype__opt[aria-checked="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
-  .rating-question__switch-wrap { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; padding-top: 1px; }
-  .rating-question__yes-label { font-size: 12px; color: var(--fg-3); min-width: 22px; text-align: right; }
+  /* Yes/No answer — the same segmented control as the Disclosures step, so there's one yes/no pattern across compliance. */
+  .rating-question .rating-seg { flex: 0 0 auto; align-self: flex-start; }
+  .rating-question .rating-seg .seg__opt { padding: var(--sp-4) var(--sp-14); font-size: 12.5px; }
   .rating-dialog__result { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-8); padding: var(--sp-12); border: 1px solid color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); border-radius: var(--r-8); background: var(--canvas-tint); }
   .rating-dialog__result-text strong { font-size: 14px; color: var(--fg-1); }
   .rating-dialog__result-text p { font-size: 12px; color: var(--fg-3); margin: 2px 0 0; }
@@ -2764,6 +2837,17 @@
   .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: #57c038; display: inline-block; }
   .verified-dot--off { background: #6b7080; }
   .verified-dot--warn { background: #ffb900; }
+  /* Editable app name in the header — opens the availability-checked name dialog. */
+  .ez-apphead__namebtn { display: inline-flex; align-items: center; gap: var(--sp-6); background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; border-radius: var(--r-4); min-width: 0; max-width: 100%; }
+  .ez-apphead__nameedit { color: var(--fg-4); opacity: 0; flex: 0 0 auto; transition: opacity var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .ez-apphead__namebtn:hover .ez-apphead__nameedit, .ez-apphead__namebtn:focus-visible .ez-apphead__nameedit { opacity: 1; }
+  .ez-apphead__namebtn:hover .ez-title, .ez-apphead__namebtn:focus-visible .ez-title { color: var(--brand); }
+  #name-edit-dialog .name-edit__intro { font-size: 13px; color: var(--fg-2); line-height: 1.5; margin: 0 0 var(--sp-16); }
+  #name-edit-dialog .name-edit__label { display: block; font-size: 12px; font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-6); }
+  #name-edit-dialog fluent-text-input { display: block; width: 100%; max-width: 100%; }
+  #name-edit-dialog .name-edit__hint { display: flex; align-items: center; gap: var(--sp-6); margin-top: var(--sp-8); min-height: 18px; }
+  #name-edit-dialog .name-edit__hint--ok { color: var(--status-success); }
+  #name-edit-dialog .name-edit__hint--err { color: var(--status-danger); }
   /* Real app icon shows directly — drop the placeholder gradient box behind it. */
   #app-icon.tdp-has-icon { background: none; box-shadow: none; border-radius: 0; overflow: visible; }
 
@@ -3120,7 +3204,10 @@
         <div class="ez-apphead">
           <div class="ez-apphead__icon" id="app-icon">A</div>
           <div class="ez-apphead__text">
-            <h1 class="ez-title" id="app-name">Loading…</h1>
+            <div class="ez-apphead__namebtn" id="app-name-btn" role="button" tabindex="0" title="Edit app name" aria-label="Edit app name">
+              <h1 class="ez-title" id="app-name">Loading…</h1>
+              <iconify-icon class="ez-apphead__nameedit" icon="fluent:edit-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>
+            </div>
             <div class="ez-apphead__meta">
               <span class="status-pill status-pill--draft" id="app-status">Draft</span>
             </div>
@@ -3160,7 +3247,7 @@
     <div class="wz-steps" id="wz-steps" role="list" aria-label="Publishing steps">
       <button type="button" class="wz-stepind is-current" data-wz="step-package" data-icon="fluent:box-20-filled" role="listitem" aria-current="step"><span class="wz-stepind__dot"><iconify-icon icon="fluent:box-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Package</span></button>
       <button type="button" class="wz-stepind" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listing</span></button>
-      <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Compliance</span></button>
+      <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Content &amp; ratings</span></button>
       <button type="button" class="wz-stepind" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
       <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
       <div class="submit-checklist" id="submit-checklist">
@@ -3195,7 +3282,7 @@
         <div class="ez-rail__tabs">
           <button type="button" class="ez-rail__item" data-section="step-package">Package<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-listing">Store listing<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
-          <button type="button" class="ez-rail__item" data-section="step-rating">Compliance<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+          <button type="button" class="ez-rail__item" data-section="step-rating">Content &amp; ratings<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-reach">Reach &amp; price<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
         </div>
         <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="subtle" size="small">
@@ -3325,7 +3412,7 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-listing">2</span>
           <div>
-            <h2 class="ez-step__title">Your Store listing</h2>
+            <h2 class="ez-step__title">Create your Store listing</h2>
             <p class="ez-step__sub">Click any field to edit it inline. Preview shows the read-only page your customers see.</p>
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
@@ -3347,18 +3434,6 @@
             </fluent-button>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-          <div class="fre-coach" id="ai-autofill-hint" role="status" hidden>
-            <div class="fre-coach__body">
-              <iconify-icon class="fre-coach__ico" icon="fluent:sparkle-16-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
-              <div class="fre-coach__text">
-                <strong>Let AI draft your listing</strong>
-                <span>Turn one line about your app into a description &amp; category.</span>
-              </div>
-            </div>
-            <div class="fre-coach__foot">
-              <button type="button" class="fre-coach__btn" id="ai-hint-dismiss">Got it</button>
-            </div>
-          </div>
         </div>
 
         <!-- Shown while the active locale's auto-translation is still running. -->
@@ -3411,8 +3486,8 @@
               </div>
             </div>
             <p class="ez-store-hero__desc live-edit-target" id="ez-pv-short">A short summary will appear here, created from your description.</p>
-            <!-- Get + Share CTA — mirrors variant B live listing. -->
-            <div class="ez-store-hero__cta">
+            <!-- Get + Share CTA — decorative preview of the customer-facing listing (non-interactive). -->
+            <div class="ez-store-hero__cta" aria-hidden="true">
               <button class="ez-store-cta ez-store-cta--primary" type="button" tabindex="-1">Get</button>
               <button class="ez-store-cta ez-store-cta--icon" type="button" tabindex="-1" aria-label="Share">
                 <iconify-icon icon="fluent:share-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -3579,7 +3654,7 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-rating">3</span>
           <div>
-            <h2 class="ez-step__title">Compliance</h2>
+            <h2 class="ez-step__title">Set your content &amp; ratings</h2>
             <p class="ez-step__sub">Tell us what’s inside your app, then set its age rating.</p>
             <p class="ez-step__summary" id="sum-rating"></p>
           </div>
@@ -3595,8 +3670,10 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
               <span class="declarations__answer">
-                <span class="declarations__yn" data-yn>No</span>
-                <fluent-switch data-declaration="genAi" id="decl-gen-ai"></fluent-switch>
+                <span class="seg decl-seg" role="radiogroup" aria-label="My app uses generative AI features" data-declaration="genAi">
+                  <button type="button" class="seg__opt" data-decl-val="no" id="decl-answer-first">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
               </span>
             </li>
             <!-- MSIX only -->
@@ -3604,8 +3681,10 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:cart-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-ext-commerce" class="declarations__label">My app allows purchases outside the Microsoft Store</label>
               <span class="declarations__answer">
-                <span class="declarations__yn" data-yn>No</span>
-                <fluent-switch data-declaration="externalCommerce" id="decl-ext-commerce"></fluent-switch>
+                <span class="seg decl-seg" role="radiogroup" aria-label="My app allows purchases outside the Microsoft Store" data-declaration="externalCommerce">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
               </span>
             </li>
             <!-- Win32 only -->
@@ -3613,8 +3692,10 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:plug-connected-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-drivers" class="declarations__label">This product depends on non-Microsoft drivers or NT services</label>
               <span class="declarations__answer">
-                <span class="declarations__yn" data-yn>No</span>
-                <fluent-switch data-declaration="drivers" id="decl-drivers"></fluent-switch>
+                <span class="seg decl-seg" role="radiogroup" aria-label="This product depends on non-Microsoft drivers or NT services" data-declaration="drivers">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
               </span>
             </li>
           </ul>
@@ -3654,7 +3735,7 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-reach">4</span>
           <div>
-            <h2 class="ez-step__title">Reach &amp; price</h2>
+            <h2 class="ez-step__title">Set your reach &amp; price</h2>
             <p class="ez-step__sub">Choose where your app is available and what it costs.</p>
           </div>
         </div>
@@ -3927,10 +4008,25 @@
           <div class="cert-card__icon">
             <iconify-icon icon="fluent:clock-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon>
           </div>
-          <div>
+          <div class="cert-card__headtext">
             <h2 class="cert-card__title">Certification in progress</h2>
             <p class="cert-card__sub">We're reviewing your app. You don't need to do anything — we'll email you when it's done.</p>
           </div>
+          <button type="button" class="cert-card__toggle" id="cert-progress-toggle" aria-expanded="true" hidden>
+            <span class="cert-card__toggle-txt">Hide steps</span>
+            <iconify-icon icon="fluent:chevron-up-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+          </button>
+        </div>
+
+        <div class="cert-strip cert-strip--summary" aria-hidden="true">
+          <span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Submitted</span></span>
+          <span class="cert-strip__sep" aria-hidden="true"></span>
+          <span class="cert-strip__stage cert-strip__stage--current"><span class="cert-strip__dot"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner></span><span class="cert-strip__lbl">Pre-processing</span></span>
+          <span class="cert-strip__sep" aria-hidden="true"></span>
+          <span class="cert-strip__stage cert-strip__stage--todo"><span class="cert-strip__dot">3</span><span class="cert-strip__lbl">Certification</span></span>
+          <span class="cert-strip__sep" aria-hidden="true"></span>
+          <span class="cert-strip__stage cert-strip__stage--todo"><span class="cert-strip__dot">4</span><span class="cert-strip__lbl">Publishing</span></span>
+          <span class="cert-strip__eta">~1&ndash;2 days</span>
         </div>
 
         <div class="cert-stages">
@@ -3996,6 +4092,25 @@
 </div><!-- /.app -->
 
 <!-- IARC age-rating questionnaire dialog -->
+<!-- Edit app name — the reserved product identity (availability-checked), shared with the listing. -->
+<fluent-dialog id="name-edit-dialog" modal-type="modal" aria-labelledby="name-edit-title">
+  <fluent-dialog-body>
+    <span slot="title" id="name-edit-title">
+      <iconify-icon icon="fluent:rename-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
+      Edit app name
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-name-edit-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="name-edit__intro">This is your app&rsquo;s name everywhere in the Store &mdash; changing it also updates your Store listing. New names are checked for availability.</p>
+    <label class="name-edit__label" for="name-edit-input">App name</label>
+    <fluent-text-input id="name-edit-input" maxlength="50" placeholder="Your app name"></fluent-text-input>
+    <p class="ez-extra-field__hint name-edit__hint" id="name-edit-hint"></p>
+    <fluent-button slot="action" appearance="secondary" data-name-edit-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="name-edit-save" disabled>Save name</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
 <fluent-dialog id="rating-dialog" modal-type="modal" aria-labelledby="rating-dialog-title">
   <fluent-dialog-body>
     <span slot="title" id="rating-dialog-title">
@@ -4097,19 +4212,36 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <!-- Chat-app-style link preview of the site (favicon + title, plus og:image hero when present). -->
-    <a class="pwapkg__preview" id="pwa-pkg-preview" target="_blank" rel="noopener" aria-label="Open website in a new tab">
-      <div class="pwapkg__preview-hero" id="pwa-pkg-hero" hidden></div>
-      <div class="pwapkg__preview-body">
-        <img class="pwapkg__preview-favicon" id="pwa-pkg-favicon" alt="" />
-        <span class="pwapkg__preview-text">
-          <span class="pwapkg__preview-title" id="pwa-pkg-ptitle"></span>
-          <span class="pwapkg__preview-host" id="pwa-pkg-phost"></span>
-        </span>
+    <!-- Website preview + app identity as ONE card: a browser-framed banner with the app logo
+         overlapping its bottom-left (avatar style) and the name / change-logo in a footer strip. -->
+    <div class="pwapkg__site">
+      <div class="pwapkg__chrome">
+        <span class="pwapkg__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <a class="pwapkg__omni" id="pwa-pkg-preview" target="_blank" rel="noopener" aria-label="Open website in a new tab">
+          <iconify-icon class="pwapkg__omni-lock" icon="fluent:lock-closed-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>
+          <span id="pwa-pkg-phost"></span>
+          <iconify-icon class="pwapkg__omni-open" icon="fluent:open-16-regular" width="11" height="11" aria-hidden="true"></iconify-icon>
+        </a>
       </div>
-    </a>
+      <div class="pwapkg__shot">
+        <div class="pwapkg__shot-fallback" id="pwa-pkg-shot-fallback"></div>
+        <img class="pwapkg__shot-img" id="pwa-pkg-shot-img" alt="Preview of your website" />
+      </div>
+      <div class="pwapkg__foot">
+        <button type="button" class="pwapkg__logo" id="pwa-pkg-logo-btn" aria-label="Change app logo" title="Change app logo">
+          <img class="pwapkg__logo-img" id="pwa-pkg-favicon" alt="" />
+          <span class="pwapkg__logo-edit" aria-hidden="true"><iconify-icon icon="fluent:edit-16-filled" width="12" height="12"></iconify-icon></span>
+        </button>
+        <div class="pwapkg__app-text">
+          <span class="pwapkg__app-name" id="pwa-pkg-ptitle"></span>
+          <span class="pwapkg__app-sub">Your app’s name &amp; icon in the Store</span>
+        </div>
+        <button type="button" class="pwapkg__logo-change" id="pwa-pkg-logo-change">Change logo</button>
+      </div>
+    </div>
+    <input type="file" id="pwa-pkg-logo-file" accept="image/*" hidden />
 
-    <p class="pwapkg__intro" id="pwa-pkg-intro">We’ll wrap your website in an <strong>MSIX</strong> so customers can install it from the Store like any app — nothing to build.</p>
+    <p class="pwapkg__intro" id="pwa-pkg-intro">We’ll turn your website into an app customers can install from the Microsoft Store — <strong>nothing to build, no code changes</strong>.</p>
 
     <div class="pwapkg__scan" id="pwa-pkg-scan" hidden>
       <fluent-spinner size="small" aria-hidden="true"></fluent-spinner>
@@ -4118,10 +4250,19 @@
 
     <div id="pwa-pkg-body" hidden></div>
 
+    <!-- Opt in/out of drafting the Store listing from the site (autoDraftFromSite). Default on. -->
+    <label class="pwapkg__prefill" id="pwa-pkg-prefill" hidden>
+      <span class="pwapkg__prefill-text">
+        <span class="pwapkg__prefill-title"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon> Prefill my Store listing from this site</span>
+        <span class="pwapkg__prefill-hint">We’ll draft your description, screenshots and other listing details from your website. Turn it off to fill the listing in yourself — you can edit everything either way.</span>
+      </span>
+      <fluent-switch id="pwa-pkg-prefill-toggle" checked aria-label="Prefill my Store listing from this site"></fluent-switch>
+    </label>
+
     <fluent-button slot="action" appearance="secondary" data-pwa-pkg-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="pwa-pkg-go" hidden>
       <iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Package as MSIX
+      Package for the Store
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -4196,13 +4337,13 @@
 <fluent-dialog id="cpx-dialog" modal-type="modal" aria-labelledby="cpx-title">
   <fluent-dialog-body>
     <span slot="title" id="cpx-title">
-      <img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
-      Publish with Copilot
+      <iconify-icon class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon>
+      Publish with AI
     </span>
     <fluent-button slot="title-action" appearance="subtle" data-cpx-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <p class="ez-ai-dialog__intro">Drop a <b>.zip</b> with your assets — screenshots, icon, README — and your package if it’s built. Copilot reads everything and drafts your whole submission for you to review.</p>
+    <p class="ez-ai-dialog__intro">Drop a <b>.zip</b> with your assets — screenshots, icon, README — and your package if it’s built. AI reads everything and drafts your whole submission for you to review.</p>
     <label class="cpx-drop" id="cpx-drop" for="cpx-file" tabindex="0" role="button">
       <span class="cpx-drop__disc"><iconify-icon id="cpx-drop-ic" icon="fluent:folder-zip-24-regular" width="30" height="30" aria-hidden="true"></iconify-icon></span>
       <strong id="cpx-drop-title">Drop your project .zip here</strong>
@@ -4219,13 +4360,13 @@
         <li><b>Description</b> — a <code>README.md</code></li>
         <li><b>What’s new</b> — a <code>CHANGELOG.md</code></li>
       </ul>
-      <p class="cpx-guide__note">Folders are fine — Copilot looks everywhere inside the .zip.</p>
+      <p class="cpx-guide__note">Folders are fine — AI looks everywhere inside the .zip.</p>
     </details>
     <p class="cpx-note"><iconify-icon icon="fluent:shield-checkmark-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>Nothing is submitted until you review and approve everything.</span></p>
     <fluent-button slot="action" appearance="secondary" data-cpx-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="cpx-go" disabled>
       <iconify-icon slot="start" icon="fluent:sparkle-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Set up with Copilot
+      Set up with AI
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -4234,8 +4375,8 @@
 <div class="cpx-run" id="cpx-run" hidden role="status" aria-live="polite">
   <div class="cpx-run__card">
     <div class="cpx-run__head">
-      <span class="cpx-run__spark"><img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" /></span>
-      <div><strong>Copilot is building your submission</strong><span id="cpx-run-sub">Reading your project…</span></div>
+      <span class="cpx-run__spark"><iconify-icon class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon></span>
+      <div><strong>AI is building your submission</strong><span id="cpx-run-sub">Reading your project…</span></div>
     </div>
     <ol class="cpx-run__steps" id="cpx-run-steps"></ol>
     <p class="cpx-run__foot"><iconify-icon icon="fluent:shield-checkmark-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> You'll review everything before it's submitted.</p>
@@ -4244,36 +4385,36 @@
 
 <!-- Wide, horizontally-centered Copilot on-ramp banner, floating near the bottom of the flow.
      Dismiss it (or engage Copilot any way) to hide it; the "Ask Copilot" launcher takes over. -->
-<div class="cpx-onramp" id="cpx-onramp" hidden role="complementary" aria-label="Copilot suggestion">
-  <span class="cpx-onramp__spark"><img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" /></span>
+<div class="cpx-onramp" id="cpx-onramp" hidden role="complementary" aria-label="AI suggestion">
+  <span class="cpx-onramp__spark"><iconify-icon class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon></span>
   <div class="cpx-onramp__t">
-    <strong>Let Copilot set up your submission</strong>
-    <span>Drop a .zip — Copilot drafts your listing and places your screenshots, ready for you to review.</span>
+    <strong>Let AI set up your submission</strong>
+    <span>Drop a .zip — AI drafts your listing and places your screenshots, ready for you to review.</span>
   </div>
   <fluent-button appearance="primary" id="cpx-onramp-go" class="cpx-onramp__go">
-    <img slot="start" class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
-    Set up with Copilot
+    <iconify-icon slot="start" class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon>
+    Set up with AI
   </fluent-button>
-  <button type="button" class="cpx-onramp__x" id="cpx-onramp-x" aria-label="Dismiss Copilot suggestion">
+  <button type="button" class="cpx-onramp__x" id="cpx-onramp-x" aria-label="Dismiss AI suggestion">
     <iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
   </button>
 </div>
 
 <!-- Copilot launcher (bottom-right): HIDDEN in the publishing flow (product decision). The button +
      panel markup stay in place so the intake/pipeline can still drive the chat programmatically. -->
-<button type="button" class="cpx-fab" id="cpx-fab" aria-label="Ask Copilot" aria-expanded="false" hidden>
-  <img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" />
-  <span class="cpx-fab__label">Ask Copilot</span>
+<button type="button" class="cpx-fab" id="cpx-fab" aria-label="Ask AI" aria-expanded="false" hidden>
+  <iconify-icon class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon>
+  <span class="cpx-fab__label">Ask AI</span>
 </button>
-<section class="cpx-panel" id="cpx-panel" hidden aria-label="Copilot assistant">
+<section class="cpx-panel" id="cpx-panel" hidden aria-label="AI assistant">
   <header class="cpx-panel__head">
-    <span class="cpx-panel__title"><span class="cpx-panel__spark"><img class="cpx-logo" src="assets/Copilot-Logo.png" alt="" aria-hidden="true" /></span> Copilot</span>
-    <button type="button" class="cpx-panel__x" id="cpx-panel-x" aria-label="Close Copilot"><iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+    <span class="cpx-panel__title"><span class="cpx-panel__spark"><iconify-icon class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon></span> AI assistant</span>
+    <button type="button" class="cpx-panel__x" id="cpx-panel-x" aria-label="Close AI assistant"><iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>
   </header>
   <div class="cpx-panel__body" id="cpx-chat"></div>
   <div class="cpx-panel__sugg" id="cpx-sugg"></div>
   <form class="cpx-panel__foot" id="cpx-form">
-    <input type="text" class="cpx-panel__input" id="cpx-input" placeholder="Ask Copilot to help with your listing…" autocomplete="off" aria-label="Ask Copilot" />
+    <input type="text" class="cpx-panel__input" id="cpx-input" placeholder="Ask AI to help with your listing…" autocomplete="off" aria-label="Ask AI" />
     <button type="submit" class="cpx-panel__send" id="cpx-send" aria-label="Send"><iconify-icon icon="fluent:send-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
   </form>
 </section>
@@ -4749,6 +4890,9 @@
       <iconify-icon icon="fluent:eye-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
       Store listing preview
     </span>
+    <fluent-dropdown slot="title-action" id="lpv-lang-select" class="lpv-lang-dd" aria-label="Preview language" hidden>
+      <fluent-listbox></fluent-listbox>
+    </fluent-dropdown>
     <fluent-button slot="title-action" appearance="subtle" data-listing-preview-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
@@ -5795,6 +5939,7 @@
   let activeSection = 'step-package';
   let reachVisited = false; // session-only; resets on hard refresh
   let ratingVisited = false; // Compliance: disclosures count as reviewed once you've opened the step
+  let declFlagged = false;   // true once the developer leaves Compliance with a blank disclosure — gates the amber outline
   // Easy-mode guided stepper state (declared early so updateGate() can call
   // renderEasySteps() during init without a temporal-dead-zone error).
   const EASY_STEPS = ['step-package', 'step-listing', 'step-rating'];
@@ -5891,7 +6036,7 @@
     if (!((adv.listing.shortDesc || '').trim()) && !state.desc) {
       const s = clone.querySelector('.ez-store-hero__desc'); if (s) s.remove();
     }
-    if (!state.desc) {
+    if (!((fDesc && fDesc.value) || '').trim()) {
       const d = clone.querySelector('.ez-store-desc');
       if (d) { d.textContent = 'No description added yet.'; d.classList.add('lpv-empty'); }
     }
@@ -5929,9 +6074,39 @@
   }
   const listingPreviewDlg = $('listing-preview-dialog');
   const listingPreviewBody = $('listing-preview-body');
+  let listingPreviewShownLocale = null;
+  function lpvLocales() { return (typeof window.__advAddedLocales === 'function') ? (window.__advAddedLocales() || []) : []; }
+  function lpvActive() { return adv.listing.activeLocale || adv.listing.defaultLocale || 'en-US'; }
+  // Fill the preview-language picker; only surfaces when the listing has more than one language.
+  function populatePreviewLangBar() {
+    const sel = $('lpv-lang-select');
+    if (!sel) return;
+    const locales = lpvLocales();
+    if (locales.length < 2) { sel.hidden = true; return; }
+    sel.hidden = false;
+    const active = lpvActive(), defLoc = adv.listing.defaultLocale || 'en-US';
+    const nameOf = c => (typeof window.__advLocaleName === 'function') ? window.__advLocaleName(c) : c;
+    const lb = sel.querySelector('fluent-listbox') || sel;
+    lb.innerHTML = locales.map(c => '<fluent-option value="' + c + '"' + (c === active ? ' selected' : '') + '>' + nameOf(c) + (c === defLoc ? ' (default)' : '') + '</fluent-option>').join('');
+    try { sel.value = active; } catch (e) {}
+  }
+  // Build the read-only preview for a specific language without leaving the editor on it:
+  // switch to it, clone the rendered listing, switch back.
+  function buildListingPreviewNodeForLocale(code) {
+    const active = lpvActive();
+    listingPreviewShownLocale = code || active;
+    if (code && code !== active && typeof window.__advSwitchToLocale === 'function') {
+      window.__advSwitchToLocale(code);
+      const node = buildListingPreviewNode();
+      window.__advSwitchToLocale(active);
+      return node;
+    }
+    return buildListingPreviewNode();
+  }
   function openListingPreview() {
     if (!listingPreviewDlg || !listingPreviewBody) return;
-    const node = buildListingPreviewNode();
+    populatePreviewLangBar();
+    const node = buildListingPreviewNodeForLocale(lpvActive());
     if (!node) return;
     listingPreviewBody.innerHTML = '';
     listingPreviewBody.appendChild(node);
@@ -5944,9 +6119,15 @@
   }
   if ($('ez-preview-open')) $('ez-preview-open').addEventListener('click', openListingPreview);
   if ($('wz-preview-open')) $('wz-preview-open').addEventListener('click', openListingPreview);
+  if ($('lpv-lang-select')) $('lpv-lang-select').addEventListener('change', function () {
+    const node = buildListingPreviewNodeForLocale(this.value);
+    if (node && listingPreviewBody) { listingPreviewBody.innerHTML = ''; listingPreviewBody.appendChild(node); listingPreviewBody.scrollTop = 0; }
+  });
   if (listingPreviewDlg) listingPreviewDlg.querySelectorAll('[data-listing-preview-close]').forEach(b => b.addEventListener('click', closeListingPreview));
   // "Edit listing" leaves the read-only preview and opens the Store listing tab to edit.
   if ($('lpv-edit-listing')) $('lpv-edit-listing').addEventListener('click', () => {
+    // Continue editing in whatever language you were previewing.
+    if (listingPreviewShownLocale && listingPreviewShownLocale !== lpvActive() && typeof window.__advSwitchToLocale === 'function') window.__advSwitchToLocale(listingPreviewShownLocale);
     closeListingPreview();
     const isWiz = document.getElementById('flow-wrap').classList.contains('is-wizard');
     if (isWiz && typeof showWzStep === 'function') showWzStep(WZ_STEPS.indexOf('step-listing'));
@@ -6102,7 +6283,7 @@
   const adv = ADV_DEFAULTS();
   // Update-flow state (session-only): set when a published app is being updated, so that adding a
   // NEW package prompts once for "What's new in this version" (a listing field shown in Advanced).
-  let inUpdateFlow = false;
+  let inUpdateFlow = false; window.__inUpdateFlow = false;   // mirrored on window so the portal cert view (tdp-bridge) can read the scenario
   let whatsNewPrompted = false;
   let updateBaselineIds = new Set();
   // ---- "What's changed in this update" tracking ------------------------------
@@ -6110,6 +6291,7 @@
   // section's data signature; every render diffs the current data against it to know what changed.
   let updateSnapshot = null;
   let updateChangedSet = new Set();
+  let updateBaselineData = null; // structured per-field baseline so updChangeDesc can name what changed
   function updSectionSig(sec) {
     try {
       if (sec === 'step-package') return JSON.stringify((packages || []).filter(function (p) { return !p._pending; }).map(function (p) { return [p.id, p.version || '', (p.arches || []).join('/'), (p.devices || []).join('/'), !!p.win32]; }));
@@ -6119,7 +6301,15 @@
     } catch (e) {}
     return '';
   }
-  function captureUpdateBaseline() { updateSnapshot = {}; WZ_STEPS.forEach(function (s) { updateSnapshot[s] = updSectionSig(s); }); updateChangedSet = new Set(); }
+  function captureUpdateBaseline() {
+    updateSnapshot = {}; WZ_STEPS.forEach(function (s) { updateSnapshot[s] = updSectionSig(s); });
+    updateBaselineData = {
+      listing: { name: state.name || '', desc: state.desc || '', category: state.category || '', shots: (state.shots || []).length, icon: (userIconDataUrl || pkgIconDataUrl || '').length, whatsNew: (adv.listing.whatsNew || '').trim(), features: (adv.listing.features || '').trim(), hero: !!adv.listing.hero, trailers: (adv.listing.trailers || []).length },
+      reach: { priceMode: adv.price.mode, priceAmt: adv.price.amount, markets: JSON.stringify(adv.markets), audience: JSON.stringify(adv.audience), trial: adv.trial.mode, schedule: JSON.stringify(adv.schedule), hold: JSON.stringify(adv.publishHold) },
+      rating: { rating: state.rating, decl: JSON.stringify(adv.declarations), iarc: adv.iarcId || '' }
+    };
+    updateChangedSet = new Set();
+  }
   function recomputeUpdateChanges() {
     if (!inUpdateFlow || !updateSnapshot) { updateChangedSet = new Set(); return; }
     var next = new Set();
@@ -6127,10 +6317,35 @@
     updateChangedSet = next;
   }
   function updChangeDesc(sec) {
+    var b = updateBaselineData || {};
     if (sec === 'step-package') { var np = (packages || []).filter(function (p) { return !p._pending && !updateBaselineIds.has(p.id); }); return np.length ? ('New version ' + (np[0].version || '')).trim() : 'Package updated'; }
-    if (sec === 'step-listing') return (adv.listing.whatsNew || '').trim() ? 'Release notes + listing edits' : 'Store listing edited';
-    if (sec === 'step-rating') return 'Compliance updated';
-    if (sec === 'step-reach') return 'Reach & price updated';
+    if (sec === 'step-listing') {
+      var L = b.listing || {}, parts = [];
+      if ((state.name || '') !== L.name) parts.push('Name');
+      if ((state.desc || '') !== L.desc) parts.push('Description');
+      if ((state.category || '') !== L.category) parts.push('Category');
+      if ((state.shots || []).length !== L.shots) parts.push('Screenshots');
+      if ((userIconDataUrl || pkgIconDataUrl || '').length !== L.icon) parts.push('Icon');
+      if ((adv.listing.whatsNew || '').trim() !== L.whatsNew) parts.push('Release notes');
+      if ((adv.listing.features || '').trim() !== L.features) parts.push('Features');
+      if (!!adv.listing.hero !== L.hero || (adv.listing.trailers || []).length !== L.trailers) parts.push('Media');
+      return parts.length ? parts.slice(0, 3).join(' · ') + (parts.length > 3 ? ' +' + (parts.length - 3) : '') : 'Store listing edited';
+    }
+    if (sec === 'step-rating') {
+      var R = b.rating || {}, rp = [];
+      if (state.rating !== R.rating || (adv.iarcId || '') !== R.iarc) rp.push('Age rating');
+      if (JSON.stringify(adv.declarations) !== R.decl) rp.push('Disclosures');
+      return rp.length ? rp.join(' · ') : 'Content & ratings updated';
+    }
+    if (sec === 'step-reach') {
+      var Rc = b.reach || {}, rc = [];
+      if (adv.price.mode !== Rc.priceMode || adv.price.amount !== Rc.priceAmt) rc.push(adv.price.mode === 'paid' ? ('Now paid · ' + adv.price.currency + ' ' + adv.price.amount) : 'Price');
+      if (JSON.stringify(adv.markets) !== Rc.markets) rc.push('Markets');
+      if (JSON.stringify(adv.audience) !== Rc.audience) rc.push('Audience');
+      if (adv.trial.mode !== Rc.trial) rc.push('Free trial');
+      if (JSON.stringify(adv.schedule) !== Rc.schedule || JSON.stringify(adv.publishHold) !== Rc.hold) rc.push('Release timing');
+      return rc.length ? rc.slice(0, 3).join(' · ') + (rc.length > 3 ? ' +' + (rc.length - 3) : '') : 'Reach & price updated';
+    }
     return 'Updated';
   }
   function renderUpdateChanges() {
@@ -6146,12 +6361,20 @@
       : 'No changes yet \u2014 edit any section to update your live listing.';
     card.classList.toggle('upd-changes--empty', changed.length === 0);
     var list = document.getElementById('upd-changes-list');
-    if (list) list.innerHTML = changed.map(function (s) {
-      return '<li class="upd-changes__item"><button type="button" class="upd-changes__jump" data-wz-jump="' + s + '">' +
-        '<span class="upd-changes__ic"><iconify-icon icon="' + (WZ_SECTION_ICON[s] || 'fluent:edit-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
-        '<span class="upd-changes__txt"><strong>' + WZ_SECTION_NAMES[s] + '</strong><span>' + updChangeDesc(s) + '</span></span>' +
-        '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button></li>';
-    }).join('');
+    if (list) {
+      var hasNewPkg = (packages || []).some(function (p) { return !p._pending && !updateBaselineIds.has(p.id); });
+      var needsNotes = hasNewPkg && !(adv.listing.whatsNew || '').trim();
+      var noteRow = needsNotes ? '<li class="upd-changes__item upd-changes__item--note"><button type="button" class="upd-changes__jump" id="upd-whatsnew-nudge">' +
+        '<span class="upd-changes__ic"><iconify-icon icon="fluent:notepad-edit-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="upd-changes__txt"><strong>Add what’s new in this version</strong><span>Release notes for your new package — shown on your listing.</span></span>' +
+        '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button></li>' : '';
+      list.innerHTML = noteRow + changed.map(function (s) {
+        return '<li class="upd-changes__item"><button type="button" class="upd-changes__jump" data-wz-jump="' + s + '">' +
+          '<span class="upd-changes__ic"><iconify-icon icon="' + (WZ_SECTION_ICON[s] || 'fluent:edit-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+          '<span class="upd-changes__txt"><strong>' + WZ_SECTION_NAMES[s] + '</strong><span>' + updChangeDesc(s) + '</span></span>' +
+          '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button></li>';
+      }).join('');
+    }
     try { if (typeof updateWzChrome === 'function') updateWzChrome(); } catch (e) {}
   }
   window.renderUpdateChanges = renderUpdateChanges;
@@ -6160,6 +6383,9 @@
     if (!b) return;
     var idx = WZ_STEPS.indexOf(b.getAttribute('data-wz-jump'));
     if (idx >= 0 && typeof showWzStep === 'function') showWzStep(idx);
+  });
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('#upd-whatsnew-nudge') && typeof openWhatsNewDialog === 'function') openWhatsNewDialog(false);
   });
   function persistAdvanced() { /* intentionally session-only — a hard refresh resets Advanced settings */ }
   // One-line summary of the effective reach & price settings (used by the gate
@@ -6287,7 +6513,7 @@
   // the final step's primary action opens the submit (review) dialog.
   // ===================================================================
   const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach'];
-  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Compliance', 'step-reach': 'Reach & price' };
+  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Content & ratings', 'step-reach': 'Reach & price' };
   const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
   let wzIndex = 0;
   function wzStepComplete(id) {
@@ -6329,8 +6555,12 @@
     return WZ_STEPS.length - 1;
   }
   function showWzStep(i, opts) {
+    const prevStep = WZ_STEPS[wzIndex];
     wzIndex = Math.max(0, Math.min(WZ_STEPS.length - 1, i));
     const cur = WZ_STEPS[wzIndex];
+    // Flag blank disclosures only once the developer has seen Compliance and moved on — never on load.
+    if (prevStep === 'step-rating' && cur !== 'step-rating' && typeof disclosuresAnswered === 'function' && !disclosuresAnswered()) declFlagged = true;
+    if (typeof syncDeclFlag === 'function') syncDeclFlag();
     if (cur === 'step-reach') reachVisited = true; // Reach & price counts complete only once you've reached it
     if (cur === 'step-rating') ratingVisited = true; // Compliance disclosures count as reviewed once you open it
     WZ_STEPS.forEach(id => {
@@ -6395,16 +6625,21 @@
       // Trailing indicator: a count of what's still to do, or "Review" for a section that's valid on
       // defaults (Reach & price) but not yet opened. Done sections show just the check — no trailing text.
       const leftN = locked ? 0 : ckSection(id).filter(it => ckRequired(it) && !ckDone(it)).length;
-      const needsReview = !locked && leftN === 0 && status !== 'complete';
+      // In an update the live app is already valid — "Review" doesn't apply; lead with changed/unchanged instead.
+      const needsReview = !locked && !inUpdateFlow && leftN === 0 && status !== 'complete';
+      const isChanged = inUpdateFlow && !locked && updateChangedSet.has(id);
       let badge = el.querySelector('.wz-stepind__badge');
       if (leftN > 0 || needsReview) {
         if (!badge) { badge = document.createElement('span'); badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
         badge.className = 'wz-stepind__badge' + (needsReview ? ' wz-stepind__badge--review' : '');
         badge.textContent = needsReview ? 'Review' : leftN;
       } else if (badge) { badge.remove(); }
-      // Update flow: a changed-and-still-valid section gets an "Updated" pill (the actionable signal).
+      // The badge + status icon are aria-hidden decoration, so carry the same status in the button's name.
+      const a11yStatus = locked ? 'locked' : leftN > 0 ? (leftN + (leftN === 1 ? ' item left' : ' items left')) : isChanged ? 'updated' : needsReview ? 'review' : status === 'complete' ? 'done' : 'not started';
+      el.setAttribute('aria-label', (WZ_SECTION_NAMES[id] || el.textContent.trim()) + ' \u2014 ' + a11yStatus);
+      // Update flow: any changed section with no outstanding gap shows the "Updated" signal (not a count).
       let upd = el.querySelector('.wz-stepind__updated');
-      if (inUpdateFlow && !locked && status === 'complete' && updateChangedSet.has(id)) {
+      if (isChanged && leftN === 0) {
         if (!upd) { upd = document.createElement('span'); upd.className = 'wz-stepind__updated'; el.appendChild(upd); }
         upd.textContent = 'Updated';
       } else if (upd) { upd.remove(); }
@@ -6437,7 +6672,7 @@
       cont.hidden = isLast;
       if (!isLast) {
         if (contLabel) contLabel.textContent = 'Continue to ' + WZ_SECTION_NAMES[WZ_STEPS[wzIndex + 1]];
-        cont.disabled = (wzIndex === 0 && !wzStepComplete('step-package'));
+        cont.disabled = false;   // non-gated: Continue always navigates; Submit is the only gate
         cont.setAttribute('appearance', wzStepComplete(WZ_STEPS[wzIndex]) ? 'primary' : 'secondary');
       }
     }
@@ -6485,7 +6720,6 @@
     return { text: '', ready: false };
   }
   function wzNext() {
-    if (wzIndex === 0 && !wzStepComplete('step-package')) return;   // can't leave the package step until it's done
     if (wzIndex === WZ_STEPS.length - 1) { const sub = $('submit'); if (sub && !sub.disabled) sub.click(); return; }
     showWzStep(wzIndex + 1);
   }
@@ -6797,7 +7031,7 @@
     { section: 'step-listing', label: 'Feature highlights', required: false, done: () => (adv.listing.features || '').trim().length > 0, focus: '#ez-features-add' },
     { section: 'step-listing', label: 'Search terms', required: false, done: () => !!(adv.listing.keywords && adv.listing.keywords.length) },
     // Compliance — two required parts: review the content disclosures, then set the age rating.
-    { section: 'step-rating', label: 'Content disclosures', required: true, done: () => ratingVisited, focus: '#decl-gen-ai' },
+    { section: 'step-rating', label: 'Content disclosures', required: true, done: () => disclosuresAnswered(), focus: '#decl-answer-first' },
     { section: 'step-rating', label: 'Age rating confirmed', required: true, done: () => !!state.rating },
     // Reach & price — shown as live facets so the checklist reflects the actual settings.
     // Defaults are valid (all markets, public, free, no trial), so each reads "set" with its
@@ -6811,8 +7045,16 @@
       value: () => adv.price.mode !== 'paid' ? 'Free'
         : (packages.some(p => p.win32 && !p._pending) ? 'Paid · your own commerce'
           : (parseFloat(adv.price.amount) > 0 ? 'Paid · ' + adv.price.currency + ' ' + adv.price.amount : 'Set a base price')) },
-    { section: 'step-reach', label: 'Free trial', applies: () => !packages.some(p => p.win32 && !p._pending), required: true, done: () => true,
-      value: () => adv.trial.mode === 'none' ? 'None' : ((adv.trial.duration || '7') + '-day trial') },
+    // Reach & price — optional settings, surfaced transparently. The advanced pricing tools apply to
+    // paid Store apps (they need a base price to act on); Free trial shows for any non-Win32 app.
+    { section: 'step-reach', label: 'Per-market prices', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => Object.keys(adv.price.overrides || {}).length > 0,
+      value: () => { const n = Object.keys(adv.price.overrides || {}).length; return n ? (n + (n === 1 ? ' market' : ' markets')) : ''; }, focus: '#price-overrides-btn' },
+    { section: 'step-reach', label: 'Scheduled price change', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => !!adv.price.schedule,
+      value: () => adv.price.schedule ? (adv.price.schedule.date || 'Scheduled') : '', focus: '#price-schedule-btn' },
+    { section: 'step-reach', label: 'Sale price', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => (adv.price.sales || []).length > 0,
+      value: () => { const n = (adv.price.sales || []).length; return n ? (n + (n === 1 ? ' sale' : ' sales')) : ''; }, focus: '#price-sale-btn' },
+    { section: 'step-reach', label: 'Free trial', applies: () => !packages.some(p => p.win32 && !p._pending), required: false, done: () => adv.trial.mode !== 'none',
+      value: () => adv.trial.mode === 'none' ? '' : ((adv.trial.duration || '7') + '-day trial') },
   ];
   function ckApplies(it) { return it.applies ? !!it.applies() : true; }
   function ckRequired(it) { if (!ckApplies(it)) return false; return typeof it.required === 'function' ? !!it.required() : !!it.required; }
@@ -6826,15 +7068,24 @@
   // one place that shows "what's left" — no separate panel taking over the editor.
   // Each stays not-done (and gates "Submit for review") until the developer marks it
   // fixed, and jumps straight to the field when its label is clicked.
-  let certFixActive = false, certFixInjected = false;
+  let certFixActive = false, certFixInjected = false, certFailPkgIds = null;
   const certFixed = {};
   function certIssuesLeft() { return (window.CERT_ISSUES || []).filter((_, i) => !certFixed[i]).length; }
+  // A "rebuild" issue (crash, security, perf) can't be ticked off in the form — it's resolved by
+  // fixing the project and uploading a NEW package, so it reads "done" only once a fresh package exists.
+  function certFailHasNewPackage() {
+    if (!certFailPkgIds) return false;
+    return (typeof packages !== 'undefined') && packages.some(function (p) { return p && !p._pending && !certFailPkgIds.has(p.id); });
+  }
   window.certFixActivate = function () {
+    certFailPkgIds = new Set((typeof packages !== 'undefined' ? packages : []).map(function (p) { return p.id; }));
     if (!certFixInjected) {
       (window.CERT_ISSUES || []).forEach(function (ci, i) {
+        var rebuild = ci.kind === 'rebuild';
         CHECKLIST_ITEMS.push({
           section: ci.section, label: ci.title, certFix: ci, certIdx: i, focus: ci.focus,
-          required: true, applies: () => certFixActive, done: () => !!certFixed[i]
+          required: true, applies: () => certFixActive,
+          done: rebuild ? (function () { return certFailHasNewPackage(); }) : (function () { return !!certFixed[i]; })
         });
       });
       certFixInjected = true;
@@ -6858,6 +7109,17 @@
     // fix. The label jumps to the step; the toggle checks it off (which clears the submit gate).
     if (it.certFix) {
       const cIcon = done ? 'fluent:checkmark-circle-16-filled' : 'fluent:circle-16-regular';
+      if (it.certFix.kind === 'rebuild') {
+        // Not pinpointable: no mark-fixed toggle — it clears only when a new package is uploaded.
+        // Show a static status marker + a "needs a new package" tag + plain-language guidance.
+        return '<li><div class="ez-ckcert ez-ckcert--manual' + (done ? ' is-done' : '') + '">' +
+          '<span class="ez-ckcert__mark ez-ckcert__mark--static"><iconify-icon icon="' + (done ? 'fluent:checkmark-circle-16-filled' : 'fluent:wrench-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+          '<button type="button" class="ez-ckcert__go" data-ck="' + idx + '">' +
+            '<span class="ez-ckcert__label">' + it.label + (done ? '' : ' <span class="ez-ckcert__tag">Needs a new package</span>') + '</span>' +
+            '<span class="ez-ckcert__fix"><b>What to do:</b> ' + it.certFix.fix + '</span>' +
+          '</button>' +
+        '</div></li>';
+      }
       return '<li><div class="ez-ckcert' + (done ? ' is-done' : '') + '">' +
         '<button type="button" class="ez-ckcert__mark" data-ckfix="' + it.certIdx + '" aria-pressed="' + (done ? 'true' : 'false') + '" title="' + (done ? 'Mark as not fixed' : 'Mark as fixed') + '">' +
           '<iconify-icon icon="' + cIcon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
@@ -7034,14 +7296,15 @@
     if (!certFixActive) { bar.hidden = true; bar.innerHTML = ''; bar.classList.remove('is-done'); return; }
     const items = CHECKLIST_ITEMS.filter(it => it.certFix);
     const tot = items.length, fixed = items.filter(ckDone).length, left = tot - fixed, done = left === 0;
+    const hasManual = items.some(it => it.certFix && it.certFix.kind === 'rebuild');
     const pct = tot ? Math.round(fixed / tot * 100) : 0;
     bar.classList.toggle('is-done', done);
     bar.innerHTML =
       '<div class="cert-fixbar__head">' +
         '<span class="cert-fixbar__icon' + (done ? ' is-done' : '') + '"><iconify-icon icon="' + (done ? 'fluent:checkmark-circle-20-filled' : 'fluent:wrench-screwdriver-20-regular') + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
         '<span class="cert-fixbar__text">' +
-          '<strong class="cert-fixbar__title">' + (done ? 'All issues fixed \u2014 resubmit when ready' : ('Fix ' + tot + ' ' + (tot === 1 ? 'issue' : 'issues') + ' from certification')) + '</strong>' +
-          '<span class="cert-fixbar__sub">' + (done ? 'Your changes are ready \u2014 use Submit for review on the left. ' : 'Update each item, then mark it fixed. ') + '<button type="button" class="cert-fixbar__report" data-cert-report-link>See full report</button></span>' +
+          '<strong class="cert-fixbar__title">' + (done ? 'All issues fixed \u2014 resubmit when ready' : ('Resolve ' + tot + ' ' + (tot === 1 ? 'issue' : 'issues') + ' from certification')) + '</strong>' +
+          '<span class="cert-fixbar__sub">' + (done ? 'Your changes are ready \u2014 use Submit for review on the left. ' : (hasManual ? 'Fix what you can here; some need a code fix and a new package. ' : 'Update each item, then mark it fixed. ')) + '<button type="button" class="cert-fixbar__report" data-cert-report-link>See full report</button></span>' +
         '</span>' +
         '<span class="cert-fixbar__count">' + fixed + ' of ' + tot + ' fixed</span>' +
       '</div>' +
@@ -7094,11 +7357,11 @@
     if (!e.target.closest('#submit-checklist')) ckClosePanel();
   });
 
-  // Which disclosures apply depends on the package type: MSIX → external commerce,
-  // Win32 → driver/service dependency. Runs from updateGate now that the rows live on
-  // the step (they used to be toggled when the submit dialog opened).
+  // Which disclosures apply depends on the selected app type (the "What are you publishing?"
+  // chooser, or a locked package once one is added): MSIX → external commerce, Win32 →
+  // driver/service dependency. Runs from updateGate, and setV4Type calls updateGate on change.
   function syncDisclosureItems() {
-    const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
+    const isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending));
     const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
     if (commerceItem) commerceItem.hidden = isWin32;
     if (driversItem) driversItem.hidden = !isWin32;
@@ -8847,8 +9110,6 @@
     const loading = !pwaPkgManifestDone;            // fetch still in flight → show "checking"
     const https = /^https:/i.test(pwaPkgPendingUrl || '');
     const hasManifest = !!(mf && mf.hadManifest);
-    const iconCount = (mf && mf.icons && mf.icons.length) || 0;
-    const appName = (mf && mf.name) || '';
     // Real checks, driven by what we actually read from the site (PWA Builder–style) — no auto-pass.
     const row = (state, label, detail) => {
       const icon = state === 'ok' ? 'fluent:checkmark-circle-16-filled'
@@ -8858,61 +9119,101 @@
         ? '<fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner>'
         : '<iconify-icon icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>';
       return '<li class="pwapkg__check pwapkg__check--' + state + '">' + mark +
-        '<span>' + esc(label) + (detail ? ' <span class="pwapkg__check-detail">' + esc(detail) + '</span>' : '') + '</span></li>';
+        '<span class="pwapkg__check-text"><span class="pwapkg__check-label">' + esc(label) + '</span>' +
+        (detail ? '<span class="pwapkg__check-detail">' + esc(detail) + '</span>' : '') + '</span></li>';
     };
     const rows = [
-      loading ? row('pending', 'Web app manifest', 'Checking…')
-        : hasManifest ? row('ok', 'Web app manifest', 'Found')
-        : row('info', 'Web app manifest', 'None yet — we’ll generate one'),
-      row(https ? 'ok' : 'warn', 'Served over HTTPS', https ? '' : 'Recommended before you publish'),
-      loading ? row('pending', 'App name & icon', 'Reading…')
-        : (appName || iconCount) ? row('ok', 'App name & icon', [appName, iconCount ? (iconCount + (iconCount === 1 ? ' icon' : ' icons')) : ''].filter(Boolean).join(' · '))
-        : row('info', 'App name & icon', 'We’ll use your Store app name')
+      loading ? row('pending', 'Your app details', 'Checking your site…')
+        : hasManifest ? row('ok', 'Your app details', 'Read from your web app manifest')
+        : row('info', 'Your app details', 'We’ll create these for you'),
+      row(https ? 'ok' : 'warn', 'Secure connection', https ? 'Your site is served over HTTPS' : 'Use HTTPS before you publish')
     ];
-    body.innerHTML =
-      '<ul class="pwapkg__checks">' + rows.join('') + '</ul>' +
-      '<div class="pwapkg__identity">' +
-        '<span class="pwapkg__identity-label">Store identity — filled in for you</span>' +
-        '<dl class="pwapkg__identity-rows">' +
-          '<dt>Package</dt><dd title="' + esc(id.identityName) + '">' + esc(id.identityName) + '</dd>' +
-          '<dt>Publisher</dt><dd>' + esc(id.publisherDisplay) + '</dd>' +
-        '</dl>' +
-      '</div>';
+    const idRow =
+      '<li class="pwapkg__check pwapkg__check--ok">' +
+        '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        '<span class="pwapkg__check-text">' +
+          '<span class="pwapkg__check-label">Store identity</span>' +
+          '<dl class="pwapkg__identity-rows">' +
+            '<dt>Package name</dt><dd title="' + esc(id.identityName) + '">' + esc(id.identityName) + '</dd>' +
+            '<dt>Publisher</dt><dd>' + esc(id.publisherDisplay) + '</dd>' +
+          '</dl>' +
+        '</span>' +
+      '</li>';
+    body.innerHTML = '<ul class="pwapkg__checks">' + rows.join('') + idRow + '</ul>';
   }
   function pwaPkgSetPhase(phase) {   // 'scan' | 'review' | 'building'
     const scan = $('pwa-pkg-scan'), body = $('pwa-pkg-body'), go = $('pwa-pkg-go');
     if (scan) scan.hidden = phase !== 'scan';
     if (body) body.hidden = phase === 'scan';
+    const prefill = $('pwa-pkg-prefill');
+    if (prefill) prefill.hidden = phase === 'scan';
     if (go) {
       go.hidden = phase === 'scan';
       go.disabled = phase === 'building';
       go.innerHTML = phase === 'building'
-        ? '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Building your MSIX…'
-        : '<iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Package as MSIX';
+        ? '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Packaging for the Store…'
+        : '<iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Package for the Store';
     }
   }
-  // Chat-app-style link preview: favicon + title always, plus an og:image hero when the site has
-  // one. Best-effort via a public preview service; if it's unreachable or rate-limited, the favicon
-  // + host card stands on its own. (A real build would fetch this through our own /api proxy.)
-  function pwaPkgPreview(url) {
-    const host = hostnameOf(url);
-    const a = $('pwa-pkg-preview'), fav = $('pwa-pkg-favicon'), hero = $('pwa-pkg-hero');
-    const titleEl = $('pwa-pkg-ptitle'), hostEl = $('pwa-pkg-phost');
-    if (a) a.href = url;
-    if (titleEl) titleEl.textContent = host;
-    if (hostEl) hostEl.textContent = host;
-    if (fav) { fav.style.display = ''; fav.onerror = function () { fav.style.display = 'none'; }; fav.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host) + '&sz=64'; }
-    // Hero = a live screenshot of the page. A site's own og:image is often just a logo card
-    // (e.g. apple.com), so a real screenshot is a truer "website preview". Falls back to no hero.
-    if (hero) {
-      hero.hidden = true; hero.style.backgroundImage = '';
-      const shotUrl = 'https://image.thum.io/get/width/800/crop/450/' + url;
-      const shot = new Image();
-      shot.onload = function () { hero.style.backgroundImage = 'url("' + shotUrl.replace(/"/g, '%22') + '")'; hero.hidden = false; };
-      shot.onerror = function () { hero.hidden = true; };
-      shot.src = shotUrl;
+  // The app logo + website-preview image shown in the dialog, resolved in priority order.
+  let pwaPkgMicrolinkLogo = '';
+  let pwaPkgMicrolinkImage = '';
+  function pwaPkgLogoSrc() {
+    try { if (userIconDataUrl) return userIconDataUrl; } catch (e) {}
+    const fromMf = pickPwaLogo(pwaPkgManifest);
+    if (fromMf) return fromMf;
+    if (pwaPkgMicrolinkLogo) return pwaPkgMicrolinkLogo;
+    return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(hostnameOf(pwaPkgPendingUrl || '')) + '&sz=128';
+  }
+  function pwaPkgSyncLogo() {
+    const fav = $('pwa-pkg-favicon'); if (!fav) return;
+    fav.onerror = function () { fav.style.display = 'none'; };
+    fav.style.display = ''; fav.src = pwaPkgLogoSrc();
+  }
+  // Paint the browser-framed website preview. Primary = a LIVE screenshot of the actual page via
+  // WordPress mShots (free, no key); its first hit can be a "generating" placeholder, so a warm-up
+  // request is followed by a couple of re-fetches. The site's og:image is only a last resort (it's
+  // often just a logo, e.g. apple.com), and a themed gradient always sits underneath.
+  let pwaPkgShotToken = 0;
+  function pwaPkgRenderSite() {
+    const hostEl = $('pwa-pkg-phost'); if (hostEl) hostEl.textContent = hostnameOf(pwaPkgPendingUrl || '');
+    const lock = document.querySelector('.pwapkg__omni-lock'); if (lock) lock.style.display = /^https:/i.test(pwaPkgPendingUrl || '') ? '' : 'none';
+    const fb = $('pwa-pkg-shot-fallback');
+    const tc = pwaPkgManifest && pwaPkgManifest.themeColor;
+    const okTc = tc && /^(#|rgb|hsl)/i.test(String(tc).trim());
+    if (fb) fb.style.background = okTc ? ('linear-gradient(135deg, ' + tc + ', color-mix(in srgb, ' + tc + ' 45%, #000))') : '';
+    const img = $('pwa-pkg-shot-img'); if (!img) return;
+    img.classList.remove('is-loaded');
+    const token = ++pwaPkgShotToken;   // supersede any in-flight loads from a previous site
+    let shownPrio = -1;
+    const setShot = function (src, prio) { if (token !== pwaPkgShotToken || prio < shownPrio) return; shownPrio = prio; img.src = src; img.classList.add('is-loaded'); };
+    const probe = function (src, cb) { if (!src) return cb(false); const im = new Image(); im.onload = function () { cb(im.naturalWidth > 120); }; im.onerror = function () { cb(false); }; im.src = src; };
+    // Live screenshot of the real page. attempt 0 warms up generation (not shown); 1..3 re-fetch + show.
+    if (pwaPkgPendingUrl) {
+      const base = 'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(pwaPkgPendingUrl) + '?w=1200&h=675';
+      let n = 0;
+      const step = function () {
+        if (token !== pwaPkgShotToken) return;
+        const attempt = n;
+        const src = attempt === 0 ? base : base + '&r=' + attempt;
+        probe(src, function (ok) { if (ok && attempt > 0) setShot(src, 1); });
+        n++;
+        if (n <= 3) setTimeout(step, attempt === 0 ? 1800 : 2600);
+      };
+      step();
     }
-    // Title + favicon from a public preview service (best-effort; browsers can't read another origin's tags directly).
+    // Last resort so it's never just a gradient (may be a logo): og:image / microlink image.
+    const og = (pwaPkgManifest && pwaPkgManifest.ogImage) || pwaPkgMicrolinkImage || '';
+    if (og) setTimeout(function () { if (token === pwaPkgShotToken && shownPrio < 0) probe(og, function (ok) { if (ok) setShot(og, 0); }); }, 6000);
+  }
+  function pwaPkgPreview(url) {
+    const a = $('pwa-pkg-preview');
+    const titleEl = $('pwa-pkg-ptitle');
+    if (a) a.href = url;
+    if (titleEl) titleEl.textContent = hostnameOf(url);
+    pwaPkgSyncLogo();   // starts on the site favicon; upgrades to the manifest / microlink logo as they resolve
+    pwaPkgRenderSite();
+    // Title, logo + preview image from a public preview service (best-effort; can't read cross-origin tags directly).
     let ctrl = null;
     try { ctrl = new AbortController(); setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 6000); } catch (e) {}
     fetch('https://api.microlink.io/?url=' + encodeURIComponent(url), ctrl ? { signal: ctrl.signal } : undefined)
@@ -8920,9 +9221,37 @@
       .then(function (j) {
         const d = (j && j.data) || {};
         if (d.title && titleEl) titleEl.textContent = d.title;
-        if (d.logo && d.logo.url && fav) { fav.onerror = function () { fav.style.display = 'none'; }; fav.src = d.logo.url; }
+        if (d.logo && d.logo.url) { pwaPkgMicrolinkLogo = d.logo.url; pwaPkgSyncLogo(); }
+        if (d.image && d.image.url) { pwaPkgMicrolinkImage = d.image.url; pwaPkgRenderSite(); }
       })
       .catch(function () {});
+  }
+  // Let the developer replace the logo with their own image (center-cropped to a square).
+  function pwaPkgApplyLogoFile(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    const r = new FileReader();
+    r.onload = function () {
+      const img = new Image();
+      img.onload = function () {
+        let out = r.result;
+        try {
+          const size = 256, c = document.createElement('canvas'); c.width = size; c.height = size;
+          const ctx = c.getContext('2d'); const s = Math.min(img.width, img.height);
+          ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+          out = c.toDataURL('image/png');
+        } catch (e) {}
+        userIconDataUrl = out;
+        try { refreshLogoHue(); } catch (e) {}
+        try { refreshAppHeadIcon(); } catch (e) {}
+        pwaPkgSyncLogo();
+        announce('Logo updated.');
+        if (typeof updateGate === 'function') updateGate();
+        if (typeof ezRenderPreview === 'function') ezRenderPreview();
+      };
+      img.onerror = function () { userIconDataUrl = r.result; try { refreshAppHeadIcon(); } catch (e) {} pwaPkgSyncLogo(); };
+      img.src = r.result;
+    };
+    r.readAsDataURL(file);
   }
   // --- Web app manifest reader (PWA Builder–style) -----------------------------
   // Browsers can't read another origin's manifest directly (CORS), so we route the
@@ -9020,10 +9349,11 @@
   // the package is already in the table, back-fill its logo (covers a late-resolving fetch).
   function applyPwaManifest(mf) {
     if (!mf) return;
-    const titleEl = $('pwa-pkg-ptitle'), fav = $('pwa-pkg-favicon');
+    const titleEl = $('pwa-pkg-ptitle');
     if (mf.name && titleEl) titleEl.textContent = mf.name;
     const logo = pickPwaLogo(mf);
-    if (logo && fav) { fav.onerror = function () { fav.style.display = 'none'; }; fav.style.display = ''; fav.src = logo; }
+    pwaPkgSyncLogo();   // reflect the manifest logo in the dialog (unless the developer picked their own)
+    pwaPkgRenderSite(); // manifest screenshots / og:image / theme color are now available for the preview
     if (logo && !userIconDataUrl && packages.some(function (p) { return p.fromPwa; })) {
       pkgIconDataUrl = logo; refreshAppHeadIcon(); refreshLogoHue();
       if (typeof ezRenderPreview === 'function') ezRenderPreview();
@@ -9033,6 +9363,8 @@
     const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
     pwaPkgPendingUrl = url;
     pwaPkgManifest = null;
+    pwaPkgMicrolinkLogo = '';
+    pwaPkgMicrolinkImage = '';
     pwaPkgManifestDone = false;
     // Kick off the manifest read as the dialog opens; it usually resolves well before the user
     // clicks "Package as MSIX", so the logo + AI context are ready by then. Re-render the report
@@ -9041,6 +9373,7 @@
       .then(function (mf) { pwaPkgManifest = mf; applyPwaManifest(mf); return mf; })
       .catch(function () { return null; })
       .finally(function () { pwaPkgManifestDone = true; pwaPkgRenderReport(); });
+    const _pf = $('pwa-pkg-prefill-toggle'); if (_pf) _pf.checked = true;   // recommended default: prefill on for each new site
     pwaPkgPreview(url);
     pwaPkgSetPhase('scan');
     try { dlg.show(); } catch (e) {}
@@ -9067,8 +9400,11 @@
     renderPackages();
     if (typeof ezRenderPreview === 'function') ezRenderPreview();
     if (typeof updateGate === 'function') updateGate();
-    announce('Your website was packaged as an MSIX and added.' + (mf && mf.name ? ' Logo and details pulled from the site.' : ''));
-    autoDraftFromSite();   // full auto-draft of the listing — only when we actually got site details
+    // The dialog toggle lets the developer opt out of drafting the listing from their site.
+    const prefillToggle = $('pwa-pkg-prefill-toggle');
+    const wantPrefill = !(prefillToggle && prefillToggle.checked === false);
+    announce('Your website was packaged as an MSIX and added.' + (mf && mf.name ? (wantPrefill ? ' Logo and details pulled from the site.' : ' Logo pulled from the site.') : ''));
+    if (wantPrefill) autoDraftFromSite();   // full auto-draft of the listing — only when the developer opted in
   }
   (function wirePwaPackager() {
     const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
@@ -9077,6 +9413,11 @@
       pwaPkgSetPhase('building');
       setTimeout(() => { addPackagedPwa(pwaPkgPendingUrl); try { dlg.hide(); } catch (e) {} }, 1200);
     });
+    // Editable logo: the pencil overlay or the "Change logo" link opens a file picker.
+    const logoFile = $('pwa-pkg-logo-file');
+    const openLogoPicker = () => { if (logoFile) logoFile.click(); };
+    ['pwa-pkg-logo-btn', 'pwa-pkg-logo-change'].forEach(id => { const el = $(id); if (el) el.addEventListener('click', openLogoPicker); });
+    if (logoFile) logoFile.addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; pwaPkgApplyLogoFile(f); e.target.value = ''; });
     dlg.querySelectorAll('[data-pwa-pkg-close]').forEach(b => b.addEventListener('click', () => { try { dlg.hide(); } catch (e) {} }));
   })();
 
@@ -9418,12 +9759,11 @@
   // Fires from renderPackages() at the end of every render. Guards ensure it triggers exactly once,
   // only in the update flow, only for a genuinely NEW committed package (win32 still pending waits).
   function maybePromptWhatsNew() {
-    if (!inUpdateFlow || whatsNewPrompted) return;
-    if (packages.some(function (p) { return p.win32 && p._pending; })) return;   // still confirming installer details
-    const hasNew = packages.some(function (p) { return !p._pending && !updateBaselineIds.has(p.id); });
-    if (!hasNew) return;
-    whatsNewPrompted = true;
-    setTimeout(function () { openWhatsNewDialog(true); }, 360);   // let any closing add-package dialog finish
+    // Release notes describe the VERSION (one submission), and a submission can hold several packages
+    // (architectures). So don't interrupt with a modal on each package add — renderUpdateChanges()
+    // surfaces a non-blocking "add release notes" nudge in the What's-changed card, filled when ready.
+    if (!inUpdateFlow) return;
+    try { if (typeof renderUpdateChanges === 'function') renderUpdateChanges(); } catch (e) {}
   }
   (function wireWhatsNew() {
     const dlg = $('whatsnew-dialog');
@@ -9631,7 +9971,7 @@
         if (overlay) overlay.hidden = true;
         try { if (typeof showWzStep === 'function') showWzStep(1); } catch (e) {}
         if (C) C.ai(sampleSummaryHtml(zip), sampleActions());
-        if (typeof announce === 'function') announce('Copilot set up your submission from the sample. Review the highlights in the chat.');
+        if (typeof announce === 'function') announce('AI set up your submission from the sample. Review the highlights in the chat.');
         return;
       }
 
@@ -9751,7 +10091,7 @@
         acts.push({ label: shotN ? 'Review screenshots' : 'Add screenshots', run: function () { try { if (typeof showWzStep === 'function') showWzStep(1); } catch (e) {} setTimeout(function () { var el = $('ez-pv-shots'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 160); } });
         C.ai(html, acts);
       }
-      if (typeof announce === 'function') announce('Copilot set up your submission. You are now on the age rating page. Answer the questionnaire to finish.');
+      if (typeof announce === 'function') announce('AI set up your submission. You are now on the age rating page. Answer the questionnaire to finish.');
     }
 
     // Staged-file model: dropping/browsing a .zip selects it (shows the name, enables the primary
@@ -9957,7 +10297,7 @@
       sugg.innerHTML = chips.map(function (c) { return '<button type="button" class="cpx-sugg__chip">' + esc(c) + '</button>'; }).join('');
       sugg.querySelectorAll('.cpx-sugg__chip').forEach(function (b) { b.addEventListener('click', function () { send(b.textContent); }); });
     }
-    function greet () { if (greeted) return; greeted = true; addAi('Hi! I’m Copilot. Ask me anything about publishing to the Microsoft Store — or I can draft your listing, improve your copy, suggest a category, or set everything up from a <b>.zip</b>.'); }
+    function greet () { if (greeted) return; greeted = true; addAi('Hi! I’m your AI assistant. Ask me anything about publishing to the Microsoft Store — or I can draft your listing, improve your copy, suggest a category, or set everything up from a <b>.zip</b>.'); }
     function openPanel (skipGreet) { if (!skipGreet) greet(); renderSugg(); panel.hidden = false; fab.setAttribute('aria-expanded', 'true'); var _or = $('cpx-onramp'); if (_or) _or.hidden = true; setTimeout(function () { try { input.focus(); } catch (e) {} }, 60); }
     function closePanel () { panel.hidden = true; fab.setAttribute('aria-expanded', 'false'); }
 
@@ -10738,7 +11078,62 @@
     el.addEventListener('click', (e) => { e.preventDefault(); trigger(); });
   }
 
-  makeInlineEditable('#ez-pv-name', fName, { required: true, maxLength: 50, placeholder: 'App name' });
+  // The app NAME is the reserved product identity — unique (availability-checked) and shown across the
+  // Store, so it's edited through one dialog (from the header AND the listing preview), never inline.
+  (function nameEdit() {
+    var dlg = $('name-edit-dialog'), input = $('name-edit-input'), hint = $('name-edit-hint'), saveBtn = $('name-edit-save');
+    function escN(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    var TAKEN = ['whatsapp', 'spotify', 'netflix', 'instagram', 'tiktok', 'facebook', 'microsoft word', 'powerpoint', 'photoshop'];
+    var timer = null;
+    function curName() { return (fName.value || '').trim(); }
+    function setHint(cls, html, canSave) {
+      if (hint) { hint.className = 'ez-extra-field__hint name-edit__hint' + (cls ? ' name-edit__hint--' + cls : ''); hint.innerHTML = html; }
+      if (saveBtn) { if (canSave) saveBtn.removeAttribute('disabled'); else saveBtn.setAttribute('disabled', ''); }
+    }
+    function check() {
+      var v = (input.value || '').trim();
+      if (v.length < 2) { setHint('', 'Enter at least 2 characters.', false); return; }
+      if (v.toLowerCase() === curName().toLowerCase()) { setHint('ok', '<span class="verified-dot"></span> This is your current name.', false); return; }
+      setHint('', '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner> Checking availability&hellip;', false);
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if ((input.value || '').trim() !== v) return;
+        if (TAKEN.indexOf(v.toLowerCase()) >= 0) setHint('err', '&ldquo;' + escN(v) + '&rdquo; is already taken &mdash; try another name.', false);
+        else setHint('ok', '<span class="verified-dot"></span> &ldquo;' + escN(v) + '&rdquo; is available', true);
+      }, 550);
+    }
+    function open() {
+      if (!dlg || !input) return;
+      input.value = curName();
+      setHint('ok', '<span class="verified-dot"></span> This is your current name.', false);
+      try { dlg.show(); } catch (e) {}
+      setTimeout(function () { try { input.focus(); if (input.select) input.select(); } catch (e) {} }, 50);
+    }
+    function close() { try { dlg.hide(); } catch (e) {} }
+    window.__openNameEdit = open;
+    if (input) input.addEventListener('input', check);
+    if (dlg) dlg.querySelectorAll('[data-name-edit-close]').forEach(function (el) { el.addEventListener('click', close); });
+    if (saveBtn) saveBtn.addEventListener('click', function () {
+      if (saveBtn.hasAttribute('disabled')) return;
+      var v = (input.value || '').trim(); if (v.length < 2) return;
+      fName.value = v;
+      if (typeof syncName === 'function') syncName();
+      if (typeof announce === 'function') announce('App name updated to ' + v + '.');
+      close();
+    });
+    var headBtn = $('app-name-btn');
+    if (headBtn) {
+      headBtn.addEventListener('click', open);
+      headBtn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    }
+    var pv = document.querySelector('#ez-pv-name');
+    if (pv) {
+      pv.classList.add('live-edit-target'); pv.dataset.required = 'true';
+      pv.setAttribute('role', 'button'); pv.setAttribute('tabindex', '0');
+      pv.addEventListener('click', open);
+      pv.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    }
+  })();
   makeInlineEditable('#ez-pv-desc', fDesc, { required: true, multiline: true, rows: 6, placeholder: 'What does your app do, and why is it useful?' });
   makeCategoryEditable('#ez-pv-category', fCategory);
   makeClickToUpload('#ez-pv-icon', () => $('icon-file').click());
@@ -10833,9 +11228,9 @@
         // cards / follow-up indentation, not from paraphrasing the question.
         return '<div class="rating-question' + (isFollowup ? ' rating-question--sub' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
           '<span class="rating-question__text">' + q.text + '</span>' +
-          '<span class="rating-question__switch-wrap">' +
-            '<span class="rating-question__yes-label">' + (checked ? 'Yes' : 'No') + '</span>' +
-            '<fluent-switch ' + (checked ? 'checked' : '') + ' data-rating-q="' + q.id + '"></fluent-switch>' +
+          '<span class="seg rating-seg" role="radiogroup" aria-label="' + q.text + '" data-rating-q="' + q.id + '">' +
+            '<button type="button" class="seg__opt' + (!checked ? ' seg__opt--active' : '') + '" data-rating-val="no" aria-checked="' + (!checked ? 'true' : 'false') + '">No</button>' +
+            '<button type="button" class="seg__opt' + (checked ? ' seg__opt--active' : '') + '" data-rating-val="yes" aria-checked="' + (checked ? 'true' : 'false') + '">Yes</button>' +
           '</span></div>';
       }).join('');
       return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4><div class="rating-qcard">' + itemsHtml + '</div></div>';
@@ -10847,17 +11242,22 @@
         list.querySelectorAll('[data-choice-value]').forEach(x => x.setAttribute('aria-checked', x === b ? 'true' : 'false'));
       });
     });
-    ratingMount.querySelectorAll('[data-rating-q]').forEach(sw => {
-      sw.addEventListener('change', () => {
+    ratingMount.querySelectorAll('.rating-seg[data-rating-q]').forEach(seg => {
+      seg.addEventListener('click', (e) => {
         if (suppressDialogChange) return;
-        const id = sw.dataset.ratingQ;
-        contentAnswers[id] = !!sw.checked;
+        const b = e.target.closest('.seg__opt'); if (!b) return;
+        const id = seg.dataset.ratingQ;
+        const yes = b.dataset.ratingVal === 'yes';
+        contentAnswers[id] = yes;
         const isParent = IARC_QUESTIONS.some(s => s.items.some(q => q.parent === id));
         if (isParent) {
           renderRatingQuestions(contentAnswers);
         } else {
-          const label = sw.closest('.rating-question') && sw.closest('.rating-question').querySelector('.rating-question__yes-label');
-          if (label) label.textContent = sw.checked ? 'Yes' : 'No';
+          seg.querySelectorAll('.seg__opt').forEach(x => {
+            const on = (x.dataset.ratingVal === 'yes') === yes;
+            x.classList.toggle('seg__opt--active', on);
+            x.setAttribute('aria-checked', on ? 'true' : 'false');
+          });
         }
       });
     });
@@ -11027,6 +11427,140 @@
     var cp = $('cert-rollout-presets');
     if (cp) cp.addEventListener('click', function (e) { var b = e.target.closest('.ez-rollout-preset'); if (!b) return; var pct = parseInt(b.dataset.pct, 10) || 10; adv.rollout.percent = pct; if (pct >= 100) adv.rollout.gradual = false; persistRollout(); renderCertRollout(); if (typeof announce === 'function') announce(pct >= 100 ? 'Now rolling out to all customers.' : ('Rollout updated to ' + pct + '% of customers.')); });
   })();
+  // ---------------------------------------------------------------------------
+  // Demo certification switcher. The portal path (?id=) is driven by tdp-bridge.js;
+  // this powers the SAME floating “Preview” switcher when the flow is opened directly
+  // (?app=), so both entry points behave identically. One shared structure for a new
+  // app and an update — only the scenario deltas differ (rollout %, “your live version
+  // stays up”, cancel-update).
+  // ---------------------------------------------------------------------------
+  var CERT_HAS_PORTAL = !!new URLSearchParams(location.search).get('id');
+  function demoCertSetSwitch(view) {
+    document.querySelectorAll('#cert-switch .cert-switch__opt').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-cert-view') === view); });
+  }
+  function demoCertPill(text, cls) { var p = $('app-status'); if (p) { p.textContent = text; p.className = 'status-pill status-pill--' + cls; } }
+  function demoCertName() { var el = $('app-name'); var n = el && el.textContent.trim(); return n || (typeof state !== 'undefined' && state.name) || 'Your app'; }
+  function demoCertPassedHTML(isUpdate) {
+    var r = adv.rollout || {};
+    var note = (isUpdate && r.gradual && (r.percent || 0) < 100) ? ' It’s rolling out to <strong>' + (r.percent || 10) + '%</strong> of your customers first — raise it anytime below.' : '';
+    return '<div class="app-status-card app-status-card--live">' +
+      '<span class="app-status-card__ico"><iconify-icon icon="fluent:checkmark-circle-20-filled" width="24" height="24" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="app-status-card__body"><strong class="app-status-card__title">' + (isUpdate ? 'Your update is live' : 'Live in the Microsoft Store') + '</strong>' +
+        '<span class="app-status-card__sub"><strong>' + demoCertName() + '</strong> ' + (isUpdate ? 'passed certification and the new version is published.' : 'passed certification and is now available to customers.') + note + '</span></div>' +
+      '<span class="app-status-card__badge app-status-card__badge--live"><span class="asc-dot"></span>Live</span>' +
+    '</div>';
+  }
+  function demoCertFailedHTML(isUpdate) {
+    var n = (window.CERT_ISSUES || []).length || 0, word = n === 1 ? 'issue' : 'issues';
+    function stage(cls, bullet, title, desc, right) {
+      return '<div class="cert-stage ' + cls + '"><span class="cert-stage__bullet">' + bullet + '</span>' +
+        '<div class="cert-stage__body"><p class="cert-stage__title">' + title + '</p><p class="cert-stage__desc">' + desc + '</p></div>' + (right || '') + '</div>';
+    }
+    var chk = '<iconify-icon icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>';
+    var x = '<iconify-icon icon="fluent:dismiss-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>';
+    var failToggle = '<button type="button" class="cert-card__toggle"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' +
+      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Submitted</span></span>' +
+      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
+      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Pre-processing</span></span>' +
+      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
+      '<span class="cert-strip__stage cert-strip__stage--fail"><span class="cert-strip__dot"><iconify-icon icon="fluent:dismiss-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Certification</span></span>' +
+      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
+      '<span class="cert-strip__stage cert-strip__stage--todo"><span class="cert-strip__dot">4</span><span class="cert-strip__lbl">Publishing</span></span>' +
+      '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span>' +
+    '</div>';
+    var stages =
+      stage('cert-stage--done', chk, 'Submission', 'Your package and details were received.', '<span class="cert-stage__time">Done</span>') +
+      stage('cert-stage--done', chk, 'Pre-processing', 'Malware scan, certificate validation, manifest review.', '<span class="cert-stage__time">Passed</span>') +
+      stage('cert-stage--fail', x, 'Certification', 'Manual review against Store policies and age rating.', '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>') +
+      stage('cert-stage--blocked', '4', 'Publishing', 'Resumes once you’ve fixed the issues and resubmitted.', '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
+    return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
+      '<div class="cert-card__head"><span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="cert-card__headtext"><h2 class="cert-card__title">' + (isUpdate ? 'Your update needs attention' : 'Certification didn’t pass') + '</h2>' +
+        '<p class="cert-card__sub">We found ' + n + ' ' + word + ' in <strong>' + demoCertName() + '</strong>.' + (isUpdate ? ' Your live version is unaffected — fix these and resubmit.' : ' Open the report for the details, then fix and resubmit.') + '</p></div>' + (isUpdate ? failToggle : '') + '</div>' +
+      (isUpdate ? failStrip : '') +
+      '<div class="cert-stages">' + stages + '</div>' +
+      '<div class="app-status-card__actions" style="margin-top: var(--sp-16);">' +
+        '<fluent-button appearance="secondary" data-demo-cert="report"><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
+        '<fluent-button appearance="primary" data-demo-cert="fix"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
+      '</div>' +
+    '</div>';
+  }
+  function demoCertView(view) {
+    var isUpdate = false; try { isUpdate = !!inUpdateFlow; } catch (e) {}
+    var prog = $('cert-progress'), res = $('cert-result'), act = $('cert-actions'), roll = $('cert-rollout');
+    if (view === 'passed') {
+      if (prog) prog.hidden = true;
+      if (res) { res.hidden = false; res.innerHTML = demoCertPassedHTML(isUpdate); }
+      if (act) act.hidden = true;
+      demoCertPill('Published', 'published');
+      try { renderCertRollout(); } catch (e) {}
+    } else if (view === 'failed') {
+      if (prog) prog.hidden = true;
+      if (res) { res.hidden = false; res.innerHTML = demoCertFailedHTML(isUpdate); }
+      if (act) act.hidden = true;
+      if (roll) roll.hidden = true;
+      demoCertPill('Action needed', 'rejected');
+    } else {
+      if (prog) {
+        prog.hidden = false;
+        var t = prog.querySelector('.cert-card__title'); if (t) t.textContent = isUpdate ? 'Update in review' : 'Certification in progress';
+        var s = prog.querySelector('.cert-card__sub'); if (s) s.textContent = isUpdate
+          ? 'Your live version stays published while we review the update — we’ll email you when it’s done.'
+          : 'We’re reviewing your app. You don’t need to do anything — we’ll email you when it’s done.';
+      }
+      if (res) { res.hidden = true; res.innerHTML = ''; }
+      setCertProgressDensity(isUpdate);
+      if (act) act.hidden = false;
+      demoCertPill('In review', 'in-review');
+      try { renderCertRollout(); relabelUpdateCancel(); } catch (e) {}
+    }
+    demoCertSetSwitch(view);
+  }
+  // The in-progress timeline collapses to a one-row summary on updates (compact — the hub is the
+  // real surface), stays expanded on a first submission. The toggle lets the developer flip it.
+  function applyCertCollapsed(card, collapsed) {
+    if (!card) return;
+    card.classList.toggle('is-collapsed', !!collapsed);
+    var tog = card.querySelector('.cert-card__toggle');
+    if (tog) {
+      tog.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      var t = tog.querySelector('.cert-card__toggle-txt'); if (t) t.textContent = collapsed ? 'View steps' : 'Hide steps';
+      var ic = tog.querySelector('iconify-icon'); if (ic) ic.setAttribute('icon', collapsed ? 'fluent:chevron-down-20-regular' : 'fluent:chevron-up-20-regular');
+    }
+  }
+  function setCertProgressDensity(isUpdate) {
+    var card = document.querySelector('#cert-progress .cert-card');
+    var tog = card && card.querySelector('.cert-card__toggle');
+    if (tog) tog.hidden = !isUpdate;   // the collapse control is only offered on updates
+    applyCertCollapsed(card, !!isUpdate);
+  }
+  window.__setCertProgressDensity = setCertProgressDensity;
+  // One handler for every collapse toggle — the in-progress card AND the fail card in #cert-result.
+  document.addEventListener('click', function (e) {
+    var tog = e.target.closest && e.target.closest('.cert-card__toggle'); if (!tog) return;
+    var card = tog.closest('.cert-card');
+    if (card) applyCertCollapsed(card, !card.classList.contains('is-collapsed'));
+  });
+  if (!CERT_HAS_PORTAL) {
+    var certSw = $('cert-switch');
+    if (certSw) certSw.addEventListener('click', function (e) { var b = e.target.closest('[data-cert-view]'); if (!b) return; demoCertView(b.getAttribute('data-cert-view')); });
+    var certRes = $('cert-result');
+    if (certRes) certRes.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-demo-cert]'); if (!b) return;
+      e.preventDefault();
+      if (b.getAttribute('data-demo-cert') === 'fix') {
+        $('state-done').hidden = true; $('editor').hidden = false; $('submit-bar').hidden = false;
+        var done = $('state-done'); if (done) done.__result = null;
+        demoCertSetSwitch('progress');
+        try { if (window.certFixActivate) window.certFixActivate(); } catch (e2) {}
+        window.scrollTo({ top: 0, behavior: (typeof reduceMotion === 'function' && reduceMotion()) ? 'auto' : 'smooth' });
+      } else {
+        var ap = new URLSearchParams(location.search).get('app');
+        try { window.open('cert-report.html' + (ap ? '?app=' + encodeURIComponent(ap) : ''), '_blank', 'noopener'); } catch (e2) {}
+      }
+    });
+  }
   function doSubmit() {
     const cbtn = $('submit-confirm-btn');
     if (cbtn) { cbtn.disabled = true; cbtn.innerHTML = '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Submitting…'; }
@@ -11052,6 +11586,7 @@
       $('submit-bar').hidden = true;
       $('state-done').hidden = false;
       try { renderCertRollout(); relabelUpdateCancel(); } catch (e) {}
+      try { if (!CERT_HAS_PORTAL) demoCertView('progress'); } catch (e) {}
       const pill = $('app-status');
       if (pill) { pill.textContent = 'In review'; pill.className = 'status-pill status-pill--in-review'; }
       announce('Submitted for review. Certification in progress.');
@@ -11067,7 +11602,7 @@
     } catch (e) {}
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Draft'; pill.className = 'status-pill status-pill--draft'; }
-    inUpdateFlow = false;   // leaving the update flow
+    inUpdateFlow = false; window.__inUpdateFlow = false;   // leaving the update flow
     try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
     $('state-done').hidden = true;
     $('editor').hidden = false;
@@ -11082,7 +11617,7 @@
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Updating'; pill.className = 'status-pill status-pill--in-review'; }
     // Entering the update flow: adding a NEW package will prompt once for "What's new in this version".
-    inUpdateFlow = true;
+    inUpdateFlow = true; window.__inUpdateFlow = true;
     whatsNewPrompted = false;
     try { document.getElementById('flow-wrap').classList.add('is-update-flow'); } catch (e) {}
     try { updateBaselineIds = new Set(packages.map(function (p) { return p.id; })); } catch (e) { updateBaselineIds = new Set(); }
@@ -11399,21 +11934,39 @@
     window.__reachRefresh = { markets: applyMarkets, groups: renderGroupChips, price: applyPrice, audience: applyAudience };
   })();
 
-  // Disclosures -> adv.declarations. The Yes/No label (same as the age-rating questionnaire)
-  // makes an off switch read as a deliberate "No"; the row tints once it's a Yes.
-  document.querySelectorAll('[data-declaration]').forEach(sw => {
-    const key = sw.dataset.declaration;
-    const row = sw.closest('.declarations__item');
-    const yn = row && row.querySelector('[data-yn]');
-    const paint = () => {
-      const on = !!sw.checked;
-      if (row) row.classList.toggle('is-on', on);
-      if (yn) yn.textContent = on ? 'Yes' : 'No';
-    };
-    if (adv.declarations[key]) { try { sw.checked = true; } catch (e) {} sw.setAttribute('checked', ''); }
-    paint();
-    sw.addEventListener('change', () => { adv.declarations[key] = !!sw.checked; paint(); persistAdvanced(); });
+  // Disclosures -> adv.declarations. Each item defaults to "No"; the developer flips only the
+  // ones that apply to their app.
+  function applicableDeclKeys() {
+    var isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(function (p) { return p.win32 && !p._pending; }));
+    return ['genAi', isWin32 ? 'drivers' : 'externalCommerce'];
+  }
+  function disclosuresAnswered() { return applicableDeclKeys().every(function (k) { return adv.declarations[k] != null; }); }
+  // Amber "answer required" outline is gated on declFlagged (set on leaving Compliance blank) and
+  // clears the moment every applicable disclosure is answered.
+  function syncDeclFlag() {
+    var list = document.querySelector('.declarations__list');
+    if (list) list.classList.toggle('is-flagged', declFlagged && !disclosuresAnswered());
+  }
+  function paintDeclSeg(seg) {
+    var key = seg.dataset.declaration, v = adv.declarations[key], row = seg.closest('.declarations__item');
+    seg.querySelectorAll('.seg__opt').forEach(function (b) {
+      var sel = (v === true && b.dataset.declVal === 'yes') || (v === false && b.dataset.declVal === 'no');
+      b.classList.toggle('seg__opt--active', sel);
+      b.setAttribute('aria-checked', sel ? 'true' : 'false');
+    });
+    if (row) { row.classList.toggle('is-on', v === true); row.classList.toggle('is-unanswered', v == null); }
+  }
+  document.querySelectorAll('.decl-seg[data-declaration]').forEach(function (seg) {
+    paintDeclSeg(seg);
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('.seg__opt'); if (!b) return;
+      adv.declarations[seg.dataset.declaration] = (b.dataset.declVal === 'yes');
+      paintDeclSeg(seg); persistAdvanced();
+      syncDeclFlag();
+      if (typeof updateGate === 'function') updateGate();
+    });
   });
+  syncDeclFlag();
 
   // IARC ID (Advanced) — paste an existing certificate instead of the questionnaire.
   (function iarcIdPath() {

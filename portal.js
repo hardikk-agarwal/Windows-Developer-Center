@@ -2035,8 +2035,8 @@
   function closeSymHistory() { var d = $("histDialog"); if (d) d.hide(); }
   function readDropdownValue(sel) {
     if (!sel) return null;
-    if (sel.classList && sel.classList.contains("segmented")) {
-      var p = sel.querySelector('button[aria-pressed="true"]');
+    if (sel.classList && (sel.classList.contains("segmented") || sel.classList.contains("choicecards"))) {
+      var p = sel.querySelector('button[aria-pressed="true"], button[aria-checked="true"]');
       return p ? p.getAttribute("data-val") : null;
     }
     if (sel.value) return sel.value;
@@ -2046,9 +2046,10 @@
   // Set a dropdown/segmented value: native <select> (WDP), Fluent <fluent-dropdown>, or a .segmented toggle.
   function setDropdownValue(sel, val) {
     if (!sel) return;
-    if (sel.classList && sel.classList.contains("segmented")) {
+    if (sel.classList && (sel.classList.contains("segmented") || sel.classList.contains("choicecards"))) {
+      var attr = sel.classList.contains("choicecards") ? "aria-checked" : "aria-pressed";
       var bs = sel.querySelectorAll("button");
-      for (var j = 0; j < bs.length; j++) bs[j].setAttribute("aria-pressed", bs[j].getAttribute("data-val") === val ? "true" : "false");
+      for (var j = 0; j < bs.length; j++) bs[j].setAttribute(attr, bs[j].getAttribute("data-val") === val ? "true" : "false");
       return;
     }
     if (sel.tagName === "SELECT") { sel.value = val; return; }
@@ -2238,7 +2239,8 @@
     nm.value = (a.storeName || a.name).replace(/\.[^.]+$/, "");
     setDropdownValue($("pubLang"), a.storeLang || "en-US");
     if ($("pubType")) setDropdownValue($("pubType"), a.type || "app");
-    syncGameNote();
+    if ($("pubGameType")) setDropdownValue($("pubGameType"), "store");
+    syncGameChoice();
     $("publishModal").hidden = false;
     document.addEventListener("keydown", escPub);
     checkPubName();
@@ -2252,39 +2254,42 @@
     $("pubName").value = "";
     setDropdownValue($("pubLang"), "en-US");
     if ($("pubType")) setDropdownValue($("pubType"), "app");
-    syncGameNote();
+    if ($("pubGameType")) setDropdownValue($("pubGameType"), "store");
+    syncGameChoice();
     $("publishModal").hidden = false;
     document.addEventListener("keydown", escPub);
     checkPubName();
     setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
   }
   function closePublish() { $("publishModal").hidden = true; document.removeEventListener("keydown", escPub); publishId = null; resetPubSteps(); }
-  // Most games (MSIX/PWA) publish here; only Open GDK titles (e.g. Xbox) still need Partner Center.
-  var GAME_NOTE = '<iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' +
-    '<span>You can publish MSIX and PWA games here. Open GDK games, like those built for Xbox, go in ' +
-    '<a href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" ' +
-    'aria-label="Partner Center (opens in a new tab)">Partner Center' +
-    '<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a> for now.</span>';
-  function syncGameNote() {
-    var n = $("pubGameNote"); if (!n) return;
+  // Reveal the game-type cards when "Game" is picked, and the Partner Center off-ramp when "GDK" is picked.
+  function syncGameChoice() {
     var isGame = $("pubType") && readDropdownValue($("pubType")) === "game";
-    n.className = "field__hint";
-    n.innerHTML = isGame ? GAME_NOTE : "";
+    var isGdk = isGame && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk";
+    var gt = $("pubGameTypeField"); if (gt) gt.hidden = !isGame;
+    var note = $("pubGdkNote"); if (note) note.hidden = !isGdk;
+    var lf = $("pubLangField"); if (lf) lf.hidden = isGdk;   // GDK leaves for Partner Center, so language is moot
+    updatePubCreate();
+  }
+  // "Add app" is enabled only for a valid name this flow can actually reserve (GDK is off-ramped).
+  function updatePubCreate() {
+    var btn = $("pubCreate"); if (!btn) return;
+    var v = ($("pubName").value || "").trim();
+    var isGdk = $("pubType") && readDropdownValue($("pubType")) === "game" && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk";
+    if (v.length >= 2 && !isGdk) btn.removeAttribute("disabled"); else btn.setAttribute("disabled", "");
   }
   function checkPubName() {
-    var v = ($("pubName").value || "").trim(), hint = $("pubNameHint"), btn = $("pubCreate");
-    if (v.length < 2) {
-      hint.className = "field__hint"; hint.textContent = "";
-      btn.setAttribute("disabled", ""); return;
-    }
-    hint.className = "field__hint field__hint--ok";
-    hint.innerHTML = '<span class="verified-dot"></span>“' + esc(v) + '” is available';
-    btn.removeAttribute("disabled");
+    var v = ($("pubName").value || "").trim(), hint = $("pubNameHint");
+    if (v.length < 2) { hint.className = "field__hint"; hint.textContent = ""; }
+    else { hint.className = "field__hint field__hint--ok"; hint.innerHTML = '<span class="verified-dot"></span>“' + esc(v) + '” is available'; }
+    updatePubCreate();
   }
   // "Create app": reserve the name (creating a brand-new app if there's no existing one),
   // add/mark it in-progress in the table immediately, then open the flow.
   function doCreateApp() {
     var name = ($("pubName").value || "").trim(); if (name.length < 2) return;
+    // GDK titles are reserved in Partner Center, not here — the button is disabled, but guard anyway.
+    if ($("pubType") && readDropdownValue($("pubType")) === "game" && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk") return;
     var a = publishId ? appById(publishId) : null;
     if (!a) {                                            // new app — added to the table right now
       var cert = state.certs.filter(function (c) { return c.trust === "Valid"; })[0] || state.certs[0] || null;
@@ -2309,8 +2314,12 @@
   function wirePublish() {
     $("publishModal").addEventListener("click", function (e) {
       if (e.target.closest("[data-pubclose]")) { closePublish(); return; }
-      var seg = e.target.closest(".segmented button");
-      if (seg && seg.closest("#pubType")) { var bs = seg.parentElement.querySelectorAll("button"); for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", bs[i] === seg ? "true" : "false"); syncGameNote(); }
+      var card = e.target.closest(".choicecard");
+      if (card && (card.closest("#pubType") || card.closest("#pubGameType"))) {
+        var sibs = card.parentElement.querySelectorAll(".choicecard");
+        for (var i = 0; i < sibs.length; i++) sibs[i].setAttribute("aria-checked", sibs[i] === card ? "true" : "false");
+        syncGameChoice();
+      }
     });
     $("pubCreate").addEventListener("click", doCreateApp);
     var nm = $("pubName");

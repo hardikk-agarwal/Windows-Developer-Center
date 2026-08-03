@@ -6,8 +6,15 @@
 // certification report page (cert-report.html). Single source of truth.
 // ============================================================================
 window.CERT_ISSUES = [
-  {
-    icon: "fluent:rename-20-regular",
+  {    icon: "fluent:bug-20-regular",
+    kind: "rebuild",
+    title: "Your app closed unexpectedly during testing",
+    problem: "On a clean Windows 11 machine, the app crashed shortly after launch. Reviewers couldn’t trace it to a single cause.",
+    fix: "Reproduce it with the details in the report, fix it in your project, and upload a new package — there’s nothing to change in this form.",
+    policy: "10.1.1",
+    section: "step-package", focus: "#upload-zone"
+  },
+  {    icon: "fluent:rename-20-regular",
     title: "Your Store name doesn\u2019t match the app on the device",
     problem: "The name in your listing is different from the name Windows shows once the app is installed.",
     fix: "Use the same product name in your listing that appears on the device.",

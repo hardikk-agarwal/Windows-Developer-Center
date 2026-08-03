@@ -137,8 +137,8 @@
           '<span class="app-status-card__sub">We found ' + n + ' ' + word + ' in the new version. Your live app is unaffected \u2014 fix these and resubmit.</span></div>' +
         '<span class="app-status-card__badge app-status-card__badge--attention"><span class="asc-dot"></span>Action needed</span></div>' +
       '<div class="app-status-card__actions">' +
-        '<a class="asc-btn asc-btn--ghost" href="#" data-cert-report><iconify-icon icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</a>' +
-        '<a class="asc-btn asc-btn--primary" href="#" data-fix="step-listing"><iconify-icon icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</a>' +
+        '<fluent-button appearance="secondary" data-cert-report><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
+        '<fluent-button appearance="primary" data-fix="step-listing"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
       '</div>' +
     '</div>';
   }
@@ -163,24 +163,41 @@
     '</div>';
   }
 
-  function failHTML() {
+  function failHTML(isUpdate) {
     var name = appName();
     var n = CERT_ISSUES.length;
     var word = n === 1 ? "issue" : "issues";
+    var failToggle = '<button type="button" class="cert-card__toggle"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' +
+      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Submitted</span></span>' +
+      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
+      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Pre-processing</span></span>' +
+      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
+      '<span class="cert-strip__stage cert-strip__stage--fail"><span class="cert-strip__dot"><iconify-icon icon="fluent:dismiss-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Certification</span></span>' +
+      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
+      '<span class="cert-strip__stage cert-strip__stage--todo"><span class="cert-strip__dot">4</span><span class="cert-strip__lbl">Publishing</span></span>' +
+      '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span>' +
+    '</div>';
     var stages =
       stageHTML("done", "check", "Submission", "Your package and details were received.", '<span class="cert-stage__time">Done</span>') +
       stageHTML("done", "check", "Pre-processing", "Malware scan, certificate validation, manifest review.", '<span class="cert-stage__time">Passed</span>') +
       stageHTML("fail", "x", "Certification", "Manual review against Store policies and age rating.", '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>') +
       stageHTML("blocked", "4", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted.", '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
-    return '<div class="cert-card cert-card--fail">' +
+    return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
       '<div class="cert-card__head">' +
         '<span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
-        '<div>' +
-          '<h2 class="cert-card__title">Certification didn\u2019t pass</h2>' +
-          '<p class="cert-card__sub">We reviewed <strong>' + esc(name) + '</strong> and found ' + n + ' ' + word + ' during certification. Open the report for the details, then edit &amp; fix.</p>' +
+        '<div class="cert-card__headtext">' +
+          '<h2 class="cert-card__title">' + (isUpdate ? "Your update needs attention" : "Certification didn\u2019t pass") + '</h2>' +
+          '<p class="cert-card__sub">' + (isUpdate ? ('We found ' + n + ' ' + word + ' in the new version of <strong>' + esc(name) + '</strong>. Your live version is unaffected \u2014 fix these and resubmit.') : ('We reviewed <strong>' + esc(name) + '</strong> and found ' + n + ' ' + word + ' during certification. Open the report for the details, then edit &amp; fix.')) + '</p>' +
         '</div>' +
+        (isUpdate ? failToggle : '') +
       '</div>' +
+      (isUpdate ? failStrip : '') +
       '<div class="cert-stages">' + stages + '</div>' +
+      (isUpdate ? ('<div class="app-status-card__actions" style="margin-top:var(--sp-16);">' +
+        '<fluent-button appearance="secondary" data-cert-report><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
+        '<fluent-button appearance="primary" data-fix="step-listing"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
+      '</div>') : '') +
     '</div>';
   }
 
@@ -201,6 +218,10 @@
   // ---- Certification result view state machine ----
   var certTimer = null;
   var nextOutcome = "passed";   // default result after a submit; the preview switcher (or an edit) can force the other outcome
+  // Whether THIS submission is an update — captured once when the submission view opens so the preview
+  // switcher keeps one consistent scenario; a preview "Passed" (which marks the app live via
+  // markEverLive) must not flip the other previews into update mode.
+  var submissionIsUpdate = false;
   function $id(x) { return document.getElementById(x); }
   function clearCertTimer() { if (certTimer) { clearTimeout(certTimer); certTimer = null; } }
   function setSwitch(view) {
@@ -232,16 +253,24 @@
   // show a compact status card above it).
   function everLive() { try { return localStorage.getItem("tdp.everLive." + id) === "1"; } catch (e) { return false; } }
   function markEverLive() { try { localStorage.setItem("tdp.everLive." + id, "1"); } catch (e) {} }
+  // Adapt the shared in-progress timeline card's copy to the scenario (new submission vs update).
+  function setProgressScenario(prog, isUpdate) {
+    var t = prog.querySelector(".cert-card__title");
+    var s = prog.querySelector(".cert-card__sub");
+    if (t) t.textContent = isUpdate ? "Update in review" : "Certification in progress";
+    try { if (window.__setCertProgressDensity) window.__setCertProgressDensity(isUpdate); } catch (e) {}
+    if (s) s.textContent = isUpdate
+      ? "Your live version stays published while we review the update \u2014 we\u2019ll email you when it\u2019s done."
+      : "We\u2019re reviewing your app. You don\u2019t need to do anything \u2014 we\u2019ll email you when it\u2019s done.";
+  }
   function showProgress() {
     var done = $id("state-done"); if (done) done.__result = "progress";
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
-    var isUpdate = everLive();   // updating a live app → keep the hub, fold the timeline into a compact status card
-    if (isUpdate) {
-      if (prog) prog.hidden = true;
-      if (res) { res.hidden = false; res.innerHTML = reviewStatusCard() + liveStatsHTML() + hubHTML({ updating: true }); }
-    } else {
-      if (prog) prog.hidden = false;
-      if (res) { res.hidden = true; res.innerHTML = ""; }
+    var isUpdate = submissionIsUpdate;   // locked when the submission view opened; preview clicks don't flip it
+    if (prog) { prog.hidden = false; setProgressScenario(prog, isUpdate); }
+    if (res) {
+      if (isUpdate) { res.hidden = false; res.innerHTML = liveStatsHTML() + hubHTML({ updating: true }); }
+      else { res.hidden = true; res.innerHTML = ""; }
     }
     if (act) act.hidden = isUpdate;
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
@@ -267,9 +296,9 @@
   function showFailed() {
     var done = $id("state-done"); if (done) done.__result = "failed";
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
-    var isUpdate = everLive();   // the live app is unaffected — only the UPDATE needs attention
+    var isUpdate = submissionIsUpdate;   // locked when the submission view opened; preview clicks don't flip it
     if (prog) prog.hidden = true;
-    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (attentionStatusCard() + liveStatsHTML() + hubHTML()) : failHTML(); }
+    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (failHTML(true) + liveStatsHTML() + hubHTML()) : failHTML(false); }
     if (act) act.hidden = true;
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
     if (isUpdate) {
@@ -347,6 +376,7 @@
     wireCertControls();
     function shown() {
       toggleSteps(true); syncBack();
+      submissionIsUpdate = (!!window.__inUpdateFlow) || everLive();   // submitted via the update flow (authoritative), or a previously-live app
       // If a terminal result was already restored (passed/failed), keep it. Otherwise show
       // the in-progress timeline and let it resolve to the next outcome after a short beat.
       if (done.__result !== "passed" && done.__result !== "failed") { showProgress(); armCertTimer(); }
@@ -407,6 +437,7 @@
     if (bar) bar.hidden = true;
     if (done) {
       done.hidden = false;
+      submissionIsUpdate = (!!window.__inUpdateFlow) || everLive();   // lock the scenario before rendering a restored result
       wireCertControls();
       if (status === "published") showPassed();
       else if (status === "rejected") showFailed();
