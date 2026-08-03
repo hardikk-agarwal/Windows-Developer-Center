@@ -2035,21 +2035,31 @@
   function closeSymHistory() { var d = $("histDialog"); if (d) d.hide(); }
   function readDropdownValue(sel) {
     if (!sel) return null;
-    if (sel.classList && (sel.classList.contains("segmented") || sel.classList.contains("choicecards"))) {
-      var p = sel.querySelector('button[aria-pressed="true"], button[aria-checked="true"]');
+    if (sel.tagName === "FLUENT-RADIO-GROUP") {
+      // On click, change bubbles before the group commits .value — the radio's .checked prop is current.
+      var rr = sel.querySelectorAll("fluent-radio");
+      for (var m = 0; m < rr.length; m++) { if (rr[m].checked) return rr[m].getAttribute("value"); }
+      return sel.value || null;
+    }
+    if (sel.classList && sel.classList.contains("segmented")) {
+      var p = sel.querySelector('button[aria-pressed="true"]');
       return p ? p.getAttribute("data-val") : null;
     }
     if (sel.value) return sel.value;
     var o = sel.querySelector('fluent-option[aria-selected="true"], fluent-option[selected]');
     return o ? o.getAttribute("value") : null;
   }
-  // Set a dropdown/segmented value: native <select> (WDP), Fluent <fluent-dropdown>, or a .segmented toggle.
+  // Set a dropdown/segmented value: native <select> (WDP), Fluent <fluent-dropdown>/<fluent-radio-group>, or a .segmented toggle.
   function setDropdownValue(sel, val) {
     if (!sel) return;
-    if (sel.classList && (sel.classList.contains("segmented") || sel.classList.contains("choicecards"))) {
-      var attr = sel.classList.contains("choicecards") ? "aria-checked" : "aria-pressed";
+    if (sel.tagName === "FLUENT-RADIO-GROUP") {
+      var rs = sel.querySelectorAll("fluent-radio");
+      for (var k = 0; k < rs.length; k++) rs[k].checked = (rs[k].getAttribute("value") === val);
+      return;
+    }
+    if (sel.classList && sel.classList.contains("segmented")) {
       var bs = sel.querySelectorAll("button");
-      for (var j = 0; j < bs.length; j++) bs[j].setAttribute(attr, bs[j].getAttribute("data-val") === val ? "true" : "false");
+      for (var j = 0; j < bs.length; j++) bs[j].setAttribute("aria-pressed", bs[j].getAttribute("data-val") === val ? "true" : "false");
       return;
     }
     if (sel.tagName === "SELECT") { sel.value = val; return; }
@@ -2264,6 +2274,9 @@
   function closePublish() { $("publishModal").hidden = true; document.removeEventListener("keydown", escPub); publishId = null; resetPubSteps(); }
   // Reveal the game-type cards when "Game" is picked, and the Partner Center off-ramp when "GDK" is picked.
   function syncGameChoice() {
+    // v3 fluent-radio doesn't reflect its checked state to a styleable attribute — mirror it so the selected dot fills.
+    var rr = document.querySelectorAll("#publishModal .pubchoice fluent-radio");
+    for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute("checked", !!rr[i].checked);
     var isGame = $("pubType") && readDropdownValue($("pubType")) === "game";
     var isGdk = isGame && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk";
     var gt = $("pubGameTypeField"); if (gt) gt.hidden = !isGame;
@@ -2314,13 +2327,9 @@
   function wirePublish() {
     $("publishModal").addEventListener("click", function (e) {
       if (e.target.closest("[data-pubclose]")) { closePublish(); return; }
-      var card = e.target.closest(".choicecard");
-      if (card && (card.closest("#pubType") || card.closest("#pubGameType"))) {
-        var sibs = card.parentElement.querySelectorAll(".choicecard");
-        for (var i = 0; i < sibs.length; i++) sibs[i].setAttribute("aria-checked", sibs[i] === card ? "true" : "false");
-        syncGameChoice();
-      }
     });
+    if ($("pubType")) $("pubType").addEventListener("change", function () { setTimeout(syncGameChoice, 0); });
+    if ($("pubGameType")) $("pubGameType").addEventListener("change", function () { setTimeout(syncGameChoice, 0); });
     $("pubCreate").addEventListener("click", doCreateApp);
     var nm = $("pubName");
     nm.addEventListener("input", checkPubName);
