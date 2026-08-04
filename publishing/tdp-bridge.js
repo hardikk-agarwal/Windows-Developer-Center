@@ -234,11 +234,12 @@
   function setNotify(show) { var n = document.querySelector("#state-done .notify-banner"); if (n) n.style.display = show ? "" : "none"; }
   // App-header card's contextual action: Withdraw while in review, View in Store once published.
   function setHeadActions(view) {
-    var w = $id("head-withdraw-btn"), v = $id("head-viewstore-btn"), r = $id("head-report-btn"), e = $id("head-editfix-btn");
+    var w = $id("head-withdraw-btn"), v = $id("head-viewstore-btn"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), rv = $id("head-review-btn");
     if (w) w.hidden = (view !== "progress");
     if (v) v.hidden = (view !== "passed");
     if (r) r.hidden = (view !== "failed");
     if (e) e.hidden = (view !== "failed");
+    if (rv) rv.hidden = (view !== "passed");
   }
   function setMsStatus(status) {
     try { var ms = readJSON(MS_KEY, []); var i = (Array.isArray(ms) ? ms : []).map(function (a) { return a.id; }).indexOf(id); if (i >= 0) { ms[i].status = status; localStorage.setItem(MS_KEY, JSON.stringify(ms)); } } catch (e) {}

@@ -1551,6 +1551,24 @@
   .upd-changes__txt strong { font-size: 13px; font-weight: 600; color: var(--fg-1); }
   .upd-changes__txt span { font-size: 12px; color: var(--fg-3); }
   .upd-changes__go { flex: 0 0 auto; color: var(--fg-4); }
+  /* Read-only "Review published details": reopens the editor with its content non-interactive.
+     The review bar (Update / Done) + the left-rail step nav stay live so you can look through each step. */
+  #review-bar { display: none; align-items: center; gap: var(--sp-12); margin: 0 0 var(--sp-20); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
+  #flow-wrap.is-review-mode #review-bar { display: flex; }
+  .review-bar__ico { flex: 0 0 auto; color: var(--brand); }
+  .review-bar__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .review-bar__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
+  .review-bar__sub { font-size: 12px; line-height: 16px; color: var(--fg-2); }
+  .review-bar__actions { flex: 0 0 auto; display: flex; gap: var(--sp-8); }
+  #flow-wrap.is-review-mode #editor { pointer-events: none; }
+  #flow-wrap.is-review-mode #review-bar { pointer-events: auto; }
+  #flow-wrap.is-review-mode #submit-bar,
+  #flow-wrap.is-review-mode .wz-forward,
+  #flow-wrap.is-review-mode #submit-checklist,
+  #flow-wrap.is-review-mode .wz-stepind__badge,
+  #flow-wrap.is-review-mode .wz-stepind__updated { display: none !important; }
+  #flow-wrap.is-review-mode .ez-apphead__nameedit { display: none; }
+  #flow-wrap.is-review-mode .ez-apphead__namebtn { pointer-events: none; cursor: default; }
   /* Left-stepper: "Updated" pill marking a section changed in this update (the actionable signal;
      unchanged sections recede to a muted check instead of green — see the .is-update-flow overrides). */
   .wz-stepind__updated { margin-left: auto; flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
@@ -3223,6 +3241,10 @@
         </div>
         <!-- Contextual header actions (submitted view only): Withdraw while in review, View in Store once published. -->
         <div class="wz-head-actions" id="wz-head-actions">
+          <fluent-button appearance="secondary" id="head-review-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Review details
+          </fluent-button>
           <fluent-button appearance="secondary" id="head-withdraw-btn" hidden>
             <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             Withdraw submission
@@ -3291,6 +3313,22 @@
         </fluent-button>
       </nav>
     <div id="editor">
+
+      <!-- Read-only banner shown when reviewing a published submission (goReviewDetails). -->
+      <div id="review-bar">
+        <iconify-icon class="review-bar__ico" icon="fluent:eye-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
+        <span class="review-bar__text">
+          <strong class="review-bar__title">You're viewing your published app</strong>
+          <span class="review-bar__sub">These are the details you submitted — read-only. Select Update app to make changes.</span>
+        </span>
+        <span class="review-bar__actions">
+          <fluent-button appearance="secondary" id="review-update-btn">
+            <iconify-icon slot="start" icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Update app
+          </fluent-button>
+          <fluent-button appearance="primary" id="review-done-btn">Done</fluent-button>
+        </span>
+      </div>
 
       <!-- "What's changed in this update" — UPDATE flow only. Lists sections that differ from the
            live listing (populated by renderUpdateChanges); each row jumps to that step. -->
@@ -6284,6 +6322,7 @@
   // Update-flow state (session-only): set when a published app is being updated, so that adding a
   // NEW package prompts once for "What's new in this version" (a listing field shown in Advanced).
   let inUpdateFlow = false; window.__inUpdateFlow = false;   // mirrored on window so the portal cert view (tdp-bridge) can read the scenario
+  let reviewMode = false; window.__reviewMode = false;       // read-only "review published details" view
   let whatsNewPrompted = false;
   let updateBaselineIds = new Set();
   // ---- "What's changed in this update" tracking ------------------------------
@@ -11486,6 +11525,16 @@
       '</div>' +
     '</div>';
   }
+  // Demo (?app=, no portal): mirror tdp-bridge's setHeadActions so the submitted header shows the
+  // right buttons (View in Store + Review details when published).
+  function demoHeadActions(view) {
+    var w = $('head-withdraw-btn'), v = $('head-viewstore-btn'), r = $('head-report-btn'), e = $('head-editfix-btn'), rv = $('head-review-btn');
+    if (w) w.hidden = (view !== 'progress');
+    if (v) v.hidden = (view !== 'passed');
+    if (r) r.hidden = (view !== 'failed');
+    if (e) e.hidden = (view !== 'failed');
+    if (rv) rv.hidden = (view !== 'passed');
+  }
   function demoCertView(view) {
     var isUpdate = false; try { isUpdate = !!inUpdateFlow; } catch (e) {}
     var prog = $('cert-progress'), res = $('cert-result'), act = $('cert-actions'), roll = $('cert-rollout');
@@ -11515,6 +11564,7 @@
       demoCertPill('In review', 'in-review');
       try { renderCertRollout(); relabelUpdateCancel(); } catch (e) {}
     }
+    demoHeadActions(view);
     demoCertSetSwitch(view);
   }
   // The in-progress timeline collapses to a one-row summary on updates (compact — the hub is the
@@ -11561,6 +11611,105 @@
       }
     });
   }
+  // ---- Persist the full editor state on submit so "Review details" / "Update" rehydrate the flow
+  //      after a hard reload or when the app is reopened from the Apps table. The editor otherwise
+  //      keeps everything in memory only, so a fresh page load showed empty fields. Keyed per app. ----
+  function flowKey() { return (app && app.id != null) ? 'tdp.flow.' + app.id : null; }
+  function saveFlowData() {
+    var k = flowKey(); if (!k) return;
+    try {
+      localStorage.setItem(k, JSON.stringify({
+        v: 1,
+        packages: packages.map(function (p) { var c = {}; for (var q in p) { if (p.hasOwnProperty(q) && q !== '_file') c[q] = p[q]; } return c; }),
+        v4Type: v4Type,
+        shots: state.shots || [],
+        name: fName ? fName.value : '',
+        desc: fDesc ? fDesc.value : '',
+        category: fCategory ? fCategory.value : '',
+        adv: adv,
+        contentAnswers: contentAnswers,
+        contentAnswersConfirmed: contentAnswersConfirmed,
+        ratingAppType: ratingAppType,
+        ratingDone: !!state.rating,
+        selectedGenres: selectedGenres,
+        userIcon: userIconDataUrl || null,
+        pkgIcon: pkgIconDataUrl || null
+      }));
+    } catch (e) {}
+  }
+  // Merge restored data into the live objects IN PLACE (never replace adv / adv.listing, since the
+  // advanced module holds a captured reference to adv.listing as `L`). Arrays + primitives replace.
+  function flowDeepAssign(t, s) {
+    if (!s || typeof s !== 'object' || !t) return;
+    Object.keys(s).forEach(function (key) {
+      var v = s[key];
+      if (v && typeof v === 'object' && !Array.isArray(v) && t[key] && typeof t[key] === 'object' && !Array.isArray(t[key])) flowDeepAssign(t[key], v);
+      else t[key] = v;
+    });
+  }
+  function restoreFlowData() {
+    var k = flowKey(); if (!k) return false;
+    var raw = null; try { raw = localStorage.getItem(k); } catch (e) {}
+    if (!raw) return false;
+    var d = null; try { d = JSON.parse(raw); } catch (e) {}
+    if (!d) return false;
+    try {
+      if (Array.isArray(d.packages)) { packages.length = 0; d.packages.forEach(function (p) { packages.push(p); }); }
+      if (d.v4Type) v4Type = d.v4Type;
+      if (d.adv) flowDeepAssign(adv, d.adv);
+      // Keep the multi-locale description in sync: the live buffer is fDesc.value, but boot tasks
+      // may reload from adv.listing.locales[active] — seed that bucket so it can't blank the field.
+      try {
+        if (adv.listing && typeof adv.listing === 'object') {
+          if (!adv.listing.locales || typeof adv.listing.locales !== 'object') adv.listing.locales = {};
+          var _al = adv.listing.activeLocale || 'en-US';
+          if (!adv.listing.locales[_al]) adv.listing.locales[_al] = { description: '', shortDesc: '', features: '' };
+          if (d.desc != null) adv.listing.locales[_al].description = d.desc;
+        }
+      } catch (e) {}
+      if (Array.isArray(d.shots)) state.shots = d.shots;
+      if (Array.isArray(d.selectedGenres)) selectedGenres = d.selectedGenres;
+      if (d.contentAnswers) contentAnswers = d.contentAnswers;
+      if (typeof d.contentAnswersConfirmed === 'boolean') contentAnswersConfirmed = d.contentAnswersConfirmed;
+      if (d.ratingAppType) ratingAppType = d.ratingAppType;
+      if (d.userIcon) userIconDataUrl = d.userIcon;
+      if (d.pkgIcon) pkgIconDataUrl = d.pkgIcon;
+      if (fName && d.name != null) { try { fName.value = d.name; } catch (e) {} }
+      if (fDesc && d.desc != null) { try { fDesc.value = d.desc; } catch (e) {} }
+      if (fCategory && d.category) { try { fCategory.value = d.category; } catch (e) {} }
+      if (d.ratingDone) state.rating = true;
+      // Rehydrate the DOM from the restored model (guarded — not every render is in this scope).
+      if (typeof syncName === 'function') { try { syncName(); } catch (e) {} }
+      if (typeof syncDesc === 'function') { try { syncDesc(); } catch (e) {} }
+      if (typeof syncCategory === 'function') { try { syncCategory(); } catch (e) {} }
+      if (typeof syncV4TypeChooser === 'function') { try { syncV4TypeChooser(); } catch (e) {} }
+      if (typeof applyV4PkgUI === 'function' && typeof effectiveType === 'function') { try { applyV4PkgUI(effectiveType()); } catch (e) {} }
+      if (typeof renderPackages === 'function') { try { renderPackages(); } catch (e) {} }
+      if (typeof renderShots === 'function') { try { renderShots(); } catch (e) {} }
+      if (IS_GAME && typeof syncGenres === 'function') { try { syncGenres(); } catch (e) {} }
+      if (typeof renderRatingQuestions === 'function') { try { renderRatingQuestions(contentAnswers); } catch (e) {} }
+      if (typeof syncDisclosureItems === 'function') { try { syncDisclosureItems(); } catch (e) {} }
+      if (typeof paintDeclSeg === 'function') { try { paintDeclSeg(); } catch (e) {} }
+      if (typeof applyPrice === 'function') { try { applyPrice(); } catch (e) {} }
+      if (typeof window.__advListingRender === 'function') { try { window.__advListingRender(); } catch (e) {} }
+      if (typeof refreshAppHeadIcon === 'function') { try { refreshAppHeadIcon(); } catch (e) {} }
+      if (typeof refreshLogoHue === 'function') { try { refreshLogoHue(); } catch (e) {} }
+      if (typeof ezRenderPreview === 'function') { try { ezRenderPreview(); } catch (e) {} }
+      if (typeof updateGate === 'function') { try { updateGate(); } catch (e) {} }
+      // Final write wins over anything a render re-loaded (the multi-locale description in particular).
+      if (fDesc && d.desc != null) { try { fDesc.value = d.desc; } catch (e) {} }
+      return true;
+    } catch (e) { return false; }
+  }
+  window.__saveFlowData = saveFlowData; window.__restoreFlowData = restoreFlowData;
+  // Restore AFTER boot fully settles: some later boot tasks re-load the listing buffers and would
+  // clobber an early restore. 'load' + a tick lands after them (the editor stays hidden until the
+  // developer opens Review/Update, so this is never visible as a flash).
+  (function () {
+    var run = function () { setTimeout(function () { try { restoreFlowData(); } catch (e) {} }, 80); };
+    if (document.readyState === 'complete') run();
+    else window.addEventListener('load', run);
+  })();
   function doSubmit() {
     const cbtn = $('submit-confirm-btn');
     if (cbtn) { cbtn.disabled = true; cbtn.innerHTML = '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Submitting…'; }
@@ -11578,6 +11727,7 @@
           all[idx].rollout = adv.rollout;
           localStorage.setItem('msstore.apps', JSON.stringify(all));
         }
+        saveFlowData();   // persist the full editor state so Review / Update rehydrate on reload
       } catch (e) {}
       try { submitDlg.hide(); } catch (e) {}
       // Restore the confirm button so the dialog is ready if it's opened again later.
@@ -11630,6 +11780,34 @@
     announce('Update started \u2014 change anything you need, then submit for review again.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   };
+  // Review a PUBLISHED submission read-only: reopen the editor (all fields still filled) with its
+  // content non-interactive, so the developer can look through everything they submitted. From here
+  // they can Update (switch to the editable update flow) or Done (back to the published view).
+  function goReviewDetails() {
+    reviewMode = true; window.__reviewMode = true;
+    try { document.getElementById('flow-wrap').classList.add('is-review-mode'); } catch (e) {}
+    $('state-done').hidden = true;
+    $('editor').hidden = false;
+    $('submit-bar').hidden = true;
+    try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
+    announce('Viewing your published app \u2014 read-only. Select a step to review it.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  window.goReviewDetails = goReviewDetails;
+  function exitReviewDetails() {
+    reviewMode = false; window.__reviewMode = false;
+    try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
+    $('editor').hidden = true;
+    $('submit-bar').hidden = true;
+    $('state-done').hidden = false;
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  // From read-only review \u2192 editable update: drop review mode, then hand off to the update flow.
+  function updateFromReview() {
+    reviewMode = false; window.__reviewMode = false;
+    try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
+    if (typeof window.startAppUpdate === 'function') window.startAppUpdate();
+  }
   function openSubmitFlow() {
     if ($('submit').disabled) return;
     // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which
@@ -11746,6 +11924,9 @@
   // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store (published) is a demo stub.
   if ($('head-withdraw-btn')) $('head-withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('head-viewstore-btn')) $('head-viewstore-btn').addEventListener('click', () => announce('Opening your Store listing…'));
+  if ($('head-review-btn')) $('head-review-btn').addEventListener('click', goReviewDetails);
+  if ($('review-done-btn')) $('review-done-btn').addEventListener('click', exitReviewDetails);
+  if ($('review-update-btn')) $('review-update-btn').addEventListener('click', updateFromReview);
 
   // -------------------------------------------------------------
   // Notification audience (in-review): who gets the cert pass/fail email.
