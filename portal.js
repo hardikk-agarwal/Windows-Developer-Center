@@ -657,13 +657,130 @@
     });
     return groups.map(certGroupHTML).join("");
   }
+  // ---- Apps list controls: search / type + status filters / sortable columns / pin-to-top / hide.
+  //      pinned + hidden persist on the app object; search/filter/sort are per-session view state. ----
+  var appsSearch = "", appsTypeFilter = "all", appsStatusFilter = "all", appsShowHidden = false;
+  var appsSort = { key: "", dir: "asc" };
+  function appStatusKey(a) {
+    if (a.store || a.storeStatus === "published") return "live";
+    if (a.storeStatus === "in-review") return "in-review";
+    if (a.storeStatus === "rejected") return "rejected";
+    return "draft";
+  }
+  function isDraftApp(a) { return appStatusKey(a) === "draft"; }
+  function pkgFromFile(f) {
+    if (!f) return null; f = String(f).toLowerCase();
+    if (/\.(msix|msixbundle|msixupload|appx|appxbundle|appxupload)$/.test(f)) return "msix";
+    if (/\.(exe|msi)$/.test(f)) return "win32";
+    return null;
+  }
+  // App "type" = what you're publishing: Game (from the App/Game reservation), else the package family
+  // (MSIX / Desktop / Web) from the flow (a.packageType) or the installer's file extension.
+  function appTypeMeta(a) {
+    if (a.type === "game" || a.productKind === "game") return { key: "game", label: "Game", icon: "fluent:xbox-controller-20-regular" };
+    var pk = a.packageType || pkgFromFile(a.file);
+    if (pk === "msix") return { key: "msix", label: "MSIX app", icon: "fluent:cube-20-regular" };
+    if (pk === "pwa") return { key: "pwa", label: "Web app", icon: "fluent:globe-20-regular" };
+    if (pk === "win32") return { key: "win32", label: "Desktop app", icon: "fluent:desktop-20-regular" };
+    return { key: "", label: "", icon: "" };   // no package added yet → no type to show
+  }
+  function typeFilterLabel(k) { return { all: "All types", msix: "MSIX apps", win32: "Desktop apps", pwa: "Web apps", game: "Games", app: "Other apps" }[k] || k; }
+  function statusFilterLabel(k) { return { all: "All statuses", live: "In the Store", "in-review": "In certification", draft: "Drafts", rejected: "Needs attention" }[k] || k; }
+  function appMetricVals(a) {
+    if (!(a.store || a.storeStatus === "published")) return { inst: -1, crash: 999, rating: -1 };
+    return { inst: acqData(a).instTotal, crash: anaData(a).crashRate, rating: ratingsData(a).avg };
+  }
+  function statusRank(a) { var r = { live: 0, "in-review": 1, rejected: 2, draft: 3 }[appStatusKey(a)]; return r == null ? 4 : r; }
+  function cmpAppsBy(a, b, key) {
+    if (key === "name") return (a.storeName || a.name || "").localeCompare(b.storeName || b.name || "");
+    if (key === "type") return appTypeMeta(a).label.localeCompare(appTypeMeta(b).label);
+    if (key === "status") return statusRank(a) - statusRank(b);
+    var va = appMetricVals(a), vb = appMetricVals(b);
+    if (key === "installs") return va.inst - vb.inst;
+    if (key === "crash") return va.crash - vb.crash;
+    if (key === "rating") return va.rating - vb.rating;
+    return 0;
+  }
+  function appsPipeline(apps) {
+    var q = appsSearch.trim().toLowerCase();
+    var out = apps.filter(function (a) {
+      if (a.hidden && !appsShowHidden) return false;
+      if (q && (a.storeName || a.name || "").toLowerCase().indexOf(q) < 0) return false;
+      if (appsTypeFilter !== "all" && appTypeMeta(a).key !== appsTypeFilter) return false;
+      if (appsStatusFilter !== "all" && appStatusKey(a) !== appsStatusFilter) return false;
+      return true;
+    });
+    var key = appsSort.key, dir = appsSort.dir === "desc" ? -1 : 1;
+    out.sort(function (a, b) {
+      var p = (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); if (p) return p;   // pinned always float to top
+      if (key) return cmpAppsBy(a, b, key) * dir;
+      return 0;
+    });
+    return out;
+  }
+  function distinctVals(arr) { var seen = {}, out = []; arr.forEach(function (v) { if (!seen[v]) { seen[v] = 1; out.push(v); } }); return out; }
+  function appsSelHTML(id, opts, cur, label) {
+    return '<fluent-dropdown class="apps-filter" id="' + id + '" appearance="outline" aria-label="' + esc(label || id) + '"><fluent-listbox>' +
+      opts.map(function (o) { return '<fluent-option value="' + o[0] + '"' + (o[0] === cur ? " selected" : "") + ">" + esc(o[1]) + "</fluent-option>"; }).join("") +
+      "</fluent-listbox></fluent-dropdown>";
+  }
+  function appsToolbarHTML(allApps) {
+    var hiddenCount = allApps.filter(function (a) { return a.hidden; }).length;
+    var typeKeys = distinctVals(allApps.map(function (a) { return appTypeMeta(a).key; })).filter(function (k) { return k; });
+    var statusKeys = distinctVals(allApps.map(appStatusKey));
+    var search = '<fluent-text-input class="apps-search" id="appsSearch" appearance="outline" placeholder="Search apps" aria-label="Search apps" value="' + esc(appsSearch) + '">' +
+      '<iconify-icon slot="start" icon="fluent:search-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-text-input>';
+    var typeSel = typeKeys.length >= 2 ? appsSelHTML("appsTypeFilter", [["all", typeFilterLabel("all")]].concat(typeKeys.map(function (k) { return [k, typeFilterLabel(k)]; })), appsTypeFilter, "Filter by type") : "";
+    var statusSel = statusKeys.length >= 2 ? appsSelHTML("appsStatusFilter", [["all", statusFilterLabel("all")]].concat(statusKeys.map(function (k) { return [k, statusFilterLabel(k)]; })), appsStatusFilter, "Filter by status") : "";
+    var hiddenToggle = hiddenCount ? '<button type="button" class="apps-hiddentoggle' + (appsShowHidden ? " is-on" : "") + '" data-showhidden aria-pressed="' + appsShowHidden + '">' +
+      '<iconify-icon icon="' + (appsShowHidden ? "fluent:eye-20-regular" : "fluent:eye-off-20-regular") + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+      (appsShowHidden ? "Hide hidden" : "Show " + hiddenCount + " hidden") + "</button>" : "";
+    return '<div class="apps-toolbar">' + search + '<div class="apps-toolbar__filters">' + typeSel + statusSel + hiddenToggle + "</div></div>";
+  }
+  function appsSortTh(key, label) {
+    var active = appsSort.key === key;
+    var arrow = active ? '<iconify-icon class="th-sort__arr" icon="' + (appsSort.dir === "desc" ? "fluent:arrow-down-16-filled" : "fluent:arrow-up-16-filled") + '" width="12" height="12" aria-hidden="true"></iconify-icon>' : "";
+    return '<th class="th-sort' + (active ? " is-active" : "") + '" data-sort="' + key + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + esc(label) + arrow + "</th>";
+  }
+  function appsEmptyFilterHTML() {
+    return '<div class="apps-emptyfilter"><iconify-icon icon="fluent:search-20-regular" width="24" height="24" aria-hidden="true"></iconify-icon>' +
+      "<p>No apps match your search or filters.</p>" +
+      '<button class="linkbtn" data-appsclear>Clear filters</button></div>';
+  }
+  function togglePinApp(id) { var a = appById(id); if (!a) return; a.pinned = !a.pinned; save(); renderApps(); toast(a.pinned ? "Pinned to top" : "Unpinned", true); }
+  function toggleHideApp(id) { var a = appById(id); if (!a) return; a.hidden = !a.hidden; if (a.hidden) a.pinned = false; save(); renderApps(); toast(a.hidden ? "Hidden from your list" : "Shown again", true); }
+  function setAppsSort(key) {
+    if (appsSort.key === key) appsSort.dir = appsSort.dir === "asc" ? "desc" : "asc";
+    else { appsSort.key = key; appsSort.dir = (key === "name" || key === "type" || key === "status") ? "asc" : "desc"; }
+    refreshAppsTable();
+  }
   // The Store-pipeline table (shared by both portals): every app you've taken toward the Store —
-  // Draft, In certification and Live — with the metrics that matter once live (installs, crash
-  // rate, rating). Analytics show only for live apps; pre-live rows show the stage instead.
+  // Draft, In certification and Live — with a search box, type + status filters, sortable columns,
+  // pin-to-top and hide, plus the metrics that matter once live (installs, crash rate, rating).
   function storeTableHTML(apps) {
-    return '<div class="table-wrap"><table class="table apptable apptable--store">' +
-      '<thead><tr><th>App</th><th>Status</th><th>Installs</th><th>Crash rate</th><th>Rating</th><th class="col-store"></th></tr></thead>' +
-      '<tbody>' + apps.map(storeAppRowHTML).join("") + '</tbody></table></div>';
+    var rows = appsPipeline(apps);
+    var toolbar = (apps.length >= 2 || apps.some(function (a) { return a.hidden; })) ? appsToolbarHTML(apps) : "";
+    var body = rows.length ? rows.map(storeAppRowHTML).join("") : '<tr><td colspan="7">' + appsEmptyFilterHTML() + "</td></tr>";
+    return '<div class="apps-tablewrap">' + toolbar +
+      '<div class="table-wrap"><table class="table apptable apptable--store">' +
+      "<thead><tr>" + appsSortTh("name", "App") + appsSortTh("type", "Type") + appsSortTh("status", "Status") +
+      appsSortTh("installs", "Installs") + appsSortTh("crash", "Crash rate") + appsSortTh("rating", "Rating") +
+      '<th class="col-store"></th></tr></thead>' +
+      "<tbody>" + body + "</tbody></table></div></div>";
+  }
+  // Re-render ONLY the store table (thead + tbody) in place — the toolbar, and thus a focused
+  // fluent-text-input's caret, stay put. Used for search / filter / sort (a full renderApps rebuilds
+  // the toolbar and would drop focus on every keystroke).
+  function refreshAppsTable() {
+    var tw = document.querySelector("#appsList .apps-tablewrap");
+    var slot = tw && tw.querySelector(".table-wrap");
+    if (!slot) { renderApps(); return; }
+    var rows = appsPipeline(state.apps.filter(inStorePipeline));
+    var body = rows.length ? rows.map(storeAppRowHTML).join("") : '<tr><td colspan="7">' + appsEmptyFilterHTML() + "</td></tr>";
+    slot.innerHTML = '<table class="table apptable apptable--store"><thead><tr>' +
+      appsSortTh("name", "App") + appsSortTh("type", "Type") + appsSortTh("status", "Status") +
+      appsSortTh("installs", "Installs") + appsSortTh("crash", "Crash rate") + appsSortTh("rating", "Rating") +
+      '<th class="col-store"></th></tr></thead><tbody>' + body + "</tbody></table>";
   }
 
   // App-list logo: handles a data URL or remote URL (publishing logo / PWA icon) as well as a
@@ -680,7 +797,7 @@
     var ms; try { ms = JSON.parse(localStorage.getItem("msstore.apps")) || []; } catch (e) { return; }
     if (!Array.isArray(ms)) return;
     var byId = {}; ms.forEach(function (x) { if (x && x.id) byId[x.id] = x; });
-    state.apps.forEach(function (a) { var m = byId[a.id]; if (m && m.icon) a.icon = m.icon; });
+    state.apps.forEach(function (a) { var m = byId[a.id]; if (m) { if (m.icon) a.icon = m.icon; if (m.packageType) a.packageType = m.packageType; } });
   }
   // Store portal only: cert-discovered apps stay locked (no crash analytics / distribution) until the
   // developer proves they OWN the signing certificate by signing our verification file. WDP verifies
@@ -729,6 +846,7 @@
     var live = a.store || a.storeStatus === "published";
     var inReview = a.storeStatus === "in-review";
     var rejected = a.storeStatus === "rejected";
+    var draft = isDraftApp(a);
     var pill = live
       ? '<span class="pill pill--ok pill--sm">✓ In the Store</span>'
       : rejected
@@ -736,6 +854,8 @@
         : inReview
           ? '<span class="pill pill--info pill--sm">In certification</span>'
           : '<span class="pill pill--ghost pill--sm">Draft</span>';
+    var tm = appTypeMeta(a);
+    var typeCell = tm.label ? '<span class="apptype apptype--' + tm.key + '"><iconify-icon icon="' + tm.icon + '" width="15" height="15" aria-hidden="true"></iconify-icon>' + esc(tm.label) + '</span>' : '';
     // Acquisition / usage / ratings only exist once an app is LIVE; pre-live rows show "—".
     var na = '<span class="muted">—</span>';
     var installs = na, crash = na, rating = na;
@@ -745,21 +865,28 @@
       installs = '<strong>' + fmtCompact(acq.instTotal) + '</strong>';
       crash = '<span class="metric__row"><span class="health__dot is-' + dot + '"></span>' + ana.crashRate.toFixed(2) + '%</span>';
       rating = '<span class="ratecell"><span class="ratecell__star">★</span><strong>' + rat.avg.toFixed(1) + '</strong> <span class="muted">(' + fmtCompact(rat.total) + ')</span></span>';
+      // Mirror the headline figures to storage so the publish hub (tdp-bridge, a separate page) shows the same numbers.
+      try { localStorage.setItem("tdp.appstats." + a.id, JSON.stringify({ installs: acq.instTotal, crashRate: ana.crashRate, rating: rat.avg, ratingCount: rat.total })); } catch (e) {}
     }
-    // The row always opens the app's page in its current state (draft / in review / published).
-    // For LIVE apps the metric cells (installs, crash rate, rating) instead open that app's analytics.
     var rowTitle = live ? "Open app \u2014 published" : inReview ? "Open app \u2014 in review" : rejected ? "Open app \u2014 needs attention" : "Open app \u2014 draft";
     var metricAttr = live ? ' class="metric-cell" data-analytics="' + a.id + '" title="View analytics"' : '';
-    return '<tr class="approw--open" data-openapp="' + a.id + '" title="' + rowTitle + '">' +
+    // Row actions: pin-to-top, hide-from-list, and delete (drafts only — you can't delete a live or
+    // in-review app). Report shows only on a rejected submission.
+    var pinBtn = '<button class="iconbtn iconbtn--pin' + (a.pinned ? " is-on" : "") + '" data-pinapp="' + a.id + '" title="' + (a.pinned ? "Unpin" : "Pin to top") + '" aria-label="' + (a.pinned ? "Unpin" : "Pin to top") + '" aria-pressed="' + (a.pinned ? "true" : "false") + '">' +
+      '<iconify-icon icon="' + (a.pinned ? "fluent:pin-16-filled" : "fluent:pin-16-regular") + '" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    var hideBtn = '<button class="iconbtn" data-hideapp="' + a.id + '" title="' + (a.hidden ? "Show in list" : "Hide from list") + '" aria-label="' + (a.hidden ? "Show in list" : "Hide from list") + '">' +
+      '<iconify-icon icon="' + (a.hidden ? "fluent:eye-16-regular" : "fluent:eye-off-16-regular") + '" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    var delBtn = draft ? '<button class="iconbtn iconbtn--danger" data-delapp="' + a.id + '" title="Delete draft" aria-label="Delete draft"><iconify-icon icon="fluent:delete-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>' : "";
+    var reportBtn = rejected ? '<button class="linkbtn" data-report="' + a.id + '" title="View certification report">Report</button>' : "";
+    var rowCls = "approw--open" + (a.pinned ? " approw--pinned" : "") + (a.hidden ? " approw--hidden" : "");
+    return '<tr class="' + rowCls + '" data-openapp="' + a.id + '" title="' + rowTitle + '">' +
       '<td><div class="cell-main">' + iconHTML + '<div><strong>' + esc(a.storeName || a.name) + '</strong>' + (a.size ? '<span class="muted">' + esc(a.size) + '</span>' : '') + '</div></div></td>' +
+      '<td>' + typeCell + '</td>' +
       '<td>' + pill + '</td>' +
       '<td' + metricAttr + '>' + installs + '</td>' +
       '<td' + metricAttr + '>' + crash + '</td>' +
       '<td' + metricAttr + '>' + rating + '</td>' +
-      '<td class="col-store"><span class="rowactions">' +
-        (rejected ? '<button class="linkbtn" data-report="' + a.id + '" title="View certification report">View report</button>' : '') +
-        '<button class="iconbtn iconbtn--danger" data-delapp="' + a.id + '" title="Delete app" aria-label="Delete app">' +
-          '<iconify-icon icon="fluent:delete-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
+      '<td class="col-store"><span class="rowactions">' + reportBtn + pinBtn + hideBtn + delBtn +
         '<iconify-icon class="row-chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span></td>' +
     '</tr>';
   }
@@ -2421,13 +2548,12 @@
   var pendingDelId = null;
   function confirmDeleteApp(id) {
     var a = appById(id); if (!a) return;
+    if (!isDraftApp(a)) { toast("Only draft apps can be deleted — unpublish or withdraw it first", false); return; }
     pendingDelId = id;
     if ($("delAppName")) $("delAppName").textContent = a.name;
-    if ($("delModal")) $("delModal").hidden = false;
-    document.addEventListener("keydown", escDel);
+    var d = $("delModal"); if (d && d.show) d.show();
   }
-  function closeDel() { if ($("delModal")) $("delModal").hidden = true; document.removeEventListener("keydown", escDel); pendingDelId = null; }
-  function escDel(e) { if (e.key === "Escape") closeDel(); }
+  function closeDel() { var d = $("delModal"); if (d && d.hide) d.hide(); }
   function doDeleteApp(id) {
     state.apps = state.apps.filter(function (a) { return a.id !== id; });
     try {
@@ -2440,6 +2566,7 @@
   function wireDel() {
     var m = $("delModal"); if (!m) return;
     m.addEventListener("click", function (e) { if (e.target.closest("[data-delclose]")) closeDel(); });
+    m.addEventListener("toggle", function (e) { if (e.detail && e.detail.newState === "closed") pendingDelId = null; });
     $("delConfirm").addEventListener("click", function () { var id = pendingDelId; closeDel(); if (id) doDeleteApp(id); });
   }
 
@@ -2500,6 +2627,8 @@
 
     document.querySelector(".main").addEventListener("keydown", function (e) {
       if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      var sortk = e.target.closest && e.target.closest("[data-sort]");
+      if (sortk) { e.preventDefault(); setAppsSort(sortk.getAttribute("data-sort")); return; }
       var fr = e.target.closest && e.target.closest("[data-failure]");
       if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); anaStackAnchor = "latest"; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
       var kc = e.target.closest && e.target.closest("[data-cause]");
@@ -2508,6 +2637,15 @@
       if (ss) { e.preventDefault(); var sk = ss.getAttribute("data-anasort"); if (anaSort.key === sk) anaSort.dir = anaSort.dir === "asc" ? "desc" : "asc"; else { anaSort.key = sk; anaSort.dir = "desc"; } anaPage = 0; renderFailTableHost(); return; }
       var ssk2 = e.target.closest && e.target.closest("[data-symsort]");
       if (ssk2) { e.preventDefault(); var sk2 = ssk2.getAttribute("data-symsort"); if (symSort.key === sk2) symSort.dir = symSort.dir === "asc" ? "desc" : "asc"; else { symSort.key = sk2; symSort.dir = "desc"; } renderSymTableHost(); return; }
+    });
+    document.querySelector(".main").addEventListener("input", function (e) {
+      // Fluent text-input bubbles input; refresh only the table so the field keeps focus + caret.
+      if (e.target && e.target.id === "appsSearch") { appsSearch = e.target.value; refreshAppsTable(); }
+    });
+    document.querySelector(".main").addEventListener("change", function (e) {
+      if (!e.target) return;
+      if (e.target.id === "appsTypeFilter") { appsTypeFilter = e.target.value; refreshAppsTable(); }
+      else if (e.target.id === "appsStatusFilter") { appsStatusFilter = e.target.value; refreshAppsTable(); }
     });
     document.querySelector(".main").addEventListener("click", function (e) {
       if (e.target.closest("[data-certmodal]")) { e.preventDefault(); openModal(); return; }
@@ -2528,6 +2666,14 @@
       if (ms) { openSources(ms.getAttribute("data-sources")); return; }
       var del = e.target.closest("[data-delapp]");
       if (del) { confirmDeleteApp(del.getAttribute("data-delapp")); return; }
+      var pinApp = e.target.closest("[data-pinapp]");
+      if (pinApp) { togglePinApp(pinApp.getAttribute("data-pinapp")); return; }
+      var hideApp = e.target.closest("[data-hideapp]");
+      if (hideApp) { toggleHideApp(hideApp.getAttribute("data-hideapp")); return; }
+      var sortEl = e.target.closest("[data-sort]");
+      if (sortEl) { setAppsSort(sortEl.getAttribute("data-sort")); return; }
+      if (e.target.closest("[data-showhidden]")) { appsShowHidden = !appsShowHidden; renderApps(); return; }
+      if (e.target.closest("[data-appsclear]")) { appsSearch = ""; appsTypeFilter = "all"; appsStatusFilter = "all"; renderApps(); return; }
       var store = e.target.closest("[data-store]");
       if (store) { openPublish(store.getAttribute("data-store")); return; }
       var cont = e.target.closest("[data-continue]");

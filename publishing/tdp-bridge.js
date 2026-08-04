@@ -215,11 +215,31 @@
   // A just-published app has no telemetry yet. Instead of a wall of empty "0 / —" cards, show ONE
   // compact placeholder that sets expectations; the full metric dashboard would replace this once
   // real data exists.
+  function appStatsData() {
+    try { return JSON.parse(localStorage.getItem("tdp.appstats." + id) || "null"); } catch (e) { return null; }
+  }
+  function statFmt(n) { n = Math.round(n); if (n >= 1e6) return (+(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)) + "M"; if (n >= 1e3) return (+(n / 1e3).toFixed(n >= 1e4 ? 0 : 1)) + "K"; return "" + n; }
+  function liveStatCard(icon, label, value, mod) {
+    return '<div class="live-stat' + (mod ? " live-stat--" + mod : "") + '">' +
+      '<span class="live-stat__ico"><iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="live-stat__body"><span class="live-stat__label">' + label + '</span><strong class="live-stat__value">' + value + '</strong></div></div>';
+  }
+  // Once live, show the SAME headline figures as the portal Apps table (persisted to tdp.appstats.<id>
+  // by portal.js). Falls back to the "no analytics yet" note when nothing has been recorded yet.
   function liveStatsHTML() {
-    return '<div class="live-metrics-empty">' +
-      '<span class="live-metrics-empty__ico"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
-      '<div class="live-metrics-empty__text"><strong>No analytics yet</strong>' +
-        '<span>Installs, ratings and health will appear here as customers discover your app — usually within a day or two of going live.</span></div>' +
+    var s = appStatsData();
+    if (!s || s.installs == null) {
+      return '<div class="live-metrics-empty">' +
+        '<span class="live-metrics-empty__ico"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="live-metrics-empty__text"><strong>No analytics yet</strong>' +
+          '<span>Installs, ratings and health will appear here as customers discover your app — usually within a day or two of going live.</span></div>' +
+      '</div>';
+    }
+    var warn = (+s.crashRate) >= 5;
+    return '<div class="live-metrics">' +
+      liveStatCard("fluent:arrow-download-20-regular", "Installs", statFmt(s.installs), "") +
+      liveStatCard("fluent:pulse-20-regular", "Crash rate", (+s.crashRate).toFixed(2) + "%", warn ? "warn" : "ok") +
+      liveStatCard("fluent:star-20-regular", "Rating", (+s.rating).toFixed(1) + ' <small>(' + statFmt(s.ratingCount) + ')</small>', "") +
     '</div>';
   }
   // The published "app overview": at-a-glance stats + the management hub. The app header already

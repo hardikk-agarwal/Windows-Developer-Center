@@ -25,7 +25,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js" defer></script>
+<script src="tdp-bridge.js?v=2" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -1586,6 +1586,14 @@
   /* Package rows aren't expandable in review — drop the button affordance. */
   #flow-wrap.is-review-mode .ez-pkg-trow { cursor: default; }
 
+  /* L2 sub-views (experiments, add-ons, review details, update) drop the app-identity header — the
+     page-level back breadcrumb + the sub-view's own title carry context instead. */
+  #flow-wrap.is-subview .ez-head { display: none; }
+  /* In the experiments/add-ons panels the step tabs + submit are hidden too, so the whole banner
+     rail is just an empty rounded card — collapse it there. Review/update keep the banner for their
+     step nav (their editor is visible), so scope this to the panel sub-views via #editor[hidden]. */
+  #flow-wrap.is-subview:has(#editor[hidden]) .wz-banner { display: none; }
+
   /* ===== Product page experiments (A/B test the live listing) ===== */
   #experiments-panel[hidden] { display: none; }
   .exp__head { display: flex; align-items: flex-start; gap: var(--sp-12); margin-bottom: var(--sp-20); }
@@ -1593,11 +1601,11 @@
   .exp__back:hover { background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); color: var(--fg-1); }
   .exp__htext { flex: 1 1 auto; min-width: 0; }
   .exp__title { margin: 0; font-size: 20px; font-weight: 600; color: var(--fg-1); }
-  .exp__sub { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--fg-3); max-width: 62ch; }
+  .exp__sub { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--fg-3); text-wrap: pretty; }
   .exp__head fluent-button { flex: 0 0 auto; }
   /* Empty state */
   .exp-empty { text-align: center; padding: var(--sp-32) var(--sp-24); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); }
-  .exp-empty__ico { width: 56px; height: 56px; margin: 0 auto var(--sp-14); display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+  .exp-empty__art { width: 128px; height: 128px; margin: 0 auto var(--sp-16); display: block; object-fit: contain; }
   .exp-empty__title { margin: 0 0 var(--sp-6); font-size: 16px; font-weight: 600; color: var(--fg-1); }
   .exp-empty__sub { margin: 0 auto var(--sp-18); font-size: 13px; line-height: 19px; color: var(--fg-3); max-width: 46ch; }
   /* List of experiment cards */
@@ -1611,17 +1619,19 @@
   .exp-status--complete { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); }
   .exp-status--stopped { color: var(--fg-3); background: color-mix(in srgb, var(--fg-1) 10%, transparent); }
   /* A vs B comparison */
-  .exp-ab { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: var(--sp-10); }
-  .exp-ab__vs { align-self: center; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fg-4); }
-  .exp-variant { border: 1px solid var(--stroke-3); border-radius: var(--r-10); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); padding: var(--sp-12); display: flex; flex-direction: column; gap: var(--sp-8); }
-  .exp-variant--b { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
-  .exp-variant__tag { font-size: 11px; font-weight: 600; color: var(--fg-2); }
+  .exp-ab { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: var(--sp-12); }
+  .exp-ab__vs { align-self: center; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); border: 1px solid var(--stroke-3); }
+  .exp-variant { border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--layer); padding: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-10); }
+  .exp-variant--b { border-color: color-mix(in srgb, var(--brand) 32%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 5%, var(--layer)); }
+  .exp-variant__tag { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11.5px; font-weight: 600; color: var(--fg-2); }
+  .exp-variant__tag::before { content: ""; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--fg-3); }
   .exp-variant--b .exp-variant__tag { color: var(--brand); }
+  .exp-variant--b .exp-variant__tag::before { background: var(--brand); }
   .exp-variant__rate { margin-top: auto; font-size: 17px; font-weight: 700; color: var(--fg-1); font-variant-numeric: tabular-nums; }
   .exp-variant__rate small { display: block; font-size: 11px; font-weight: 400; color: var(--fg-3); }
   /* Assets */
   .exp-asset--logo { display: flex; }
-  .exp-logo { width: 60px; height: 60px; border-radius: var(--r-10); object-fit: cover; background: var(--subtle); }
+  .exp-logo { width: 60px; height: 60px; border-radius: var(--r-8); object-fit: cover; background: var(--subtle); }
   .exp-logo--empty { display: inline-block; }
   .exp-asset--shots { display: flex; gap: 6px; flex-wrap: wrap; }
   .exp-shot { width: 62px; height: 39px; border-radius: var(--r-6); object-fit: cover; background: var(--subtle); }
@@ -1637,26 +1647,47 @@
   .exp-choice { display: flex; align-items: center; gap: var(--sp-10); text-align: left; padding: var(--sp-12) var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-10); background: var(--layer); color: var(--fg-1); cursor: pointer; transition: border-color .14s, background .14s, box-shadow .14s; }
   .exp-choice:hover:not(.is-active) { border-color: var(--stroke-1); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); }
   .exp-choice.is-active { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--layer)); box-shadow: 0 0 0 1px var(--brand); }
-  .exp-choice > iconify-icon { flex: 0 0 auto; color: var(--fg-3); }
-  .exp-choice.is-active > iconify-icon { color: var(--brand); }
+  .exp-choice__ico { flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 6%, transparent); color: var(--fg-2); }
+  .exp-choice.is-active .exp-choice__ico { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
   .exp-choice__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .exp-choice__t b { font-size: 13.5px; font-weight: 600; }
   .exp-choice__t span { font-size: 12px; color: var(--fg-3); }
   .exp-choices__hint { margin: var(--sp-6) 0 0; font-size: 12px; color: var(--fg-4); }
-  .exp-ab--edit .exp-variant { min-height: 108px; }
-  .exp-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 78px; padding: var(--sp-12); border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); border-radius: var(--r-8); background: transparent; color: var(--fg-2); cursor: pointer; }
-  .exp-drop:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); border-color: var(--brand); }
-  .exp-drop > iconify-icon { color: var(--brand); }
-  .exp-drop span { font-size: 12.5px; font-weight: 600; }
+  .exp-ab--edit .exp-variant { min-height: 0; }
+  /* Line the two sides up: the current asset (A) and the uploaded variant (B) share one framed,
+     centered media tile; the empty variant is a dashed upload target of the same footprint. */
+  .exp-ab--edit .exp-asset--logo,
+  .exp-ab--edit .exp-asset--shots,
+  .exp-logo-btn,
+  .exp-drop { min-height: 128px; box-sizing: border-box; border-radius: var(--r-8); }
+  .exp-ab--edit .exp-asset--logo,
+  .exp-ab--edit .exp-asset--shots,
+  .exp-logo-btn { padding: var(--sp-12); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid var(--stroke-3); }
+  .exp-ab--edit .exp-asset--logo { display: grid; place-items: center; }
+  .exp-ab--edit .exp-asset--shots { display: flex; align-items: center; align-content: center; gap: var(--sp-6); flex-wrap: wrap; }
+  .exp-ab--edit .exp-logo { width: 76px; height: 76px; box-shadow: 0 2px 6px rgba(0, 0, 0, .28); }
+  .exp-logo-btn { position: relative; display: grid; place-items: center; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out); }
+  .exp-logo-btn:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); }
+  .exp-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-8); padding: var(--sp-12); border: 1px dashed color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 3%, transparent); color: var(--fg-2); cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .exp-drop:hover { background: color-mix(in srgb, var(--brand) 9%, transparent); border-color: var(--brand); }
+  .exp-drop__ico { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+  .exp-drop__t { font-size: 12.5px; font-weight: 600; color: var(--fg-1); }
   .exp-drop small { font-size: 11px; color: var(--fg-4); }
-  .exp-logo-btn { position: relative; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; }
-  .exp-asset__edit { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: #fff; box-shadow: 0 0 0 2px var(--layer); }
+  .exp-asset__edit { position: absolute; right: var(--sp-8); bottom: var(--sp-8); width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
   .exp-shot-wrap { position: relative; line-height: 0; }
   .exp-shot__del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; border: 0; background: var(--fg-1); color: var(--layer); cursor: pointer; }
   .exp-shot-add { width: 62px; height: 39px; display: grid; place-items: center; border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); border-radius: var(--r-6); background: transparent; color: var(--brand); cursor: pointer; }
   .exp-shot-add:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
   .exp-form__foot { display: flex; justify-content: flex-end; gap: var(--sp-10); padding-top: var(--sp-6); }
   @media (max-width: 640px) { .exp-choices { grid-template-columns: 1fr; } .exp-ab { grid-template-columns: 1fr; } .exp-ab__vs { justify-self: center; } }
+
+  /* Create/edit forms now render inside fluent-dialogs (exp-dialog / addon-dialog). Size them wide
+     enough for the A/B comparison and let a tall body scroll rather than push the actions off-screen. */
+  #exp-dialog, #exp-dialog::part(control), #exp-dialog::part(dialog) { width: min(620px, 94vw); max-width: min(620px, 94vw); }
+  #addon-dialog, #addon-dialog::part(control), #addon-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  #exp-dialog fluent-dialog-body::part(content), #addon-dialog fluent-dialog-body::part(content) { overflow-y: auto; max-height: 66vh; }
+  .exp-dialog__sub { margin: 0 0 var(--sp-16); font-size: 12.5px; line-height: 17px; color: var(--fg-3); }
+  #exp-dialog .exp-form--dialog, #addon-dialog .exp-form--dialog { max-width: none; gap: var(--sp-16); }
 
   /* ===== Add-ons (in-app products) manager ===== */
   #addons-panel[hidden] { display: none; }
@@ -3092,6 +3123,17 @@
   .live-metrics-empty__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .live-metrics-empty__text strong { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
   .live-metrics-empty__text span { font-size: 12px; line-height: 1.45; color: var(--fg-3); }
+  /* Live headline stats (installs / crash rate / rating) — mirrors the portal Apps-table figures. */
+  .live-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); margin-bottom: var(--sp-20); }
+  .live-stat { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-14) var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); }
+  .live-stat__ico { flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .live-stat--ok .live-stat__ico { background: color-mix(in srgb, var(--status-success) 16%, transparent); color: var(--status-success); }
+  .live-stat--warn .live-stat__ico { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
+  .live-stat__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .live-stat__label { font-size: 12px; color: var(--fg-3); }
+  .live-stat__value { font-size: 19px; font-weight: 600; color: var(--fg-1); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .live-stat__value small { font-size: 12px; font-weight: 400; color: var(--fg-3); margin-left: 3px; }
+  @media (max-width: 640px) { .live-metrics { grid-template-columns: 1fr; } }
 
   /* Hide the demo design-variant (A/B/C/D) switcher in the integrated portal. */
   .design-switch { display: none !important; }
@@ -3346,7 +3388,7 @@
 
     <!-- Page-level back navigation: sits above the entity banner, on the canvas (web convention —
          page navigation is separate from the entity-identity header card). -->
-    <a class="ez-back" href="../store-portal.html#apps"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Apps</a>
+    <a class="ez-back" href="../store-portal.html#apps"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> <span class="ez-back__txt">Apps</span></a>
 
     <!-- V2 left-stepper layout: identity + vertical steps + submit stack into a sticky left rail;
          the step content sits in the right column. Two direct children of .wz-layout. -->
@@ -4318,6 +4360,45 @@
     </label>
     <fluent-button slot="action" appearance="secondary" data-availability-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="availability-apply">Apply</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Create a product-page experiment (A/B test). Opened from the experiments panel's New/Create
+     button — the panel keeps the list, this dialog builds the variant. -->
+<fluent-dialog id="exp-dialog" modal-type="modal" aria-labelledby="exp-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="exp-dialog-title">
+      <iconify-icon icon="fluent:beaker-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
+      New experiment
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-exp-dclose aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="exp-dialog__sub">Pick one thing to test, then build a variant of your live listing.</p>
+    <div id="exp-dialog-body"></div>
+    <fluent-button slot="action" appearance="secondary" data-exp-dclose>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="exp-start" data-exp-start disabled>
+      <iconify-icon slot="start" icon="fluent:rocket-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+      Start experiment
+    </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Create or edit an add-on (in-app product). Opened from the add-ons panel's New/Create/Edit
+     buttons — the panel keeps the list, this dialog holds the form. -->
+<fluent-dialog id="addon-dialog" modal-type="modal" aria-labelledby="addon-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="addon-dialog-title">
+      <iconify-icon icon="fluent:puzzle-piece-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
+      <span id="addon-dialog-title-text">New add-on</span>
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-addon-dclose aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="exp-dialog__sub" id="addon-dialog-sub">Pick what you&rsquo;re selling, name it, and set a price.</p>
+    <div id="addon-dialog-body"></div>
+    <fluent-button slot="action" appearance="secondary" data-addon-dclose>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="addon-save" data-addon-save disabled>Create add-on</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -11883,6 +11964,7 @@
         contentAnswersConfirmed: contentAnswersConfirmed,
         ratingAppType: ratingAppType,
         ratingDone: !!state.rating,
+        reachVisited: !!reachVisited,
         selectedGenres: selectedGenres,
         shotsCount: (state.shots || []).length
       }));
@@ -11929,6 +12011,9 @@
       if (fDesc && d.desc != null) { try { fDesc.value = d.desc; } catch (e) {} }
       if (fCategory && d.category) { try { fCategory.value = d.category; } catch (e) {} }
       if (d.ratingDone) state.rating = true;
+      // Reach & price reads "done" only once opened; a submitted app has necessarily opened it, so
+      // treat published/in-review apps as visited too (covers data saved before this was persisted).
+      if (d.reachVisited || (app && (app.status === 'published' || app.status === 'in-review'))) reachVisited = true;
       // Rehydrate the DOM from the restored model (guarded — not every render is in this scope).
       if (typeof syncName === 'function') { try { syncName(); } catch (e) {} }
       if (typeof syncDesc === 'function') { try { syncDesc(); } catch (e) {} }
@@ -12034,6 +12119,7 @@
           const finalLogo = userIconDataUrl || pkgIconDataUrl;
           if (finalLogo) all[idx].icon = finalLogo;
           all[idx].rollout = adv.rollout;
+          if (v4Type) all[idx].packageType = v4Type;   // "What are you publishing" → portal Apps "Type" column
           localStorage.setItem('msstore.apps', JSON.stringify(all));
         }
         saveFlowData();   // persist the full editor state so Review / Update rehydrate on reload
@@ -12117,6 +12203,51 @@
     try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
     if (typeof window.startAppUpdate === 'function') window.startAppUpdate();
   }
+  // Leave the update flow WITHOUT submitting \u2014 back to the published hub (the app stays live).
+  function exitUpdateToHub() {
+    inUpdateFlow = false; window.__inUpdateFlow = false;
+    try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
+    var pill = $('app-status'); if (pill) { pill.textContent = 'Published'; pill.className = 'status-pill status-pill--published'; }
+    $('editor').hidden = true;
+    $('submit-bar').hidden = true;
+    $('state-done').hidden = false;
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  // ---- Page back arrow (\u201c\u2190 Apps\u201d): go UP one level. From a sub-view (Review details, Update,
+  //      Product page experiments, Add-ons) it returns to THIS app's hub; only from the hub itself does
+  //      it follow its href to the Apps list. The label tracks the level so it never lies. ----
+  (function () {
+    var back = document.querySelector('.ez-back'); if (!back) return;
+    function panelOpen(id) { var p = document.getElementById(id); return !!(p && !p.hidden); }
+    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel')); }
+    function syncBackLabel() {
+      var txt = back.querySelector('.ez-back__txt'); if (!txt) return;
+      txt.textContent = inSubview() ? ((fName && fName.value.trim()) || (app && app.name) || 'Overview') : 'Apps';
+    }
+    // In an L2 sub-view, drop the app-identity header \u2014 the breadcrumb + the sub-view's own title
+    // carry context. Guard the write so toggling is-subview doesn't re-trigger our #flow-wrap observer.
+    function syncSubviewChrome() {
+      var fw = document.getElementById('flow-wrap'); if (!fw) return;
+      var want = inSubview();
+      if (want !== fw.classList.contains('is-subview')) fw.classList.toggle('is-subview', want);
+    }
+    function onViewChange() { syncSubviewChrome(); syncBackLabel(); }
+    back.addEventListener('click', function (e) {
+      if (panelOpen('experiments-panel') && typeof exitExperiments === 'function') { e.preventDefault(); exitExperiments(); return; }
+      if (panelOpen('addons-panel') && typeof exitAddons === 'function') { e.preventDefault(); exitAddons(); return; }
+      if (window.__reviewMode && typeof exitReviewDetails === 'function') { e.preventDefault(); exitReviewDetails(); return; }
+      if (window.__inUpdateFlow) { e.preventDefault(); exitUpdateToHub(); return; }
+      // else: on the hub / draft editor \u2014 follow the href to the Apps list.
+    });
+    // Keep the label in sync as the view changes (review/update toggle a #flow-wrap class; the
+    // experiments/add-ons panels toggle [hidden]).
+    try {
+      var mo = new MutationObserver(onViewChange);
+      var fw = document.getElementById('flow-wrap'); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ['class'] });
+      ['experiments-panel', 'addons-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
+    } catch (e) {}
+    onViewChange();
+  })();
 
   // ---- Store availability: post-publish quick control to hide the app from NEW customers (existing
   //      customers keep access). Persisted per app; tdp-bridge's live hub reflects the state. ----
@@ -12159,13 +12290,18 @@
      look; each experiment pits the live listing (Control A) against a variant (B) you build here. */
   let experiments = [];
   let expDraft = null;            // { name, test:'logo'|'screenshots', variantLogo, variantShots:[] }
-  let expView = 'list';          // 'list' | 'create'
   function expKey() { return (app && app.id != null) ? 'tdp.experiments.' + app.id : null; }
   function loadExperiments() { try { experiments = JSON.parse(localStorage.getItem(expKey()) || '[]'); } catch (e) { experiments = []; } if (!Array.isArray(experiments)) experiments = []; }
   function saveExperiments() { try { var k = expKey(); if (k) localStorage.setItem(k, JSON.stringify(experiments)); } catch (e) {} }
   function currentLogoSrc() { return userIconDataUrl || pkgIconDataUrl || (typeof themedAppLogo === 'function' ? themedAppLogo(baseIcon) : baseIcon) || ''; }
   function currentShots() { return ((state && state.shots) || []).slice(); }
   function expImg(src, cls) { return src ? '<img class="' + cls + '" src="' + src + '" alt="" />' : '<span class="' + cls + ' ' + cls + '--empty"></span>'; }
+  // Fluent spot illustration for zero states — resolve the theme-matched PNG up front (these panels
+  // render after fluent-bootstrap's one-time swap) and keep data-theme-image so it re-swaps on toggle.
+  function spotArt(name, cls) {
+    var dark = (document.documentElement.getAttribute('data-theme') || 'dark') !== 'light';
+    return '<img class="' + cls + '" src="assets/' + name + '-' + (dark ? 'dark' : 'light') + '.png" data-theme-image="' + name + '" alt="" aria-hidden="true" />';
+  }
   function expEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[m]; }); }
   // Deterministic demo metrics so a given experiment always reads the same across renders.
   function expMetric(exp) {
@@ -12177,7 +12313,7 @@
   let _expHidden = [];
   window.startExperiments = function () {
     loadExperiments();
-    expView = 'list'; expDraft = null;
+    expDraft = null;
     var panel = $('experiments-panel'); if (!panel) return;
     // Take over the post-publish area: hide every #state-done child (cert timeline, hub, demo
     // switch, actions) except this panel, remembering each prior state to restore on exit.
@@ -12200,19 +12336,17 @@
   }
   function renderExperiments() {
     var p = $('experiments-panel'); if (!p) return;
-    p.innerHTML = expView === 'create' ? expCreateHTML() : expListHTML();
-    if (expView === 'create' && $('exp-name')) $('exp-name').value = (expDraft && expDraft.name) || '';
+    p.innerHTML = expListHTML();  // the panel is always the list now; creating happens in #exp-dialog
   }
   function expListHTML() {
     var head = '<div class="exp__head">' +
-      '<button type="button" class="exp__back" data-exp-back aria-label="Back to app"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
       '<div class="exp__htext"><h2 class="exp__title">Product page experiments</h2>' +
       '<p class="exp__sub">A/B test your app logo or screenshots against your live listing. Real visitors see each version \u2014 keep the winner with one click.</p></div>' +
       (experiments.length ? '<fluent-button appearance="primary" data-exp-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New experiment</fluent-button>' : '') +
       '</div>';
     var body = experiments.length
       ? '<div class="exp-list">' + experiments.map(expCardHTML).join('') + '</div>'
-      : '<div class="exp-empty"><div class="exp-empty__ico"><iconify-icon icon="fluent:beaker-24-regular" width="28" height="28" aria-hidden="true"></iconify-icon></div>' +
+      : '<div class="exp-empty">' + spotArt('rocket', 'exp-empty__art') +
         '<h3 class="exp-empty__title">Test a new logo or screenshots</h3>' +
         '<p class="exp-empty__sub">Show some visitors a different version of your Store listing and let real installs pick the winner \u2014 no new package, no redeploy.</p>' +
         '<fluent-button appearance="primary" data-exp-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create experiment</fluent-button></div>';
@@ -12251,7 +12385,7 @@
   }
   function expChoice(val, icon, title, sub, cur) {
     return '<button type="button" class="exp-choice' + (cur === val ? ' is-active' : '') + '" data-exp-test="' + val + '" aria-pressed="' + (cur === val) + '">' +
-      '<iconify-icon icon="' + icon + '" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+      '<span class="exp-choice__ico"><iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
       '<span class="exp-choice__t"><b>' + title + '</b><span>' + sub + '</span></span></button>';
   }
   function expEditAbHTML(d) {
@@ -12260,7 +12394,7 @@
       control = '<div class="exp-asset exp-asset--logo">' + expImg(currentLogoSrc(), 'exp-logo') + '</div>';
       variant = d.variantLogo
         ? '<button type="button" class="exp-logo-btn" data-exp-add-logo aria-label="Change variant logo">' + expImg(d.variantLogo, 'exp-logo') + '<span class="exp-asset__edit"><iconify-icon icon="fluent:edit-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></span></button>'
-        : '<button type="button" class="exp-drop" data-exp-add-logo><iconify-icon icon="fluent:arrow-upload-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon><span>Upload variant logo</span><small>PNG \u00b7 300\u00d7300</small></button>';
+        : '<button type="button" class="exp-drop" data-exp-add-logo><span class="exp-drop__ico"><iconify-icon icon="fluent:arrow-upload-24-regular" width="22" height="22" aria-hidden="true"></iconify-icon></span><span class="exp-drop__t">Upload variant logo</span><small>PNG \u00b7 300\u00d7300</small></button>';
     } else {
       var cs = currentShots();
       control = '<div class="exp-asset exp-asset--shots">' + (cs.length ? cs.slice(0, 4).map(function (s) { return expImg(s, 'exp-shot'); }).join('') : '<span class="exp-asset__none">No screenshots on your live page</span>') + '</div>';
@@ -12270,22 +12404,31 @@
     return '<div class="exp-ab exp-ab--edit"><div class="exp-variant"><span class="exp-variant__tag">A \u00b7 Current (live)</span>' + control + '</div>' +
       '<div class="exp-ab__vs">vs</div><div class="exp-variant exp-variant--b"><span class="exp-variant__tag">B \u00b7 Your variant</span>' + variant + '</div></div>';
   }
-  function expCreateHTML() {
+  // The create form now lives in #exp-dialog; this renders just its FIELDS (the dialog supplies the
+  // title bar and the Cancel / Start experiment actions).
+  function expFieldsHTML() {
     var d = expDraft || { test: 'logo', variantShots: [] };
-    var head = '<div class="exp__head"><button type="button" class="exp__back" data-exp-back-list aria-label="Back to experiments"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
-      '<div class="exp__htext"><h2 class="exp__title">New experiment</h2><p class="exp__sub">Pick one thing to test, then build a variant of your live listing.</p></div></div>';
-    var form = '<div class="exp-form">' +
+    return '<div class="exp-form exp-form--dialog">' +
       '<div class="field"><label class="field__lbl" for="exp-name">Experiment name</label><fluent-text-input id="exp-name" appearance="outline" placeholder="e.g. Bolder logo test" style="width:100%"></fluent-text-input></div>' +
       '<div class="field"><label class="field__lbl">What do you want to test?</label><div class="exp-choices">' +
         expChoice('logo', 'fluent:image-20-regular', 'App logo', 'Try a different icon', d.test) +
         expChoice('screenshots', 'fluent:image-multiple-20-regular', 'Screenshots', 'Try different store images', d.test) +
       '</div><p class="exp-choices__hint">Test one asset at a time for the clearest result.</p></div>' +
-      '<div class="field"><label class="field__lbl">Current vs your variant</label>' + expEditAbHTML(d) + '</div>' +
-      '<div class="exp-form__foot"><fluent-button appearance="secondary" data-exp-cancel>Cancel</fluent-button>' +
-      '<fluent-button appearance="primary" id="exp-start" data-exp-start ' + (expCanStart() ? '' : 'disabled') + '><iconify-icon slot="start" icon="fluent:rocket-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Start experiment</fluent-button></div>' +
-      '</div>';
-    return '<div class="exp exp--create">' + head + form + '</div>';
+      '<div class="field"><label class="field__lbl">Current vs your variant</label>' + expEditAbHTML(d) + '</div></div>';
   }
+  function renderExpDialogBody() {
+    var body = $('exp-dialog-body'); if (!body) return;
+    body.innerHTML = expFieldsHTML();
+    if ($('exp-name')) $('exp-name').value = (expDraft && expDraft.name) || '';
+    var b = $('exp-start'); if (b) { if (expCanStart()) b.removeAttribute('disabled'); else b.setAttribute('disabled', ''); }
+  }
+  function openExpDialog() {
+    expDraft = { name: '', test: 'logo', variantLogo: null, variantShots: [] };
+    renderExpDialogBody();
+    var dlg = $('exp-dialog'); if (dlg && dlg.show) dlg.show();
+    setTimeout(function () { try { $('exp-name').focus(); } catch (e) {} }, 60);
+  }
+  function closeExpDialog() { var dlg = $('exp-dialog'); if (dlg && dlg.hide) dlg.hide(); }
   function expCanStart() {
     if (!expDraft) return false;
     if ((expDraft.name || '').trim().length < 2) return false;
@@ -12293,9 +12436,10 @@
   }
   function startExperiment() {
     if (!expCanStart()) return;
+    var nm = expDraft.name.trim();
     experiments.unshift({
       id: 'exp-' + Date.now().toString(36),
-      name: expDraft.name.trim(),
+      name: nm,
       test: expDraft.test,
       variantLogo: expDraft.test === 'logo' ? expDraft.variantLogo : null,
       variantShots: expDraft.test === 'screenshots' ? expDraft.variantShots.slice() : [],
@@ -12303,8 +12447,7 @@
       status: 'running', created: Date.now(), days: 14
     });
     saveExperiments();
-    var nm = expDraft.name.trim();
-    expView = 'list'; expDraft = null;
+    closeExpDialog(); expDraft = null;
     renderExperiments();
     announce('Experiment \u201c' + nm + '\u201d started \u2014 now running against your live page.');
   }
@@ -12326,31 +12469,37 @@
     announce('Experiment stopped.');
   }
   (function wireExperiments() {
+    // The panel hosts the list; the create form lives in #exp-dialog. Wire each surface separately.
     var p = $('experiments-panel');
-    if (p) {
-      p.addEventListener('click', function (e) {
+    if (p) p.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-exp-new]')) { openExpDialog(); return; }
+      var w = t.closest('[data-exp-winner]'); if (w) { declareWinner(w.getAttribute('data-exp-id'), w.getAttribute('data-exp-winner')); return; }
+      var st = t.closest('[data-exp-stop]'); if (st) { stopExperiment(st.getAttribute('data-exp-id')); return; }
+    });
+    var dlg = $('exp-dialog');
+    if (dlg) {
+      dlg.addEventListener('click', function (e) {
         var t = e.target;
-        if (t.closest('[data-exp-back]')) { exitExperiments(); return; }
-        if (t.closest('[data-exp-back-list]') || t.closest('[data-exp-cancel]')) { expView = 'list'; expDraft = null; renderExperiments(); return; }
-        if (t.closest('[data-exp-new]')) { expDraft = { name: '', test: 'logo', variantLogo: null, variantShots: [] }; expView = 'create'; renderExperiments(); return; }
-        var ch = t.closest('[data-exp-test]'); if (ch) { if (expDraft) { expDraft.test = ch.getAttribute('data-exp-test'); renderExperiments(); } return; }
+        if (t.closest('[data-exp-dclose]')) { closeExpDialog(); return; }
+        var ch = t.closest('[data-exp-test]'); if (ch) { if (expDraft) { expDraft.test = ch.getAttribute('data-exp-test'); renderExpDialogBody(); } return; }
         if (t.closest('[data-exp-add-logo]')) { if ($('exp-logo-file')) $('exp-logo-file').click(); return; }
         if (t.closest('[data-exp-add-shot]')) { if ($('exp-shot-file')) $('exp-shot-file').click(); return; }
-        var ds = t.closest('[data-exp-del-shot]'); if (ds) { if (expDraft) { expDraft.variantShots.splice(+ds.getAttribute('data-exp-del-shot'), 1); renderExperiments(); } return; }
+        var ds = t.closest('[data-exp-del-shot]'); if (ds) { if (expDraft) { expDraft.variantShots.splice(+ds.getAttribute('data-exp-del-shot'), 1); renderExpDialogBody(); } return; }
         if (t.closest('[data-exp-start]')) { startExperiment(); return; }
-        var w = t.closest('[data-exp-winner]'); if (w) { declareWinner(w.getAttribute('data-exp-id'), w.getAttribute('data-exp-winner')); return; }
-        var st = t.closest('[data-exp-stop]'); if (st) { stopExperiment(st.getAttribute('data-exp-id')); return; }
       });
-      p.addEventListener('input', function (e) {
-        if (e.target && e.target.id === 'exp-name' && expDraft) { expDraft.name = e.target.value; var b = $('exp-start'); if (b) b.disabled = !expCanStart(); }
+      dlg.addEventListener('input', function (e) {
+        if (e.target && e.target.id === 'exp-name' && expDraft) { expDraft.name = e.target.value; var b = $('exp-start'); if (b) { if (expCanStart()) b.removeAttribute('disabled'); else b.setAttribute('disabled', ''); } }
       });
+      // Esc / backdrop dismiss clears the in-progress draft so a reopened dialog starts fresh.
+      dlg.addEventListener('toggle', function (e) { if (e.detail && e.detail.newState === 'closed') expDraft = null; });
     }
     var lf = $('exp-logo-file');
     if (lf) lf.addEventListener('change', function (e) {
       var f = e.target.files && e.target.files[0];
       if (f && /^image\//.test(f.type) && typeof openImageEditDialog === 'function') {
         var r = new FileReader();
-        r.onload = function () { openImageEditDialog({ dataUrl: r.result, aspect: 1, title: 'Variant logo', onApply: function (u) { if (expDraft) { expDraft.variantLogo = u; renderExperiments(); } } }); };
+        r.onload = function () { openImageEditDialog({ dataUrl: r.result, aspect: 1, title: 'Variant logo', onApply: function (u) { if (expDraft) { expDraft.variantLogo = u; renderExpDialogBody(); } } }); };
         r.readAsDataURL(f);
       }
       e.target.value = '';
@@ -12362,7 +12511,7 @@
       var next = function () {
         if (i >= files.length || !expDraft) return;
         var f = files[i++], r = new FileReader();
-        r.onload = function () { openImageEditDialog({ dataUrl: r.result, aspect: 16 / 10, title: 'Variant screenshot', onApply: function (u) { if (expDraft) { expDraft.variantShots.push(u); renderExperiments(); } setTimeout(next, 60); } }); };
+        r.onload = function () { openImageEditDialog({ dataUrl: r.result, aspect: 16 / 10, title: 'Variant screenshot', onApply: function (u) { if (expDraft) { expDraft.variantShots.push(u); renderExpDialogBody(); } setTimeout(next, 60); } }); };
         r.readAsDataURL(f);
       };
       next();
@@ -12376,7 +12525,6 @@
      rides along as a consumable sub-option. Per-app catalog persisted in localStorage. */
   let addons = [];
   let addonDraft = null;    // { id?, type, tracking, name, productId, price, period, trial, _idEdited }
-  let addonView = 'list';   // 'list' | 'form'
   function addonKey() { return (app && app.id != null) ? 'tdp.addons.' + app.id : null; }
   function loadAddons() { try { addons = JSON.parse(localStorage.getItem(addonKey()) || '[]'); } catch (e) { addons = []; } if (!Array.isArray(addons)) addons = []; }
   function saveAddons() { try { var k = addonKey(); if (k) localStorage.setItem(k, JSON.stringify(addons)); } catch (e) {} }
@@ -12404,7 +12552,7 @@
   let _addonsHidden = [];
   window.startAddons = function () {
     loadAddons();
-    addonView = 'list'; addonDraft = null;
+    addonDraft = null;
     var panel = $('addons-panel'); if (!panel) return;
     // Take over the post-publish area: hide every #state-done sibling, remembering each to restore.
     _addonsHidden = [];
@@ -12426,23 +12574,17 @@
   }
   function renderAddons() {
     var p = $('addons-panel'); if (!p) return;
-    p.innerHTML = addonView === 'form' ? addonFormHTML() : addonListHTML();
-    if (addonView === 'form' && addonDraft) {
-      if ($('addon-name')) $('addon-name').value = addonDraft.name || '';
-      if ($('addon-id')) $('addon-id').value = addonDraft.productId || '';
-      if ($('addon-price')) $('addon-price').value = String(addonDraft.price != null ? addonDraft.price : 0);
-    }
+    p.innerHTML = addonListHTML();  // the panel is always the list now; the form lives in #addon-dialog
   }
   function addonListHTML() {
     var head = '<div class="exp__head">' +
-      '<button type="button" class="exp__back" data-addon-back aria-label="Back to app"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
       '<div class="exp__htext"><h2 class="exp__title">Add-ons</h2>' +
       '<p class="exp__sub">Sell extras inside your app \u2014 unlocks, consumables and subscriptions. Customers buy them from your Store listing or right in your app.</p></div>' +
       (addons.length ? '<fluent-button appearance="primary" data-addon-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New add-on</fluent-button>' : '') +
       '</div>';
     var body = addons.length
       ? '<div class="addon-list">' + addons.map(addonCardHTML).join('') + '</div>'
-      : '<div class="exp-empty"><div class="exp-empty__ico"><iconify-icon icon="fluent:puzzle-piece-24-regular" width="28" height="28" aria-hidden="true"></iconify-icon></div>' +
+      : '<div class="exp-empty">' + spotArt('add', 'exp-empty__art') +
         '<h3 class="exp-empty__title">Sell extras inside your app</h3>' +
         '<p class="exp-empty__sub">Offer a one-time unlock, consumable currency, or a subscription \u2014 no new app submission needed.</p>' +
         '<fluent-button appearance="primary" data-addon-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create add-on</fluent-button></div>';
@@ -12465,7 +12607,7 @@
   function addonTypeCardHTML(k, cur, locked) {
     var t = ADDON_TYPES[k], on = cur === k;
     return '<button type="button" class="exp-choice' + (on ? ' is-active' : '') + '" data-addon-type="' + k + '"' + (locked && !on ? ' disabled' : '') + ' aria-pressed="' + on + '">' +
-      '<iconify-icon icon="' + t.icon + '" width="24" height="24" aria-hidden="true"></iconify-icon>' +
+      '<span class="exp-choice__ico"><iconify-icon icon="' + t.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
       '<span class="exp-choice__t"><b>' + t.label + '</b><span>' + t.example + '</span></span></button>';
   }
   function addonSeg(group, val, label, cur) {
@@ -12484,10 +12626,10 @@
     }
     return '';
   }
-  function addonFormHTML() {
+  // The create/edit form now lives in #addon-dialog; this renders just its FIELDS. The dialog supplies
+  // the title (updated per new/edit), subtitle, and the Cancel / Create/Save actions.
+  function addonFieldsHTML() {
     var d = addonDraft || { type: 'unlock', price: 0 }, editing = !!d.id;
-    var head = '<div class="exp__head"><button type="button" class="exp__back" data-addon-back-list aria-label="Back to add-ons"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
-      '<div class="exp__htext"><h2 class="exp__title">' + (editing ? 'Edit add-on' : 'New add-on') + '</h2><p class="exp__sub">' + (editing ? 'Update the name or price \u2014 type and product ID stay the same.' : 'Pick what you\u2019re selling, name it, and set a price.') + '</p></div></div>';
     var types = '<div class="field"><label class="field__lbl">Product type</label><div class="addon-types">' +
       Object.keys(ADDON_TYPES).map(function (k) { return addonTypeCardHTML(k, d.type, editing); }).join('') + '</div>' +
       (editing ? '<p class="addon-locked-note">Type can\u2019t change after an add-on is created.</p>' : '') + '</div>';
@@ -12500,10 +12642,34 @@
       '<p class="addon-id-note"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>The ID you reference in your code \u2014 customers never see it' + (editing ? '. Locked after creation.' : ', and it can\u2019t change once published.') + '</span></p></div>';
     var price = '<div class="field"><label class="field__lbl" for="addon-price">Price</label>' +
       '<select id="addon-price" class="ez-native-select addon-price-select">' + ADDON_PRICES.map(function (p) { return '<option value="' + p + '">' + (p ? '$' + p.toFixed(2) + (d.type === 'subscription' ? (d.period === 'yearly' ? ' / year' : ' / month') : '') : (d.type === 'subscription' ? 'Free (trial only)' : 'Free')) + '</option>'; }).join('') + '</select></div>';
-    var foot = '<div class="exp-form__foot"><fluent-button appearance="secondary" data-addon-cancel>Cancel</fluent-button>' +
-      '<fluent-button appearance="primary" id="addon-save" data-addon-save ' + (addonCanSave() ? '' : 'disabled') + '>' + (editing ? 'Save changes' : 'Create add-on') + '</fluent-button></div>';
-    return '<div class="exp exp--create">' + head + '<div class="exp-form">' + types + opts + name + pid + price + foot + '</div></div>';
+    return '<div class="exp-form exp-form--dialog">' + types + opts + name + pid + price + '</div>';
   }
+  function renderAddonDialogBody() {
+    var body = $('addon-dialog-body'); if (!body) return;
+    body.innerHTML = addonFieldsHTML();
+    if (addonDraft) {
+      if ($('addon-name')) $('addon-name').value = addonDraft.name || '';
+      if ($('addon-id')) $('addon-id').value = addonDraft.productId || '';
+      if ($('addon-price')) $('addon-price').value = String(addonDraft.price != null ? addonDraft.price : 0);
+    }
+    var editing = !!(addonDraft && addonDraft.id);
+    var tt = $('addon-dialog-title-text'); if (tt) tt.textContent = editing ? 'Edit add-on' : 'New add-on';
+    var sub = $('addon-dialog-sub'); if (sub) sub.textContent = editing ? 'Update the name or price \u2014 type and product ID stay the same.' : 'Pick what you\u2019re selling, name it, and set a price.';
+    var save = $('addon-save'); if (save) save.textContent = editing ? 'Save changes' : 'Create add-on';
+    updateAddonSave();
+  }
+  function openAddonDialog(editId) {
+    if (editId) {
+      var a = addons.filter(function (x) { return x.id === editId; })[0]; if (!a) return;
+      addonDraft = { id: a.id, type: a.type, tracking: a.tracking || 'store', name: a.name, productId: a.productId, price: a.price, period: a.period || 'monthly', trial: a.trial || 'none', _idEdited: true };
+    } else {
+      addonDraft = { type: 'unlock', tracking: 'store', name: '', productId: '', price: 0, period: 'monthly', trial: 'none', _idEdited: false };
+    }
+    renderAddonDialogBody();
+    var dlg = $('addon-dialog'); if (dlg && dlg.show) dlg.show();
+    if (!editId) setTimeout(function () { try { $('addon-name').focus(); } catch (e) {} }, 60);
+  }
+  function closeAddonDialog() { var dlg = $('addon-dialog'); if (dlg && dlg.hide) dlg.hide(); }
   function createOrSaveAddon() {
     if (!addonCanSave()) return;
     var d = addonDraft, nm = d.name.trim();
@@ -12522,7 +12688,7 @@
     }
     saveAddons();
     var wasEdit = !!d.id;
-    addonView = 'list'; addonDraft = null;
+    closeAddonDialog(); addonDraft = null;
     renderAddons();
     announce('Add-on \u201c' + nm + (wasEdit ? '\u201d saved.' : '\u201d created \u2014 publish it when you\u2019re ready.'));
   }
@@ -12532,11 +12698,7 @@
     saveAddons(); renderAddons();
     announce('Add-on \u201c' + a.name + '\u201d is now live in the Store.');
   }
-  function editAddon(id) {
-    var a = addons.filter(function (x) { return x.id === id; })[0]; if (!a) return;
-    addonDraft = { id: a.id, type: a.type, tracking: a.tracking || 'store', name: a.name, productId: a.productId, price: a.price, period: a.period || 'monthly', trial: a.trial || 'none', _idEdited: true };
-    addonView = 'form'; renderAddons();
-  }
+  function editAddon(id) { openAddonDialog(id); }
   function deleteAddon(id) {
     addons = addons.filter(function (x) { return x.id !== id; });
     saveAddons(); renderAddons();
@@ -12545,32 +12707,40 @@
   // Toggle the ATTRIBUTE (not the .disabled property) — fluent-button reflects the attribute reliably.
   function updateAddonSave() { var b = $('addon-save'); if (!b) return; if (addonCanSave()) b.removeAttribute('disabled'); else b.setAttribute('disabled', ''); }
   (function wireAddons() {
-    var p = $('addons-panel'); if (!p) return;
-    p.addEventListener('click', function (e) {
+    // The panel hosts the list; the create/edit form lives in #addon-dialog. Wire each separately.
+    var p = $('addons-panel');
+    if (p) p.addEventListener('click', function (e) {
       var t = e.target;
-      if (t.closest('[data-addon-back]')) { exitAddons(); return; }
-      if (t.closest('[data-addon-back-list]') || t.closest('[data-addon-cancel]')) { addonView = 'list'; addonDraft = null; renderAddons(); return; }
-      if (t.closest('[data-addon-new]')) { addonDraft = { type: 'unlock', tracking: 'store', name: '', productId: '', price: 0, period: 'monthly', trial: 'none', _idEdited: false }; addonView = 'form'; renderAddons(); return; }
-      var ty = t.closest('[data-addon-type]'); if (ty) { if (addonDraft && !addonDraft.id) { addonDraft.type = ty.getAttribute('data-addon-type'); renderAddons(); } return; }
-      var seg = t.closest('[data-addon-seg]'); if (seg) { if (addonDraft) { addonDraft[seg.getAttribute('data-addon-seg')] = seg.getAttribute('data-val'); renderAddons(); } return; }
-      if (t.closest('[data-addon-save]')) { createOrSaveAddon(); return; }
+      if (t.closest('[data-addon-new]')) { openAddonDialog(); return; }
       var pub = t.closest('[data-addon-publish]'); if (pub) { publishAddon(pub.getAttribute('data-addon-publish')); return; }
-      var ed = t.closest('[data-addon-edit]'); if (ed) { editAddon(ed.getAttribute('data-addon-edit')); return; }
+      var ed = t.closest('[data-addon-edit]'); if (ed) { openAddonDialog(ed.getAttribute('data-addon-edit')); return; }
       var dl = t.closest('[data-addon-del]'); if (dl) { deleteAddon(dl.getAttribute('data-addon-del')); return; }
     });
-    p.addEventListener('input', function (e) {
-      if (!addonDraft) return;
-      if (e.target && e.target.id === 'addon-name') {
-        addonDraft.name = e.target.value;
-        if (!addonDraft._idEdited) { addonDraft.productId = addonSlug(e.target.value); var idf = $('addon-id'); if (idf) idf.value = addonDraft.productId; }
-        updateAddonSave();
-      } else if (e.target && e.target.id === 'addon-id') {
-        addonDraft._idEdited = true; addonDraft.productId = e.target.value; updateAddonSave();
-      }
-    });
-    p.addEventListener('change', function (e) {
-      if (addonDraft && e.target && e.target.id === 'addon-price') addonDraft.price = parseFloat(e.target.value) || 0;
-    });
+    var dlg = $('addon-dialog');
+    if (dlg) {
+      dlg.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t.closest('[data-addon-dclose]')) { closeAddonDialog(); return; }
+        var ty = t.closest('[data-addon-type]'); if (ty) { if (addonDraft && !addonDraft.id) { addonDraft.type = ty.getAttribute('data-addon-type'); renderAddonDialogBody(); } return; }
+        var seg = t.closest('[data-addon-seg]'); if (seg) { if (addonDraft) { addonDraft[seg.getAttribute('data-addon-seg')] = seg.getAttribute('data-val'); renderAddonDialogBody(); } return; }
+        if (t.closest('[data-addon-save]')) { createOrSaveAddon(); return; }
+      });
+      dlg.addEventListener('input', function (e) {
+        if (!addonDraft) return;
+        if (e.target && e.target.id === 'addon-name') {
+          addonDraft.name = e.target.value;
+          if (!addonDraft._idEdited) { addonDraft.productId = addonSlug(e.target.value); var idf = $('addon-id'); if (idf) idf.value = addonDraft.productId; }
+          updateAddonSave();
+        } else if (e.target && e.target.id === 'addon-id') {
+          addonDraft._idEdited = true; addonDraft.productId = e.target.value; updateAddonSave();
+        }
+      });
+      dlg.addEventListener('change', function (e) {
+        if (addonDraft && e.target && e.target.id === 'addon-price') addonDraft.price = parseFloat(e.target.value) || 0;
+      });
+      // Esc / backdrop dismiss clears the in-progress draft so a reopened dialog starts fresh.
+      dlg.addEventListener('toggle', function (e) { if (e.detail && e.detail.newState === 'closed') addonDraft = null; });
+    }
   })();
   function openSubmitFlow() {
     if ($('submit').disabled) return;
