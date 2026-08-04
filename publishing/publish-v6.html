@@ -1569,6 +1569,123 @@
   #flow-wrap.is-review-mode .wz-stepind__updated { display: none !important; }
   #flow-wrap.is-review-mode .ez-apphead__nameedit { display: none; }
   #flow-wrap.is-review-mode .ez-apphead__namebtn { pointer-events: none; cursor: default; }
+  /* Read-only review: hide every add/remove/edit control so it reads purely as "details you submitted". */
+  #flow-wrap.is-review-mode #add-more-pkg,
+  #flow-wrap.is-review-mode #pkg-add-surface,
+  #flow-wrap.is-review-mode .ez-pkg-remove,
+  #flow-wrap.is-review-mode .ez-pkg-edit,
+  #flow-wrap.is-review-mode .ez-pkg-chev,
+  #flow-wrap.is-review-mode .ez-pv-shot-add,
+  #flow-wrap.is-review-mode .ez-pv-shot__del,
+  #flow-wrap.is-review-mode .ez-trailer-add-btn,
+  #flow-wrap.is-review-mode .ez-hero-media__remove,
+  #flow-wrap.is-review-mode .ez-hero-empty,
+  #flow-wrap.is-review-mode .price-sale-item__remove { display: none !important; }
+  /* No "required but empty" asterisks in read-only (you can't fill them here). */
+  #flow-wrap.is-review-mode .live-edit-target::before { content: none !important; }
+  /* Package rows aren't expandable in review — drop the button affordance. */
+  #flow-wrap.is-review-mode .ez-pkg-trow { cursor: default; }
+
+  /* ===== Product page experiments (A/B test the live listing) ===== */
+  #experiments-panel[hidden] { display: none; }
+  .exp__head { display: flex; align-items: flex-start; gap: var(--sp-12); margin-bottom: var(--sp-20); }
+  .exp__back { flex: 0 0 auto; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-8); border: 1px solid var(--stroke-2); background: var(--layer); color: var(--fg-2); cursor: pointer; }
+  .exp__back:hover { background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); color: var(--fg-1); }
+  .exp__htext { flex: 1 1 auto; min-width: 0; }
+  .exp__title { margin: 0; font-size: 20px; font-weight: 600; color: var(--fg-1); }
+  .exp__sub { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--fg-3); max-width: 62ch; }
+  .exp__head fluent-button { flex: 0 0 auto; }
+  /* Empty state */
+  .exp-empty { text-align: center; padding: var(--sp-32) var(--sp-24); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); }
+  .exp-empty__ico { width: 56px; height: 56px; margin: 0 auto var(--sp-14); display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+  .exp-empty__title { margin: 0 0 var(--sp-6); font-size: 16px; font-weight: 600; color: var(--fg-1); }
+  .exp-empty__sub { margin: 0 auto var(--sp-18); font-size: 13px; line-height: 19px; color: var(--fg-3); max-width: 46ch; }
+  /* List of experiment cards */
+  .exp-list { display: flex; flex-direction: column; gap: var(--sp-14); }
+  .exp-card { border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); padding: var(--sp-16); }
+  .exp-card__head { display: flex; align-items: center; gap: var(--sp-10); flex-wrap: wrap; margin-bottom: var(--sp-14); }
+  .exp-card__name { font-size: 15px; font-weight: 600; color: var(--fg-1); }
+  .exp-card__meta { font-size: 12px; color: var(--fg-3); }
+  .exp-status { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 3px 9px; border-radius: var(--r-full); }
+  .exp-status--running { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 16%, transparent); }
+  .exp-status--complete { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); }
+  .exp-status--stopped { color: var(--fg-3); background: color-mix(in srgb, var(--fg-1) 10%, transparent); }
+  /* A vs B comparison */
+  .exp-ab { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: var(--sp-10); }
+  .exp-ab__vs { align-self: center; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fg-4); }
+  .exp-variant { border: 1px solid var(--stroke-3); border-radius: var(--r-10); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); padding: var(--sp-12); display: flex; flex-direction: column; gap: var(--sp-8); }
+  .exp-variant--b { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
+  .exp-variant__tag { font-size: 11px; font-weight: 600; color: var(--fg-2); }
+  .exp-variant--b .exp-variant__tag { color: var(--brand); }
+  .exp-variant__rate { margin-top: auto; font-size: 17px; font-weight: 700; color: var(--fg-1); font-variant-numeric: tabular-nums; }
+  .exp-variant__rate small { display: block; font-size: 11px; font-weight: 400; color: var(--fg-3); }
+  /* Assets */
+  .exp-asset--logo { display: flex; }
+  .exp-logo { width: 60px; height: 60px; border-radius: var(--r-10); object-fit: cover; background: var(--subtle); }
+  .exp-logo--empty { display: inline-block; }
+  .exp-asset--shots { display: flex; gap: 6px; flex-wrap: wrap; }
+  .exp-shot { width: 62px; height: 39px; border-radius: var(--r-6); object-fit: cover; background: var(--subtle); }
+  .exp-asset__none { font-size: 12px; color: var(--fg-4); }
+  .exp-card__foot { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--stroke-3); }
+  .exp-card__hint { flex: 1 1 auto; min-width: 0; font-size: 12.5px; color: var(--fg-2); }
+  .exp-card__acts { display: flex; gap: var(--sp-8); }
+  /* Create form */
+  .exp-form { display: flex; flex-direction: column; gap: var(--sp-20); max-width: 720px; }
+  .exp-form .field { display: flex; flex-direction: column; gap: var(--sp-8); }
+  .field__lbl { font-size: 13px; font-weight: 600; color: var(--fg-2); }
+  .exp-choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-10); }
+  .exp-choice { display: flex; align-items: center; gap: var(--sp-10); text-align: left; padding: var(--sp-12) var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-10); background: var(--layer); color: var(--fg-1); cursor: pointer; transition: border-color .14s, background .14s, box-shadow .14s; }
+  .exp-choice:hover:not(.is-active) { border-color: var(--stroke-1); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); }
+  .exp-choice.is-active { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--layer)); box-shadow: 0 0 0 1px var(--brand); }
+  .exp-choice > iconify-icon { flex: 0 0 auto; color: var(--fg-3); }
+  .exp-choice.is-active > iconify-icon { color: var(--brand); }
+  .exp-choice__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .exp-choice__t b { font-size: 13.5px; font-weight: 600; }
+  .exp-choice__t span { font-size: 12px; color: var(--fg-3); }
+  .exp-choices__hint { margin: var(--sp-6) 0 0; font-size: 12px; color: var(--fg-4); }
+  .exp-ab--edit .exp-variant { min-height: 108px; }
+  .exp-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 78px; padding: var(--sp-12); border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); border-radius: var(--r-8); background: transparent; color: var(--fg-2); cursor: pointer; }
+  .exp-drop:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); border-color: var(--brand); }
+  .exp-drop > iconify-icon { color: var(--brand); }
+  .exp-drop span { font-size: 12.5px; font-weight: 600; }
+  .exp-drop small { font-size: 11px; color: var(--fg-4); }
+  .exp-logo-btn { position: relative; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; }
+  .exp-asset__edit { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: #fff; box-shadow: 0 0 0 2px var(--layer); }
+  .exp-shot-wrap { position: relative; line-height: 0; }
+  .exp-shot__del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; border: 0; background: var(--fg-1); color: var(--layer); cursor: pointer; }
+  .exp-shot-add { width: 62px; height: 39px; display: grid; place-items: center; border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); border-radius: var(--r-6); background: transparent; color: var(--brand); cursor: pointer; }
+  .exp-shot-add:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
+  .exp-form__foot { display: flex; justify-content: flex-end; gap: var(--sp-10); padding-top: var(--sp-6); }
+  @media (max-width: 640px) { .exp-choices { grid-template-columns: 1fr; } .exp-ab { grid-template-columns: 1fr; } .exp-ab__vs { justify-self: center; } }
+
+  /* ===== Add-ons (in-app products) manager ===== */
+  #addons-panel[hidden] { display: none; }
+  .addon-types { display: grid; gap: var(--sp-10); }
+  .addon-list { display: flex; flex-direction: column; gap: var(--sp-12); }
+  .addon-card { display: flex; align-items: center; gap: var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); padding: var(--sp-14) var(--sp-16); }
+  .addon-card__ico { flex: 0 0 auto; width: 42px; height: 42px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 13%, transparent); color: var(--brand); }
+  .addon-card__ico--consumable { background: color-mix(in srgb, #e0a43b 18%, transparent); color: #e0a43b; }
+  .addon-card__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .addon-card__top { display: flex; align-items: center; gap: var(--sp-8); min-width: 0; }
+  .addon-card__name { font-size: 14.5px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .addon-card__meta { font-size: 12px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .addon-status { flex: 0 0 auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 2px 8px; border-radius: var(--r-full); }
+  .addon-status--live { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 16%, transparent); }
+  .addon-status--draft { color: var(--fg-3); background: color-mix(in srgb, var(--fg-1) 10%, transparent); }
+  .addon-card__price { flex: 0 0 auto; font-size: 15px; font-weight: 700; color: var(--fg-1); font-variant-numeric: tabular-nums; }
+  .addon-card__acts { flex: 0 0 auto; display: flex; align-items: center; gap: 2px; }
+  .addon-seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: var(--r-8); background: var(--subtle); border: 1px solid var(--stroke-2); flex-wrap: wrap; width: fit-content; }
+  .addon-seg__opt { border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: var(--r-6); cursor: pointer; transition: background .14s, color .14s; }
+  .addon-seg__opt:hover:not(.is-active) { background: color-mix(in srgb, var(--fg-1) 7%, transparent); }
+  .addon-seg__opt.is-active { background: var(--brand); color: #fff; }
+  .addon-subopt__row { display: flex; flex-wrap: wrap; gap: var(--sp-20) var(--sp-32); }
+  .addon-subopt__group { display: flex; flex-direction: column; gap: 6px; }
+  .addon-subopt__lbl { font-size: 12px; font-weight: 600; color: var(--fg-3); }
+  .addon-note { margin: 0; font-size: 12px; line-height: 16px; color: var(--fg-4); }
+  .addon-id-note { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 12px; line-height: 16px; color: var(--fg-4); }
+  .addon-id-note iconify-icon { flex: 0 0 auto; margin-top: 1px; }
+  .addon-price-select { max-width: 260px; }
+  .addon-locked-note { margin: 2px 0 0; font-size: 11.5px; color: var(--fg-4); font-style: italic; }
   /* Left-stepper: "Updated" pill marking a section changed in this update (the actionable signal;
      unchanged sections recede to a muted check instead of green — see the .is-update-flow overrides). */
   .wz-stepind__updated { margin-left: auto; flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
@@ -2949,6 +3066,25 @@
   .live-row--busy { opacity: .7; cursor: default; }
   .live-row--busy .live-row__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
 
+  /* ---- Store availability (post-publish): hub-card state, "hidden" notice card + the toggle dialog ---- */
+  .live-row__tag { flex: 0 0 auto; align-self: center; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: var(--r-full); background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
+  .live-row--availability.is-unavailable .live-row__ico { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
+  .app-status-card--paused { display: flex; align-items: center; gap: var(--sp-12); background: color-mix(in srgb, var(--status-warning) 9%, var(--layer)); border-color: color-mix(in srgb, var(--status-warning) 34%, var(--stroke-2)); }
+  .app-status-card--paused .app-status-card__ico { background: color-mix(in srgb, var(--status-warning) 18%, transparent); color: var(--status-warning); }
+  .app-status-card--paused .asc-btn--ghost { flex: 0 0 auto; align-self: center; }
+  .avail-status { display: flex; align-items: flex-start; gap: var(--sp-8); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: var(--subtle); font-size: 12.5px; line-height: 16px; color: var(--fg-2); }
+  .avail-status__ico { flex: 0 0 auto; margin-top: 1px; }
+  .avail-status.is-available .avail-status__ico { color: var(--status-success); }
+  .avail-status.is-unavailable { background: color-mix(in srgb, var(--status-warning) 10%, var(--canvas-tint)); }
+  .avail-status.is-unavailable .avail-status__ico { color: var(--status-warning); }
+  .avail-opt { display: flex; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-10); cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .avail-opt:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 4%, transparent); }
+  .avail-opt:has(input:checked) { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 7%, transparent); }
+  .avail-opt input { flex: 0 0 auto; margin: 2px 0 0; accent-color: var(--brand); width: 16px; height: 16px; }
+  .avail-opt__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .avail-opt__body strong { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
+  .avail-opt__body span { font-size: 12.5px; line-height: 16px; color: var(--fg-2); }
+
   /* A just-published app has no telemetry yet — one compact "no analytics yet" placeholder instead
      of a wall of empty metric cards. The 3-up dashboard (.live-stat*) would return once data exists. */
   .live-metrics-empty { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-16); background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); border-radius: var(--r-12); margin-bottom: var(--sp-20); }
@@ -4112,6 +4248,14 @@
       <!-- Certification result (passed or failed) — rendered by tdp-bridge.js -->
       <div id="cert-result" hidden></div>
 
+      <!-- Product page experiments (A/B test the live listing's logo or screenshots) — opened from the live hub row. -->
+      <div id="experiments-panel" hidden></div>
+      <input type="file" id="exp-logo-file" accept="image/*" hidden />
+      <input type="file" id="exp-shot-file" accept="image/*" hidden multiple />
+
+      <!-- Add-ons (in-app products) manager — opened from the live hub "Manage add-ons" row. -->
+      <div id="addons-panel" hidden></div>
+
       <div class="submit-strip" id="cert-actions" style="margin-top: var(--sp-16);">
         <div class="submit-strip__text">
           <h3 class="submit-strip__title">Need to make changes?</h3>
@@ -4146,6 +4290,34 @@
     <p class="ez-extra-field__hint name-edit__hint" id="name-edit-hint"></p>
     <fluent-button slot="action" appearance="secondary" data-name-edit-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="name-edit-save" disabled>Save name</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Store availability (post-publish): a quick control to hide the app from NEW customers while
+     existing customers keep access. Opened from the live hub's "Store availability" card. -->
+<fluent-dialog id="availability-dialog" modal-type="modal" aria-labelledby="availability-title">
+  <fluent-dialog-body>
+    <span slot="title" id="availability-title">
+      <iconify-icon icon="fluent:eye-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
+      Store availability
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-availability-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div class="avail-status is-available" id="avail-status">
+      <iconify-icon class="avail-status__ico" icon="fluent:checkmark-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
+      <span id="avail-status-text">Your app is available in the Microsoft Store.</span>
+    </div>
+    <label class="avail-opt">
+      <input type="radio" name="availability" value="available" checked />
+      <span class="avail-opt__body"><strong>Available</strong><span>Discoverable in Store search, browse, and direct links — anyone can find and get your app.</span></span>
+    </label>
+    <label class="avail-opt">
+      <input type="radio" name="availability" value="unavailable" />
+      <span class="avail-opt__body"><strong>Unavailable to new customers</strong><span>Hidden from search, browse, and direct links. Existing customers keep access and can reinstall.</span></span>
+    </label>
+    <fluent-button slot="action" appearance="secondary" data-availability-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="availability-apply">Apply</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -5622,7 +5794,12 @@
   const params = new URLSearchParams(location.search);
   const appId  = params.get('id');
   const apps   = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
-  let app = apps.find(a => a.id === appId) || apps[apps.length - 1] || { id: appId, name: 'Untitled app', status: 'draft' };
+  // Resolve the app to open. When an explicit ?id= is given, that id is authoritative: use the
+  // matching app, or a stub carrying THAT id if msstore.apps doesn't have it yet — never fall back
+  // to an unrelated app, so per-app saved data (tdp.flow.<id>) always round-trips to the right key.
+  // Only the demo entry points (?app= / no id) fall back to the most recent app.
+  let app = (appId ? apps.find(a => a.id === appId) : (apps[apps.length - 1]))
+            || { id: appId, name: 'Untitled app', status: 'draft' };
 
   // A Game (the App/Game choice made when the name was reserved → app.productKind === 'game') swaps
   // the Listing "Category" single-select for a "Genre(s)" multi-select of up to 3 game genres, blocks
@@ -10779,6 +10956,7 @@
             renderShots();
             announce('Screenshot added.');
             if (typeof updateGate === 'function') updateGate(); // screenshot is required → refresh gate + tabs + checklist
+            if (window.__scheduleFlowSave) window.__scheduleFlowSave(); // persist the new screenshot promptly (IndexedDB)
             setTimeout(next, 50);
           },
         });
@@ -11192,6 +11370,7 @@
             refreshAppHeadIcon();
             announce('Icon updated.');
             if (typeof updateGate === 'function') updateGate(); // App logo is required → refresh gate + tabs + checklist
+            if (window.__scheduleFlowSave) window.__scheduleFlowSave(); // persist the new logo promptly (IndexedDB)
           },
         });
       };
@@ -11615,25 +11794,97 @@
   //      after a hard reload or when the app is reopened from the Apps table. The editor otherwise
   //      keeps everything in memory only, so a fresh page load showed empty fields. Keyed per app. ----
   function flowKey() { return (app && app.id != null) ? 'tdp.flow.' + app.id : null; }
+  // ---- Large media (screenshots, logo, cover image, trailer videos — all data: URLs) is stored in
+  //      IndexedDB, NOT localStorage: a handful of full-res images/videos easily exceeds localStorage's
+  //      ~5MB quota, and once setItem throws the WHOLE save is dropped — so text was lost too and the
+  //      screenshots never came back. IndexedDB has a far larger quota. Small text/packages/settings
+  //      stay in localStorage so the synchronous flush-on-leave stays reliable. ----
+  var __IDB_NAME = 'tdpFlowMedia', __IDB_STORE = 'media', __idbPromise = null, __lastMediaSig = '';
+  function idbOpen() {
+    if (__idbPromise) return __idbPromise;
+    __idbPromise = new Promise(function (resolve) {
+      try {
+        var req = indexedDB.open(__IDB_NAME, 1);
+        req.onupgradeneeded = function () { try { req.result.createObjectStore(__IDB_STORE); } catch (e) {} };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+    return __idbPromise;
+  }
+  function idbPutMedia(key, val) {
+    return idbOpen().then(function (db) {
+      if (!db) return false;
+      return new Promise(function (resolve) {
+        try {
+          var tx = db.transaction(__IDB_STORE, 'readwrite');
+          tx.objectStore(__IDB_STORE).put(val, key);
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = function () { resolve(false); };
+          tx.onabort = function () { resolve(false); };
+        } catch (e) { resolve(false); }
+      });
+    });
+  }
+  function idbGetMedia(key) {
+    return idbOpen().then(function (db) {
+      if (!db) return null;
+      return new Promise(function (resolve) {
+        try {
+          var tx = db.transaction(__IDB_STORE, 'readonly');
+          var g = tx.objectStore(__IDB_STORE).get(key);
+          g.onsuccess = function () { resolve(g.result || null); };
+          g.onerror = function () { resolve(null); };
+        } catch (e) { resolve(null); }
+      });
+    });
+  }
+  // Shallow-clone adv with cover/trailer media removed so the localStorage copy stays tiny (the media
+  // itself is persisted in IndexedDB and re-attached on restore).
+  function advStripMedia(a) {
+    try {
+      var c = Object.assign({}, a);
+      if (c.listing) { c.listing = Object.assign({}, c.listing); c.listing.hero = null; c.listing.trailers = []; }
+      return c;
+    } catch (e) { return a; }
+  }
   function saveFlowData() {
     var k = flowKey(); if (!k) return;
+    // Media -> IndexedDB (dirty-checked so we don't rewrite several MB on every autosave tick).
+    try {
+      var shots = state.shots || [];
+      var hero = (adv.listing && adv.listing.hero) || null;
+      var trailers = (adv.listing && adv.listing.trailers) || [];
+      var sig = shots.length + '|' + shots.reduce(function (n, s) { return n + (s ? s.length : 0); }, 0)
+              + '|' + ((userIconDataUrl || '').length) + '|' + ((pkgIconDataUrl || '').length)
+              + '|' + (hero ? JSON.stringify(hero).length : 0) + '|' + (Array.isArray(trailers) ? trailers.length : 0);
+      if (sig !== __lastMediaSig) {
+        __lastMediaSig = sig;
+        idbPutMedia(app.id, {
+          shots: shots.slice(),
+          userIcon: userIconDataUrl || null,
+          pkgIcon: pkgIconDataUrl || null,
+          hero: hero,
+          trailers: Array.isArray(trailers) ? trailers.slice() : []
+        });
+      }
+    } catch (e) {}
+    // Text + package metadata + media-stripped advanced settings -> localStorage (small + synchronous).
     try {
       localStorage.setItem(k, JSON.stringify({
-        v: 1,
+        v: 2,
         packages: packages.map(function (p) { var c = {}; for (var q in p) { if (p.hasOwnProperty(q) && q !== '_file') c[q] = p[q]; } return c; }),
         v4Type: v4Type,
-        shots: state.shots || [],
         name: fName ? fName.value : '',
         desc: fDesc ? fDesc.value : '',
         category: fCategory ? fCategory.value : '',
-        adv: adv,
+        adv: advStripMedia(adv),
         contentAnswers: contentAnswers,
         contentAnswersConfirmed: contentAnswersConfirmed,
         ratingAppType: ratingAppType,
         ratingDone: !!state.rating,
         selectedGenres: selectedGenres,
-        userIcon: userIconDataUrl || null,
-        pkgIcon: pkgIconDataUrl || null
+        shotsCount: (state.shots || []).length
       }));
     } catch (e) {}
   }
@@ -11698,15 +11949,73 @@
       if (typeof updateGate === 'function') { try { updateGate(); } catch (e) {} }
       // Final write wins over anything a render re-loaded (the multi-locale description in particular).
       if (fDesc && d.desc != null) { try { fDesc.value = d.desc; } catch (e) {} }
+      // Large media (screenshots, logo, cover, trailers) lives in IndexedDB — load it async, then
+      // re-render the media-dependent UI. (v1 saves kept media inline in localStorage, handled above.)
+      try {
+        idbGetMedia(app.id).then(function (m) {
+          if (!m) return;
+          try {
+            if (Array.isArray(m.shots)) state.shots = m.shots;
+            if (m.userIcon) userIconDataUrl = m.userIcon;
+            if (m.pkgIcon) pkgIconDataUrl = m.pkgIcon;
+            if (adv.listing) {
+              if (m.hero) adv.listing.hero = m.hero;
+              if (Array.isArray(m.trailers)) adv.listing.trailers = m.trailers;
+            }
+            if (typeof renderShots === 'function') renderShots();
+            if (typeof refreshAppHeadIcon === 'function') refreshAppHeadIcon();
+            if (typeof refreshLogoHue === 'function') refreshLogoHue();
+            if (typeof window.__advListingRender === 'function') window.__advListingRender();
+            if (typeof ezRenderPreview === 'function') ezRenderPreview();
+            if (typeof updateGate === 'function') updateGate();
+          } catch (e) {}
+        });
+      } catch (e) {}
       return true;
     } catch (e) { return false; }
   }
   window.__saveFlowData = saveFlowData; window.__restoreFlowData = restoreFlowData;
+  // ---- Autosave: keep the app's publishing data persisted WHILE it's edited — not only on submit —
+  //      so leaving the flow (going Home, back to Apps, closing the tab) and reopening the app keeps
+  //      everything. Autosave arms only AFTER restore has run, so a freshly-booted empty editor can
+  //      never overwrite previously-saved data. ----
+  var __flowRestored = false, __flowSaveTimer = null;
+  function scheduleFlowSave() {
+    if (!__flowRestored) return;
+    if (__flowSaveTimer) clearTimeout(__flowSaveTimer);
+    __flowSaveTimer = setTimeout(function () { __flowSaveTimer = null; try { saveFlowData(); } catch (e) {} }, 500);
+  }
+  function flushFlowSave() {
+    if (!__flowRestored) return;
+    if (__flowSaveTimer) { clearTimeout(__flowSaveTimer); __flowSaveTimer = null; }
+    try { saveFlowData(); } catch (e) {}
+  }
+  window.__scheduleFlowSave = scheduleFlowSave; window.__flushFlowSave = flushFlowSave;
   // Restore AFTER boot fully settles: some later boot tasks re-load the listing buffers and would
   // clobber an early restore. 'load' + a tick lands after them (the editor stays hidden until the
   // developer opens Review/Update, so this is never visible as a flash).
   (function () {
-    var run = function () { setTimeout(function () { try { restoreFlowData(); } catch (e) {} }, 80); };
+    var run = function () {
+      setTimeout(function () {
+        try { restoreFlowData(); } catch (e) {}
+        __flowRestored = true;
+        try {
+          // Every edit inside the flow persists (debounced). Capture-phase listeners catch fields,
+          // dropdowns, file inputs and fluent controls anywhere in the editor.
+          var ed = document.getElementById('editor');
+          if (ed) { ed.addEventListener('input', scheduleFlowSave, true); ed.addEventListener('change', scheduleFlowSave, true); }
+          // Flush the FULL live state the instant the page is hidden or unloaded — this is what makes
+          // "go Home, come back" keep the data regardless of how a field changed, since saveFlowData
+          // re-reads packages / screenshots / rating / price at flush time.
+          document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushFlowSave(); });
+          window.addEventListener('pagehide', flushFlowSave);
+          window.addEventListener('beforeunload', flushFlowSave);
+          // Backstop for purely-programmatic edits (package add, screenshot reorder, rating) so nothing
+          // is lost even if the leave events don't fire.
+          setInterval(function () { if (document.visibilityState !== 'hidden') scheduleFlowSave(); }, 4000);
+        } catch (e) {}
+      }, 80);
+    };
     if (document.readyState === 'complete') run();
     else window.addEventListener('load', run);
   })();
@@ -11808,6 +12117,461 @@
     try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
     if (typeof window.startAppUpdate === 'function') window.startAppUpdate();
   }
+
+  // ---- Store availability: post-publish quick control to hide the app from NEW customers (existing
+  //      customers keep access). Persisted per app; tdp-bridge's live hub reflects the state. ----
+  function availKey() { return (app && app.id != null) ? 'tdp.availability.' + app.id : null; }
+  function getAvailability() { try { var k = availKey(); return (k && localStorage.getItem(k) === 'unavailable') ? 'unavailable' : 'available'; } catch (e) { return 'available'; } }
+  function setAvailabilityState(v) { try { var k = availKey(); if (k) localStorage.setItem(k, v === 'unavailable' ? 'unavailable' : 'available'); } catch (e) {} }
+  window.__getAvailability = getAvailability;
+  (function availabilityDialog() {
+    var dlg = $('availability-dialog'); if (!dlg) return;
+    function paintStatus(cur) {
+      var box = $('avail-status'); if (!box) return;
+      var un = cur === 'unavailable';
+      box.className = 'avail-status ' + (un ? 'is-unavailable' : 'is-available');
+      var ico = box.querySelector('.avail-status__ico'); if (ico) ico.setAttribute('icon', un ? 'fluent:eye-off-20-regular' : 'fluent:checkmark-circle-20-filled');
+      var txt = $('avail-status-text'); if (txt) txt.textContent = un
+        ? 'Your app is hidden from new customers. Existing customers still have access.'
+        : 'Your app is available in the Microsoft Store.';
+    }
+    window.startAvailability = function () {
+      var cur = getAvailability();
+      var r = dlg.querySelector('input[name="availability"][value="' + cur + '"]'); if (r) r.checked = true;
+      paintStatus(cur);
+      try { dlg.show(); } catch (e) {}
+    };
+    Array.prototype.forEach.call(dlg.querySelectorAll('[data-availability-close]'), function (b) { b.addEventListener('click', function () { try { dlg.hide(); } catch (e) {} }); });
+    dlg.addEventListener('change', function (e) { if (e.target && e.target.name === 'availability') paintStatus(e.target.value); });
+    var apply = $('availability-apply');
+    if (apply) apply.addEventListener('click', function () {
+      var sel = dlg.querySelector('input[name="availability"]:checked');
+      var v = sel ? sel.value : 'available';
+      setAvailabilityState(v);
+      try { dlg.hide(); } catch (e) {}
+      try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e) {}
+      try { if (typeof announce === 'function') announce(v === 'unavailable' ? 'Your app is now hidden from new customers.' : 'Your app is now available to everyone.'); } catch (e) {}
+    });
+  })();
+
+  /* ============ Product page experiments: A/B test the live listing's logo or screenshots ============
+     Opened from the live-hub "Product page experiments" row. Reuses the image-crop dialog + PDP asset
+     look; each experiment pits the live listing (Control A) against a variant (B) you build here. */
+  let experiments = [];
+  let expDraft = null;            // { name, test:'logo'|'screenshots', variantLogo, variantShots:[] }
+  let expView = 'list';          // 'list' | 'create'
+  function expKey() { return (app && app.id != null) ? 'tdp.experiments.' + app.id : null; }
+  function loadExperiments() { try { experiments = JSON.parse(localStorage.getItem(expKey()) || '[]'); } catch (e) { experiments = []; } if (!Array.isArray(experiments)) experiments = []; }
+  function saveExperiments() { try { var k = expKey(); if (k) localStorage.setItem(k, JSON.stringify(experiments)); } catch (e) {} }
+  function currentLogoSrc() { return userIconDataUrl || pkgIconDataUrl || (typeof themedAppLogo === 'function' ? themedAppLogo(baseIcon) : baseIcon) || ''; }
+  function currentShots() { return ((state && state.shots) || []).slice(); }
+  function expImg(src, cls) { return src ? '<img class="' + cls + '" src="' + src + '" alt="" />' : '<span class="' + cls + ' ' + cls + '--empty"></span>'; }
+  function expEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[m]; }); }
+  // Deterministic demo metrics so a given experiment always reads the same across renders.
+  function expMetric(exp) {
+    var seed = String(exp.id || '').split('').reduce(function (a, c) { return a + c.charCodeAt(0); }, 0);
+    var a = 3.0 + (seed % 7) / 10;
+    var b = Math.max(1.5, a + ((seed % 6) - 1) / 10 + 0.2);
+    return { a: a.toFixed(1), b: b.toFixed(1), leader: b > a + 0.05 ? 'B' : (a > b + 0.05 ? 'A' : 'tie'), lift: (((b - a) / a) * 100).toFixed(0) };
+  }
+  let _expHidden = [];
+  window.startExperiments = function () {
+    loadExperiments();
+    expView = 'list'; expDraft = null;
+    var panel = $('experiments-panel'); if (!panel) return;
+    // Take over the post-publish area: hide every #state-done child (cert timeline, hub, demo
+    // switch, actions) except this panel, remembering each prior state to restore on exit.
+    _expHidden = [];
+    var sd = $('state-done');
+    if (sd) Array.prototype.forEach.call(sd.children, function (ch) {
+      if (ch.id === 'experiments-panel' || ch.id === 'exp-logo-file' || ch.id === 'exp-shot-file') return;
+      _expHidden.push([ch, ch.hidden]); ch.hidden = true;
+    });
+    panel.hidden = false;
+    renderExperiments();
+    announce('Product page experiments.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
+  function exitExperiments() {
+    if ($('experiments-panel')) $('experiments-panel').hidden = true;
+    _expHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+    _expHidden = [];
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  function renderExperiments() {
+    var p = $('experiments-panel'); if (!p) return;
+    p.innerHTML = expView === 'create' ? expCreateHTML() : expListHTML();
+    if (expView === 'create' && $('exp-name')) $('exp-name').value = (expDraft && expDraft.name) || '';
+  }
+  function expListHTML() {
+    var head = '<div class="exp__head">' +
+      '<button type="button" class="exp__back" data-exp-back aria-label="Back to app"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
+      '<div class="exp__htext"><h2 class="exp__title">Product page experiments</h2>' +
+      '<p class="exp__sub">A/B test your app logo or screenshots against your live listing. Real visitors see each version \u2014 keep the winner with one click.</p></div>' +
+      (experiments.length ? '<fluent-button appearance="primary" data-exp-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New experiment</fluent-button>' : '') +
+      '</div>';
+    var body = experiments.length
+      ? '<div class="exp-list">' + experiments.map(expCardHTML).join('') + '</div>'
+      : '<div class="exp-empty"><div class="exp-empty__ico"><iconify-icon icon="fluent:beaker-24-regular" width="28" height="28" aria-hidden="true"></iconify-icon></div>' +
+        '<h3 class="exp-empty__title">Test a new logo or screenshots</h3>' +
+        '<p class="exp-empty__sub">Show some visitors a different version of your Store listing and let real installs pick the winner \u2014 no new package, no redeploy.</p>' +
+        '<fluent-button appearance="primary" data-exp-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create experiment</fluent-button></div>';
+    return '<div class="exp">' + head + body + '</div>';
+  }
+  function expVariantPreview(exp, side, rate) {
+    var isA = side === 'A', body;
+    if (exp.test === 'logo') {
+      body = '<div class="exp-asset exp-asset--logo">' + expImg(isA ? (exp.control && exp.control.logo) : exp.variantLogo, 'exp-logo') + '</div>';
+    } else {
+      var shots = (isA ? (exp.control && exp.control.shots) : exp.variantShots) || [];
+      body = '<div class="exp-asset exp-asset--shots">' + (shots.length ? shots.slice(0, 3).map(function (s) { return expImg(s, 'exp-shot'); }).join('') : '<span class="exp-asset__none">None</span>') + '</div>';
+    }
+    return '<div class="exp-variant' + (isA ? '' : ' exp-variant--b') + '"><span class="exp-variant__tag">' + (isA ? 'A \u00b7 Current' : 'B \u00b7 Variant') + '</span>' + body +
+      (rate != null ? '<span class="exp-variant__rate">' + rate + '%<small>install rate</small></span>' : '') + '</div>';
+  }
+  function expCardHTML(exp) {
+    var m = expMetric(exp), running = exp.status === 'running';
+    var statusCls = running ? 'running' : (exp.status === 'complete' ? 'complete' : 'stopped');
+    var statusTxt = running ? 'Running' : (exp.status === 'complete' ? 'Complete' : 'Stopped');
+    var testLabel = exp.test === 'logo' ? 'app logo' : 'screenshots';
+    var meta = running ? ('Testing ' + testLabel + ' \u00b7 ' + exp.days + ' days left')
+      : (exp.status === 'complete' ? ('Winner: ' + (exp.winner === 'B' ? 'Variant B (applied to your listing)' : 'Current A')) : 'Stopped before finishing');
+    var foot = running ? ('<div class="exp-card__foot"><span class="exp-card__hint">' +
+        (m.leader === 'B' ? ('<strong>Variant B is leading</strong> \u2014 +' + m.lift + '% installs so far') : (m.leader === 'A' ? 'Your current page is leading so far' : 'No clear winner yet \u2014 give it more time')) +
+        '</span><span class="exp-card__acts">' +
+        '<fluent-button appearance="subtle" data-exp-stop data-exp-id="' + exp.id + '">Stop</fluent-button>' +
+        '<fluent-button appearance="secondary" data-exp-winner="A" data-exp-id="' + exp.id + '">Keep current</fluent-button>' +
+        '<fluent-button appearance="primary" data-exp-winner="B" data-exp-id="' + exp.id + '">Apply variant</fluent-button>' +
+        '</span></div>') : '';
+    return '<div class="exp-card" data-exp-id="' + exp.id + '">' +
+      '<div class="exp-card__head"><span class="exp-status exp-status--' + statusCls + '">' + statusTxt + '</span>' +
+      '<strong class="exp-card__name">' + expEsc(exp.name) + '</strong><span class="exp-card__meta">' + meta + '</span></div>' +
+      '<div class="exp-ab">' + expVariantPreview(exp, 'A', running ? m.a : null) + '<div class="exp-ab__vs">vs</div>' + expVariantPreview(exp, 'B', running ? m.b : null) + '</div>' +
+      foot + '</div>';
+  }
+  function expChoice(val, icon, title, sub, cur) {
+    return '<button type="button" class="exp-choice' + (cur === val ? ' is-active' : '') + '" data-exp-test="' + val + '" aria-pressed="' + (cur === val) + '">' +
+      '<iconify-icon icon="' + icon + '" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+      '<span class="exp-choice__t"><b>' + title + '</b><span>' + sub + '</span></span></button>';
+  }
+  function expEditAbHTML(d) {
+    var control, variant;
+    if (d.test === 'logo') {
+      control = '<div class="exp-asset exp-asset--logo">' + expImg(currentLogoSrc(), 'exp-logo') + '</div>';
+      variant = d.variantLogo
+        ? '<button type="button" class="exp-logo-btn" data-exp-add-logo aria-label="Change variant logo">' + expImg(d.variantLogo, 'exp-logo') + '<span class="exp-asset__edit"><iconify-icon icon="fluent:edit-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></span></button>'
+        : '<button type="button" class="exp-drop" data-exp-add-logo><iconify-icon icon="fluent:arrow-upload-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon><span>Upload variant logo</span><small>PNG \u00b7 300\u00d7300</small></button>';
+    } else {
+      var cs = currentShots();
+      control = '<div class="exp-asset exp-asset--shots">' + (cs.length ? cs.slice(0, 4).map(function (s) { return expImg(s, 'exp-shot'); }).join('') : '<span class="exp-asset__none">No screenshots on your live page</span>') + '</div>';
+      var tiles = (d.variantShots || []).map(function (s, i) { return '<div class="exp-shot-wrap">' + expImg(s, 'exp-shot') + '<button type="button" class="exp-shot__del" data-exp-del-shot="' + i + '" aria-label="Remove screenshot"><iconify-icon icon="fluent:dismiss-12-regular" width="11" height="11" aria-hidden="true"></iconify-icon></button></div>'; }).join('');
+      variant = '<div class="exp-asset exp-asset--shots">' + tiles + ((d.variantShots || []).length < 8 ? '<button type="button" class="exp-shot-add" data-exp-add-shot aria-label="Add variant screenshot"><iconify-icon icon="fluent:image-add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' : '') + '</div>';
+    }
+    return '<div class="exp-ab exp-ab--edit"><div class="exp-variant"><span class="exp-variant__tag">A \u00b7 Current (live)</span>' + control + '</div>' +
+      '<div class="exp-ab__vs">vs</div><div class="exp-variant exp-variant--b"><span class="exp-variant__tag">B \u00b7 Your variant</span>' + variant + '</div></div>';
+  }
+  function expCreateHTML() {
+    var d = expDraft || { test: 'logo', variantShots: [] };
+    var head = '<div class="exp__head"><button type="button" class="exp__back" data-exp-back-list aria-label="Back to experiments"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
+      '<div class="exp__htext"><h2 class="exp__title">New experiment</h2><p class="exp__sub">Pick one thing to test, then build a variant of your live listing.</p></div></div>';
+    var form = '<div class="exp-form">' +
+      '<div class="field"><label class="field__lbl" for="exp-name">Experiment name</label><fluent-text-input id="exp-name" appearance="outline" placeholder="e.g. Bolder logo test" style="width:100%"></fluent-text-input></div>' +
+      '<div class="field"><label class="field__lbl">What do you want to test?</label><div class="exp-choices">' +
+        expChoice('logo', 'fluent:image-20-regular', 'App logo', 'Try a different icon', d.test) +
+        expChoice('screenshots', 'fluent:image-multiple-20-regular', 'Screenshots', 'Try different store images', d.test) +
+      '</div><p class="exp-choices__hint">Test one asset at a time for the clearest result.</p></div>' +
+      '<div class="field"><label class="field__lbl">Current vs your variant</label>' + expEditAbHTML(d) + '</div>' +
+      '<div class="exp-form__foot"><fluent-button appearance="secondary" data-exp-cancel>Cancel</fluent-button>' +
+      '<fluent-button appearance="primary" id="exp-start" data-exp-start ' + (expCanStart() ? '' : 'disabled') + '><iconify-icon slot="start" icon="fluent:rocket-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Start experiment</fluent-button></div>' +
+      '</div>';
+    return '<div class="exp exp--create">' + head + form + '</div>';
+  }
+  function expCanStart() {
+    if (!expDraft) return false;
+    if ((expDraft.name || '').trim().length < 2) return false;
+    return expDraft.test === 'logo' ? !!expDraft.variantLogo : (expDraft.variantShots || []).length >= 1;
+  }
+  function startExperiment() {
+    if (!expCanStart()) return;
+    experiments.unshift({
+      id: 'exp-' + Date.now().toString(36),
+      name: expDraft.name.trim(),
+      test: expDraft.test,
+      variantLogo: expDraft.test === 'logo' ? expDraft.variantLogo : null,
+      variantShots: expDraft.test === 'screenshots' ? expDraft.variantShots.slice() : [],
+      control: { logo: currentLogoSrc(), shots: currentShots() },
+      status: 'running', created: Date.now(), days: 14
+    });
+    saveExperiments();
+    var nm = expDraft.name.trim();
+    expView = 'list'; expDraft = null;
+    renderExperiments();
+    announce('Experiment \u201c' + nm + '\u201d started \u2014 now running against your live page.');
+  }
+  function declareWinner(id, side) {
+    var exp = experiments.filter(function (x) { return x.id === id; })[0]; if (!exp || exp.status !== 'running') return;
+    if (side === 'B') {
+      if (exp.test === 'logo' && exp.variantLogo) { userIconDataUrl = exp.variantLogo; try { if (typeof refreshLogoHue === 'function') refreshLogoHue(); if (typeof refreshAppHeadIcon === 'function') refreshAppHeadIcon(); } catch (e) {} }
+      else if (exp.test === 'screenshots' && (exp.variantShots || []).length) { state.shots = exp.variantShots.slice(); try { if (typeof renderShots === 'function') renderShots(); } catch (e) {} }
+      try { if (typeof saveFlowData === 'function') saveFlowData(); } catch (e) {}
+    }
+    exp.status = 'complete'; exp.winner = side;
+    saveExperiments(); renderExperiments();
+    announce(side === 'B' ? 'Variant applied to your live listing.' : 'Kept your current listing.');
+  }
+  function stopExperiment(id) {
+    var exp = experiments.filter(function (x) { return x.id === id; })[0]; if (!exp) return;
+    exp.status = 'stopped';
+    saveExperiments(); renderExperiments();
+    announce('Experiment stopped.');
+  }
+  (function wireExperiments() {
+    var p = $('experiments-panel');
+    if (p) {
+      p.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t.closest('[data-exp-back]')) { exitExperiments(); return; }
+        if (t.closest('[data-exp-back-list]') || t.closest('[data-exp-cancel]')) { expView = 'list'; expDraft = null; renderExperiments(); return; }
+        if (t.closest('[data-exp-new]')) { expDraft = { name: '', test: 'logo', variantLogo: null, variantShots: [] }; expView = 'create'; renderExperiments(); return; }
+        var ch = t.closest('[data-exp-test]'); if (ch) { if (expDraft) { expDraft.test = ch.getAttribute('data-exp-test'); renderExperiments(); } return; }
+        if (t.closest('[data-exp-add-logo]')) { if ($('exp-logo-file')) $('exp-logo-file').click(); return; }
+        if (t.closest('[data-exp-add-shot]')) { if ($('exp-shot-file')) $('exp-shot-file').click(); return; }
+        var ds = t.closest('[data-exp-del-shot]'); if (ds) { if (expDraft) { expDraft.variantShots.splice(+ds.getAttribute('data-exp-del-shot'), 1); renderExperiments(); } return; }
+        if (t.closest('[data-exp-start]')) { startExperiment(); return; }
+        var w = t.closest('[data-exp-winner]'); if (w) { declareWinner(w.getAttribute('data-exp-id'), w.getAttribute('data-exp-winner')); return; }
+        var st = t.closest('[data-exp-stop]'); if (st) { stopExperiment(st.getAttribute('data-exp-id')); return; }
+      });
+      p.addEventListener('input', function (e) {
+        if (e.target && e.target.id === 'exp-name' && expDraft) { expDraft.name = e.target.value; var b = $('exp-start'); if (b) b.disabled = !expCanStart(); }
+      });
+    }
+    var lf = $('exp-logo-file');
+    if (lf) lf.addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (f && /^image\//.test(f.type) && typeof openImageEditDialog === 'function') {
+        var r = new FileReader();
+        r.onload = function () { openImageEditDialog({ dataUrl: r.result, aspect: 1, title: 'Variant logo', onApply: function (u) { if (expDraft) { expDraft.variantLogo = u; renderExperiments(); } } }); };
+        r.readAsDataURL(f);
+      }
+      e.target.value = '';
+    });
+    var sf = $('exp-shot-file');
+    if (sf) sf.addEventListener('change', function (e) {
+      var files = Array.prototype.slice.call(e.target.files || []).filter(function (f) { return /^image\//.test(f.type); });
+      var i = 0;
+      var next = function () {
+        if (i >= files.length || !expDraft) return;
+        var f = files[i++], r = new FileReader();
+        r.onload = function () { openImageEditDialog({ dataUrl: r.result, aspect: 16 / 10, title: 'Variant screenshot', onApply: function (u) { if (expDraft) { expDraft.variantShots.push(u); renderExperiments(); } setTimeout(next, 60); } }); };
+        r.readAsDataURL(f);
+      };
+      next();
+      e.target.value = '';
+    });
+  })();
+
+  /* ============ Add-ons (in-app products): sell unlocks, consumables, or subscriptions ============
+     Opened from the live-hub "Manage add-ons" row. Partner Center's four SKU types are simplified to
+     three plain-language intents (unlock / consumable / subscription); the dev-vs-Store balance choice
+     rides along as a consumable sub-option. Per-app catalog persisted in localStorage. */
+  let addons = [];
+  let addonDraft = null;    // { id?, type, tracking, name, productId, price, period, trial, _idEdited }
+  let addonView = 'list';   // 'list' | 'form'
+  function addonKey() { return (app && app.id != null) ? 'tdp.addons.' + app.id : null; }
+  function loadAddons() { try { addons = JSON.parse(localStorage.getItem(addonKey()) || '[]'); } catch (e) { addons = []; } if (!Array.isArray(addons)) addons = []; }
+  function saveAddons() { try { var k = addonKey(); if (k) localStorage.setItem(k, JSON.stringify(addons)); } catch (e) {} }
+  var ADDON_PRICES = [0, 0.99, 1.99, 2.99, 4.99, 9.99, 14.99, 19.99, 49.99, 99.99];
+  var ADDON_TYPES = {
+    unlock:       { icon: 'fluent:premium-20-regular',          label: 'One-time unlock', example: 'Remove ads or unlock Pro \u2014 bought once, kept forever.' },
+    consumable:   { icon: 'fluent:coin-multiple-20-regular',    label: 'Consumable',      example: 'Coins, gems or extra lives \u2014 used up, then bought again.' },
+    subscription: { icon: 'fluent:arrow-repeat-all-20-regular', label: 'Subscription',    example: 'Recurring access \u2014 billed monthly or yearly.' }
+  };
+  function addonPriceText(a) {
+    if (!a.price) return a.type === 'subscription' ? 'Free trial' : 'Free';
+    var s = '$' + Number(a.price).toFixed(2);
+    if (a.type === 'subscription') s += a.period === 'yearly' ? '/yr' : '/mo';
+    return s;
+  }
+  function addonSlug(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 100); }
+  // Product IDs can't contain < > * % & : \ ? + , (or spaces); collapse them to dots.
+  function addonCleanId(s) { return String(s || '').replace(/[<>*%&:\\?+,\s]+/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 100); }
+  function addonCanSave() {
+    if (!addonDraft || !addonDraft.type) return false;
+    if ((addonDraft.name || '').trim().length < 2) return false;
+    if (addonCleanId(addonDraft.productId).length < 1) return false;
+    return true;
+  }
+  let _addonsHidden = [];
+  window.startAddons = function () {
+    loadAddons();
+    addonView = 'list'; addonDraft = null;
+    var panel = $('addons-panel'); if (!panel) return;
+    // Take over the post-publish area: hide every #state-done sibling, remembering each to restore.
+    _addonsHidden = [];
+    var sd = $('state-done');
+    if (sd) Array.prototype.forEach.call(sd.children, function (ch) {
+      if (ch.id === 'addons-panel') return;
+      _addonsHidden.push([ch, ch.hidden]); ch.hidden = true;
+    });
+    panel.hidden = false;
+    renderAddons();
+    announce('Add-ons.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
+  function exitAddons() {
+    if ($('addons-panel')) $('addons-panel').hidden = true;
+    _addonsHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+    _addonsHidden = [];
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  function renderAddons() {
+    var p = $('addons-panel'); if (!p) return;
+    p.innerHTML = addonView === 'form' ? addonFormHTML() : addonListHTML();
+    if (addonView === 'form' && addonDraft) {
+      if ($('addon-name')) $('addon-name').value = addonDraft.name || '';
+      if ($('addon-id')) $('addon-id').value = addonDraft.productId || '';
+      if ($('addon-price')) $('addon-price').value = String(addonDraft.price != null ? addonDraft.price : 0);
+    }
+  }
+  function addonListHTML() {
+    var head = '<div class="exp__head">' +
+      '<button type="button" class="exp__back" data-addon-back aria-label="Back to app"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
+      '<div class="exp__htext"><h2 class="exp__title">Add-ons</h2>' +
+      '<p class="exp__sub">Sell extras inside your app \u2014 unlocks, consumables and subscriptions. Customers buy them from your Store listing or right in your app.</p></div>' +
+      (addons.length ? '<fluent-button appearance="primary" data-addon-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New add-on</fluent-button>' : '') +
+      '</div>';
+    var body = addons.length
+      ? '<div class="addon-list">' + addons.map(addonCardHTML).join('') + '</div>'
+      : '<div class="exp-empty"><div class="exp-empty__ico"><iconify-icon icon="fluent:puzzle-piece-24-regular" width="28" height="28" aria-hidden="true"></iconify-icon></div>' +
+        '<h3 class="exp-empty__title">Sell extras inside your app</h3>' +
+        '<p class="exp-empty__sub">Offer a one-time unlock, consumable currency, or a subscription \u2014 no new app submission needed.</p>' +
+        '<fluent-button appearance="primary" data-addon-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create add-on</fluent-button></div>';
+    return '<div class="exp">' + head + body + '</div>';
+  }
+  function addonCardHTML(a) {
+    var t = ADDON_TYPES[a.type] || ADDON_TYPES.unlock, live = a.status === 'live';
+    return '<div class="addon-card" data-addon-id="' + a.id + '">' +
+      '<span class="addon-card__ico addon-card__ico--' + a.type + '"><iconify-icon icon="' + t.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="addon-card__body"><div class="addon-card__top"><strong class="addon-card__name">' + expEsc(a.name) + '</strong>' +
+      '<span class="addon-status addon-status--' + (live ? 'live' : 'draft') + '">' + (live ? 'Live' : 'Draft') + '</span></div>' +
+      '<span class="addon-card__meta">' + t.label + ' \u00b7 ' + expEsc(a.productId) + '</span></div>' +
+      '<span class="addon-card__price">' + addonPriceText(a) + '</span>' +
+      '<span class="addon-card__acts">' +
+        (live ? '' : '<fluent-button appearance="primary" size="small" data-addon-publish="' + a.id + '">Publish</fluent-button>') +
+        '<fluent-button appearance="subtle" size="small" data-addon-edit="' + a.id + '" aria-label="Edit ' + expEsc(a.name) + '"><iconify-icon icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>' +
+        '<fluent-button appearance="subtle" size="small" data-addon-del="' + a.id + '" aria-label="Delete ' + expEsc(a.name) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>' +
+      '</span></div>';
+  }
+  function addonTypeCardHTML(k, cur, locked) {
+    var t = ADDON_TYPES[k], on = cur === k;
+    return '<button type="button" class="exp-choice' + (on ? ' is-active' : '') + '" data-addon-type="' + k + '"' + (locked && !on ? ' disabled' : '') + ' aria-pressed="' + on + '">' +
+      '<iconify-icon icon="' + t.icon + '" width="24" height="24" aria-hidden="true"></iconify-icon>' +
+      '<span class="exp-choice__t"><b>' + t.label + '</b><span>' + t.example + '</span></span></button>';
+  }
+  function addonSeg(group, val, label, cur) {
+    return '<button type="button" class="addon-seg__opt' + (cur === val ? ' is-active' : '') + '" data-addon-seg="' + group + '" data-val="' + val + '" aria-pressed="' + (cur === val) + '">' + label + '</button>';
+  }
+  function addonOptionsHTML(d) {
+    if (d.type === 'consumable') {
+      return '<div class="field"><label class="field__lbl">Balance tracked by</label>' +
+        '<div class="addon-seg">' + addonSeg('tracking', 'store', 'Microsoft', d.tracking || 'store') + addonSeg('tracking', 'app', 'My app', d.tracking || 'store') + '</div>' +
+        '<p class="addon-note">Microsoft keeps the balance in sync across the customer\u2019s devices (recommended). Choose \u201cMy app\u201d only if you track balances on your own server.</p></div>';
+    }
+    if (d.type === 'subscription') {
+      return '<div class="addon-subopt__row">' +
+        '<div class="addon-subopt__group"><span class="addon-subopt__lbl">Billing period</span><div class="addon-seg">' + addonSeg('period', 'monthly', 'Monthly', d.period || 'monthly') + addonSeg('period', 'yearly', 'Yearly', d.period || 'monthly') + '</div></div>' +
+        '<div class="addon-subopt__group"><span class="addon-subopt__lbl">Free trial</span><div class="addon-seg">' + addonSeg('trial', 'none', 'None', d.trial || 'none') + addonSeg('trial', '7d', '7 days', d.trial || 'none') + addonSeg('trial', '1m', '1 month', d.trial || 'none') + '</div></div></div>';
+    }
+    return '';
+  }
+  function addonFormHTML() {
+    var d = addonDraft || { type: 'unlock', price: 0 }, editing = !!d.id;
+    var head = '<div class="exp__head"><button type="button" class="exp__back" data-addon-back-list aria-label="Back to add-ons"><iconify-icon icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>' +
+      '<div class="exp__htext"><h2 class="exp__title">' + (editing ? 'Edit add-on' : 'New add-on') + '</h2><p class="exp__sub">' + (editing ? 'Update the name or price \u2014 type and product ID stay the same.' : 'Pick what you\u2019re selling, name it, and set a price.') + '</p></div></div>';
+    var types = '<div class="field"><label class="field__lbl">Product type</label><div class="addon-types">' +
+      Object.keys(ADDON_TYPES).map(function (k) { return addonTypeCardHTML(k, d.type, editing); }).join('') + '</div>' +
+      (editing ? '<p class="addon-locked-note">Type can\u2019t change after an add-on is created.</p>' : '') + '</div>';
+    var opts = addonOptionsHTML(d);
+    var name = '<div class="field"><label class="field__lbl" for="addon-name">Display name</label>' +
+      '<fluent-text-input id="addon-name" appearance="outline" placeholder="e.g. 1,000 Gold Coins" style="width:100%"></fluent-text-input>' +
+      '<p class="addon-note">What customers see in the Store and in your app.</p></div>';
+    var pid = '<div class="field"><label class="field__lbl" for="addon-id">Product ID</label>' +
+      '<fluent-text-input id="addon-id" appearance="outline" placeholder="gold.coins.1000" style="width:100%"' + (editing ? ' disabled' : '') + '></fluent-text-input>' +
+      '<p class="addon-id-note"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>The ID you reference in your code \u2014 customers never see it' + (editing ? '. Locked after creation.' : ', and it can\u2019t change once published.') + '</span></p></div>';
+    var price = '<div class="field"><label class="field__lbl" for="addon-price">Price</label>' +
+      '<select id="addon-price" class="ez-native-select addon-price-select">' + ADDON_PRICES.map(function (p) { return '<option value="' + p + '">' + (p ? '$' + p.toFixed(2) + (d.type === 'subscription' ? (d.period === 'yearly' ? ' / year' : ' / month') : '') : (d.type === 'subscription' ? 'Free (trial only)' : 'Free')) + '</option>'; }).join('') + '</select></div>';
+    var foot = '<div class="exp-form__foot"><fluent-button appearance="secondary" data-addon-cancel>Cancel</fluent-button>' +
+      '<fluent-button appearance="primary" id="addon-save" data-addon-save ' + (addonCanSave() ? '' : 'disabled') + '>' + (editing ? 'Save changes' : 'Create add-on') + '</fluent-button></div>';
+    return '<div class="exp exp--create">' + head + '<div class="exp-form">' + types + opts + name + pid + price + foot + '</div></div>';
+  }
+  function createOrSaveAddon() {
+    if (!addonCanSave()) return;
+    var d = addonDraft, nm = d.name.trim();
+    if (d.id) {
+      var a = addons.filter(function (x) { return x.id === d.id; })[0];
+      if (a) { a.name = nm; a.price = d.price; if (a.type === 'subscription') { a.period = d.period; a.trial = d.trial; } if (a.type === 'consumable') a.tracking = d.tracking; }
+    } else {
+      addons.unshift({
+        id: 'add-' + Date.now().toString(36), type: d.type,
+        tracking: d.type === 'consumable' ? (d.tracking || 'store') : null,
+        name: nm, productId: addonCleanId(d.productId), price: d.price,
+        period: d.type === 'subscription' ? (d.period || 'monthly') : null,
+        trial: d.type === 'subscription' ? (d.trial || 'none') : null,
+        status: 'draft', created: Date.now()
+      });
+    }
+    saveAddons();
+    var wasEdit = !!d.id;
+    addonView = 'list'; addonDraft = null;
+    renderAddons();
+    announce('Add-on \u201c' + nm + (wasEdit ? '\u201d saved.' : '\u201d created \u2014 publish it when you\u2019re ready.'));
+  }
+  function publishAddon(id) {
+    var a = addons.filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    a.status = 'live';
+    saveAddons(); renderAddons();
+    announce('Add-on \u201c' + a.name + '\u201d is now live in the Store.');
+  }
+  function editAddon(id) {
+    var a = addons.filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    addonDraft = { id: a.id, type: a.type, tracking: a.tracking || 'store', name: a.name, productId: a.productId, price: a.price, period: a.period || 'monthly', trial: a.trial || 'none', _idEdited: true };
+    addonView = 'form'; renderAddons();
+  }
+  function deleteAddon(id) {
+    addons = addons.filter(function (x) { return x.id !== id; });
+    saveAddons(); renderAddons();
+    announce('Add-on removed.');
+  }
+  // Toggle the ATTRIBUTE (not the .disabled property) — fluent-button reflects the attribute reliably.
+  function updateAddonSave() { var b = $('addon-save'); if (!b) return; if (addonCanSave()) b.removeAttribute('disabled'); else b.setAttribute('disabled', ''); }
+  (function wireAddons() {
+    var p = $('addons-panel'); if (!p) return;
+    p.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-addon-back]')) { exitAddons(); return; }
+      if (t.closest('[data-addon-back-list]') || t.closest('[data-addon-cancel]')) { addonView = 'list'; addonDraft = null; renderAddons(); return; }
+      if (t.closest('[data-addon-new]')) { addonDraft = { type: 'unlock', tracking: 'store', name: '', productId: '', price: 0, period: 'monthly', trial: 'none', _idEdited: false }; addonView = 'form'; renderAddons(); return; }
+      var ty = t.closest('[data-addon-type]'); if (ty) { if (addonDraft && !addonDraft.id) { addonDraft.type = ty.getAttribute('data-addon-type'); renderAddons(); } return; }
+      var seg = t.closest('[data-addon-seg]'); if (seg) { if (addonDraft) { addonDraft[seg.getAttribute('data-addon-seg')] = seg.getAttribute('data-val'); renderAddons(); } return; }
+      if (t.closest('[data-addon-save]')) { createOrSaveAddon(); return; }
+      var pub = t.closest('[data-addon-publish]'); if (pub) { publishAddon(pub.getAttribute('data-addon-publish')); return; }
+      var ed = t.closest('[data-addon-edit]'); if (ed) { editAddon(ed.getAttribute('data-addon-edit')); return; }
+      var dl = t.closest('[data-addon-del]'); if (dl) { deleteAddon(dl.getAttribute('data-addon-del')); return; }
+    });
+    p.addEventListener('input', function (e) {
+      if (!addonDraft) return;
+      if (e.target && e.target.id === 'addon-name') {
+        addonDraft.name = e.target.value;
+        if (!addonDraft._idEdited) { addonDraft.productId = addonSlug(e.target.value); var idf = $('addon-id'); if (idf) idf.value = addonDraft.productId; }
+        updateAddonSave();
+      } else if (e.target && e.target.id === 'addon-id') {
+        addonDraft._idEdited = true; addonDraft.productId = e.target.value; updateAddonSave();
+      }
+    });
+    p.addEventListener('change', function (e) {
+      if (addonDraft && e.target && e.target.id === 'addon-price') addonDraft.price = parseFloat(e.target.value) || 0;
+    });
+  })();
   function openSubmitFlow() {
     if ($('submit').disabled) return;
     // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which

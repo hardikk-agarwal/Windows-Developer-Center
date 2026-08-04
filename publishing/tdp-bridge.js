@@ -76,11 +76,12 @@
     ] },
     { title: "Insights & growth", accent: "growth", cards: [
       ["fluent:data-histogram-20-regular", "View analytics", "Installs, usage, ratings and health.", "../" + PORTAL_FILE + "#analytics"],
-      ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#"]
+      ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#", "experiments"]
     ] },
     { title: "Listing & monetization", accent: "mon", cards: [
+      ["fluent:eye-20-regular", "Store availability", "Control who can find and get your app.", "#", "availability"],
       ["fluent:share-20-regular", "Share listing", "Copy your Store listing link.", "#"],
-      ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#"]
+      ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#", "addons"]
     ] }
   ];
   function liveRow(c, opts) {
@@ -91,6 +92,16 @@
         '<span class="live-row__t"><strong>Update in review</strong><span>Your new version is being certified.</span></span></div>';
     }
     var act = c[4] ? ' data-live-action="' + c[4] + '"' : '';
+    // Store availability carries live state (available / hidden from new customers), so its row shows
+    // the current status rather than a static description.
+    if (c[4] === "availability") {
+      var un = availUnavailable();
+      return '<a class="live-row live-row--availability' + (un ? ' is-unavailable' : '') + '" href="#" data-live-action="availability">' +
+        '<span class="live-row__ico"><iconify-icon icon="' + (un ? 'fluent:eye-off-20-regular' : 'fluent:eye-20-regular') + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="live-row__t"><strong>Store availability</strong><span>' + (un ? 'Hidden from new customers' : 'Available to everyone') + '</span></span>' +
+        (un ? '<span class="live-row__tag">Hidden</span>' : '') +
+        '<iconify-icon class="live-row__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
+    }
     return '<a class="live-row" href="' + c[3] + '"' + act + '><span class="live-row__ico"><iconify-icon icon="' + c[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
       '<span class="live-row__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
       '<iconify-icon class="live-row__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
@@ -213,7 +224,21 @@
   }
   // The published "app overview": at-a-glance stats + the management hub. The app header already
   // carries the Published pill + "View in Store", so we don't repeat a separate green "Live" card here.
-  function passHTML() { return liveStatsHTML() + hubHTML(); }
+  function availUnavailable() { try { return localStorage.getItem("tdp.availability." + id) === "unavailable"; } catch (e) { return false; } }
+  // Prominent notice shown ONLY when the app has been hidden from new customers — a deliberate,
+  // notable state the developer should see the moment they open the live app.
+  function availabilityCardHTML() {
+    if (!availUnavailable()) return "";
+    return '<div class="app-status-card app-status-card--paused">' +
+      '<span class="app-status-card__ico"><iconify-icon icon="fluent:eye-off-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="app-status-card__body"><strong class="app-status-card__title">Hidden from new customers</strong>' +
+        '<span class="app-status-card__sub"><strong>' + esc(appName()) + '</strong> isn\u2019t discoverable in the Store. Existing customers keep access and can reinstall.</span></div>' +
+      '<a class="asc-btn asc-btn--ghost" href="#" data-live-action="availability">Manage</a>' +
+    '</div>';
+  }
+  function passHTML() { return availabilityCardHTML() + liveStatsHTML() + hubHTML(); }
+  // Re-render the live hub in place (after the availability toggle changes) without a full reload.
+  window.__renderLiveHub = function () { var res = $id("cert-result"), done = $id("state-done"); if (res && done && done.__result === "passed") { res.innerHTML = passHTML(); } };
 
   // ---- Certification result view state machine ----
   var certTimer = null;
@@ -355,6 +380,12 @@
       res.addEventListener("click", function (e) {
         var upd = e.target.closest('[data-live-action="update"]');
         if (upd) { e.preventDefault(); if (typeof window.startAppUpdate === "function") window.startAppUpdate(); return; }
+        var experiments = e.target.closest('[data-live-action="experiments"]');
+        if (experiments) { e.preventDefault(); if (typeof window.startExperiments === "function") window.startExperiments(); return; }
+        var availability = e.target.closest('[data-live-action="availability"]');
+        if (availability) { e.preventDefault(); if (typeof window.startAvailability === "function") window.startAvailability(); return; }
+        var addons = e.target.closest('[data-live-action="addons"]');
+        if (addons) { e.preventDefault(); if (typeof window.startAddons === "function") window.startAddons(); return; }
         var report = e.target.closest("[data-cert-report]");
         if (report) { e.preventDefault(); window.open("cert-report.html?id=" + encodeURIComponent(id), "_blank", "noopener"); return; }
         var edit = e.target.closest("[data-edit]");
