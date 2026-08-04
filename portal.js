@@ -2294,7 +2294,7 @@
   function checkPubName() {
     var v = ($("pubName").value || "").trim(), hint = $("pubNameHint");
     if (v.length < 2) { hint.className = "field__hint"; hint.textContent = ""; }
-    else { hint.className = "field__hint field__hint--ok"; hint.innerHTML = '<span class="verified-dot"></span>“' + esc(v) + '” is available'; }
+    else { hint.className = "field__hint field__hint--ok"; hint.innerHTML = '<iconify-icon icon="fluent:checkmark-circle-12-filled" width="14" height="14" aria-hidden="true"></iconify-icon>“' + esc(v) + '” is available'; }
     updatePubCreate();
   }
   // "Create app": reserve the name (creating a brand-new app if there's no existing one),
