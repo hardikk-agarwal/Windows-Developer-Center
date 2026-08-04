@@ -763,13 +763,66 @@
   .ez-store-features-empty iconify-icon { color: color-mix(in srgb, var(--brand) 70%, var(--fg-3)); flex: 0 0 auto; }
   #ez-features-section.is-empty .ez-store-features { display: none; }
   #ez-features-section.is-empty .ez-store-features-empty { display: inline-flex; }
-  /* System requirements — hidden everywhere. Three ids out-specify the wizard's
-     `#flow-wrap.is-wizard #step-listing.is-more .ez-card-section.adv-only` !important rule. */
+  /* System requirements: shown ONLY in the read-only "Preview listing" (the dialog clone lives
+     outside #step-listing) — always hidden in the inline editable listing. */
   #flow-wrap #step-listing #ez-sysreq-section { display: none !important; }
+  .ez-sysreq-intro { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-14); font-size: 13px; line-height: 18px; color: var(--fg-2); }
+  .ez-sysreq-intro iconify-icon { flex: 0 0 auto; color: var(--status-success); margin-top: 1px; }
+  /* Collapse by CLASS (not id): the preview-dialog clone strips element ids, so the "Show more"
+     toggle only works when targeted via classes. .ez-store-sysreq lives only in this card. */
+  .ez-card-section:not(.is-open) .ez-store-sysreq { display: none; }
+  .ez-sysreq-more { margin-top: var(--sp-14); background: none; border: 0; padding: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--store-link, var(--brand)); cursor: pointer; }
+  .ez-sysreq-more:hover { text-decoration: underline; }
   .ez-store-sysreq { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-10); font-size: 13px; color: var(--fg-2); }
   .ez-store-sysreq li { display: flex; align-items: flex-start; gap: var(--sp-10); }
   .ez-store-sysreq li iconify-icon { color: var(--status-success); flex: 0 0 auto; margin-top: 2px; }
   .ez-store-sysreq strong { color: var(--fg-1); font-weight: 600; }
+  /* Optional "System requirements": its OWN card below the Package card. It's a sibling of the .ez-step
+     sections, so show it only while the Package step is active (the wizard shows one step at a time). */
+  .sysreq { border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 2%, var(--layer)); margin-top: var(--sp-16); overflow: hidden; }
+  #flow-wrap.is-wizard #editor > #sysreq-sec { display: none; }
+  #flow-wrap.is-wizard #step-package.is-wz-active ~ #sysreq-sec { display: block; }
+  /* Match the wizard package card's shell (radius, border, solid surface) and align the sysreq
+     card's inner content to the same 32px edges so the two cards read as one consistent family. */
+  #flow-wrap.is-wizard #sysreq-sec { border-radius: var(--r-16); border-color: var(--stroke-3); background: var(--layer); }
+  #flow-wrap.is-wizard #sysreq-sec .sysreq__summary { padding: var(--sp-24) var(--sp-32); }
+  #flow-wrap.is-wizard #sysreq-sec .sysreq__body { padding: var(--sp-24) var(--sp-32) var(--sp-32); }
+  #flow-wrap.is-wizard #sysreq-sec .sysreq__title { font-size: 15px; }
+  #flow-wrap.is-wizard #sysreq-sec .sysreq__sub { font-size: 13px; line-height: 18px; }
+  .sysreq[open] { background: var(--layer); }
+  .sysreq__summary { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); cursor: pointer; list-style: none; }
+  .sysreq__summary::-webkit-details-marker { display: none; }
+  .sysreq__summary:hover { background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .sysreq__ico { flex: 0 0 auto; width: 36px; height: 36px; border-radius: var(--r-8); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 6%, transparent); color: var(--fg-3); }
+  .sysreq__head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .sysreq__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); display: inline-flex; align-items: center; gap: var(--sp-8); }
+  .sysreq__sub { font-size: 12px; line-height: 16px; color: var(--fg-3); }
+  .sysreq__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  .sysreq[open] .sysreq__chev { transform: rotate(180deg); }
+  .sysreq__body { display: flex; flex-direction: column; gap: var(--sp-14); padding: var(--sp-16); border-top: 1px solid var(--stroke-3); }
+  .sysreq__explain { margin: 0; font-size: 12px; line-height: 16px; color: var(--fg-3); }
+  /* Read-only "From your package" recap — device family / min OS / architecture the listing auto-derives. */
+  .sysreq-auto { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8); margin: 0; padding: var(--sp-8) var(--sp-10); border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
+  .sysreq-auto__lead { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11.5px; font-weight: 600; color: var(--fg-2); }
+  .sysreq-auto__lead iconify-icon { color: var(--status-success); flex: 0 0 auto; }
+  .sysreq-auto__facts { display: inline-flex; flex-wrap: wrap; gap: var(--sp-6); }
+  .sysreq-auto__chip { display: inline-flex; align-items: center; gap: var(--sp-4); padding: 2px var(--sp-8); border-radius: 999px; background: var(--layer); border: 1px solid var(--stroke-2); font-size: 11.5px; color: var(--fg-2); }
+  .sysreq-auto__chip strong { color: var(--fg-1); font-weight: 600; }
+  .sysreq-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
+  .sysreq-field { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
+
+  .sysreq-field__lbl { font-size: 12px; font-weight: 600; color: var(--fg-2); }
+  .sysreq-field fluent-dropdown, .sysreq-field fluent-text-input { display: block; width: 100% !important; max-width: 100% !important; }
+  .sysreq-caps__lbl { display: block; font-size: 12px; font-weight: 600; color: var(--fg-2); margin-bottom: var(--sp-8); }
+  .sysreq-caps__lbl .muted { font-weight: 400; color: var(--fg-4); }
+  .sysreq-chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  .sysreq-chip { display: inline-flex; align-items: center; gap: var(--sp-6); padding: var(--sp-6) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-full); background: var(--layer); color: var(--fg-2); font-size: 12.5px; font-weight: 500; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .sysreq-chip:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); }
+  .sysreq-chip iconify-icon { color: var(--fg-3); }
+  .sysreq-chip[aria-pressed="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .sysreq-chip[aria-pressed="true"] iconify-icon { color: var(--brand); }
+  .sysreq__note { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-14) 0 0; font-size: 11.5px; color: var(--fg-4); }
+  @media (max-width: 640px) { .sysreq-grid { grid-template-columns: 1fr; } }
   /* Additional information grid. */
   .ez-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-16) var(--sp-24); }
   @media (max-width: 720px) { .ez-info-grid { grid-template-columns: 1fr; } }
@@ -2609,6 +2662,29 @@
   #price-sale-dialog .price-sale-amount-row { display: flex; align-items: center; gap: var(--sp-8); }
   #price-sale-dialog .price-sale-amount-row fluent-dropdown { width: auto; flex: 0 0 auto; min-width: 92px; }
   #price-sale-dialog .price-sale-amount-row fluent-text-input { flex: 1 1 auto; }
+  /* Inline market picker inside the sale dialog — "Specific markets" reveals a compact
+     searchable checkbox list (reuses the .markets-dialog__* structure at a smaller height). */
+  #price-sale-markets-pick { margin-top: var(--sp-10); }
+  #price-sale-dialog .markets-dialog__search { margin: 0 0 var(--sp-8); display: block; width: 100%; box-sizing: border-box; }
+  #price-sale-dialog .markets-dialog__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: 0 0 var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-3); }
+  #price-sale-dialog .markets-dialog__toolbar-actions { display: flex; gap: var(--sp-12); }
+  #price-sale-dialog .markets-dialog__toolbar-actions button { background: transparent; border: 0; padding: 0; color: var(--brand); cursor: pointer; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); }
+  #price-sale-dialog .markets-dialog__toolbar-actions button:hover { text-decoration: underline; }
+  #price-sale-dialog .markets-dialog__list { max-height: 200px; overflow-y: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-2); padding: var(--sp-4) 0; }
+  #price-sale-dialog .markets-dialog__row { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-6) var(--sp-12); cursor: pointer; user-select: none; }
+  #price-sale-dialog .markets-dialog__row:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
+  #price-sale-dialog .markets-dialog__row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
+  #price-sale-dialog .markets-dialog__row-name { flex: 1 1 auto; font-size: var(--font-size-base-300); color: var(--fg-1); }
+  #price-sale-dialog .markets-dialog__empty { padding: var(--sp-16); text-align: center; color: var(--fg-3); font-size: var(--font-size-base-200); }
+  /* 2-step sale flow: step 1 picks markets (taller list for the dedicated step), step 2 sets the
+     discount. The scope chip on step 2 shows the chosen markets and jumps back to step 1 on click. */
+  #price-sale-dialog #price-sale-step-markets .markets-dialog__list { max-height: 260px; }
+  .price-sale-scope { display: flex; align-items: center; gap: var(--sp-10); width: 100%; margin: 0 0 var(--sp-16); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); color: var(--fg-2); font: inherit; font-size: var(--font-size-base-200); text-align: left; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .price-sale-scope:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 6%, var(--subtle)); }
+  .price-sale-scope__ico { flex: 0 0 auto; color: var(--brand); }
+  .price-sale-scope__text { flex: 1 1 auto; min-width: 0; }
+  .price-sale-scope__text strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .price-sale-scope__edit { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--sp-4); color: var(--brand); font-weight: var(--font-weight-semibold); }
   #price-schedule-dialog .price-schedule-preview,
   #price-sale-dialog .price-schedule-preview {
     padding: var(--sp-12) var(--sp-16);
@@ -3555,8 +3631,8 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-package">1</span>
           <div>
-            <h2 class="ez-step__title">Add your app package</h2>
-            <p class="ez-step__sub">Upload a file, or paste a link. We read the details for you.</p>
+            <h2 class="ez-step__title">Add your app package <span class="field-mark field-mark--req" aria-label="required">*</span></h2>
+            <p class="ez-step__sub">Add your app and we’ll read the details for you.</p>
             <p class="ez-step__summary" id="sum-package"></p>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
@@ -3619,6 +3695,81 @@
           <span id="add-more-label">Add another package</span>
         </fluent-button>
       </section>
+
+      <!-- System requirements (optional): its OWN card below the package card, shown with the package
+           step. Nothing is pre-selected — the developer picks. Providing a minimum lets below-spec
+           customers still install (with a Store warning) and skips their rating/review; it also
+           surfaces in the Store listing preview. -->
+      <details class="sysreq" id="sysreq-sec">
+        <summary class="sysreq__summary">
+          <span class="sysreq__ico"><iconify-icon icon="fluent:developer-board-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+          <span class="sysreq__head">
+            <span class="sysreq__title">System requirements</span>
+            <span class="sysreq__sub" id="sysreq-summary">Tell shoppers the minimum hardware your app needs to run well.</span>
+          </span>
+          <iconify-icon class="sysreq__chev" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        </summary>
+        <div class="sysreq__body">
+          <div class="sysreq-auto" id="sysreq-auto" hidden>
+            <span class="sysreq-auto__lead"><iconify-icon icon="fluent:box-checkmark-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>From your package</span>
+            <span class="sysreq-auto__facts" id="sysreq-auto-facts"></span>
+          </div>
+          <p class="sysreq__explain">Set a minimum and customers below it can still install &mdash; the Store shows a &ldquo;may not run well&rdquo; note and skips their rating &amp; review, so a mismatch you flagged won&rsquo;t drag down your score.</p>
+          <div class="sysreq-grid">
+            <div class="sysreq-field">
+              <label class="sysreq-field__lbl" for="sr-ram">Memory (RAM)</label>
+              <fluent-dropdown id="sr-ram"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option>
+                <fluent-option value="2 GB">2 GB</fluent-option>
+                <fluent-option value="4 GB">4 GB</fluent-option>
+                <fluent-option value="8 GB">8 GB</fluent-option>
+                <fluent-option value="16 GB">16 GB</fluent-option>
+                <fluent-option value="32 GB">32 GB</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+            </div>
+            <div class="sysreq-field">
+              <label class="sysreq-field__lbl" for="sr-storage">Storage</label>
+              <fluent-dropdown id="sr-storage"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option>
+                <fluent-option value="500 MB">500 MB</fluent-option>
+                <fluent-option value="1 GB">1 GB</fluent-option>
+                <fluent-option value="2 GB">2 GB</fluent-option>
+                <fluent-option value="5 GB">5 GB</fluent-option>
+                <fluent-option value="10 GB">10 GB</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+            </div>
+            <div class="sysreq-field">
+              <label class="sysreq-field__lbl" for="sr-dx">DirectX</label>
+              <fluent-dropdown id="sr-dx"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option>
+                <fluent-option value="9">DirectX 9</fluent-option>
+                <fluent-option value="10">DirectX 10</fluent-option>
+                <fluent-option value="11">DirectX 11</fluent-option>
+                <fluent-option value="12">DirectX 12</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+            </div>
+          <div class="sysreq-field">
+            <label class="sysreq-field__lbl" for="sr-cpu">Processor</label>
+            <fluent-text-input id="sr-cpu" placeholder="e.g. 1 GHz or faster, dual-core"></fluent-text-input>
+          </div>
+          <div class="sysreq-field">
+            <label class="sysreq-field__lbl" for="sr-gpu">Graphics</label>
+            <fluent-text-input id="sr-gpu" placeholder="e.g. DirectX 11 compatible"></fluent-text-input>
+          </div>
+          </div>
+          <div class="sysreq-caps">
+            <span class="sysreq-caps__lbl">Also requires <span class="muted">(optional)</span></span>
+            <div class="sysreq-chips" id="sysreq-caps">
+              <button type="button" class="sysreq-chip" data-sr-cap="touch" aria-pressed="false"><iconify-icon icon="fluent:tap-single-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Touch screen</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="keyboard" aria-pressed="false"><iconify-icon icon="fluent:keyboard-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Keyboard</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="mouse" aria-pressed="false"><iconify-icon icon="fluent:cursor-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Mouse</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="gamepad" aria-pressed="false"><iconify-icon icon="fluent:xbox-controller-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Gamepad</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="microphone" aria-pressed="false"><iconify-icon icon="fluent:mic-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Microphone</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="camera" aria-pressed="false"><iconify-icon icon="fluent:camera-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Camera</button>
+            </div>
+          </div>
+        </div>
+      </details>
 
       <!-- Step 2: listing -->
       <!-- is-more is permanent: the "Make your listing stand out" banner is retired, so every
@@ -3797,13 +3948,16 @@
               </div>
             </section>
 
-            <!-- System requirements — hidden from the listing (read from the package, not author-editable). -->
-            <section class="ez-card-section adv-only" id="ez-sysreq-section">
+            <!-- System requirements — appears in the listing once the developer provides a minimum
+                 (renderSysreq toggles .is-provided). Mirrors the Store product-page card. -->
+            <section class="ez-card-section" id="ez-sysreq-section">
               <div class="ez-card-section__head">
                 <h4 class="ez-card-section__title">System requirements</h4>
               </div>
               <div class="ez-card-section__body">
+                <p class="ez-sysreq-intro"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="18" height="18" aria-hidden="true"></iconify-icon>This product should work on your device. Items with a checkmark meet the developer&rsquo;s system requirements.</p>
                 <ul class="ez-store-sysreq" id="ez-pv-sysreq"></ul>
+                <button type="button" class="ez-sysreq-more" id="ez-sysreq-more" aria-expanded="false">Show more</button>
               </div>
             </section>
 
@@ -5018,11 +5172,42 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <p class="markets-dialog__intro" style="font-size:var(--font-size-base-200);color:var(--fg-3);margin:0 0 var(--sp-12);">
-      Offer a limited-time discount. During the sale, your original price shows with a strikethrough in the Microsoft Store.
+    <p class="markets-dialog__intro" id="price-sale-intro" style="font-size:var(--font-size-base-200);color:var(--fg-3);margin:0 0 var(--sp-12);">
+      First, choose where this sale runs — every market, or specific ones.
     </p>
 
-    <div class="price-sale-fields">
+    <!-- Step 1 — pick the markets the sale applies to. -->
+    <div class="price-sale-step" id="price-sale-step-markets">
+      <div class="field">
+        <label class="field__label">Markets</label>
+        <div class="seg" role="radiogroup" aria-label="Where the sale applies" id="price-sale-markets-mode">
+          <button type="button" class="seg__opt seg__opt--active" data-sale-markets="all">All markets</button>
+          <button type="button" class="seg__opt" data-sale-markets="choose">Specific markets</button>
+        </div>
+        <div class="price-sale-markets" id="price-sale-markets-pick" hidden>
+          <fluent-text-input id="price-sale-markets-search" class="markets-dialog__search" placeholder="Search markets…">
+            <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+          </fluent-text-input>
+          <div class="markets-dialog__toolbar">
+            <span id="price-sale-markets-count">0 selected</span>
+            <div class="markets-dialog__toolbar-actions">
+              <button type="button" id="price-sale-markets-all">Select all</button>
+              <button type="button" id="price-sale-markets-clear">Clear all</button>
+            </div>
+          </div>
+          <div class="markets-dialog__list" id="price-sale-markets-list" role="listbox" aria-multiselectable="true"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 — sale details; the scope chip shows the chosen markets and jumps back to step 1. -->
+    <div class="price-sale-step" id="price-sale-step-details" hidden>
+      <button type="button" class="price-sale-scope" id="price-sale-scope-edit" aria-label="Edit markets">
+        <iconify-icon class="price-sale-scope__ico" icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+        <span class="price-sale-scope__text">Sale applies to <strong id="price-sale-scope-label">all markets</strong></span>
+        <span class="price-sale-scope__edit"><iconify-icon icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Edit</span>
+      </button>
+      <div class="price-sale-fields">
       <div class="field">
         <label class="field__label">Discount</label>
         <div class="seg" role="radiogroup" aria-label="Discount type" id="price-sale-type">
@@ -5063,13 +5248,22 @@
           <fluent-text-input id="price-sale-end" type="date"></fluent-text-input>
         </div>
       </div>
+      </div>
+
+      <p class="price-schedule-preview" id="price-sale-preview">Set a discount and dates to preview the sale.</p>
     </div>
 
-    <p class="price-schedule-preview" id="price-sale-preview">Set a discount and dates to preview the sale.</p>
-
-    <fluent-button slot="action" appearance="secondary" data-price-sale-close>Cancel</fluent-button>
+    <fluent-button slot="action" id="price-sale-cancel" appearance="secondary" data-price-sale-close>Cancel</fluent-button>
+    <fluent-button slot="action" id="price-sale-back" appearance="secondary" hidden>
+      <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      Back
+    </fluent-button>
     <fluent-button slot="action" id="price-sale-remove" appearance="subtle" hidden>Remove sale</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="price-sale-save" disabled>
+    <fluent-button slot="action" appearance="primary" id="price-sale-next">
+      Next
+      <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <fluent-button slot="action" appearance="primary" id="price-sale-save" hidden disabled>
       <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Save sale
     </fluent-button>
@@ -6320,11 +6514,11 @@
     // Required-field asterisks ("Screenshots *", "Description *") are an editor
     // affordance — a customer never sees them, so drop every required mark.
     clone.querySelectorAll('.field-mark').forEach(n => n.remove());
-    // System requirements are auto-derived from the package (OS, architecture) and
-    // aren't part of the wizard's edit view. Drop them so the preview reflects what the
-    // developer actually authors rather than a section they can't touch.
+    // System requirements: shown ONLY in this read-only preview (hidden in the editable listing) and
+    // only when the developer provided a minimum. Left collapsed behind "Show more" (the preview body
+    // wires that toggle by delegation), matching the Store product page.
     const sysreqList = clone.querySelector('.ez-store-sysreq');
-    if (sysreqList) { const sec = sysreqList.closest('.ez-card-section'); if (sec) sec.remove(); }
+    if (sysreqList && !sysreqList.children.length) { const sec = sysreqList.closest('.ez-card-section'); if (sec) sec.remove(); }
     // ---- Read-only zero states: a customer never sees "Click to pick a category" /
     // "Click to write your description". Missing content is hidden (optional) or shown
     // as a calm, muted placeholder (required core fields) — never as an edit prompt. ----
@@ -6415,6 +6609,14 @@
   }
   if ($('ez-preview-open')) $('ez-preview-open').addEventListener('click', openListingPreview);
   if ($('wz-preview-open')) $('wz-preview-open').addEventListener('click', openListingPreview);
+  // Show more / less for the System requirements card inside the preview (the body is re-cloned each open).
+  if (listingPreviewBody) listingPreviewBody.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.ez-sysreq-more'); if (!b) return;
+    var sec = b.closest('.ez-card-section'); if (!sec) return;
+    var open = sec.classList.toggle('is-open');
+    b.textContent = open ? 'Show less' : 'Show more';
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
   if ($('lpv-lang-select')) $('lpv-lang-select').addEventListener('change', function () {
     const node = buildListingPreviewNodeForLocale(this.value);
     if (node && listingPreviewBody) { listingPreviewBody.innerHTML = ''; listingPreviewBody.appendChild(node); listingPreviewBody.scrollTop = 0; }
@@ -7305,6 +7507,7 @@
     // Package
     { section: 'step-package', label: 'App package', required: true, done: () => !!state.pkg },
     { section: 'step-package', label: 'Restricted-capability reasons', applies: () => collectRestrictedCapabilities().length > 0, required: true, done: () => hasAllCapabilityReasons() },
+    { section: 'step-package', label: 'System requirements', required: false, done: () => { const s = sysreqState || {}; return !!(s.ram || s.storage || s.dx || s.cpu || s.gpu || (s.caps && s.caps.length)); }, focus: '#sysreq-sec', onJump: () => { const d = document.getElementById('sysreq-sec'); if (d) d.open = true; } },
     // Store listing — required
     { section: 'step-listing', label: 'App name', required: true, done: () => !!state.name, value: () => missLocaleNames(() => !!state.name), valueTitle: () => missLocaleNamesFull(() => !!state.name), focus: '#ez-pv-name' },
     { section: 'step-listing', label: 'Description', required: true,
@@ -8242,6 +8445,9 @@
   // Pick MSIX app / Desktop installer / Web app up front; a real package locks the choice.
   let v4Type = 'msix';  // 'msix' | 'win32' | 'pwa'
   const V4_TYPE_LABEL = { msix: 'MSIX app', win32: 'Desktop installer', pwa: 'Web app' };
+  // System requirements (optional, its own card below the Package step): the developer's stated
+  // MINIMUM. Nothing pre-selected; providing any value surfaces it in the listing + drives the warning.
+  let sysreqState = { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [] };
   // How the package step's add methods adapt per type: MSIX = upload only (packaged extensions),
   // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app is link-only.
   const V4_PKG_UI = {
@@ -8408,6 +8614,33 @@
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
     });
   }
+
+  // System-requirements facts read straight from the uploaded package(s): device family
+  // (→ "Available on"), the minimum OS build, and architecture. Aggregated across committed
+  // packages; surfaced both in the Package-step card and the listing preview. Reference-only.
+  function pkgSysreqFacts() {
+    const pkgs = (typeof packages !== 'undefined' ? packages : []).filter(p => p && !p._pending);
+    if (!pkgs.length) return { avail: '', os: '', arch: '', families: [] };
+    const AVAIL = { 'Desktop': 'PC', 'Xbox': 'Xbox', 'HoloLens': 'HoloLens', 'Surface Hub': 'Surface Hub', 'IoT': 'IoT', 'Web': 'PC' };
+    const ARCH = { arm64: 'ARM64', arm: 'ARM' };
+    const availSet = [], archSet = [], famSet = [];
+    let minBuild = 0, minRev = 0;
+    pkgs.forEach(pkg => {
+      familiesOfPkg(pkg).forEach(f => {
+        if (f && famSet.indexOf(f) < 0) famSet.push(f);
+        const l = AVAIL[f] || f; if (l && availSet.indexOf(l) < 0) availSet.push(l);
+      });
+      (pkg.arches || []).forEach(a => { const l = ARCH[a] || a; if (l && archSet.indexOf(l) < 0) archSet.push(l); });
+      if (pkg.minOsVersion) {
+        const p = String(pkg.minOsVersion).split('.').map(n => parseInt(n, 10) || 0);
+        const b = p[2] || 0;
+        if (b && (!minBuild || b < minBuild)) { minBuild = b; minRev = p[3] || 0; }
+      }
+    });
+    const os = minBuild ? ((minBuild >= 22000 ? 'Windows 11' : 'Windows 10') + ' version ' + minBuild + '.' + minRev + ' or higher') : '';
+    return { avail: availSet.join(', '), os, arch: archSet.join(', '), families: famSet };
+  }
+  window.__pkgSysreqFacts = pkgSysreqFacts;
   const isFamilyEnabled = (fam) => familyDistribution[fam] !== false;
   const enabledFamilyCount = (fams) => fams.filter(isFamilyEnabled).length;
 
@@ -8746,6 +8979,9 @@
     if (window.__reachRefresh && window.__reachRefresh.price) window.__reachRefresh.price();
     state.pkg = packages.some(p => !p._pending);
     updateGate();
+    // Refresh the package-derived System requirements (editor recap + listing preview) on every change.
+    if (window.__renderSysreqAuto) { try { window.__renderSysreqAuto(); } catch (e) {} }
+    if (window.__renderSysreq) { try { window.__renderSysreq(); } catch (e) {} }
     maybePromptWhatsNew();   // update flow: after a NEW package is added, prompt "What's new in this version"
   }
 
@@ -11966,6 +12202,7 @@
         ratingDone: !!state.rating,
         reachVisited: !!reachVisited,
         selectedGenres: selectedGenres,
+        sysreq: sysreqState,
         shotsCount: (state.shots || []).length
       }));
     } catch (e) {}
@@ -12014,11 +12251,22 @@
       // Reach & price reads "done" only once opened; a submitted app has necessarily opened it, so
       // treat published/in-review apps as visited too (covers data saved before this was persisted).
       if (d.reachVisited || (app && (app.status === 'published' || app.status === 'in-review'))) reachVisited = true;
+      if (d.sysreq && typeof d.sysreq === 'object') {
+        if (d.sysreq.ram != null) sysreqState.ram = d.sysreq.ram;
+        if (d.sysreq.storage != null) sysreqState.storage = d.sysreq.storage;
+        if (d.sysreq.dx != null) sysreqState.dx = d.sysreq.dx;
+        if (d.sysreq.cpu != null) sysreqState.cpu = d.sysreq.cpu;
+        if (d.sysreq.gpu != null) sysreqState.gpu = d.sysreq.gpu;
+        if (Array.isArray(d.sysreq.caps)) sysreqState.caps = d.sysreq.caps.slice();
+      }
       // Rehydrate the DOM from the restored model (guarded — not every render is in this scope).
       if (typeof syncName === 'function') { try { syncName(); } catch (e) {} }
       if (typeof syncDesc === 'function') { try { syncDesc(); } catch (e) {} }
       if (typeof syncCategory === 'function') { try { syncCategory(); } catch (e) {} }
       if (typeof syncV4TypeChooser === 'function') { try { syncV4TypeChooser(); } catch (e) {} }
+      if (typeof window.__syncSysreq === 'function') { try { window.__syncSysreq(); } catch (e) {} }
+      if (typeof window.__renderSysreq === 'function') { try { window.__renderSysreq(); } catch (e) {} }
+      if (typeof window.__renderSysreqAuto === 'function') { try { window.__renderSysreqAuto(); } catch (e) {} }
       if (typeof applyV4PkgUI === 'function' && typeof effectiveType === 'function') { try { applyV4PkgUI(effectiveType()); } catch (e) {} }
       if (typeof renderPackages === 'function') { try { renderPackages(); } catch (e) {} }
       if (typeof renderShots === 'function') { try { renderShots(); } catch (e) {} }
@@ -12060,6 +12308,66 @@
     } catch (e) { return false; }
   }
   window.__saveFlowData = saveFlowData; window.__restoreFlowData = restoreFlowData;
+  // System requirements (its own card below the Package step): nothing is pre-selected. Every control
+  // writes sysreqState, recaps the collapsed summary, refreshes the listing preview, and autosaves.
+  (function wireSysreq() {
+    var summary = $('sysreq-summary');
+    var ram = $('sr-ram'), storage = $('sr-storage'), dx = $('sr-dx'), cpu = $('sr-cpu'), gpu = $('sr-gpu'), caps = $('sysreq-caps');
+    if (!ram && !caps) return;
+    // beta.133 fluent-dropdown shows its value via the selected OPTION's `.selected` PROPERTY (it
+    // slots that option into the control) — the attribute alone leaves the control blank.
+    function setDD(dd, val) {
+      if (!dd) return;
+      Array.prototype.forEach.call(dd.querySelectorAll('fluent-option'), function (o) { try { o.selected = (o.value === (val || '')); } catch (e) {} });
+      try { dd.value = val || ''; } catch (e) {}
+    }
+    function recap() {
+      if (!summary) return;
+      var bits = [];
+      if (sysreqState.ram) bits.push(sysreqState.ram + ' RAM');
+      if (sysreqState.storage) bits.push(sysreqState.storage);
+      if (sysreqState.dx) bits.push('DirectX ' + sysreqState.dx);
+      summary.textContent = bits.length ? ('Minimum: ' + bits.join(' \u00b7 ')) : 'Tell shoppers the minimum hardware your app needs to run well.';
+    }
+    function changed() { recap(); if (window.__renderSysreq) { try { window.__renderSysreq(); } catch (e) {} } if (window.__scheduleFlowSave) window.__scheduleFlowSave(); }
+    // Read-only recap of what the listing auto-derives from the uploaded package (device family,
+    // minimum OS, architecture) — the same facts the System requirements preview shows.
+    function renderSysreqAuto() {
+      var wrap = document.getElementById('sysreq-auto'), host = document.getElementById('sysreq-auto-facts');
+      if (!wrap || !host) return;
+      var f = (typeof window.__pkgSysreqFacts === 'function') ? window.__pkgSysreqFacts() : null;
+      var chips = [];
+      if (f && f.avail) chips.push(['Available on', f.avail]);
+      if (f && f.os) chips.push(['OS', f.os]);
+      if (f && f.arch) chips.push(['Architecture', f.arch]);
+      if (!chips.length) { wrap.hidden = true; host.innerHTML = ''; return; }
+      var e = function (s) { return String(s).replace(/[&<>"]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[m]; }); };
+      wrap.hidden = false;
+      host.innerHTML = chips.map(function (c) { return '<span class="sysreq-auto__chip">' + e(c[0]) + ': <strong>' + e(c[1]) + '</strong></span>'; }).join('');
+    }
+    window.__renderSysreqAuto = renderSysreqAuto;
+    window.__syncSysreq = function () {
+      setDD(ram, sysreqState.ram); setDD(storage, sysreqState.storage); setDD(dx, sysreqState.dx);
+      if (cpu) cpu.value = sysreqState.cpu || ''; if (gpu) gpu.value = sysreqState.gpu || '';
+      if (caps) Array.prototype.forEach.call(caps.querySelectorAll('[data-sr-cap]'), function (b) { b.setAttribute('aria-pressed', sysreqState.caps.indexOf(b.getAttribute('data-sr-cap')) >= 0 ? 'true' : 'false'); });
+      recap();
+    };
+    if (ram) ram.addEventListener('change', function () { sysreqState.ram = ram.value; changed(); });
+    if (storage) storage.addEventListener('change', function () { sysreqState.storage = storage.value; changed(); });
+    if (dx) dx.addEventListener('change', function () { sysreqState.dx = dx.value; changed(); });
+    if (cpu) cpu.addEventListener('input', function () { sysreqState.cpu = cpu.value; changed(); });
+    if (gpu) gpu.addEventListener('input', function () { sysreqState.gpu = gpu.value; changed(); });
+    if (caps) caps.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-sr-cap]'); if (!b) return;
+      var cap = b.getAttribute('data-sr-cap'), i = sysreqState.caps.indexOf(cap);
+      if (i >= 0) sysreqState.caps.splice(i, 1); else sysreqState.caps.push(cap);
+      b.setAttribute('aria-pressed', i >= 0 ? 'false' : 'true'); changed();
+    });
+    window.__syncSysreq();
+    renderSysreqAuto();
+    // Dropdowns only reflect their value once upgraded — re-sync after the components define.
+    try { if (window.customElements) customElements.whenDefined('fluent-option').then(function () { window.__syncSysreq(); }); } catch (e) {}
+  })();
   // ---- Autosave: keep the app's publishing data persisted WHILE it's edited — not only on submit —
   //      so leaving the flow (going Home, back to Apps, closing the tab) and reopening the app keeps
   //      everything. Autosave arms only AFTER restore has run, so a freshly-booted empty editor can
@@ -13897,8 +14205,65 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   const priceSalePreview  = $('price-sale-preview');
   const priceSaleSave     = $('price-sale-save');
   const priceSaleRemove   = $('price-sale-remove');
+  const priceSaleNext     = $('price-sale-next');
+  const priceSaleBack     = $('price-sale-back');
+  const priceSaleCancel   = $('price-sale-cancel');
   let priceSaleType = 'price';
   const SALE_AUDIENCE_LABEL = { all: 'everyone', new: 'new customers', existing: 'existing customers' };
+  // ---- Market scope: 'all' markets by default, or a specific set of market codes. Editable inline. ----
+  const priceSaleMarketsPick   = $('price-sale-markets-pick');
+  const priceSaleMarketsList   = $('price-sale-markets-list');
+  const priceSaleMarketsSearch = $('price-sale-markets-search');
+  const priceSaleMarketsCount  = $('price-sale-markets-count');
+  let saleMarketsMode = 'all';
+  const saleMarketsSel = new Set();
+  // The full market list comes from the reach step (window.MARKET_NAME: { code -> name }).
+  function saleAllMarkets() {
+    const m = window.MARKET_NAME || {};
+    return Object.keys(m).map(code => ({ code, name: m[code] })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+  function updateSaleMarketsCount() {
+    const total = Object.keys(window.MARKET_NAME || {}).length;
+    if (priceSaleMarketsCount) priceSaleMarketsCount.textContent = saleMarketsSel.size + ' of ' + total + ' selected';
+  }
+  function renderSaleMarketsList(filter) {
+    if (!priceSaleMarketsList) return;
+    const q = (filter || '').trim().toLowerCase();
+    const all = saleAllMarkets();
+    const filtered = q ? all.filter(m => m.name.toLowerCase().includes(q)) : all;
+    if (!filtered.length) { priceSaleMarketsList.innerHTML = '<div class="markets-dialog__empty">No markets match &ldquo;' + q + '&rdquo;.</div>'; return; }
+    priceSaleMarketsList.innerHTML = filtered.map(m => {
+      const checked = saleMarketsSel.has(m.code) ? 'checked' : '';
+      return '<label class="markets-dialog__row" role="option" aria-selected="' + (!!checked) + '">' +
+        '<input type="checkbox" data-sale-market="' + m.code + '" ' + checked + ' />' +
+        '<span class="markets-dialog__row-name">' + m.name + '</span></label>';
+    }).join('');
+    priceSaleMarketsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const code = cb.getAttribute('data-sale-market');
+        if (cb.checked) saleMarketsSel.add(code); else saleMarketsSel.delete(code);
+        updateSaleMarketsCount(); syncSaleSaveEnabled();
+      });
+    });
+  }
+  function setSaleMarketsMode(mode, sync) {
+    saleMarketsMode = (mode === 'choose') ? 'choose' : 'all';
+    const seg = $('price-sale-markets-mode');
+    if (seg) seg.querySelectorAll('[data-sale-markets]').forEach(b => b.classList.toggle('seg__opt--active', b.getAttribute('data-sale-markets') === saleMarketsMode));
+    if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = saleMarketsMode !== 'choose';
+    if (saleMarketsMode === 'choose') { renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); }
+    if (sync) syncSaleSaveEnabled();
+  }
+  function saleMarketsLabel(s) {
+    const m = s && s.markets;
+    if (Array.isArray(m) && m.length) return m.length === 1 ? ((window.MARKET_NAME || {})[m[0]] || m[0]) : (m.length + ' markets');
+    return 'All markets';
+  }
+  function salePreviewScope() {
+    if (saleMarketsMode !== 'choose' || !saleMarketsSel.size) return '';
+    if (saleMarketsSel.size === 1) { const c = [...saleMarketsSel][0]; return ' in ' + ((window.MARKET_NAME || {})[c] || c); }
+    return ' in ' + saleMarketsSel.size + ' markets';
+  }
   function saleCurrency() { return (priceSaleCurrency && priceSaleCurrency.value) || _baseCurrency(); }
   // The sale-price currency list mirrors the base price dropdown — cloned once.
   function populateSaleCurrency() {
@@ -13915,6 +14280,17 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     }
     tightenCurrencyDropdown(priceSaleCurrency);
   }
+  // beta.133 fluent-dropdown only fills its collapsed control when the SELECTED option is (re)slotted,
+  // which happens on a slotchange. Rebuilding the listbox with the `selected` attribute on the target
+  // forces it; setting `.value`/`.selected` after the options already exist leaves the control blank.
+  function reselectDD(dd, val) {
+    if (!dd) return;
+    const lb = dd.querySelector('fluent-listbox'); if (!lb) return;
+    const opts = Array.from(lb.querySelectorAll('fluent-option')).map(o => ({ v: o.getAttribute('value') || '', t: o.textContent || '' }));
+    if (!opts.length) return;
+    lb.innerHTML = opts.map(o => '<fluent-option value="' + o.v + '"' + (o.v === val ? ' selected' : '') + '>' + o.t + '</fluent-option>').join('');
+    try { dd.value = val; } catch (e) {}
+  }
   function setSaleType(t, sync) {
     priceSaleType = (t === 'percent') ? 'percent' : 'price';
     const seg = $('price-sale-type');
@@ -13925,6 +14301,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (sync) syncSaleSaveEnabled();
   }
   function saleValid() {
+    if (saleMarketsMode === 'choose' && saleMarketsSel.size === 0) return false;
     const start = priceSaleStart?.value, end = priceSaleEnd?.value;
     if (!start || !end || end < start) return false;
     if (priceSaleType === 'percent') {
@@ -13938,6 +14315,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   }
   function renderSalePreview() {
     if (!priceSalePreview) return;
+    if (saleMarketsMode === 'choose' && saleMarketsSel.size === 0) { priceSalePreview.textContent = 'Select at least one market for this sale.'; return; }
     const start = priceSaleStart?.value, end = priceSaleEnd?.value;
     const bcur = _baseCurrency(), base = _baseAmount(), bdig = fractionDigitsFor(bcur);
     const who = SALE_AUDIENCE_LABEL[(priceSaleAudience && priceSaleAudience.value) || 'all'] || 'everyone';
@@ -13947,7 +14325,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
       if (!Number.isFinite(p) || !start || !end) { priceSalePreview.textContent = 'Set a discount and dates to preview the sale.'; return; }
       if (p < 1 || p > 99) { priceSalePreview.textContent = 'Enter a percentage between 1 and 99.'; return; }
       if (end < start) { priceSalePreview.textContent = 'The end date must be on or after the start date.'; return; }
-      priceSalePreview.innerHTML = range + who + ' get <strong>' + p + '% off</strong> — ' + bcur + ' ' + Math.max(0, base * (1 - p / 100)).toFixed(bdig) + ' instead of ' + bcur + ' ' + base.toFixed(bdig) + '.';
+      priceSalePreview.innerHTML = range + who + ' get <strong>' + p + '% off</strong> — ' + bcur + ' ' + Math.max(0, base * (1 - p / 100)).toFixed(bdig) + ' instead of ' + bcur + ' ' + base.toFixed(bdig) + salePreviewScope() + '.';
       return;
     }
     const cur = saleCurrency(), cdig = fractionDigitsFor(cur), sameCur = cur === bcur;
@@ -13955,16 +14333,52 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (!Number.isFinite(v) || !start || !end) { priceSalePreview.textContent = 'Set a discount and dates to preview the sale.'; return; }
     if (sameCur && v >= base) { priceSalePreview.textContent = 'Sale price must be lower than your base price (' + bcur + ' ' + base.toFixed(bdig) + ').'; return; }
     if (end < start) { priceSalePreview.textContent = 'The end date must be on or after the start date.'; return; }
-    priceSalePreview.innerHTML = range + who + ' pay <strong>' + cur + ' ' + v.toFixed(cdig) + '</strong>' + (sameCur ? (' instead of <strong>' + bcur + ' ' + base.toFixed(bdig) + '</strong>') : '') + '.';
+    priceSalePreview.innerHTML = range + who + ' pay <strong>' + cur + ' ' + v.toFixed(cdig) + '</strong>' + (sameCur ? (' instead of <strong>' + bcur + ' ' + base.toFixed(bdig) + '</strong>') : '') + salePreviewScope() + '.';
   }
-  function syncSaleSaveEnabled() { if (priceSaleSave) priceSaleSave.disabled = !saleValid(); renderSalePreview(); }
+  // Step 1 (markets) is complete when it's "all markets" or at least one specific market is picked.
+  function saleStep1Valid() { return saleMarketsMode !== 'choose' || saleMarketsSel.size > 0; }
+  function currentSaleMarketsLabel() {
+    if (saleMarketsMode !== 'choose') return 'all markets';
+    const n = saleMarketsSel.size;
+    if (!n) return 'no markets yet';
+    const names = [...saleMarketsSel].map(c => (window.MARKET_NAME || {})[c] || c);
+    if (n === 1) return names[0];
+    if (n === 2) return names[0] + ' and ' + names[1];
+    return names.slice(0, 2).join(', ') + ' +' + (n - 2) + ' more';
+  }
+  function updateSaleScopeLabel() { const el = $('price-sale-scope-label'); if (el) el.textContent = currentSaleMarketsLabel(); }
+  function syncSaleSaveEnabled() {
+    if (priceSaleSave) priceSaleSave.disabled = !saleValid();
+    if (priceSaleNext) priceSaleNext.disabled = !saleStep1Valid();
+    updateSaleScopeLabel();
+    renderSalePreview();
+  }
+  // Two-step flow: step 1 = choose markets, step 2 = discount + dates. New sale starts on step 1;
+  // editing jumps to step 2 (the scope chip there jumps back to step 1 to change markets).
+  let saleStep = 1;
+  function showSaleStep(step) {
+    saleStep = (step === 2) ? 2 : 1;
+    const s1 = $('price-sale-step-markets'), s2 = $('price-sale-step-details'), intro = $('price-sale-intro');
+    if (s1) s1.hidden = saleStep !== 1;
+    if (s2) s2.hidden = saleStep !== 2;
+    if (intro) intro.textContent = saleStep === 1
+      ? 'First, choose where this sale runs \u2014 every market, or specific ones.'
+      : 'Now set the discount and when it runs. During the sale, your original price shows with a strikethrough.';
+    if (priceSaleCancel) priceSaleCancel.hidden = saleStep !== 1;
+    if (priceSaleNext)   priceSaleNext.hidden   = saleStep !== 1;
+    if (priceSaleBack)   priceSaleBack.hidden   = saleStep !== 2;
+    if (priceSaleSave)   priceSaleSave.hidden   = saleStep !== 2;
+    if (priceSaleRemove) priceSaleRemove.hidden = !(saleStep === 2 && priceSaleEditIndex >= 0);
+    syncSaleSaveEnabled();
+    setTimeout(() => { try { (saleStep === 2 ? priceSaleAmount : ($('price-sale-markets-mode') || {}).querySelector?.('.seg__opt--active'))?.focus?.(); } catch (e) {} }, 30);
+  }
   let priceSaleEditIndex = -1; // -1 = adding a new sale; otherwise the index being edited
   function saleList() { return (adv && adv.price && Array.isArray(adv.price.sales)) ? adv.price.sales : []; }
   function saleSummary(s) {
     const cur = s.currency || _baseCurrency();
     const what = s.type === 'percent' ? (s.value + '% off') : (cur + ' ' + s.value);
     const who = SALE_AUDIENCE_LABEL[s.audience] || 'everyone';
-    return what + ' · ' + who + ' · ' + formatScheduleDate(s.start) + ' – ' + formatScheduleDate(s.end);
+    return what + ' · ' + saleMarketsLabel(s) + ' · ' + who + ' · ' + formatScheduleDate(s.start) + ' – ' + formatScheduleDate(s.end);
   }
   function renderSalesList() {
     const host = $('price-sales');
@@ -13987,12 +14401,19 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     setSaleType(sale?.type || 'price', false);
     if (priceSaleAmount) priceSaleAmount.value = (sale && sale.type !== 'percent' && sale.value != null) ? String(sale.value) : '';
     if (priceSalePercent) priceSalePercent.value = (sale && sale.type === 'percent' && sale.value != null) ? String(sale.value) : '';
-    if (priceSaleCurrency) priceSaleCurrency.value = (sale && sale.currency) || _baseCurrency();
-    if (priceSaleAudience) priceSaleAudience.value = sale?.audience || 'all';
+    reselectDD(priceSaleCurrency, (sale && sale.currency) || _baseCurrency());
+    reselectDD(priceSaleAudience, sale?.audience || 'all');
     if (priceSaleStart) priceSaleStart.value = sale?.start || '';
     if (priceSaleEnd) priceSaleEnd.value = sale?.end || '';
     if (priceSaleRemove) priceSaleRemove.hidden = priceSaleEditIndex < 0; // only when editing an existing sale
-    syncSaleSaveEnabled();
+    // Seed the market scope from the sale (default: all markets).
+    saleMarketsSel.clear();
+    const seedMarkets = sale && sale.markets;
+    if (Array.isArray(seedMarkets)) seedMarkets.forEach(c => { if ((window.MARKET_NAME || {})[c]) saleMarketsSel.add(c); });
+    if (priceSaleMarketsSearch) priceSaleMarketsSearch.value = '';
+    setSaleMarketsMode(Array.isArray(seedMarkets) && seedMarkets.length ? 'choose' : 'all', false);
+    // New sale → start on the markets step; editing → jump to the details step (markets already chosen).
+    showSaleStep(priceSaleEditIndex >= 0 ? 2 : 1);
     priceSaleDialog.setAttribute('open', '');
     priceSaleDialog.removeAttribute('hidden');
     try { if (typeof priceSaleDialog.show === 'function') priceSaleDialog.show(); } catch (e) {}
@@ -14003,6 +14424,13 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     try { if (typeof priceSaleDialog.hide === 'function') priceSaleDialog.hide(); } catch (e) {}
   }
   $('price-sale-type')?.querySelectorAll('[data-sale-type]').forEach(b => b.addEventListener('click', () => setSaleType(b.getAttribute('data-sale-type'), true)));
+  $('price-sale-markets-mode')?.querySelectorAll('[data-sale-markets]').forEach(b => b.addEventListener('click', () => setSaleMarketsMode(b.getAttribute('data-sale-markets'), true)));
+  priceSaleMarketsSearch?.addEventListener('input', e => renderSaleMarketsList(e.target.value));
+  $('price-sale-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => saleMarketsSel.add(m.code)); renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); syncSaleSaveEnabled(); });
+  $('price-sale-markets-clear')?.addEventListener('click', () => { saleMarketsSel.clear(); renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); syncSaleSaveEnabled(); });
+  $('price-sale-next')?.addEventListener('click', () => { if (saleStep1Valid()) showSaleStep(2); });
+  $('price-sale-back')?.addEventListener('click', () => showSaleStep(1));
+  $('price-sale-scope-edit')?.addEventListener('click', () => showSaleStep(1));
   priceSaleDialog?.querySelectorAll('[data-price-sale-close]').forEach(el => el.addEventListener('click', () => closePriceSaleDialog()));
   priceSaleAmount?.addEventListener('input', syncSaleSaveEnabled);
   priceSalePercent?.addEventListener('input', syncSaleSaveEnabled);
@@ -14020,7 +14448,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   priceSaleSave?.addEventListener('click', () => {
     if (!saleValid()) return;
     const value = priceSaleType === 'percent' ? parseFloat(priceSalePercent.value) : parseFloat(priceSaleAmount.value);
-    const obj = { type: priceSaleType, value, audience: (priceSaleAudience && priceSaleAudience.value) || 'all', currency: priceSaleType === 'percent' ? _baseCurrency() : saleCurrency(), start: priceSaleStart.value, end: priceSaleEnd.value };
+    const obj = { type: priceSaleType, value, audience: (priceSaleAudience && priceSaleAudience.value) || 'all', currency: priceSaleType === 'percent' ? _baseCurrency() : saleCurrency(), markets: saleMarketsMode === 'choose' ? [...saleMarketsSel] : 'all', start: priceSaleStart.value, end: priceSaleEnd.value };
     if (adv && adv.price) {
       if (!Array.isArray(adv.price.sales)) adv.price.sales = [];
       if (priceSaleEditIndex >= 0) adv.price.sales[priceSaleEditIndex] = obj; else adv.price.sales.push(obj);
@@ -14346,14 +14774,32 @@ function openPriceScheduleDialog() {
     renderHeroMedia();
 
     // ---- System requirements (from the package; defaults otherwise) ----
+    // System requirements shown in the listing preview — package-derived rows (Available on / OS /
+    // Architecture) PLUS whatever minimum the developer entered (sysreqState). The card only appears
+    // once the developer has provided something, which also gates the preview-dialog clone.
     function renderSysreq() {
       const ul = $('ez-pv-sysreq'); if (!ul) return;
-      const pkg = (typeof packages !== 'undefined' && packages[0]) ? packages[0] : null;
-      const arch = (pkg && pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : 'x86, x64, Arm64';
-      const os = (pkg && pkg.minOsVersion) ? ('Windows 10 version ' + pkg.minOsVersion + ' or higher') : 'Windows 10 version 19041.0 or higher';
-      const rows = [['Available on', 'PC'], ['Operating system', os], ['Architecture', arch]];
-      ul.innerHTML = rows.map(r => '<li><iconify-icon icon="fluent:checkmark-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span><strong>' + r[0] + ':</strong> ' + esc(r[1]) + '</span></li>').join('');
+      const sec = $('ez-sysreq-section');
+      const sr = (typeof sysreqState !== 'undefined') ? sysreqState : {};
+      // Package-derived facts (device family → "Available on", minimum OS, architecture) come straight
+      // from the uploaded package and show automatically; the developer's minimums are appended.
+      const facts = (typeof window.__pkgSysreqFacts === 'function') ? window.__pkgSysreqFacts() : { avail: '', os: '', arch: '' };
+      const CAP_LABEL = { touch: 'Touch screen', keyboard: 'Keyboard', mouse: 'Mouse', gamepad: 'Gamepad', microphone: 'Microphone', camera: 'Camera' };
+      const rows = [];
+      if (facts.avail) rows.push(['Available on', facts.avail]);
+      if (facts.os) rows.push(['OS', facts.os]);
+      if (facts.arch) rows.push(['Architecture', facts.arch]);
+      if (sr.dx) rows.push(['DirectX', 'DirectX ' + sr.dx + ' API']);
+      if (sr.ram) rows.push(['Memory', sr.ram + ' (Minimum)']);
+      if (sr.cpu) rows.push(['Processor', sr.cpu + ' (Minimum)']);
+      if (sr.gpu) rows.push(['Graphics', sr.gpu + ' (Minimum)']);
+      if (sr.storage) rows.push(['Storage', sr.storage + ' available space']);
+      if (sr.caps && sr.caps.length) rows.push(['Also requires', sr.caps.map(c => CAP_LABEL[c] || c).join(', ')]);
+      if (sec) sec.classList.toggle('is-provided', rows.length > 0);
+      if (!rows.length) { ul.innerHTML = ''; return; }
+      ul.innerHTML = rows.map(r => '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span><strong>' + r[0] + ':</strong> ' + esc(r[1]) + '</span></li>').join('');
     }
+    window.__renderSysreq = renderSysreq;
 
     // ---- Additional information grid (subcategory + privacy editable) ----
     function catLabel() { const o = fCat && fCat.value ? fCat.querySelector('fluent-option[value="' + fCat.value + '"]') : null; return o ? o.textContent.trim() : 'Not set'; }
