@@ -910,10 +910,10 @@
   // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
   var anaRange = "7d", anaCustom = null, symUp = null, anaFilters = {};
   var SYM_STATES = {
-    resolved:    { label: "Resolved",      cls: "ok",   ico: "fluent:checkmark-circle-16-filled" },
-    processing:  { label: "Processing",    cls: "info", ico: "fluent:arrow-sync-16-filled" },
-    notuploaded: { label: "Not uploaded",  cls: "idle", ico: "fluent:circle-16-regular" },
-    action:      { label: "Action needed", cls: "warn", ico: "fluent:warning-16-filled" }
+    resolved:    { label: "Resolved",       cls: "ok",   ico: "fluent:checkmark-circle-16-filled" },
+    processing:  { label: "Validating",     cls: "info", ico: "fluent:arrow-sync-16-filled" },
+    notuploaded: { label: "Not uploaded",   cls: "idle", ico: "fluent:circle-16-regular" },
+    action:      { label: "Action needed",  cls: "warn", ico: "fluent:warning-16-filled" }
   };
   var SYM_ERR = {
     code: "SYM_E_PDB_MISMATCH",
@@ -1018,12 +1018,18 @@
     var vShare = 0.62, versions = verNums.map(function (vn, vi) {
       var st = msix ? "resolved" : symSeq[(vi + soff) % symSeq.length];
       var vf = Math.max(240, Math.round((crashes + hangs) * vShare * (0.5 + rnd() * 0.5))); vShare *= (0.42 + rnd() * 0.3);
-      return { ver: vn, failures: vf, sym: st };
+      return { ver: vn, failures: vf, sym: st, stacksPending: false };
     });
     if (!msix) {   // symbol-status variety only matters for Win32; MSIX is always resolved
       if (!versions.some(function (v) { return v.sym === "action"; })) versions[Math.min(2, nver - 1)].sym = "action";
       var actionIdx = -1; for (var ai = 0; ai < versions.length; ai++) { if (versions[ai].sym === "action") { actionIdx = ai; break; } }
       if (!versions.some(function (v) { return v.sym === "notuploaded"; })) { var nIdx = nver - 1; if (nIdx === actionIdx) nIdx = Math.max(0, nver - 2); versions[nIdx].sym = "notuploaded"; }
+      // A recently-validated build shows Resolved, but its crashes still take ~10h to attach stacks. Put that lag on a
+      // recent build (top 3 carry crash volume) so it also shows on individual crashes.
+      var _topN = Math.min(3, nver);
+      if (!versions.some(function (v, ix) { return v.stacksPending && ix < _topN; })) {
+        for (var ri = 0; ri < _topN; ri++) { if (versions[ri].sym === "resolved") { versions[ri].stacksPending = true; break; } }
+      }
       if (versions[0].sym === "notuploaded") versions[0].sym = "processing";   // newest is being worked on
     }
     var symbolHealth = msix ? 100 : Math.round(versions.filter(function (v) { return v.sym === "resolved"; }).length / nver * 100);
@@ -1033,7 +1039,8 @@
     for (var f = 0; f < 24; f++) {
       var k = FAIL_KINDS[f % FAIL_KINDS.length];
       var vp = versions[(rnd() * Math.min(3, nver)) | 0];
-      var resolved = msix || vp.sym === "resolved";
+      var reprocessing = !msix && vp.sym === "resolved" && !!vp.stacksPending;   // symbols resolved, this crash's stack still attaching (~10h)
+      var resolved = !reprocessing && (msix || vp.sym === "resolved");
       var type = (f % 6 === 5) ? "Memory" : k.t;
       var cm = k.p.match(/_([0-9a-fA-F]{8})_/), code = cm ? "0x" + cm[1].toUpperCase() : (type === "Hang" ? "Hang" : "0xC0000005");
       var fn = STACK_FNS[(rnd() * STACK_FNS.length) | 0];
@@ -1042,7 +1049,7 @@
       var fIsNew = vp.ver === verNums[0] && rnd() < 0.5;
       if (fIsNew) fhits = Math.round(fhits * (1.7 + rnd() * 1.3));   // spiking regressions climb fast — surface them
       var fDelta = fIsNew ? (55 + rnd() * 260) : (-50 + rnd() * 120);
-      failures.push({ id: "f" + f, name: name, type: type, ver: vp.ver, resolved: resolved, code: code, fn: resolved ? fn : "!Unknown",
+      failures.push({ id: "f" + f, name: name, type: type, ver: vp.ver, resolved: resolved, reprocessing: reprocessing, code: code, fn: resolved ? fn : "!Unknown",
         hits: fhits, devices: Math.max(1, Math.round(fhits * (0.10 + rnd() * 0.32))), dPct: +fDelta.toFixed(1), isNew: fIsNew,
         trend: wave(rnd, 8, fhits / 8, fhits / 6).map(Math.round) });
       share *= (0.55 + rnd() * 0.3);
@@ -1599,11 +1606,13 @@
   function symbolsPanel(app) {
     var d = anaData(app), hp = d.symbolHealth, hcls = hp >= 80 ? "ok" : hp >= 50 ? "warn" : "bad";
     var rn = d.versions.filter(function (v) { return v.sym === "resolved"; }).length, nv = d.versions.length;
+    var rp = d.versions.filter(function (v) { return v.sym === "resolved" && v.stacksPending; }).length;
     var actionV = d.versions.filter(function (v) { return v.sym === "action"; })[0];
     var unreadable = d.failures.filter(function (f) { return !f.resolved; }).reduce(function (m, f) { return m + f.hits; }, 0);
-    var detail = (rn === nv)
-      ? "All " + nv + " versions resolved \u00b7 stacks resolving normally"
-      : rn + " of " + nv + " versions resolved \u00b7 <strong>" + fmtCompact(unreadable) + "</strong> crashes can\u2019t show stack traces";
+    var allDone = (rn === nv && !rp);
+    var detail = allDone ? "All " + nv + " versions resolved \u00b7 stacks showing normally" : (rn + " of " + nv + " versions resolved");
+    if (rp) detail += " \u00b7 <span class=\"sympanel__prog\">stacks attaching on " + rp + " build" + (rp > 1 ? "s" : "") + " (~10h)</span>";
+    if (unreadable && !allDone) detail += " \u00b7 <strong>" + fmtCompact(unreadable) + "</strong> crashes can\u2019t show stacks yet";
     if (actionV) detail += " \u00b7 <span class=\"sympanel__warn\">action needed on " + esc(actionV.ver) + "</span>";
     // Accordion: collapsed by default = coverage health at a glance (any "action needed" version
     // is still surfaced in the header); expand to manage symbols in place, on demand.
@@ -1617,7 +1626,7 @@
         '<iconify-icon class="symacc__chev" icon="fluent:chevron-down-16-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
       '</summary>' +
       '<div class="symacc__body">' +
-        '<p class="apanel__sub muted symacc__hint">Symbols are matched per app version. Uploading resolves stack traces for <strong>future</strong> crashes on that build \u2014 occurrences that already happened stay unresolved. Processing can take up to 24 hours \u2014 we\u2019ll email you when a version resolves or needs attention.</p>' +
+        '<p class="apanel__sub muted symacc__hint">Symbols are matched per app version. A build shows <strong>Resolved</strong> the moment validation passes (~2\u20133 min). Its existing crashes then take up to <strong>~10 hours</strong> to attach stacks \u2014 we\u2019ll email you when they\u2019re ready; new crashes resolve right away. A crash that never recurs may stay unresolved.</p>' +
         '<div id="symTableHost">' + symbolsTable(app) + '</div>' +
       '</div>' +
       '</details></section>';
@@ -1648,7 +1657,7 @@
     if (anaCause) list = list.filter(function (f) { return causeCat(f).key === anaCause; });
     if (anaSearch) { var q = anaSearch.toLowerCase(); list = list.filter(function (f) { return f.name.toLowerCase().indexOf(q) >= 0 || f.ver.toLowerCase().indexOf(q) >= 0; }); }
     var key = anaSort.key, dir = anaSort.dir === "asc" ? 1 : -1;
-    var symRank = function (f) { return f.resolved ? 0 : 1; };
+    var symRank = function (f) { return f.resolved ? 0 : f.reprocessing ? 1 : 2; };
     list.sort(function (a, b) { return (key === "ver" ? cmpVer(a.ver, b.ver) : key === "sym" ? symRank(a) - symRank(b) : a[key] - b[key]) * dir; });
     var per = 6, pages = Math.max(1, Math.ceil(list.length / per)), pg = Math.max(0, Math.min(anaPage, pages - 1));
     function sortTh(label, k, num) { var on = anaSort.key === k; return '<th class="' + (num === false ? "" : "num ") + 'th-sort" data-anasort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (anaSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
@@ -1656,7 +1665,7 @@
       return '<tr class="failrow" data-failure="' + f.id + '" tabindex="0" role="button" aria-label="View ' + esc(f.name) + '">' +
         '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
         '<td>' + ftypePill(f.type) + '</td><td><span class="mono">' + esc(f.ver) + '</span></td>' +
-        (msix ? "" : '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>') +
+        (msix ? "" : '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : f.reprocessing ? '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="brand" title="Symbols resolved \u2014 this crash\u2019s stack is still attaching (up to ~10h). We\u2019ll email you.">Stack pending</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>') +
         '<td class="num" title="' + fmtComma(f.hits) + ' hits">' + fmtCompact(f.hits) + '</td><td class="num" title="' + fmtComma(f.devices) + ' devices">' + fmtCompact(f.devices) + '</td></tr>';
     }).join("");
     if (!list.length) rows = '<tr><td colspan="' + (msix ? 5 : 6) + '" class="cellspan">No failures match your search or filters.</td></tr>';
@@ -1673,17 +1682,19 @@
   }
   function symbolsTable(app) {
     var d = anaData(app), list = d.versions.slice(), dir = symSort.dir === "asc" ? 1 : -1;
-    var symRank = { action: 3, notuploaded: 2, processing: 1, resolved: 0 };
+    var symRank = function (v) { return (({ action: 3, notuploaded: 2, processing: 1, resolved: 0 })[v.sym] || 0) * 2 + (v.stacksPending ? 1 : 0); };
     if (symSort.key === "ver") list.sort(function (a, b) { return cmpVer(a.ver, b.ver) * dir; });
-    else if (symSort.key === "sym") list.sort(function (a, b) { return ((symRank[a.sym] || 0) - (symRank[b.sym] || 0)) * dir || cmpVer(b.ver, a.ver); });
+    else if (symSort.key === "sym") list.sort(function (a, b) { return (symRank(a) - symRank(b)) * dir || cmpVer(b.ver, a.ver); });
     else list.sort(function (a, b) { return (a.failures - b.failures) * dir; });
     function symTh(label, k, num) { var on = symSort.key === k; return '<th class="' + (num ? "num " : "") + 'th-sort" data-symsort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (symSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
     var rows = list.map(function (v) {
-      var act = v.sym === "action" ? '<fluent-link data-sym-details="' + esc(v.ver) + '">View details</fluent-link>'
+      var lag = (v.sym === "resolved" && v.stacksPending);
+      var act = v.sym === "action" ? '<fluent-button appearance="primary" size="small" data-sym-details="' + esc(v.ver) + '">Fix symbols</fluent-button>'
         : v.sym === "processing" ? '<span class="muted">Validating\u2026</span>'
-        : v.sym === "notuploaded" ? '<fluent-link data-sym-upload="' + esc(v.ver) + '">Upload</fluent-link>'
-        : '<fluent-link data-sym-upload="' + esc(v.ver) + '">Re-upload</fluent-link>';
-      return '<tr data-ver="' + esc(v.ver) + '"><td><span class="mono">' + esc(v.ver) + '</span></td><td class="num">' + fmtComma(v.failures) + '</td><td>' + symPill(v.sym) + '</td><td class="atable__act">' + act + '</td></tr>';
+        : v.sym === "notuploaded" ? '<fluent-button appearance="primary" size="small" data-sym-upload="' + esc(v.ver) + '">Upload</fluent-button>'
+        : '<fluent-button appearance="outline" size="small" data-sym-upload="' + esc(v.ver) + '" title="Replace or add to this build\u2019s symbols \u2014 e.g. missing modules or architectures, or richer private PDBs. Complete, correct symbols need no action.">Replace\u2026</fluent-button>';
+      var pill = symPill(v.sym) + (lag ? ' <span class="sympend" title="Symbols are in. We\u2019ll email you when your existing crashes finish attaching stacks (up to ~10h)."><iconify-icon icon="fluent:arrow-sync-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Stacks attaching \u00b7 ~10h</span>' : "");
+      return '<tr data-ver="' + esc(v.ver) + '"><td><span class="mono">' + esc(v.ver) + '</span></td><td class="num">' + fmtComma(v.failures) + '</td><td>' + pill + '</td><td class="atable__act">' + act + '</td></tr>';
     }).join("");
     return '<div class="table-wrap"><table class="atable atable--sym"><thead><tr>' + symTh("App version", "ver") + symTh("Failures", "failures", true) + symTh("Symbol status", "sym") + '<th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
@@ -1867,6 +1878,15 @@
         '<div class="apanel__body"><div class="stk stk--resolved">' + ctx + bodyHTML +
         '<div class="crashai" id="crashai-' + f.id + '" hidden>' + crashInsightHTML(app, f, parts, env, occ) + '</div></div></div></section>';
     }
+    if (f.reprocessing) {
+      return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="brand">Stack pending</fluent-badge>' +
+        '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
+        '<span class="stk__actions">' + dumpBtn +
+        '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button></span></header>' +
+        '<div class="apanel__body"><div class="stk stk--reproc">' +
+        '<div class="stk__reproc"><iconify-icon class="stk__reproc-ico" icon="fluent:arrow-sync-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><div><strong>Symbols resolved \u2014 attaching this crash\u2019s stack.</strong> <strong>' + esc(f.ver) + '</strong> passed validation, so its symbols are in; existing crashes take up to <strong>~10 hours</strong> to show stacks and we\u2019ll email you when they\u2019re ready \u2014 no need to re-upload. Frames below stay raw until then, and a crash that doesn\u2019t recur may remain unresolved. <button class="stk__link" data-sym-jump="' + esc(f.ver) + '">View symbol status</button></div></div>' +
+        ctx + bodyHTML + '</div></div></section>';
+    }
     return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
       '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
       '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-sym-manage="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:folder-zip-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Manage symbols</fluent-button>' + dumpBtn +
@@ -1963,11 +1983,29 @@
       if (bad) { symUp.phase = "error"; renderSymUploader(); return; }
       var app = appById(symUp.appId); if (!app) return; var d = anaData(app);
       var ver = symUp.ver || d.versions[0].ver, vo = d.versions.filter(function (v) { return v.ver === ver; })[0];
-      if (vo) vo.sym = "processing";
-      d.history.unshift({ id: "h" + Date.now(), file: symUp.file, ver: ver, status: "processing", size: "\u2014", by: "you@contoso.com", date: new Date().toLocaleDateString("en-US") });
+      if (vo) { vo.sym = "resolved"; vo.stacksPending = true; }   // validation passed -> symbols Resolved; crashes still attaching stacks (~10h)
+      d.failures.forEach(function (f) { if (f.ver === ver && !f.resolved) f.reprocessing = true; });
+      d.history.unshift({ id: "h" + Date.now(), file: symUp.file, ver: ver, status: "resolved", size: "\u2014", by: "you@contoso.com", date: new Date().toLocaleDateString("en-US") });
       d.symbolHealth = Math.round(d.versions.filter(function (v) { return v.sym === "resolved"; }).length / d.versions.length * 100);
       symUp.phase = "done"; symUp.ver = ver; renderSymUploader(); renderAnalyticsPanel();
+      // Stack reprocessing (~10h in production) finishes -> crashes attach stacks and we email you. Sped up here so the lag clears visibly.
+      setTimeout(function () { attachStacks(app.id, ver); }, 7000);
     }, 1600);
+  }
+  // Symbols are already Resolved at validation; this clears the ~10h stack-attach lag once crash reprocessing finishes.
+  function attachStacks(appId, ver) {
+    var app = appById(appId); if (!app) return;
+    var d = anaData(app), vo = d.versions.filter(function (v) { return v.ver === ver; })[0];
+    if (!vo || !vo.stacksPending) return;
+    vo.stacksPending = false;
+    d.failures.forEach(function (f) {
+      if (f.ver === ver && f.reprocessing) {
+        var fn = STACK_FNS[Math.abs(hashStr(f.id)) % STACK_FNS.length];
+        f.reprocessing = false; f.resolved = true; f.fn = fn; f.name = d.base + "!" + fn;
+      }
+    });
+    toast("Stacks attached for " + ver + " \u2014 its crashes now show full traces", true);
+    if (analyticsAppId === appId) renderAnalyticsPanel();
   }
   function renderSymUploader() {
     if (!symUp) return;
@@ -1982,8 +2020,8 @@
       '<li>A bare <span class="mono">.pdb</span> can\u2019t be matched \u2014 include the binaries it was built with.</li></ul>' +
       '<fluent-link href="#" data-noop="1">Learn more \u2192</fluent-link></div>' +
       '<div class="symfoot"><fluent-button appearance="subtle" data-sym-close="1">Cancel</fluent-button><fluent-button appearance="primary" data-sym-start="1"' + (symUp.file ? "" : " disabled") + '>Upload &amp; validate</fluent-button></div>';
-    else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries. This usually takes a few minutes \u2014 you can close this and come back; we\u2019ll keep working \u2014 and we\u2019ll email you the moment it\u2019s done.</p></div>';
-    else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols accepted for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed. Your <strong>future</strong> crashes will start showing resolved stack traces within the next <strong>24 hours</strong>. Crashes that already happened stay unresolved. We\u2019ll email you when processing finishes \u2014 whether it resolves or needs your attention.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
+    else if (symUp.phase === "validating") html = '<div class="symstate"><fluent-spinner size="medium"></fluent-spinner><strong>Validating &amp; indexing your symbols\u2026</strong><p class="muted">We\u2019re checking the package matches your binaries \u2014 usually ~2\u20133 minutes. As soon as it passes, this build shows <strong>Resolved</strong>; existing crashes then take up to ~10h to attach stacks, and we\u2019ll email you when they\u2019re ready.</p></div>';
+    else if (symUp.phase === "done") html = '<div class="symstate"><iconify-icon class="symstate__ok" icon="fluent:checkmark-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Symbols resolved for ' + esc(symUp.ver || "detected versions") + '</strong><p class="muted">Validation passed \u2014 this build now shows <strong>Resolved</strong>. New crashes resolve right away; your <strong>existing</strong> crashes take up to <strong>~10 hours</strong> to attach stacks, and we\u2019ll email you when they\u2019re ready. A crash that never recurs may stay unresolved.</p><div class="symfoot symfoot--center"><fluent-button appearance="primary" data-sym-close="1">Done</fluent-button></div></div>';
     else html = '<div class="symstate symstate--err"><iconify-icon class="symstate__err" icon="fluent:error-circle-24-filled" width="46" height="46" aria-hidden="true"></iconify-icon><strong>Action needed' + (symUp.ver ? " on " + esc(symUp.ver) : "") + '</strong><p class="muted">' + esc(SYM_ERR.summary) + '</p>' +
       '<div class="symdiag">' +
         '<div class="symdiag__group"><span class="symdiag__h symdiag__h--err">Errors</span><ul class="symdiag__list">' + SYM_ERR.errors.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") + '</ul></div>' +

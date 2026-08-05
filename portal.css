@@ -663,6 +663,9 @@ fluent-badge[appearance="outline"][color="subtle"] { background-color: var(--sur
 .sympanel__lead { display: flex; flex-direction: column; gap: 3px; }
 .sympanel__health { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-3); }
 .sympanel__warn { color: var(--warn); font-weight: 600; }
+.sympanel__prog { color: var(--brand-soft); font-weight: 600; }
+.sympend { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: 11.5px; font-weight: 500; color: var(--text-3); white-space: nowrap; }
+.sympend iconify-icon { color: var(--brand-soft); flex: none; }
 .ca-symdot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
 .ca-symdot--ok { background: var(--ok); }
 .ca-symdot--warn { background: var(--warn); }
@@ -879,6 +882,9 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .stk__fn { color: var(--text); font-family: var(--mono); word-break: break-all; }
 .stk__frame.is-crash .stk__fn { font-weight: 600; }
 .stk__hint { margin: 12px 0 0; font-size: 12.5px; }
+.stk__reproc { display: flex; gap: 10px; margin: 0 0 14px; padding: 12px 14px; border-radius: var(--r-md); background: linear-gradient(120deg, var(--brand-tint), transparent 70%), var(--surface-2); border: 1px solid var(--brand-tint-stroke); font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+.stk__reproc-ico { color: var(--brand-soft); flex: none; margin-top: 1px; }
+.stk__reproc strong { color: var(--text); }
 .stk__note { display: flex; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: var(--r-md);
   background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; line-height: 1.55; color: var(--text-2); }
 .stk__note iconify-icon { color: var(--brand-soft); flex: none; margin-top: 1px; }
