@@ -1569,8 +1569,8 @@
         '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
         '<fluent-link href="https://learn.microsoft.com/windows/win32/debug/symbol-files" target="_blank" rel="noopener noreferrer">How to get symbols \u2192</fluent-link></div></div>';
     return '<div class="ca-zero"><div class="ca-zero__hero"><img class="ca-zero__art" data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
-      '<h2>No crashes reported yet for ' + esc(app.name) + '</h2>' +
-      '<p class="muted">Crash and hang reports appear here once your app reaches about <strong>100 devices</strong> \u2014 usually within <strong>4 hours</strong>.</p></div>' +
+      '<h2>We\u2019re getting ' + esc(app.name) + '\u2019s crash data ready</h2>' +
+      '<p class="muted">We\u2019ve detected <strong>' + esc(app.name) + '</strong> and started collecting its crash and hang reports. New data takes about <strong>4 hours</strong> to process \u2014 and for a brand-new app, reports also begin once it reaches about <strong>100 devices</strong>. Check back shortly.</p></div>' +
       nudge + '</div>';
   }
   function latencyZeroHTML() {
