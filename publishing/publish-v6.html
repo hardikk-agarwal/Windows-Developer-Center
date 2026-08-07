@@ -25,7 +25,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=2" defer></script>
+<script src="tdp-bridge.js?v=3" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -1347,26 +1347,52 @@
   /* ===== In-review state (cert card + stages), ported from variant B ===== */
   .cert-card { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-32); }
   .cert-card__head { display: flex; align-items: center; gap: var(--sp-16); margin-bottom: var(--sp-24); }
-  .cert-card__icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(210,153,34,.15); color: var(--status-warning); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  .cert-card__icon { width: 56px; height: 56px; border-radius: 50%; background: color-mix(in srgb, var(--status-warning) 14%, var(--layer)); color: var(--status-warning); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--status-warning) 22%, transparent); }
   .cert-card__title { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 600; color: var(--fg-1); margin: 0; }
   .cert-card__sub { font-size: 14px; color: var(--fg-3); margin: var(--sp-4) 0 0; }
-  .cert-stages { display: flex; flex-direction: column; border-top: 1px solid var(--stroke-2); }
-  .cert-stage { display: flex; align-items: center; gap: var(--sp-16); padding: var(--sp-16) 0; border-bottom: 1px solid var(--stroke-2); }
-  .cert-stage:last-child { border-bottom: 0; }
-  .cert-stage__bullet { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--subtle); color: var(--fg-4); border: 1.5px solid var(--stroke-1); font-size: 12px; font-weight: 600; }
+  /* Certification progress reads left-to-right as a timeline: each stage is a numbered node with its
+     title + description stacked beneath, and a connector line links the nodes. Win32 apps render 3
+     stages (no Pre-processing), MSIX/PWA render 4 — the flex row spaces either count evenly. */
+  .cert-stages { display: flex; align-items: flex-start; margin-top: var(--sp-24); }
+  .cert-stage { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-10); padding: 0 var(--sp-8); position: relative; }
+  .cert-stage::before { content: ''; position: absolute; top: 15px; left: -50%; right: 50%; height: 2px; border-radius: 2px; background: var(--stroke-2); z-index: 0; }
+  .cert-stage:first-child::before { display: none; }
+  .cert-stage--done::before, .cert-stage--current::before, .cert-stage--fail::before { background: var(--status-success); }
+  .cert-stage__bullet { position: relative; z-index: 1; width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--layer); color: var(--fg-4); border: 1.5px solid var(--stroke-1); font-size: 12.5px; font-weight: 600; box-shadow: 0 0 0 4px var(--layer); }
   .cert-stage--done .cert-stage__bullet { background: var(--status-success); border-color: var(--status-success); color: #fff; }
-  .cert-stage--current .cert-stage__bullet { background: var(--brand-tint-60); border-color: var(--brand); color: var(--brand); }
-  .cert-stage__body { flex: 1; }
-  .cert-stage__title { font-size: 14px; font-weight: 600; color: var(--fg-1); margin: 0; }
-  .cert-stage__desc { font-size: 12px; color: var(--fg-3); margin: var(--sp-2) 0 0; }
-  .cert-stage__time { font-size: 12px; color: var(--fg-4); flex: 0 0 auto; }
-  .cert-eta { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-24); padding: var(--sp-12) var(--sp-16); background: rgba(71,158,245,.08); border: 1px solid var(--brand-tint-40); border-radius: var(--r-4); font-size: 13px; color: var(--fg-2); }
+  .cert-stage--current .cert-stage__bullet { background: var(--layer); border-color: var(--brand); color: var(--brand); }
+  /* Active-stage pulse: a soft brand ring radiating outward to signal "in progress". */
+  .cert-stage--current .cert-stage__bullet::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--brand); opacity: .5; animation: certStagePulse 1.9s var(--ease-out) infinite; }
+  @keyframes certStagePulse { 0% { transform: scale(.9); opacity: .5; } 70% { transform: scale(1.45); opacity: 0; } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .cert-stage--current .cert-stage__bullet::after { animation: none; opacity: .32; } }
+  .cert-stage__body { flex: 0 0 auto; }
+  .cert-stage__title { font-size: 13px; font-weight: 600; color: var(--fg-1); margin: 0; letter-spacing: -.01em; }
+  .cert-stage--current .cert-stage__title { color: var(--brand); }
+  .cert-stage--todo .cert-stage__title, .cert-stage--blocked .cert-stage__title { color: var(--fg-3); font-weight: 500; }
+  .cert-stage__desc { font-size: 11.5px; color: var(--fg-3); margin: var(--sp-2) 0 0; line-height: 1.45; max-width: 20ch; }
+  .cert-stage__time { display: none; }   /* per-step time estimates removed — the timeline speaks for itself */
+  .cert-stage__pill { margin-top: var(--sp-2); }
+  @media (max-width: 560px) {
+    .cert-stages { flex-direction: column; align-items: stretch; margin-top: var(--sp-12); }
+    .cert-stage { flex-direction: row; align-items: flex-start; text-align: left; gap: var(--sp-12); padding: var(--sp-8) 0; }
+    .cert-stage::before { display: none; }
+    .cert-stage__bullet { box-shadow: none; }
+    .cert-stage__body { flex: 1 1 auto; }
+    .cert-stage__desc { max-width: none; }
+  }
+  .cert-eta { display: flex; align-items: center; gap: var(--sp-10); margin-top: var(--sp-24); padding: var(--sp-12) var(--sp-16); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent); border-radius: var(--r-8); font-size: 13px; line-height: 1.45; color: var(--fg-2); }
   /* Post-update: the in-progress timeline collapses to a compact one-row summary (the developer has
      seen it before and the live-app hub is the real surface); a first submission stays expanded. */
   .cert-card__headtext { flex: 1 1 auto; min-width: 0; }
   .cert-card__toggle { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--sp-4); background: transparent; border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: var(--sp-4) var(--sp-10) var(--sp-4) var(--sp-12); font: inherit; font-size: 12px; font-weight: 600; color: var(--fg-2); cursor: pointer; white-space: nowrap; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
   .cert-card__toggle:hover { background: var(--subtle); color: var(--fg-1); }
   .cert-card__toggle[hidden] { display: none; }
+  /* Withdraw/cancel lives INSIDE the in-review card (contextual to the status it acts on), not the
+     top app header. The header withdraw and the old below-card #cert-actions strip are retired. */
+  .cert-card__headactions { flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-8); }
+  .cert-card__headactions .cert-card__toggle { align-self: center; }
+  #head-withdraw-btn { display: none; }
+  #cert-actions { display: none; }
   #cert-progress .cert-strip--summary { display: none; }
   .cert-card .cert-strip--summary { display: none; }
   .cert-strip--summary .cert-strip__eta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--fg-3); white-space: nowrap; padding-left: var(--sp-12); }
@@ -1381,6 +1407,9 @@
   .cert-card.is-collapsed .cert-strip--summary { display: flex; }
   /* Space the fail card off the live-app stats/hub that follow it in #cert-result. */
   #cert-result .cert-card { margin-bottom: var(--sp-20); }
+  /* In-review: separate the "…in review" card (#cert-progress) from the live stats/hub that render
+     directly below it in #cert-result — they otherwise sit flush (no gap). */
+  #cert-progress:not([hidden]) { margin-bottom: var(--sp-20); }
   .cert-eta iconify-icon { color: var(--brand); flex: 0 0 auto; }
   .submit-strip { display: flex; align-items: center; gap: var(--sp-16); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-20); }
   .submit-strip__text { flex: 1; }
@@ -2137,6 +2166,9 @@
   .apptype__opt { display: flex; align-items: flex-start; gap: var(--sp-10); width: 100%; padding: var(--sp-8); border: 0; border-radius: var(--r-8); background: none; font: inherit; text-align: left; cursor: pointer; transition: background var(--dur-2) var(--ease-out); }
   .apptype__opt:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
   .apptype__opt:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  /* Locked options: the app type is fixed at name reservation (a game can only be "Game"; an app can't be a game). */
+  .apptype__opt:disabled { opacity: .4; cursor: not-allowed; }
+  .apptype__opt:disabled:hover { background: none; }
   .apptype__dot { position: relative; flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; border: 1px solid var(--fg-3); border-radius: 50%; }
   .apptype__opt[aria-checked="true"] .apptype__dot { border-color: var(--brand); }
   .apptype__opt[aria-checked="true"] .apptype__dot::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--brand); }
@@ -4430,10 +4462,16 @@
             <h2 class="cert-card__title">Certification in progress</h2>
             <p class="cert-card__sub">We're reviewing your app. You don't need to do anything — we'll email you when it's done.</p>
           </div>
-          <button type="button" class="cert-card__toggle" id="cert-progress-toggle" aria-expanded="true" hidden>
-            <span class="cert-card__toggle-txt">Hide steps</span>
-            <iconify-icon icon="fluent:chevron-up-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-          </button>
+          <div class="cert-card__headactions">
+            <fluent-button appearance="secondary" id="cert-withdraw-btn">
+              <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Withdraw submission
+            </fluent-button>
+            <button type="button" class="cert-card__toggle" id="cert-progress-toggle" aria-expanded="true" hidden>
+              <span class="cert-card__toggle-txt">Hide steps</span>
+              <iconify-icon icon="fluent:chevron-up-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            </button>
+          </div>
         </div>
 
         <div class="cert-strip cert-strip--summary" aria-hidden="true">
@@ -11860,8 +11898,19 @@
   // Question 1: app type. Changing it swaps which sections are asked below, so the whole
   // questionnaire re-renders. Answers are kept, so flipping back and forth loses nothing.
   const APP_TYPE_LABEL = { game: 'Game', social: 'Social or communication', other: 'All other app types' };
+  // The app type is fixed by the App/Game choice made when the name was reserved (IS_GAME): a game
+  // can only be "Game"; a non-game app can be "Social or communication" or "All other app types",
+  // never "Game". So we lock the disallowed options rather than let the two questions disagree.
+  const appTypeAllowed = (type) => IS_GAME ? (type === 'game') : (type !== 'game');
   function renderAppTypeChoice() {
+    if (IS_GAME && ratingAppType !== 'game') ratingAppType = 'game';
+    else if (!IS_GAME && ratingAppType === 'game') ratingAppType = 'other';
     document.querySelectorAll('#rating-apptype-list .apptype__opt').forEach(b => {
+      const allowed = appTypeAllowed(b.dataset.apptype);
+      b.disabled = !allowed;
+      b.setAttribute('aria-disabled', allowed ? 'false' : 'true');
+      if (allowed) b.removeAttribute('title');
+      else b.title = IS_GAME ? 'Set to Game when you reserved the name.' : 'Not available — this app wasn’t reserved as a game.';
       b.setAttribute('aria-checked', b.dataset.apptype === ratingAppType ? 'true' : 'false');
     });
   }
@@ -11869,7 +11918,7 @@
     const list = $('rating-apptype-list'); if (!list) return;
     list.addEventListener('click', (e) => {
       const b = e.target.closest('.apptype__opt');
-      if (!b || b.dataset.apptype === ratingAppType) return;
+      if (!b || b.disabled || !appTypeAllowed(b.dataset.apptype) || b.dataset.apptype === ratingAppType) return;
       ratingAppType = b.dataset.apptype;
       renderAppTypeChoice();
       suppressDialogChange = true;
@@ -12010,6 +12059,7 @@
   function relabelUpdateCancel() {
     if (!inUpdateFlow) return;
     var b = $('withdraw-btn'); if (b) b.innerHTML = '<iconify-icon slot="start" icon="fluent:dismiss-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Cancel update';
+    var cb = $('cert-withdraw-btn'); if (cb) cb.innerHTML = '<iconify-icon slot="start" icon="fluent:dismiss-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Cancel update';
     var strip = $('cert-actions');
     if (strip) { var t = strip.querySelector('.submit-strip__title'); if (t) t.textContent = 'Cancel this update?'; var d = strip.querySelector('.submit-strip__desc'); if (d) d.textContent = 'Your live version stays published \u2014 you can cancel the update until it goes live.'; }
   }
@@ -12034,6 +12084,61 @@
   }
   function demoCertPill(text, cls) { var p = $('app-status'); if (p) { p.textContent = text; p.className = 'status-pill status-pill--' + cls; } }
   function demoCertName() { var el = $('app-name'); var n = el && el.textContent.trim(); return n || (typeof state !== 'undefined' && state.name) || 'Your app'; }
+  // ---- Certification timeline model (shared by the in-progress card and the failed report) ----
+  // Pipeline: Submission -> Pre-processing -> Certification -> Publishing. Win32 (.exe/.msi) packages
+  // skip Pre-processing (there's no appx manifest to pre-scan), so they run a 3-stage pipeline.
+  function certStepModel(win32) {
+    var steps = [
+      { key: 'submission',    title: 'Submission',     desc: 'Your package and details were received.' },
+      { key: 'preprocessing', title: 'Pre-processing', desc: 'Malware scan, certificate validation, manifest review.' },
+      { key: 'certification', title: 'Certification',  desc: 'Manual review against Store policies and age rating.' },
+      { key: 'publishing',    title: 'Publishing',     desc: 'Sign-off and rollout to Microsoft Store.' }
+    ];
+    return win32 ? steps.filter(function (s) { return s.key !== 'preprocessing'; }) : steps;
+  }
+  // Detailed horizontal timeline. scenario: 'progress' (Submission done, next stage in review) or
+  // 'failed' (Certification failed, Publishing on hold).
+  function certStagesHTML(scenario, win32) {
+    var steps = certStepModel(win32);
+    var n = (window.CERT_ISSUES || []).length || 0, word = n === 1 ? 'issue' : 'issues';
+    var chk = '<iconify-icon icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>';
+    var x = '<iconify-icon icon="fluent:dismiss-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>';
+    var spin = '<fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner>';
+    return steps.map(function (s, i) {
+      var cls = 'cert-stage', bullet = String(i + 1), right = '';
+      if (scenario === 'failed') {
+        if (s.key === 'certification') { cls += ' cert-stage--fail'; bullet = x; right = '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>'; }
+        else if (s.key === 'publishing') { cls += ' cert-stage--blocked'; right = '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>'; }
+        else { cls += ' cert-stage--done'; bullet = chk; }
+      } else {
+        if (i === 0) { cls += ' cert-stage--done'; bullet = chk; }
+        else if (i === 1) { cls += ' cert-stage--current'; bullet = spin; }
+      }
+      return '<div class="' + cls + '"><span class="cert-stage__bullet">' + bullet + '</span>' +
+        '<div class="cert-stage__body"><p class="cert-stage__title">' + s.title + '</p><p class="cert-stage__desc">' + s.desc + '</p></div>' + right + '</div>';
+    }).join('');
+  }
+  // Compact one-row summary (shown when the in-progress card is collapsed, e.g. on updates).
+  function certStripHTML(scenario, win32) {
+    var steps = certStepModel(win32);
+    var n = (window.CERT_ISSUES || []).length || 0, word = n === 1 ? 'issue' : 'issues';
+    var inner = steps.map(function (s, i) {
+      var st = (scenario === 'failed')
+        ? ((s.key === 'certification') ? 'fail' : (s.key === 'publishing') ? 'todo' : 'done')
+        : ((i === 0) ? 'done' : (i === 1) ? 'current' : 'todo');
+      var dot = st === 'done' ? '<iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>'
+              : st === 'current' ? '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>'
+              : st === 'fail' ? '<iconify-icon icon="fluent:dismiss-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>'
+              : String(i + 1);
+      var label = s.key === 'submission' ? 'Submitted' : s.title;
+      return '<span class="cert-strip__stage cert-strip__stage--' + st + '"><span class="cert-strip__dot">' + dot + '</span><span class="cert-strip__lbl">' + label + '</span></span>';
+    }).join('<span class="cert-strip__sep" aria-hidden="true"></span>');
+    var eta = scenario === 'failed'
+      ? '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span>'
+      : '<span class="cert-strip__eta">~1&ndash;2 days</span>';
+    return inner + eta;
+  }
+  window.__certStagesHTML = certStagesHTML; window.__certStripHTML = certStripHTML;   // let the portal (tdp-bridge) reuse the same timeline
   function demoCertPassedHTML(isUpdate) {
     var r = adv.rollout || {};
     var note = (isUpdate && r.gradual && (r.percent || 0) < 100) ? ' It’s rolling out to <strong>' + (r.percent || 10) + '%</strong> of your customers first — raise it anytime below.' : '';
@@ -12046,28 +12151,10 @@
   }
   function demoCertFailedHTML(isUpdate) {
     var n = (window.CERT_ISSUES || []).length || 0, word = n === 1 ? 'issue' : 'issues';
-    function stage(cls, bullet, title, desc, right) {
-      return '<div class="cert-stage ' + cls + '"><span class="cert-stage__bullet">' + bullet + '</span>' +
-        '<div class="cert-stage__body"><p class="cert-stage__title">' + title + '</p><p class="cert-stage__desc">' + desc + '</p></div>' + (right || '') + '</div>';
-    }
-    var chk = '<iconify-icon icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>';
-    var x = '<iconify-icon icon="fluent:dismiss-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>';
+    var win32 = false; try { win32 = effectiveWin32(); } catch (e) {}
     var failToggle = '<button type="button" class="cert-card__toggle"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
-    var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' +
-      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Submitted</span></span>' +
-      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
-      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Pre-processing</span></span>' +
-      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
-      '<span class="cert-strip__stage cert-strip__stage--fail"><span class="cert-strip__dot"><iconify-icon icon="fluent:dismiss-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Certification</span></span>' +
-      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
-      '<span class="cert-strip__stage cert-strip__stage--todo"><span class="cert-strip__dot">4</span><span class="cert-strip__lbl">Publishing</span></span>' +
-      '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span>' +
-    '</div>';
-    var stages =
-      stage('cert-stage--done', chk, 'Submission', 'Your package and details were received.', '<span class="cert-stage__time">Done</span>') +
-      stage('cert-stage--done', chk, 'Pre-processing', 'Malware scan, certificate validation, manifest review.', '<span class="cert-stage__time">Passed</span>') +
-      stage('cert-stage--fail', x, 'Certification', 'Manual review against Store policies and age rating.', '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>') +
-      stage('cert-stage--blocked', '4', 'Publishing', 'Resumes once you’ve fixed the issues and resubmitted.', '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
+    var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' + certStripHTML('failed', win32) + '</div>';
+    var stages = certStagesHTML('failed', win32);
     return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
       '<div class="cert-card__head"><span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
         '<div class="cert-card__headtext"><h2 class="cert-card__title">' + (isUpdate ? 'Your update needs attention' : 'Certification didn’t pass') + '</h2>' +
@@ -12112,6 +12199,10 @@
         var s = prog.querySelector('.cert-card__sub'); if (s) s.textContent = isUpdate
           ? 'Your live version stays published while we review the update — we’ll email you when it’s done.'
           : 'We’re reviewing your app. You don’t need to do anything — we’ll email you when it’s done.';
+        var pwin32 = false; try { pwin32 = effectiveWin32(); } catch (e) {}
+        window.__CERT_WIN32 = pwin32;
+        var pStages = prog.querySelector('.cert-stages'); if (pStages) pStages.innerHTML = certStagesHTML('progress', pwin32);
+        var pStrip = prog.querySelector('.cert-strip--summary'); if (pStrip) pStrip.innerHTML = certStripHTML('progress', pwin32);
       }
       if (res) { res.hidden = true; res.innerHTML = ''; }
       setCertProgressDensity(isUpdate);
@@ -12507,6 +12598,7 @@
           if (finalLogo) all[idx].icon = finalLogo;
           all[idx].rollout = adv.rollout;
           if (v4Type) all[idx].packageType = v4Type;   // "What are you publishing" → portal Apps "Type" column
+          try { all[idx].win32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : false; } catch (e) {}   // portal cert view uses this to drop Pre-processing for Win32
           localStorage.setItem('msstore.apps', JSON.stringify(all));
         }
         saveFlowData();   // persist the full editor state so Review / Update rehydrate on reload
@@ -13242,6 +13334,7 @@
   if (submitDlg) submitDlg.querySelectorAll('[data-submit-close]').forEach(b => b.addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} }));
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
   if ($('withdraw-btn')) $('withdraw-btn').addEventListener('click', withdrawSubmission);
+  if ($('cert-withdraw-btn')) $('cert-withdraw-btn').addEventListener('click', withdrawSubmission);
   // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store (published) is a demo stub.
   if ($('head-withdraw-btn')) $('head-withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('head-viewstore-btn')) $('head-viewstore-btn').addEventListener('click', () => announce('Opening your Store listing…'));

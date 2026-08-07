@@ -88,7 +88,7 @@
     // While an update is certifying, the "Update your app" row becomes a non-interactive status
     // chip — you can't stack a second submission on a pending one.
     if (opts && opts.updating && c[4] === "update") {
-      return '<div class="live-row live-row--busy" aria-disabled="true"><span class="live-row__ico"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner></span>' +
+      return '<div class="live-row live-row--busy" aria-disabled="true"><span class="live-row__ico"><iconify-icon icon="fluent:clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
         '<span class="live-row__t"><strong>Update in review</strong><span>Your new version is being certified.</span></span></div>';
     }
     var act = c[4] ? ' data-live-action="' + c[4] + '"' : '';
@@ -124,8 +124,21 @@
       '<span class="app-status-card__badge app-status-card__badge--live"><span class="asc-dot"></span>Live</span>' +
     '</div>';
   }
+  // Win32 (.exe/.msi) apps skip Pre-processing, so their cert pipeline is 3 stages, not 4. The flow
+  // records this on the app record (msstore.apps) at submit; window.__CERT_WIN32 mirrors it in the
+  // same document. Default false (MSIX/PWA) when nothing is known — the original 4-stage behaviour.
+  function certWin32() {
+    try { if (typeof window.__CERT_WIN32 === "boolean") return window.__CERT_WIN32; } catch (e) {}
+    try {
+      var ms = readJSON(MS_KEY, []); var a = (Array.isArray(ms) ? ms : []).filter(function (x) { return x.id === id; })[0];
+      if (a && (a.win32 === true || a.packageType === "win32")) return true;
+    } catch (e) {}
+    return false;
+  }
   function reviewStatusCard() {
-    var stages = [["Submitted", "done"], ["Pre-processing", "done"], ["Certification", "current"], ["Publishing", "todo"]];
+    var stages = certWin32()
+      ? [["Submitted", "done"], ["Certification", "current"], ["Publishing", "todo"]]
+      : [["Submitted", "done"], ["Pre-processing", "done"], ["Certification", "current"], ["Publishing", "todo"]];
     var strip = stages.map(function (s, i) {
       var dot = s[1] === "done" ? '<iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>'
               : s[1] === "current" ? '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>'
@@ -179,21 +192,25 @@
     var n = CERT_ISSUES.length;
     var word = n === 1 ? "issue" : "issues";
     var failToggle = '<button type="button" class="cert-card__toggle"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
-    var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' +
-      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Submitted</span></span>' +
-      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
-      '<span class="cert-strip__stage cert-strip__stage--done"><span class="cert-strip__dot"><iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Pre-processing</span></span>' +
-      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
-      '<span class="cert-strip__stage cert-strip__stage--fail"><span class="cert-strip__dot"><iconify-icon icon="fluent:dismiss-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span><span class="cert-strip__lbl">Certification</span></span>' +
-      '<span class="cert-strip__sep" aria-hidden="true"></span>' +
-      '<span class="cert-strip__stage cert-strip__stage--todo"><span class="cert-strip__dot">4</span><span class="cert-strip__lbl">Publishing</span></span>' +
-      '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span>' +
-    '</div>';
-    var stages =
-      stageHTML("done", "check", "Submission", "Your package and details were received.", '<span class="cert-stage__time">Done</span>') +
-      stageHTML("done", "check", "Pre-processing", "Malware scan, certificate validation, manifest review.", '<span class="cert-stage__time">Passed</span>') +
-      stageHTML("fail", "x", "Certification", "Manual review against Store policies and age rating.", '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>') +
-      stageHTML("blocked", "4", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted.", '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>');
+    var win32 = certWin32();
+    var stripSteps = win32
+      ? [["Submitted", "done"], ["Certification", "fail"], ["Publishing", "todo"]]
+      : [["Submitted", "done"], ["Pre-processing", "done"], ["Certification", "fail"], ["Publishing", "todo"]];
+    var stripInner = stripSteps.map(function (s, i) {
+      var dot = s[1] === "done" ? '<iconify-icon icon="fluent:checkmark-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>'
+              : s[1] === "fail" ? '<iconify-icon icon="fluent:dismiss-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>'
+              : String(i + 1);
+      return '<span class="cert-strip__stage cert-strip__stage--' + s[1] + '"><span class="cert-strip__dot">' + dot + '</span><span class="cert-strip__lbl">' + s[0] + '</span></span>';
+    }).join('<span class="cert-strip__sep" aria-hidden="true"></span>');
+    var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' + stripInner + '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span></div>';
+    var stageDefs = win32
+      ? [["done", "check", "Submission", "Your package and details were received."], ["fail", "x", "Certification", "Manual review against Store policies and age rating."], ["blocked", "", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted."]]
+      : [["done", "check", "Submission", "Your package and details were received."], ["done", "check", "Pre-processing", "Malware scan, certificate validation, manifest review."], ["fail", "x", "Certification", "Manual review against Store policies and age rating."], ["blocked", "", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted."]];
+    var stages = stageDefs.map(function (d, i) {
+      var right = d[0] === "fail" ? '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>'
+                : d[0] === "blocked" ? '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>' : '';
+      return stageHTML(d[0], d[1] || String(i + 1), d[2], d[3], right);
+    }).join("");
     return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
       '<div class="cert-card__head">' +
         '<span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
@@ -308,6 +325,13 @@
     if (s) s.textContent = isUpdate
       ? "Your live version stays published while we review the update \u2014 we\u2019ll email you when it\u2019s done."
       : "We\u2019re reviewing your app. You don\u2019t need to do anything \u2014 we\u2019ll email you when it\u2019s done.";
+    try {
+      if (window.__certStagesHTML) {
+        var w = certWin32();
+        var st = prog.querySelector(".cert-stages"); if (st) st.innerHTML = window.__certStagesHTML("progress", w);
+        var sp = prog.querySelector(".cert-strip--summary"); if (sp) sp.innerHTML = window.__certStripHTML("progress", w);
+      }
+    } catch (e) {}
   }
   function showProgress() {
     var done = $id("state-done"); if (done) done.__result = "progress";
