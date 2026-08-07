@@ -398,6 +398,10 @@
   .schedule-sub__label { flex: 0 0 90px; font-size: var(--font-size-base-200); color: var(--fg-2); font-weight: var(--font-weight-semibold); }
   .schedule-sub + .schedule-sub { margin-top: var(--sp-8); }
   .markets-choose-row { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; margin-top: var(--sp-4); }
+  .reach-newmkt { display: flex; align-items: center; gap: var(--sp-8); width: fit-content; margin-top: var(--sp-10); cursor: pointer; }
+  .reach-newmkt[hidden] { display: none; }
+  .reach-newmkt fluent-checkbox { flex: 0 0 auto; }
+  .reach-newmkt__text { font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.35; }
   .audience-link-row { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; margin-top: var(--sp-8); }
   .audience-link-row__field { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 1 1 auto; min-width: 0; padding: var(--sp-8) var(--sp-12); background: color-mix(in srgb, var(--fg-1) 5%, transparent); border: 1px solid var(--stroke-2); border-radius: var(--r-2); }
   .audience-link-row__field iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
@@ -409,6 +413,13 @@
   .price-win32-note { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 32%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--subtle)); font-size: var(--font-size-base-200); line-height: 1.45; color: var(--fg-2); max-width: 520px; }
   .price-win32-note[hidden] { display: none; }
   .price-win32-note > iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
+  /* Win32 paid: disclosure-only Free trial (Store doesn't run it; the developer's own commerce does). */
+  .price-win32-trial { margin-top: var(--sp-16); padding-top: var(--sp-12); border-top: 1px dashed var(--stroke-3); display: flex; flex-direction: column; gap: var(--sp-8); max-width: 560px; }
+  .price-win32-trial[hidden] { display: none; }
+  .price-win32-trial__head { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-300); }
+  .price-win32-trial__head > iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
+  .price-win32-trial__head strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .price-win32-trial__tag { display: inline-flex; align-items: center; gap: 3px; margin-left: var(--sp-4); padding: 1px var(--sp-6); border-radius: 999px; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); font-size: 11px; font-weight: var(--font-weight-semibold); }
   .price-advanced { margin-top: var(--sp-16); }
   .price-adv__label { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-8); }
   .price-adv__tag { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-4); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 1px 7px; }
@@ -617,6 +628,12 @@
   .ez-extra-input::part(control) { width: 100%; box-sizing: border-box; }
   .ez-kw-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); }
   .ez-kw-suggest__label { font-size: 11.5px; color: var(--fg-3); }
+  /* Two stacked sections under the keyword input: "Added" then "Suggested by AI". Same rhythm so
+     the reading order is obvious — your keywords first, AI suggestions to tap below. */
+  .ez-kw-section { margin-top: var(--sp-16); }
+  .ez-kw-section[hidden] { display: none; }
+  .ez-kw-section__label { display: flex; align-items: center; gap: var(--sp-6); margin: 0 0 var(--sp-8); font-size: 11px; font-weight: var(--font-weight-semibold); letter-spacing: .02em; text-transform: uppercase; color: var(--fg-3); }
+  .ez-kw-section__label iconify-icon { color: var(--brand); }
   .ez-kw-chips { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
   .ez-kw-chips--added { margin-top: var(--sp-10); }
   .ez-kw-chips:empty { display: none; }
@@ -626,6 +643,10 @@
   .ez-kw-chips__chip--suggest { cursor: pointer; border-style: dashed; background: transparent; color: var(--fg-2); }
   .ez-kw-chips__chip--suggest:hover { border-color: var(--brand); color: var(--brand); }
   .ez-kw-chips__chip--suggest iconify-icon { color: var(--brand); }
+  /* An added keyword the AI proposed (auto-seeded, or tapped from a suggestion) is marked with a
+     brand sparkle + a subtly tinted border so it's clear which ones came from AI. */
+  .ez-kw-chips__chip--ai { border-color: color-mix(in srgb, var(--brand) 35%, var(--stroke-2)); }
+  .ez-kw-chips__ai { color: var(--brand); flex: 0 0 auto; }
   /* Simple (easy) keyword view — read-only chips + a subtle "auto-added" note. */
   .ez-kw-chips--ro .ez-kw-chips__chip { color: var(--fg-2); }
   .ez-kw-easy__note { display: flex; align-items: center; gap: var(--sp-6); margin: 0 0 var(--sp-12); font-size: 12px; color: var(--fg-3); line-height: 1.45; }
@@ -637,7 +658,7 @@
      auto-seed from the description; the user can add/remove from either mode). */
   #listing-extras-card .ez-kw-easy { display: none; }
   #listing-extras-card .ez-kw-adv { display: block; }
-  /* Privacy policy: Link/Text mode toggle + AI-generate */
+  /* Privacy policy: Link/Text mode toggle */
   .privacy-mode-toggle { align-self: flex-start; margin-bottom: var(--sp-10); }
   .privacy-field__input[hidden] { display: none; }
   /* Privacy editor dialog: full-width inputs (controls moved here keep their original classes). */
@@ -646,7 +667,7 @@
   #privacy-edit-dialog fluent-text-input,
   #privacy-edit-dialog fluent-textarea { width: 100%; }
   /* Own the dialog's vertical rhythm in one flex column (the dialog-body's default slot spacing was
-     the source of the big gaps). Uniform 12px between hint, toggle, field, and the Generate link. */
+     the source of the big gaps). Uniform 12px between hint, toggle, and field. */
   #privacy-edit-dialog .privacy-dialog__content { display: flex; flex-direction: column; gap: var(--sp-12); }
   #privacy-edit-dialog .privacy-dialog__content > * { margin: 0; }
   /* Text mode is a single-line field so it matches the Link (URL) field exactly — same height, no
@@ -709,14 +730,6 @@
   #field-edit-dialog fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
   /* Additional-information section visibility is JS-controlled (renderInfo). */
   #ez-info-section[hidden] { display: none !important; }
-  #gen-privacy { align-self: flex-start; margin-top: var(--sp-10); }
-  #privacy-dialog::part(control), #privacy-dialog::part(dialog) { width: min(720px, 92vw); }
-  #privacy-dialog .privacy-dialog__lede { font-size: 12.5px; color: var(--fg-3); line-height: 1.5; margin: 0 0 var(--sp-12); }
-  #privacy-dialog .privacy-dialog__textwrap { position: relative; }
-  #privacy-dialog .privacy-dialog__textarea { width: 100%; box-sizing: border-box; min-height: 320px; resize: vertical; padding: var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--canvas); color: var(--fg-1); font: inherit; font-size: 13px; line-height: 1.5; }
-  #privacy-dialog .privacy-dialog__textarea:focus { outline: none; border-color: var(--brand); }
-  #privacy-dialog .privacy-dialog__loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: var(--sp-8); background: color-mix(in srgb, var(--canvas) 80%, transparent); color: var(--fg-2); font-size: 13px; border-radius: var(--r-8); }
-  #privacy-dialog .privacy-dialog__loading[hidden] { display: none; }
   .ez-chips { display: flex; flex-wrap: wrap; gap: var(--sp-6); align-items: center; padding: var(--sp-6); border: 1px solid var(--stroke-2); border-radius: var(--r-4); background: var(--canvas); }
   .ez-chips__chip { display: inline-flex; align-items: center; gap: var(--sp-4); padding: 2px var(--sp-8); border-radius: 999px; background: var(--subtle); border: 1px solid var(--stroke-2); font-size: 12px; color: var(--fg-1); }
   .ez-chips__chip button { border: 0; background: transparent; color: var(--fg-3); cursor: pointer; display: inline-flex; padding: 0; }
@@ -809,6 +822,13 @@
   .sysreq-auto__chip { display: inline-flex; align-items: center; gap: var(--sp-4); padding: 2px var(--sp-8); border-radius: 999px; background: var(--layer); border: 1px solid var(--stroke-2); font-size: 11.5px; color: var(--fg-2); }
   .sysreq-auto__chip strong { color: var(--fg-1); font-weight: 600; }
   .sysreq-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
+  .sysreq-2col { display: flex; flex-direction: column; gap: var(--sp-10); }
+  .sysreq-2col__head, .sysreq-2col__row { display: grid; grid-template-columns: minmax(84px, 132px) 1fr 1fr; gap: var(--sp-12); align-items: center; }
+  .sysreq-2col__head > span { font-size: 11px; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: .02em; }
+  .sysreq-2col__head .muted { font-weight: 400; text-transform: none; color: var(--fg-4); }
+  .sysreq-2col__lbl { font-size: 12px; font-weight: 600; color: var(--fg-2); }
+  .sysreq-2col fluent-dropdown, .sysreq-2col fluent-text-input { display: block; width: 100% !important; max-width: 100% !important; }
+  @media (max-width: 640px) { .sysreq-2col__head { display: none; } .sysreq-2col__row { grid-template-columns: 1fr; gap: var(--sp-6); } }
   .sysreq-field { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 
   .sysreq-field__lbl { font-size: 12px; font-weight: 600; color: var(--fg-2); }
@@ -1193,9 +1213,13 @@
   .pkgd-fields .ez-field { margin: 0; display: flex; flex-direction: column; }
   .pkgd-fields .ez-field__label { margin-bottom: 0; }
   .pkgd-fields .ez-field__hint { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 2px 0 var(--sp-6); }
-  .pkgd-fields fluent-dropdown, .pkgd-fields .pkgd-url { display: block; width: 100%; max-width: none; }
-  .pkgd-fields .pkgd-url::part(root) { width: 100%; max-width: none; box-sizing: border-box; }
-  .pkgd-fields fluent-dropdown::part(control), .pkgd-fields .pkgd-url::part(control) { width: 100%; box-sizing: border-box; }
+  .pkgd-fields fluent-dropdown, .pkgd-fields fluent-text-input { display: block; width: 100%; max-width: none; }
+  .pkgd-fields fluent-text-input::part(root) { width: 100%; max-width: none; box-sizing: border-box; }
+  .pkgd-fields fluent-dropdown::part(control), .pkgd-fields fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
+  /* Silent-install Fluent checkbox + label on its own line just under the parameters field. */
+  .pkgd-fields .ez-silent-check { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-8); width: fit-content; cursor: pointer; }
+  .ez-silent-check fluent-checkbox { flex: 0 0 auto; }
+  .ez-silent-check__text { font-size: var(--font-size-base-200); color: var(--fg-1); line-height: 1.3; }
   .pkgd-adv-toggle { display: inline-flex; align-items: center; gap: var(--sp-6); background: transparent; border: 0; padding: var(--sp-8) 0; margin: var(--sp-16) 0 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); cursor: pointer; }
   .pkgd-adv-toggle iconify-icon { transition: transform var(--dur-2) var(--ease-out); }
   .pkgd-adv-toggle[aria-expanded="true"] iconify-icon { transform: rotate(90deg); }
@@ -1205,7 +1229,7 @@
   .pkgd-adv__intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-12); line-height: 1.5; }
   .pkgd-adv__intro strong { color: var(--fg-1); }
   .pkgd-mono { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; color: var(--fg-1); font-weight: var(--font-weight-semibold); }
-  .pkgd-hint { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-12) 0 0; font-size: var(--font-size-base-200); color: var(--status-warning); }
+  .pkgd-hint { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-12) 0 0; font-size: var(--font-size-base-200); color: var(--status-danger); }
   .pkgd-hint iconify-icon { flex: 0 0 auto; }
   /* Cap the body so the dialog stays compact — title + footer pinned, fields scroll.
      Fill the available dialog height (reserve ~150px for the title + pinned footer) so it
@@ -2735,10 +2759,7 @@
   #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__desc,
   #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__cta,
   #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__iarc { max-width: 48%; }
-  /* Hero image + trailer are MSIX-only listing features. When the submission has a Win32 (exe/msi/url)
-     package, suppress both "add" affordances even in Advanced. MSIX submissions keep showing them. */
-  #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only,
-  #flow-wrap.has-win32-pkg.is-wizard #step-listing.is-more .ez-hero-empty.adv-only { display: none !important; }
+  /* Hero image + trailer are available for all package types including Win32. */
   #flow-wrap.is-wizard #editor > .ez-step:not(.is-wz-active) { display: none !important; }
   #flow-wrap.is-wizard .ez-step__expand, #flow-wrap.is-wizard .ez-step__summary { display: none !important; }
   #flow-wrap.is-wizard .ez-step { cursor: default; margin-bottom: 0; padding: var(--sp-32); border-color: var(--stroke-3); box-shadow: none; }
@@ -3714,48 +3735,52 @@
             <span class="sysreq-auto__lead"><iconify-icon icon="fluent:box-checkmark-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>From your package</span>
             <span class="sysreq-auto__facts" id="sysreq-auto-facts"></span>
           </div>
-          <p class="sysreq__explain">Set a minimum and customers below it can still install &mdash; the Store shows a &ldquo;may not run well&rdquo; note and skips their rating &amp; review, so a mismatch you flagged won&rsquo;t drag down your score.</p>
-          <div class="sysreq-grid">
-            <div class="sysreq-field">
-              <label class="sysreq-field__lbl" for="sr-ram">Memory (RAM)</label>
-              <fluent-dropdown id="sr-ram"><fluent-listbox>
-                <fluent-option value="">Not specified</fluent-option>
-                <fluent-option value="2 GB">2 GB</fluent-option>
-                <fluent-option value="4 GB">4 GB</fluent-option>
-                <fluent-option value="8 GB">8 GB</fluent-option>
-                <fluent-option value="16 GB">16 GB</fluent-option>
-                <fluent-option value="32 GB">32 GB</fluent-option>
+          <p class="sysreq__explain">Set the minimum your app needs to run &mdash; and, optionally, the recommended specs for the best experience. Customers below the minimum can still install: the Store shows a &ldquo;may not run well&rdquo; note and skips their rating &amp; review, so a mismatch you flagged won&rsquo;t drag down your score.</p>
+          <!-- Minimum + Recommended side by side, like Partner Center and the real Store listing.
+               Minimum = the floor to install; Recommended = best-experience specs (optional). -->
+          <div class="sysreq-2col">
+            <div class="sysreq-2col__head">
+              <span></span>
+              <span>Minimum</span>
+              <span>Recommended</span>
+            </div>
+            <div class="sysreq-2col__row">
+              <span class="sysreq-2col__lbl" id="sr-ram-lbl">Memory (RAM)</span>
+              <fluent-dropdown id="sr-ram" aria-labelledby="sr-ram-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="4 GB">4 GB</fluent-option><fluent-option value="8 GB">8 GB</fluent-option><fluent-option value="16 GB">16 GB</fluent-option><fluent-option value="32 GB">32 GB</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+              <fluent-dropdown id="sr-ram-rec" aria-labelledby="sr-ram-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="4 GB">4 GB</fluent-option><fluent-option value="8 GB">8 GB</fluent-option><fluent-option value="16 GB">16 GB</fluent-option><fluent-option value="32 GB">32 GB</fluent-option>
               </fluent-listbox></fluent-dropdown>
             </div>
-            <div class="sysreq-field">
-              <label class="sysreq-field__lbl" for="sr-storage">Storage</label>
-              <fluent-dropdown id="sr-storage"><fluent-listbox>
-                <fluent-option value="">Not specified</fluent-option>
-                <fluent-option value="500 MB">500 MB</fluent-option>
-                <fluent-option value="1 GB">1 GB</fluent-option>
-                <fluent-option value="2 GB">2 GB</fluent-option>
-                <fluent-option value="5 GB">5 GB</fluent-option>
-                <fluent-option value="10 GB">10 GB</fluent-option>
+            <div class="sysreq-2col__row">
+              <span class="sysreq-2col__lbl" id="sr-storage-lbl">Storage</span>
+              <fluent-dropdown id="sr-storage" aria-labelledby="sr-storage-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="500 MB">500 MB</fluent-option><fluent-option value="1 GB">1 GB</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="5 GB">5 GB</fluent-option><fluent-option value="10 GB">10 GB</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+              <fluent-dropdown id="sr-storage-rec" aria-labelledby="sr-storage-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="500 MB">500 MB</fluent-option><fluent-option value="1 GB">1 GB</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="5 GB">5 GB</fluent-option><fluent-option value="10 GB">10 GB</fluent-option>
               </fluent-listbox></fluent-dropdown>
             </div>
-            <div class="sysreq-field">
-              <label class="sysreq-field__lbl" for="sr-dx">DirectX</label>
-              <fluent-dropdown id="sr-dx"><fluent-listbox>
-                <fluent-option value="">Not specified</fluent-option>
-                <fluent-option value="9">DirectX 9</fluent-option>
-                <fluent-option value="10">DirectX 10</fluent-option>
-                <fluent-option value="11">DirectX 11</fluent-option>
-                <fluent-option value="12">DirectX 12</fluent-option>
+            <div class="sysreq-2col__row">
+              <span class="sysreq-2col__lbl" id="sr-dx-lbl">DirectX</span>
+              <fluent-dropdown id="sr-dx" aria-labelledby="sr-dx-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="9">DirectX 9</fluent-option><fluent-option value="10">DirectX 10</fluent-option><fluent-option value="11">DirectX 11</fluent-option><fluent-option value="12">DirectX 12</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+              <fluent-dropdown id="sr-dx-rec" aria-labelledby="sr-dx-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="9">DirectX 9</fluent-option><fluent-option value="10">DirectX 10</fluent-option><fluent-option value="11">DirectX 11</fluent-option><fluent-option value="12">DirectX 12</fluent-option>
               </fluent-listbox></fluent-dropdown>
             </div>
-          <div class="sysreq-field">
-            <label class="sysreq-field__lbl" for="sr-cpu">Processor</label>
-            <fluent-text-input id="sr-cpu" placeholder="e.g. 1 GHz or faster, dual-core"></fluent-text-input>
-          </div>
-          <div class="sysreq-field">
-            <label class="sysreq-field__lbl" for="sr-gpu">Graphics</label>
-            <fluent-text-input id="sr-gpu" placeholder="e.g. DirectX 11 compatible"></fluent-text-input>
-          </div>
+            <div class="sysreq-2col__row">
+              <span class="sysreq-2col__lbl" id="sr-cpu-lbl">Processor</span>
+              <fluent-text-input id="sr-cpu" aria-labelledby="sr-cpu-lbl" placeholder="e.g. 1 GHz, dual-core"></fluent-text-input>
+              <fluent-text-input id="sr-cpu-rec" aria-labelledby="sr-cpu-lbl" placeholder="e.g. 2.4 GHz, quad-core"></fluent-text-input>
+            </div>
+            <div class="sysreq-2col__row">
+              <span class="sysreq-2col__lbl" id="sr-gpu-lbl">Graphics</span>
+              <fluent-text-input id="sr-gpu" aria-labelledby="sr-gpu-lbl" placeholder="e.g. DirectX 11 compatible"></fluent-text-input>
+              <fluent-text-input id="sr-gpu-rec" aria-labelledby="sr-gpu-lbl" placeholder="e.g. DirectX 12, 2 GB VRAM"></fluent-text-input>
+            </div>
           </div>
           <div class="sysreq-caps">
             <span class="sysreq-caps__lbl">Also requires <span class="muted">(optional)</span></span>
@@ -4003,17 +4028,21 @@
               </p>
               <div class="ez-kw-chips ez-kw-chips--ro" id="kw-easy-chips"></div>
             </div>
-            <!-- Advanced view: full editor (input + suggestions + removable chips). -->
+            <!-- Advanced view: full editor. Reading order: input, then what you've Added
+                 (AI-added ones carry a sparkle), then AI Suggestions you can tap to add. -->
             <div class="ez-kw-adv" id="kw-adv">
               <p class="ez-extra-field__hint">Words people might search to find your app in the Store.</p>
               <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword">
                 <iconify-icon slot="start" icon="fluent:search-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
               </fluent-text-input>
-              <div class="ez-kw-suggest" id="kw-suggest" hidden>
-                <span class="ez-kw-suggest__label">Suggested from your description</span>
+              <div id="kw-added-section" hidden class="ez-kw-section">
+                <p class="ez-kw-section__label">Added</p>
+                <div class="ez-kw-chips" id="adv-keywords"></div>
+              </div>
+              <div id="kw-suggest" hidden class="ez-kw-section">
+                <p class="ez-kw-section__label"><iconify-icon icon="fluent:sparkle-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon>Suggested by AI</p>
                 <div class="ez-kw-chips" id="kw-suggest-chips"></div>
               </div>
-              <div class="ez-kw-chips ez-kw-chips--added" id="adv-keywords"></div>
             </div>
           </div>
         </div>
@@ -4129,6 +4158,10 @@
                 Pick markets
               </fluent-button>
             </div>
+            <label class="reach-newmkt" id="markets-newregions-row" hidden>
+              <fluent-checkbox id="markets-new-regions"></fluent-checkbox>
+              <span class="reach-newmkt__text">Distribute my application to new regions as they become available.</span>
+            </label>
           </div>
 
           <!-- Audience -->
@@ -4176,6 +4209,21 @@
             <div class="price-win32-note" id="price-win32-note" hidden>
               <iconify-icon icon="fluent:info-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
               <span>You handle pricing and payment through your own commerce — customers buy or license directly in your app. The Store lists it as a paid app but doesn’t process the transaction.</span>
+            </div>
+            <!-- Free trial for Win32 paid apps is DISCLOSURE-ONLY: the Store doesn't run the trial — you
+                 offer it via your own installer/commerce — it's just surfaced on your listing so
+                 customers know one exists. Mirrors Partner Center's MSI/EXE “Free trial” field. -->
+            <div class="price-win32-trial" id="price-win32-trial" hidden>
+              <div class="price-win32-trial__head">
+                <iconify-icon icon="fluent:gift-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                <strong>Free trial</strong>
+                <span class="price-win32-trial__tag"><iconify-icon icon="fluent:info-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Disclosure only</span>
+              </div>
+              <p class="reach-row__hint">Paid and subscription apps often let customers try the app free before buying. This tells customers a trial is available and shows on your Store listing — but <strong>you run and enforce the trial through your own installer and commerce</strong>; the Store doesn’t manage it. Free trials are disabled by default.</p>
+              <div class="seg" role="radiogroup" aria-label="Free trial" data-choice="win32trial">
+                <button class="seg__opt seg__opt--active" data-value="none" type="button">No free trial</button>
+                <button class="seg__opt" data-value="trial" type="button">Free trial</button>
+              </div>
             </div>
             <div class="price-paid-row" id="price-paid-row" hidden>
               <div class="price-field">
@@ -5513,7 +5561,7 @@
     <div class="lang-dialog__list" id="lang-list" role="list"></div>
 
     <label class="lang-dialog__opt">
-      <fluent-switch id="lang-duplicate-toggle" checked></fluent-switch>
+      <fluent-switch id="lang-duplicate-toggle"></fluent-switch>
       <span>
         <span class="lang-dialog__opt-title">Auto-translate default content for new languages</span>
         <span class="lang-dialog__opt-hint">Description, short description, and features are translated from your default language as a starting point. You can edit anything after.</span>
@@ -5684,17 +5732,17 @@
         <fluent-text-input id="pkgd-url" class="pkgd-url"></fluent-text-input>
       </div>
       <div class="ez-field">
-        <label class="ez-field__label" for="pkgd-arch">Architecture</label>
+        <label class="ez-field__label" for="pkgd-arch">Architecture <span class="field-mark field-mark--req" aria-label="required">*</span></label>
         <span class="ez-field__hint">The CPU this installer targets.</span>
         <div id="pkgd-arch-wrap"></div>
       </div>
       <div class="ez-field">
-        <label class="ez-field__label" for="pkgd-params">Install parameters</label>
-        <span class="ez-field__hint">The silent-install flags we run.</span>
+        <label class="ez-field__label" for="pkgd-params">Install parameters <span class="field-mark field-mark--req" aria-label="required">*</span></label>
+        <span class="ez-field__hint">The silent-install flags we run — or tick the box below if none are needed.</span>
         <div id="pkgd-params-wrap"></div>
       </div>
       <div class="ez-field">
-        <label class="ez-field__label">Language</label>
+        <label class="ez-field__label">Language <span class="field-mark field-mark--req" aria-label="required">*</span></label>
         <span class="ez-field__hint">Locales bundled in this installer.</span>
         <div id="pkgd-lang-wrap"></div>
       </div>
@@ -5709,7 +5757,7 @@
       <div id="pkgd-exit"></div>
     </div>
 
-    <p class="pkgd-hint" id="pkgd-hint" hidden></p>
+    <p class="pkgd-hint" id="pkgd-hint" aria-live="polite" hidden></p>
     <div class="pkgd-msix-tip">
       <iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
       <div class="pkgd-msix-tip__body">
@@ -5754,33 +5802,7 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
-<!-- Privacy policy generator: drafts a starter policy from the listing (URL mode). -->
-<fluent-dialog id="privacy-dialog" modal-type="modal" aria-labelledby="privacy-dialog-title">
-  <fluent-dialog-body>
-    <span slot="title" id="privacy-dialog-title">
-      <iconify-icon icon="fluent:shield-checkmark-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
-      Starter privacy policy
-    </span>
-    <fluent-button slot="title-action" appearance="subtle" data-privacy-dialog-close aria-label="Close">
-      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-    </fluent-button>
-    <p class="privacy-dialog__lede">A starter draft based on your listing. Review it, host it on your site, then paste the URL above. This isn't legal advice — consult a lawyer for production apps.</p>
-    <div class="privacy-dialog__textwrap">
-      <textarea id="privacy-text" class="privacy-dialog__textarea" rows="16" spellcheck="false" aria-label="Privacy policy draft"></textarea>
-      <div class="privacy-dialog__loading" id="privacy-loading" hidden>
-        <fluent-spinner size="small" aria-hidden="true"></fluent-spinner>
-        <span>Drafting your privacy policy…</span>
-      </div>
-    </div>
-    <fluent-button slot="action" appearance="subtle" data-privacy-dialog-close>Close</fluent-button>
-    <fluent-button slot="action" appearance="secondary" id="privacy-download"><iconify-icon slot="start" icon="fluent:arrow-download-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Download .txt</fluent-button>
-    <fluent-button slot="action" appearance="secondary" id="privacy-regenerate"><iconify-icon slot="start" icon="fluent:arrow-clockwise-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Regenerate</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="privacy-copy"><iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Copy text</fluent-button>
-  </fluent-dialog-body>
-</fluent-dialog>
-
-<!-- Privacy policy editor — opened from the listing's Additional information row. Link or Text,
-     with an optional AI-drafted starter. Holds the privacy controls that used to be an inline card. -->
+<!-- Privacy policy editor — opened from the listing's Additional information row. Link or Text. -->
 <fluent-dialog id="privacy-edit-dialog" modal-type="modal" aria-labelledby="privacy-edit-title">
   <fluent-dialog-body>
     <span slot="title" id="privacy-edit-title">
@@ -5803,12 +5825,8 @@
         </fluent-text-input>
       </div>
       <div class="privacy-field__input" data-privacy-input="text" hidden>
-        <fluent-textarea id="privacy-text-inline" class="ez-extra-input" rows="1" placeholder="Paste your privacy policy text, or generate a starter below."></fluent-textarea>
+        <fluent-textarea id="privacy-text-inline" class="ez-extra-input" rows="1" placeholder="Paste your privacy policy text."></fluent-textarea>
       </div>
-      <fluent-button type="button" appearance="transparent" class="link-btn--ai" id="gen-privacy">
-        <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="13" height="13" aria-hidden="true"></iconify-icon>
-        Generate a basic privacy policy
-      </fluent-button>
     </div>
     <fluent-button slot="action" appearance="primary" data-privacy-edit-close>Done</fluent-button>
   </fluent-dialog-body>
@@ -6161,7 +6179,7 @@
     if (!q) return true;
     return langLabelOf(code).toLowerCase().indexOf(q) >= 0 || code.toLowerCase().indexOf(q) >= 0 || (LANG_SEARCH[code] || '').indexOf(q) >= 0;
   }
-  function win32ArchOf(p)  { return (p.arches && p.arches[0]) || 'x64'; }
+  function win32ArchOf(p)  { return (p.arches && p.arches[0]) || ''; }
   function win32LangsOf(p) { return (p.langs && p.langs.length) ? p.langs : []; }
   // The first Win32 installer in a submission gets the default language; later installers start
   // blank so the developer assigns a unique architecture + language instead of colliding with it.
@@ -6173,7 +6191,7 @@
   // whenever the architecture or install parameters change. The result lives on pkg.validation.
   const validationTimers = {};
   function buildValidationChecks(pkg) {
-    const paramsOk = (pkg.installParams || '').trim().length > 0;
+    const paramsOk = !!pkg.silentNoParams || (pkg.installParams || '').trim().length > 0;
     return [
       { key: 'malware', label: 'Malware check', kind: 'pass',
         desc: 'The package is found to be clean.' },
@@ -6221,11 +6239,26 @@
 
   // Architecture choices for a Win32 installer (Fluent dropdown).
   const ARCH_VALUES = ['x64', 'x86', 'arm64', 'neutral'];
+  // When the installer file name carries no architecture token we DON'T guess: the dropdown opens
+  // on a "Select architecture" placeholder (value "") and Confirm stays disabled until the developer
+  // picks one. Never silently default to x64.
   function archDropdownHtml(id, dataAttr, selected) {
-    const sel = ARCH_VALUES.includes(selected) ? selected : 'x64';
-    return '<fluent-dropdown id="' + id + '" ' + dataAttr + '><fluent-listbox>' +
+    const has = ARCH_VALUES.includes(selected);
+    const sel = has ? selected : '';
+    const placeholder = has ? '' : '<fluent-option value="" selected>Select architecture</fluent-option>';
+    return '<fluent-dropdown id="' + id + '" ' + dataAttr + '><fluent-listbox>' + placeholder +
       ARCH_VALUES.map(a => '<fluent-option value="' + a + '"' + (a === sel ? ' selected' : '') + '>' + a + '</fluent-option>').join('') +
       '</fluent-listbox></fluent-dropdown>';
+  }
+
+  // Free-form install params: text input with preset datalist + silent checkbox.
+  function installParamsFieldHtml(id, dataAttr, value, type, silentFlag) {
+    const v = value || "", listId = id + "-list";
+    const presets = ["/S","/silent","/quiet","/quiet /norestart","/VERYSILENT /NORESTART","/qn"].map(p => '<option value="' + p + '">').join("");
+    const chk = silentFlag ? " checked" : "";
+    return '<fluent-text-input id="' + id + '" ' + dataAttr + ' value="' + v.replace(/"/g,"&quot;") + '" placeholder="e.g. /S" list="' + listId + '"></fluent-text-input>' +
+      '<datalist id="' + listId + '">' + presets + "</datalist>" +
+      '<label class="ez-silent-check"><fluent-checkbox id="' + id + '-silent"' + chk + ' data-pkg-silent="' + id.replace(/^prm-/,"") + '"></fluent-checkbox><span class="ez-silent-check__text">My app installs silently — no switches needed</span></label>';
   }
 
   // Install parameters are mandatory; offer common silent-install presets (Fluent dropdown).
@@ -6751,9 +6784,9 @@
   // Advanced-mode settings (reach & price, listing extras, disclosures). Shared
   // across Easy/Advanced within a session; reset to defaults on a hard refresh.
   const ADV_DEFAULTS = () => ({
-    markets: { mode: 'all', selected: [] },
+    markets: { mode: 'all', selected: [], newRegions: true },
     audience: { mode: 'public', groups: [] },
-    price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, schedule: null, sales: [] },
+    price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, schedule: null, sales: [], win32Trial: 'none' },
     trial: { mode: 'none', duration: '7' },
     // Gradual rollout of an UPDATE (Windows 10/11): release to a % of customers first, then ramp.
     rollout: { gradual: false, percent: 10, mandatory: false },
@@ -7507,7 +7540,7 @@
     // Package
     { section: 'step-package', label: 'App package', required: true, done: () => !!state.pkg },
     { section: 'step-package', label: 'Restricted-capability reasons', applies: () => collectRestrictedCapabilities().length > 0, required: true, done: () => hasAllCapabilityReasons() },
-    { section: 'step-package', label: 'System requirements', required: false, done: () => { const s = sysreqState || {}; return !!(s.ram || s.storage || s.dx || s.cpu || s.gpu || (s.caps && s.caps.length)); }, focus: '#sysreq-sec', onJump: () => { const d = document.getElementById('sysreq-sec'); if (d) d.open = true; } },
+    { section: 'step-package', label: 'System requirements', required: false, done: () => { const has = o => !!(o && (o.ram || o.storage || o.dx || o.cpu || o.gpu || (o.caps && o.caps.length))); const s = sysreqState || {}; return has(s) || has(s.rec); }, focus: '#sysreq-sec', onJump: () => { const d = document.getElementById('sysreq-sec'); if (d) d.open = true; } },
     // Store listing — required
     { section: 'step-listing', label: 'App name', required: true, done: () => !!state.name, value: () => missLocaleNames(() => !!state.name), valueTitle: () => missLocaleNamesFull(() => !!state.name), focus: '#ez-pv-name' },
     { section: 'step-listing', label: 'Description', required: true,
@@ -8399,7 +8432,7 @@
       version: detectVersion(file.name),
       arches: detectArches(file.name),
       langs: [defaultPkgLang()],
-      installParams: /^Win32/.test(type) ? defaultInstallParams(type) : '',
+      installParams: '',   // no default flags — the field shows a ghost placeholder until typed or “installs silently” is ticked
       manifestParsed: false,
       sizeBytes: file.size,
       _file: file,
@@ -8438,7 +8471,7 @@
   // The submission's package family (MSIX vs Win32), set by the first package of ANY source
   // (upload OR URL). One family per submission — never mix. null when there are no packages yet.
   function lockedPkgType() {
-    const p = packages.find(Boolean);
+    const p = packages.find(p => !p._pending);   // only a CONFIRMED package locks the type/UI (pending = still open in the details dialog)
     return p ? (p.win32 ? 'win32' : 'msix') : null;
   }
   // ---- "What are you publishing?" type chooser (ported from V5) --------------------------
@@ -8447,7 +8480,8 @@
   const V4_TYPE_LABEL = { msix: 'MSIX app', win32: 'Desktop installer', pwa: 'Web app' };
   // System requirements (optional, its own card below the Package step): the developer's stated
   // MINIMUM. Nothing pre-selected; providing any value surfaces it in the listing + drives the warning.
-  let sysreqState = { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [] };
+  // Minimum requirements live at the top level (back-compat); `rec` holds the optional Recommended set.
+  let sysreqState = { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [], rec: { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [] } };
   // How the package step's add methods adapt per type: MSIX = upload only (packaged extensions),
   // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app is link-only.
   const V4_PKG_UI = {
@@ -8774,11 +8808,11 @@
         let rows = '';
         if (pkg.source === 'url') rows += setRow('Installer URL', 'Where the installer is downloaded from',
           '<fluent-text-input class="ez-setrow__url" id="url-' + pkg.id + '" data-pkg-url="' + pkg.id + '" value="' + esc(pkg.url || '') + '"></fluent-text-input>', true);
-        rows += setRow('Architecture', 'The CPU this installer targets',
+        rows += setRow('Architecture <span class="field-mark field-mark--req">*</span>', 'The CPU this installer targets',
           archDropdownHtml('arch-' + pkg.id, 'data-pkg-arch="' + pkg.id + '"', win32ArchOf(pkg)));
-        rows += setRow('Install parameters', 'Silent-install flags we run',
-          installParamsDropdownHtml('prm-' + pkg.id, 'data-pkg-params="' + pkg.id + '"', pkg.installParams, pkg.type));
-        rows += setRow('Language', 'Locales bundled in this installer',
+        rows += setRow('Install parameters <span class="field-mark field-mark--req">*</span>', 'Silent-install flags we run',
+          installParamsFieldHtml('prm-' + pkg.id, 'data-pkg-params="' + pkg.id + '"', pkg.installParams, pkg.type, pkg.silentNoParams));
+        rows += setRow('Language <span class="field-mark field-mark--req">*</span>', 'Locales bundled in this installer',
           langFieldHtml('data-pkg-langs', pkg.id, win32LangsOf(pkg)));
         rows += setRow('Installer exit codes', exitCodesSummary(pkg.exitCodes),
           '<fluent-button appearance="secondary" data-open-exitcodes="' + pkg.id + '">' + (exitCodesIsDefault(pkg.exitCodes) ? 'Customize' : 'Edit') + '</fluent-button>');
@@ -8954,14 +8988,15 @@
         commit: langs => { p.langs = langs.slice(); invalidateValidation(p); renderPackages(); },
       }));
     });
-    if (packages.length === 0) {
-      showAddUI('both');                       // empty: offer both methods
+    const committedPkgs = packages.filter(p => !p._pending);   // pending = still being reviewed in the details dialog; not yet “added”
+    if (committedPkgs.length === 0) {
+      showAddUI('both');                       // nothing confirmed yet: offer both methods
     } else {
-      const pi = $('pkg-input'); if (pi) pi.hidden = true;   // a package exists: collapse the add UI
+      const pi = $('pkg-input'); if (pi) pi.hidden = true;   // a confirmed package exists: collapse the add UI
     }
     const addMore = $('add-more-pkg');   // both methods produce a package, so the label is uniform
     // A packaged web app is a single submission — no "add another package" for it.
-    if (addMore) addMore.hidden = packages.length === 0 || packages.some(p => p.fromPwa);
+    if (addMore) addMore.hidden = committedPkgs.length === 0 || packages.some(p => p.fromPwa);
     updateUploadConstraints();   // drop-zone hint + accepted file types reflect the locked package type
     renderFamilyDistribution();  // per-family distribution toggles (only when packages span >1 family)
     // The "Building a package?" identity banner is MSIX-only (AppxManifest.xml). Re-derived every render:
@@ -9302,13 +9337,17 @@
     const pkg = pkgdPkg(), btn = $('pkgd-confirm'), hint = $('pkgd-hint'); if (!pkg || !btn) return;
     const urlEl = $('pkgd-url');
     const urlOk = pkg.source !== 'url' || !!(urlEl && urlEl.value.trim());
+    const archOk = ARCH_VALUES.includes(win32ArchOf(pkg));
+    const paramsOk = !!pkg.silentNoParams || !!(pkg.installParams && pkg.installParams.trim());
     const langOk = win32LangsOf(pkg).length > 0;
-    btn.disabled = !(urlOk && langOk);
+    btn.disabled = !(urlOk && archOk && paramsOk && langOk);
     const cv = $('pkgd-convert'); if (cv) cv.disabled = !(urlOk && langOk);
     let msg = '';
     if (!urlOk) msg = 'Paste your installer link to confirm.';
+    else if (!archOk) msg = 'Select the architecture to confirm.';
+    else if (!paramsOk) msg = 'Enter the silent-install parameters, or tick “My app installs silently”.';
     else if (!langOk) msg = 'Add at least one language to confirm.';
-    if (hint) { hint.hidden = !msg; if (msg) hint.innerHTML = '<iconify-icon icon="fluent:warning-20-filled" width="14" height="14" aria-hidden="true"></iconify-icon> ' + msg; }
+    if (hint) { hint.hidden = !msg; if (msg) hint.innerHTML = '<iconify-icon icon="fluent:error-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon> ' + msg; }
   }
   function renderPkgdDialog() {
     const pkg = pkgdPkg(); if (!pkg) return;
@@ -9330,17 +9369,29 @@
       const d = $('pkgd-arch');
       if (d) d.addEventListener('change', () => {
         const newArch = d.value;
-        if (win32LangsOf(pkg).some(code => langTakenByOther(newArch, code, pkg.id))) {
+        if (newArch && win32LangsOf(pkg).some(code => langTakenByOther(newArch, code, pkg.id))) {
           announce('Another ' + newArch + ' installer already uses one of these languages. Pick a different architecture or language.');
           renderPkgdDialog(); return;   // revert the dropdown
         }
-        pkg.arches = [newArch];
+        pkg.arches = newArch ? [newArch] : [];
+        updatePkgdConfirm();   // architecture is mandatory — reflect it on Confirm
       });
     }
     const prmWrap = $('pkgd-params-wrap');
     if (prmWrap) {
-      prmWrap.innerHTML = installParamsDropdownHtml('pkgd-params', 'data-pkgd-params', pkg.installParams, pkg.type);
-      const d = $('pkgd-params'); if (d) d.addEventListener('change', () => { pkg.installParams = d.value; });
+      prmWrap.innerHTML = installParamsFieldHtml('pkgd-params', 'data-pkgd-params', pkg.installParams, pkg.type, pkg.silentNoParams);
+      const d = $('pkgd-params'), chk = $('pkgd-params-silent');
+      // "My app installs silently" = no switches needed: clear + disable the field and treat the
+      // parameter requirement as satisfied.
+      const syncSilent = () => { if (d) { d.disabled = !!pkg.silentNoParams; if (pkg.silentNoParams) { d.value = ''; } } };
+      const onParams = () => { if (!pkg.silentNoParams) { pkg.installParams = d.value; } updatePkgdConfirm(); };
+      if (d) { d.addEventListener('input', onParams); d.addEventListener('change', onParams); }
+      if (chk) chk.addEventListener('change', () => {
+        pkg.silentNoParams = chk.checked;
+        if (chk.checked) { pkg.installParams = ''; }
+        syncSilent(); updatePkgdConfirm();
+      });
+      syncSilent();
     }
     renderPkgdLang();
     renderPkgdExit();
@@ -9356,6 +9407,12 @@
     if (advLbl) advLbl.textContent = 'Show advanced options';
     renderPkgdDialog();
     try { pkgDetailsDialog.show(); } catch (e) {}
+    // A light-dismiss (backdrop / Escape) closes the inner <dialog> without hitting Cancel; treat it
+    // the same as Cancel so an unconfirmed package never lingers and wrongly shows the step as “added”.
+    if (!pkgDetailsDialog.__closeWired) {
+      const inner = pkgDetailsDialog.shadowRoot && pkgDetailsDialog.shadowRoot.querySelector('dialog');
+      if (inner) { pkgDetailsDialog.__closeWired = true; inner.addEventListener('close', () => { if (pkgdId != null) cancelPkgDetails(); }); }
+    }
     if (pkg.source === 'url' && !pkg.url) setTimeout(() => { const u = $('pkgd-url'); if (u) { try { u.focus(); } catch (e) {} } }, 60);
   }
   function openNextPendingPkg() {
@@ -9376,6 +9433,7 @@
       runValidation(pkg);   // validate in the background
       announce('Package confirmed. Validating in the background.');
     }
+    pkgdId = null;   // resolved via Confirm — the inner-dialog close handler must not re-cancel
     try { pkgDetailsDialog.hide(); } catch (e) {}
     renderPackages();
     openNextPendingPkg();
@@ -9422,6 +9480,7 @@
         pkg.url = pkgdSnapshot.url; pkg.exitCodes = pkgdSnapshot.exitCodes; pkg.validation = pkgdSnapshot.validation;
       }
     }
+    pkgdId = null;   // resolved — the inner-dialog close handler must not re-cancel
     try { pkgDetailsDialog.hide(); } catch (e) {}
     renderPackages();
     openNextPendingPkg();
@@ -9584,7 +9643,7 @@
     } else {
       const isMsi = /\.msi(?:[?#]|$)/i.test(url);
       const type = isMsi ? 'Win32 MSI' : 'Win32 EXE';
-      packages.push({ id, source: 'url', kind: 'win32', filename: basenameOf(url), type, win32: true, url, arches: [arch || 'x64'], langs: Array.isArray(langs) ? langs.slice() : firstWin32Langs(), installParams: (prm || '').trim() || defaultInstallParams(type), capabilities: [], manifestParsed: true, sizeBytes: null, _pending: true });
+      packages.push({ id, source: 'url', kind: 'win32', filename: basenameOf(url), type, win32: true, url, arches: [arch || 'x64'], langs: Array.isArray(langs) ? langs.slice() : firstWin32Langs(), installParams: (prm || '').trim(), capabilities: [], manifestParsed: true, sizeBytes: null, _pending: true });
       announce('Win32 installer added.');   // no render — the details dialog commits it on Confirm
     }
     return id;
@@ -12258,6 +12317,12 @@
         if (d.sysreq.cpu != null) sysreqState.cpu = d.sysreq.cpu;
         if (d.sysreq.gpu != null) sysreqState.gpu = d.sysreq.gpu;
         if (Array.isArray(d.sysreq.caps)) sysreqState.caps = d.sysreq.caps.slice();
+        if (d.sysreq.rec && typeof d.sysreq.rec === 'object') {
+          sysreqState.rec = {
+            ram: d.sysreq.rec.ram || '', storage: d.sysreq.rec.storage || '', dx: d.sysreq.rec.dx || '',
+            cpu: d.sysreq.rec.cpu || '', gpu: d.sysreq.rec.gpu || '', caps: Array.isArray(d.sysreq.rec.caps) ? d.sysreq.rec.caps.slice() : []
+          };
+        }
       }
       // Rehydrate the DOM from the restored model (guarded — not every render is in this scope).
       if (typeof syncName === 'function') { try { syncName(); } catch (e) {} }
@@ -12313,7 +12378,10 @@
   (function wireSysreq() {
     var summary = $('sysreq-summary');
     var ram = $('sr-ram'), storage = $('sr-storage'), dx = $('sr-dx'), cpu = $('sr-cpu'), gpu = $('sr-gpu'), caps = $('sysreq-caps');
+    var ramR = $('sr-ram-rec'), storageR = $('sr-storage-rec'), dxR = $('sr-dx-rec'), cpuR = $('sr-cpu-rec'), gpuR = $('sr-gpu-rec');
     if (!ram && !caps) return;
+    // Top-level sysreqState = Minimum; sysreqState.rec = Recommended (each field has its own control).
+    if (!sysreqState.rec) sysreqState.rec = { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [] };
     // beta.133 fluent-dropdown shows its value via the selected OPTION's `.selected` PROPERTY (it
     // slots that option into the control) — the attribute alone leaves the control blank.
     function setDD(dd, val) {
@@ -12327,7 +12395,10 @@
       if (sysreqState.ram) bits.push(sysreqState.ram + ' RAM');
       if (sysreqState.storage) bits.push(sysreqState.storage);
       if (sysreqState.dx) bits.push('DirectX ' + sysreqState.dx);
-      summary.textContent = bits.length ? ('Minimum: ' + bits.join(' \u00b7 ')) : 'Tell shoppers the minimum hardware your app needs to run well.';
+      var r = sysreqState.rec || {}, hasRec = !!(r.ram || r.storage || r.dx || r.cpu || r.gpu || (r.caps && r.caps.length));
+      summary.textContent = bits.length
+        ? ('Minimum: ' + bits.join(' \u00b7 ') + (hasRec ? ' \u00b7 + Recommended set' : ''))
+        : 'Tell shoppers the minimum (and recommended) hardware your app needs to run well.';
     }
     function changed() { recap(); if (window.__renderSysreq) { try { window.__renderSysreq(); } catch (e) {} } if (window.__scheduleFlowSave) window.__scheduleFlowSave(); }
     // Read-only recap of what the listing auto-derives from the uploaded package (device family,
@@ -12349,7 +12420,10 @@
     window.__syncSysreq = function () {
       setDD(ram, sysreqState.ram); setDD(storage, sysreqState.storage); setDD(dx, sysreqState.dx);
       if (cpu) cpu.value = sysreqState.cpu || ''; if (gpu) gpu.value = sysreqState.gpu || '';
-      if (caps) Array.prototype.forEach.call(caps.querySelectorAll('[data-sr-cap]'), function (b) { b.setAttribute('aria-pressed', sysreqState.caps.indexOf(b.getAttribute('data-sr-cap')) >= 0 ? 'true' : 'false'); });
+      var r = sysreqState.rec || {};
+      setDD(ramR, r.ram); setDD(storageR, r.storage); setDD(dxR, r.dx);
+      if (cpuR) cpuR.value = r.cpu || ''; if (gpuR) gpuR.value = r.gpu || '';
+      if (caps) Array.prototype.forEach.call(caps.querySelectorAll('[data-sr-cap]'), function (b) { b.setAttribute('aria-pressed', (sysreqState.caps || []).indexOf(b.getAttribute('data-sr-cap')) >= 0 ? 'true' : 'false'); });
       recap();
     };
     if (ram) ram.addEventListener('change', function () { sysreqState.ram = ram.value; changed(); });
@@ -12357,6 +12431,11 @@
     if (dx) dx.addEventListener('change', function () { sysreqState.dx = dx.value; changed(); });
     if (cpu) cpu.addEventListener('input', function () { sysreqState.cpu = cpu.value; changed(); });
     if (gpu) gpu.addEventListener('input', function () { sysreqState.gpu = gpu.value; changed(); });
+    if (ramR) ramR.addEventListener('change', function () { sysreqState.rec.ram = ramR.value; changed(); });
+    if (storageR) storageR.addEventListener('change', function () { sysreqState.rec.storage = storageR.value; changed(); });
+    if (dxR) dxR.addEventListener('change', function () { sysreqState.rec.dx = dxR.value; changed(); });
+    if (cpuR) cpuR.addEventListener('input', function () { sysreqState.rec.cpu = cpuR.value; changed(); });
+    if (gpuR) gpuR.addEventListener('input', function () { sysreqState.rec.gpu = gpuR.value; changed(); });
     if (caps) caps.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('[data-sr-cap]'); if (!b) return;
       var cap = b.getAttribute('data-sr-cap'), i = sysreqState.caps.indexOf(cap);
@@ -13241,8 +13320,16 @@
     }
     function applyMarkets() {
       setSeg('markets', adv.markets.mode);
-      $('markets-choose-row').hidden = adv.markets.mode !== 'choose';
+      const choose = adv.markets.mode === 'choose';
+      $('markets-choose-row').hidden = !choose;
+      $('markets-newregions-row').hidden = !choose;
       $('markets-all-hint').hidden = adv.markets.mode !== 'all';
+      if (choose) {
+        // Fluent checkbox renders its tick only once :state(checked) is set via a real toggle — the
+        // `checked` attribute/property alone won't show it — so drive the default with a click.
+        const nr = $('markets-new-regions');
+        if (nr && !!nr.checked !== (adv.markets.newRegions !== false)) nr.click();
+      }
       renderMarketChips();
     }
 
@@ -13284,6 +13371,8 @@
       const win32 = !!document.getElementById('flow-wrap')?.classList.contains('has-win32-pkg');
       const storePaid = paid && !win32;   // paid AND the Store handles the money
       const note = $('price-win32-note'); if (note) note.hidden = !(paid && win32);
+      const w32trial = $('price-win32-trial');   // Win32 paid: disclosure-only free-trial flag
+      if (w32trial) { w32trial.hidden = !(paid && win32); setSeg('win32trial', adv.price.win32Trial || 'none'); }
       $('price-paid-row').hidden = !storePaid;
       // Advanced pricing (per-market, scheduling, sales) + free trial collapse behind the reveal
       // (is-price-adv on flow-wrap) so the default paid view is just base price. Ported from V5.
@@ -13314,6 +13403,7 @@
           if (choice === 'markets') { adv.markets.mode = v; applyMarkets(); }
           else if (choice === 'audience') { adv.audience.mode = v; applyAudience(); }
           else if (choice === 'price') { adv.price.mode = v; applyPrice(); }
+          else if (choice === 'win32trial') { adv.price.win32Trial = v; applyPrice(); }
           else if (choice === 'trial') { adv.trial.mode = v; applyTrial(); }
           persistAdvanced(); updateGate();
         });
@@ -13333,6 +13423,8 @@
     });
 
     const mp = $('markets-pick-btn'); if (mp) mp.addEventListener('click', () => { if (typeof openMarketsDialog === 'function') openMarketsDialog(); });
+    const mnr = $('markets-new-regions');
+    if (mnr) mnr.addEventListener('change', () => { adv.markets.newRegions = !!mnr.checked; persistAdvanced(); });
     const gp = $('groups-pick-btn'); if (gp) gp.addEventListener('click', () => { if (typeof openGroupsDialog === 'function') openGroupsDialog(); });
     const po = $('price-overrides-btn'); if (po) po.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
     const ps = $('price-schedule-btn'); if (ps) ps.addEventListener('click', () => { if (typeof openPriceScheduleDialog === 'function') openPriceScheduleDialog(); });
@@ -14584,7 +14676,10 @@ function openPriceScheduleDialog() {
 
     // ---- Search terms / keywords (discoverability metadata, not on the PDP) ----
     const chipsWrap = $('adv-keywords'), kwInput = $('adv-keyword-input'), kwEasyChips = $('kw-easy-chips');
-    const kwSuggestWrap = $('kw-suggest'), kwSuggestChips = $('kw-suggest-chips');
+    const kwSuggestWrap = $('kw-suggest'), kwSuggestChips = $('kw-suggest-chips'), kwAddedSection = $('kw-added-section');
+    // Keywords the AI proposed (auto-seeded from the description, or tapped from a suggestion chip)
+    // carry a sparkle so it's clear which came from AI vs. the ones you typed yourself.
+    const aiKw = new Set();
     const KW_STOP = new Set(('the a an and or but for with to of in on at by from as is are be this that these those your you our its it can will would should more most get use used using make makes made into about over under have has had not all any new free best top app apps').split(' '));
     // Keywords seed automatically from the description and stay read-only in the simple view.
     // Once the user adds/removes one in Advanced, we stop auto-seeding and respect their list.
@@ -14600,7 +14695,7 @@ function openPriceScheduleDialog() {
     function seedKeywords() {
       if (kwUserEdited || (typeof localeLocked === 'function' && localeLocked()) || L.keywords.length) return;
       const seed = suggestKeywords(6);
-      if (seed.length) { L.keywords = seed; persistAdvanced(); }
+      if (seed.length) { L.keywords = seed; seed.forEach(w => aiKw.add(w)); persistAdvanced(); }
     }
     // Read-only chips for the simple view (no remove buttons). The "auto-added" note only makes
     // sense once we actually have keywords, so it hides in the empty state.
@@ -14619,18 +14714,23 @@ function openPriceScheduleDialog() {
       if (!sugg.length) { kwSuggestWrap.hidden = true; kwSuggestChips.innerHTML = ''; return; }
       kwSuggestWrap.hidden = false;
       kwSuggestChips.innerHTML = sugg.map(w => '<button type="button" class="ez-kw-chips__chip ez-kw-chips__chip--suggest" data-suggest="' + esc(w) + '"><iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + esc(w) + '</button>').join('');
-      kwSuggestChips.querySelectorAll('[data-suggest]').forEach(b => b.addEventListener('click', () => addKeyword(b.dataset.suggest)));
+      kwSuggestChips.querySelectorAll('[data-suggest]').forEach(b => b.addEventListener('click', () => addKeyword(b.dataset.suggest, true)));
     }
     window.__refreshKwSuggest = renderKwSuggest;
     function renderKeywords() {
       seedKeywords();
       if (chipsWrap) chipsWrap.innerHTML = L.keywords.map((kw, i) =>
-        '<span class="ez-kw-chips__chip">' + esc(kw) + '<button type="button" data-i="' + i + '" aria-label="Remove ' + esc(kw) + '"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button></span>'
+        '<span class="ez-kw-chips__chip' + (aiKw.has(kw) ? ' ez-kw-chips__chip--ai' : '') + '">' +
+          (aiKw.has(kw) ? '<iconify-icon class="ez-kw-chips__ai" icon="fluent:sparkle-16-filled" width="12" height="12" role="img" aria-label="Added by AI"></iconify-icon>' : '') +
+          esc(kw) +
+          '<button type="button" data-i="' + i + '" aria-label="Remove ' + esc(kw) + '"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button>' +
+        '</span>'
       ).join('');
+      if (kwAddedSection) kwAddedSection.hidden = L.keywords.length === 0;
       renderKwSuggest();
       renderKwEasy();
     }
-    function addKeyword(v) { v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(function () { addKeyword(v); }); return; } kwUserEdited = true; L.keywords.push(v); persistAdvanced(); renderKeywords(); }
+    function addKeyword(v, fromAI) { v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(function () { addKeyword(v, fromAI); }); return; } kwUserEdited = true; if (fromAI) { aiKw.add(v); } else { aiKw.delete(v); } L.keywords.push(v); persistAdvanced(); renderKeywords(); }
     if (kwInput) {
       kwInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKeyword(kwInput.value); kwInput.value = ''; }
@@ -14641,7 +14741,7 @@ function openPriceScheduleDialog() {
     if (chipsWrap) chipsWrap.addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; const doRemove = () => { kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); }; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(doRemove); return; } doRemove(); });
     renderKeywords();
 
-    // ---- Privacy policy: Link or Text, with an optional AI-drafted starter ----
+    // ---- Privacy policy: Link or Text ----
     const privacyUrlInput = $('listing-privacy-input'), privacyTextInline = $('privacy-text-inline');
     const privacyUrlGroup = document.querySelector('.privacy-field__input[data-privacy-input="url"]');
     const privacyTextGroup = document.querySelector('.privacy-field__input[data-privacy-input="text"]');
@@ -14669,33 +14769,6 @@ function openPriceScheduleDialog() {
     document.querySelectorAll('.privacy-mode-toggle .seg__opt').forEach(b => b.addEventListener('click', () => { if (localeLocked()) return; setPrivacyMode(b.dataset.privacyMode, true); }));
     setPrivacyMode(getPrivacyMode(), false);
     if (typeof updatePrivacyChrome === 'function') updatePrivacyChrome();
-
-    // AI: draft a starter privacy policy. Link mode → dialog (copy/host); Text mode → fill inline.
-    (function wirePrivacyGen() {
-      const genBtn = $('gen-privacy'), dlg = $('privacy-dialog'), dlgText = $('privacy-text'), dlgLoad = $('privacy-loading');
-      const payload = () => ({ appName: (app && app.name) || 'app', shortDesc: (L.shortDesc || ''), fullDesc: (fDesc && fDesc.value) || '', category: (fCategory && fCategory.value) || '', packageType: (packages[0] && packages[0].kind) || 'MSIX' });
-      const runGen = async () => {
-        if (!(window.AI && window.AI.enabled)) { announce('AI is not configured.'); return null; }
-        try { return await window.AI.generatePrivacyPolicy(payload()); }
-        catch (e) { console.warn('[ai] privacy generation failed:', e.message); announce('Could not draft a privacy policy.'); return null; }
-      };
-      const fillDialog = async () => { if (dlgText) dlgText.value = ''; if (dlgLoad) dlgLoad.hidden = false; const t = await runGen(); if (dlgLoad) dlgLoad.hidden = true; if (t && dlgText) dlgText.value = t; };
-      // fluent-dialog show()/hide() are unreliable here (esp. nested over the privacy editor) — drive the
-      // inner native <dialog> directly as a fallback. Same approach as openBuildGuide().
-      const showDlg = () => { if (!dlg) return; try { dlg.show(); } catch (e) {} try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {} };
-      const hideDlg = () => { if (!dlg) return; try { dlg.hide(); } catch (e) {} try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {} };
-      if (dlg) dlg.querySelectorAll('[data-privacy-dialog-close]').forEach(el => el.addEventListener('click', hideDlg));
-      const regen = $('privacy-regenerate'); if (regen) regen.addEventListener('click', fillDialog);
-      const copy = $('privacy-copy'); if (copy) copy.addEventListener('click', async () => { const t = (dlgText && dlgText.value) || ''; if (!t) return; try { await navigator.clipboard.writeText(t); } catch (e) { try { dlgText.select(); document.execCommand('copy'); } catch (e2) {} } const o = copy.innerHTML; copy.innerHTML = '<iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Copied'; setTimeout(() => { copy.innerHTML = o; }, 1500); });
-      const dl = $('privacy-download'); if (dl) dl.addEventListener('click', () => { const t = (dlgText && dlgText.value) || ''; if (!t) return; const blob = new Blob([t], { type: 'text/plain' }); const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = 'privacy-policy.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); });
-      if (genBtn) genBtn.addEventListener('click', async () => {
-        if (localeLocked()) return;
-        if (getPrivacyMode() === 'url') { showDlg(); await fillDialog(); return; }
-        const o = genBtn.innerHTML; genBtn.disabled = true; genBtn.innerHTML = '<fluent-spinner size="extra-small"></fluent-spinner> Drafting…';
-        try { const t = await runGen(); if (t && privacyTextInline) { privacyTextInline.value = t; L.privacyText = t; persistAdvanced(); updateGate(); } }
-        finally { genBtn.disabled = false; genBtn.innerHTML = o; }
-      });
-    })();
 
     // ---- Features (PDP section, click-to-edit; one per line) ----
     const featSection = $('ez-features-section'), featList = $('ez-pv-features'), featAdd = $('ez-features-add');
@@ -14781,20 +14854,24 @@ function openPriceScheduleDialog() {
       const ul = $('ez-pv-sysreq'); if (!ul) return;
       const sec = $('ez-sysreq-section');
       const sr = (typeof sysreqState !== 'undefined') ? sysreqState : {};
+      const rc = sr.rec || {};
       // Package-derived facts (device family → "Available on", minimum OS, architecture) come straight
       // from the uploaded package and show automatically; the developer's minimums are appended.
       const facts = (typeof window.__pkgSysreqFacts === 'function') ? window.__pkgSysreqFacts() : { avail: '', os: '', arch: '' };
       const CAP_LABEL = { touch: 'Touch screen', keyboard: 'Keyboard', mouse: 'Mouse', gamepad: 'Gamepad', microphone: 'Microphone', camera: 'Camera' };
+      // Combine Minimum + Recommended into "min (Minimum), rec (Recommended)" like the real Store listing.
+      const pair = (minV, recV) => { const p = []; if (minV) p.push(minV + ' (Minimum)'); if (recV) p.push(recV + ' (Recommended)'); return p.join(', '); };
+      const capsTxt = arr => (arr && arr.length) ? arr.map(c => CAP_LABEL[c] || c).join(', ') : '';
       const rows = [];
       if (facts.avail) rows.push(['Available on', facts.avail]);
       if (facts.os) rows.push(['OS', facts.os]);
       if (facts.arch) rows.push(['Architecture', facts.arch]);
-      if (sr.dx) rows.push(['DirectX', 'DirectX ' + sr.dx + ' API']);
-      if (sr.ram) rows.push(['Memory', sr.ram + ' (Minimum)']);
-      if (sr.cpu) rows.push(['Processor', sr.cpu + ' (Minimum)']);
-      if (sr.gpu) rows.push(['Graphics', sr.gpu + ' (Minimum)']);
-      if (sr.storage) rows.push(['Storage', sr.storage + ' available space']);
-      if (sr.caps && sr.caps.length) rows.push(['Also requires', sr.caps.map(c => CAP_LABEL[c] || c).join(', ')]);
+      const dxRow = pair(sr.dx ? 'DirectX ' + sr.dx : '', rc.dx ? 'DirectX ' + rc.dx : ''); if (dxRow) rows.push(['DirectX', dxRow]);
+      const ramRow = pair(sr.ram, rc.ram); if (ramRow) rows.push(['Memory', ramRow]);
+      const cpuRow = pair(sr.cpu, rc.cpu); if (cpuRow) rows.push(['Processor', cpuRow]);
+      const gpuRow = pair(sr.gpu, rc.gpu); if (gpuRow) rows.push(['Graphics', gpuRow]);
+      const stoRow = pair(sr.storage, rc.storage); if (stoRow) rows.push(['Storage', stoRow]);
+      const capsRow = pair(capsTxt(sr.caps), capsTxt(rc.caps)); if (capsRow) rows.push(['Also requires', capsRow]);
       if (sec) sec.classList.toggle('is-provided', rows.length > 0);
       if (!rows.length) { ul.innerHTML = ''; return; }
       ul.innerHTML = rows.map(r => '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span><strong>' + r[0] + ':</strong> ' + esc(r[1]) + '</span></li>').join('');
@@ -15034,7 +15111,10 @@ function openPriceScheduleDialog() {
       if (g.shortDescription) { L.shortDesc = String(g.shortDescription).slice(0, 270); if (fShort) fShort.value = L.shortDesc; }
       if (g.subcategory) L.subcategory = String(g.subcategory);
       if (Array.isArray(g.features) && g.features.length) L.features = g.features.map(s => String(s).trim()).filter(Boolean).join('\n');
-      if (Array.isArray(g.keywords) && g.keywords.length) L.keywords = g.keywords.map(s => String(s).trim()).filter(Boolean);
+      if (Array.isArray(g.keywords) && g.keywords.length) {
+        L.keywords = g.keywords.map(s => String(s).trim()).filter(Boolean);
+        L.keywords.forEach(k => aiKw.add(k));   // autofill replaces the list — every keyword is AI-generated (sparkle)
+      }
       persistAdvanced();
       renderKeywords(); renderFeatures(); renderInfo();
     };
@@ -15305,7 +15385,7 @@ function openPriceScheduleDialog() {
       langDraft = { added: new Map(), removed: new Set() };
       langOrder = null; // recompute the (then-fixed) row order for this session
       if (langSearch) langSearch.value = '';
-      if (langDupTgl) langDupTgl.checked = true;
+      if (langDupTgl) langDupTgl.checked = false;
       renderLangList('');
       try { langDialog.show(); } catch (e) {}
       // fluent-dialog show() doesn't reliably open the inner native <dialog> — drive it directly.
