@@ -191,7 +191,7 @@
     var name = appName();
     var n = CERT_ISSUES.length;
     var word = n === 1 ? "issue" : "issues";
-    var failToggle = '<button type="button" class="cert-card__toggle"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    var failToggle = '<button type="button" class="cert-card__toggle" aria-label="View steps"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
     var win32 = certWin32();
     var stripSteps = win32
       ? [["Submitted", "done"], ["Certification", "fail"], ["Publishing", "todo"]]
@@ -204,13 +204,18 @@
     }).join('<span class="cert-strip__sep" aria-hidden="true"></span>');
     var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' + stripInner + '<span class="cert-strip__eta cert-strip__eta--fail">' + n + ' ' + word + '</span></div>';
     var stageDefs = win32
-      ? [["done", "check", "Submission", "Your package and details were received."], ["fail", "x", "Certification", "Manual review against Store policies and age rating."], ["blocked", "", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted."]]
-      : [["done", "check", "Submission", "Your package and details were received."], ["done", "check", "Pre-processing", "Malware scan, certificate validation, manifest review."], ["fail", "x", "Certification", "Manual review against Store policies and age rating."], ["blocked", "", "Publishing", "Resumes once you\u2019ve fixed the issues and resubmitted."]];
+      ? [["done", "check", "Submission", "Package received"], ["fail", "x", "Certification", "Policy & age review"], ["blocked", "", "Publishing", "Sign-off & rollout"]]
+      : [["done", "check", "Submission", "Package received"], ["done", "check", "Pre-processing", "Automated checks"], ["fail", "x", "Certification", "Policy & age review"], ["blocked", "", "Publishing", "Sign-off & rollout"]];
     var stages = stageDefs.map(function (d, i) {
       var right = d[0] === "fail" ? '<span class="cert-stage__pill cert-stage__pill--fail"><iconify-icon icon="fluent:error-circle-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + n + ' ' + word + '</span>'
                 : d[0] === "blocked" ? '<span class="cert-stage__pill cert-stage__pill--hold">On hold</span>' : '';
       return stageHTML(d[0], d[1] || String(i + 1), d[2], d[3], right);
     }).join("");
+    var failActions = '<div class="cert-card__headactions">' +
+        '<fluent-button appearance="secondary" data-cert-report><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
+        '<fluent-button appearance="primary" data-fix="step-listing"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
+        (isUpdate ? failToggle : '') +
+      '</div>';
     return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
       '<div class="cert-card__head">' +
         '<span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
@@ -218,14 +223,10 @@
           '<h2 class="cert-card__title">' + (isUpdate ? "Your update needs attention" : "Certification didn\u2019t pass") + '</h2>' +
           '<p class="cert-card__sub">' + (isUpdate ? ('We found ' + n + ' ' + word + ' in the new version of <strong>' + esc(name) + '</strong>. Your live version is unaffected \u2014 fix these and resubmit.') : ('We reviewed <strong>' + esc(name) + '</strong> and found ' + n + ' ' + word + ' during certification. Open the report for the details, then edit &amp; fix.')) + '</p>' +
         '</div>' +
-        (isUpdate ? failToggle : '') +
+        failActions +
       '</div>' +
       (isUpdate ? failStrip : '') +
       '<div class="cert-stages">' + stages + '</div>' +
-      (isUpdate ? ('<div class="app-status-card__actions" style="margin-top:var(--sp-16);">' +
-        '<fluent-button appearance="secondary" data-cert-report><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
-        '<fluent-button appearance="primary" data-fix="step-listing"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
-      '</div>') : '') +
     '</div>';
   }
 
@@ -316,6 +317,9 @@
   // show a compact status card above it).
   function everLive() { try { return localStorage.getItem("tdp.everLive." + id) === "1"; } catch (e) { return false; } }
   function markEverLive() { try { localStorage.setItem("tdp.everLive." + id, "1"); } catch (e) {} }
+  // Whether THIS submission was made via the update flow — persisted per-app at submit (msstore.apps).
+  // Used instead of everLive() so a plain published app (never updated) doesn't read as an update on refresh.
+  function submittedAsUpdate() { var ms = readJSON(MS_KEY, []); var a = (Array.isArray(ms) ? ms : []).filter(function (x) { return x.id === id; })[0]; return !!(a && a.submissionIsUpdate); }
   // Adapt the shared in-progress timeline card's copy to the scenario (new submission vs update).
   function setProgressScenario(prog, isUpdate) {
     var t = prog.querySelector(".cert-card__title");
@@ -340,6 +344,7 @@
     if (prog) { prog.hidden = false; setProgressScenario(prog, isUpdate); }
     if (res) {
       if (isUpdate) { res.hidden = false; res.innerHTML = liveStatsHTML() + hubHTML({ updating: true }); }
+      else if (window.__certLivePreviewHTML) { res.hidden = false; res.innerHTML = window.__certLivePreviewHTML(); }   // new app: preview what unlocks once live
       else { res.hidden = true; res.innerHTML = ""; }
     }
     if (act) act.hidden = isUpdate;
@@ -452,7 +457,7 @@
     wireCertControls();
     function shown() {
       toggleSteps(true); syncBack();
-      submissionIsUpdate = (!!window.__inUpdateFlow) || everLive();   // submitted via the update flow (authoritative), or a previously-live app
+      submissionIsUpdate = (!!window.__inUpdateFlow) || submittedAsUpdate();   // update flow (authoritative) or a submission persisted as an update — NOT just "app was ever live"
       // If a terminal result was already restored (passed/failed), keep it. Otherwise show
       // the in-progress timeline and let it resolve to the next outcome after a short beat.
       if (done.__result !== "passed" && done.__result !== "failed") { showProgress(); armCertTimer(); }
@@ -513,7 +518,7 @@
     if (bar) bar.hidden = true;
     if (done) {
       done.hidden = false;
-      submissionIsUpdate = (!!window.__inUpdateFlow) || everLive();   // lock the scenario before rendering a restored result
+      submissionIsUpdate = (!!window.__inUpdateFlow) || submittedAsUpdate();   // lock the scenario before rendering a restored result
       wireCertControls();
       if (status === "published") showPassed();
       else if (status === "rejected") showFailed();

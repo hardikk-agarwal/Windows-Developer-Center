@@ -23,7 +23,7 @@
 <script src="ai-client.js"></script>
 <script src="tooltip.js" defer></script>
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
-<script src="cert-issues.js" defer></script>
+<script src="cert-issues.js?v=2" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
 <script src="tdp-bridge.js?v=3" defer></script>
 <link rel="stylesheet" href="styles.css">
@@ -1360,16 +1360,13 @@
   .cert-stage--done::before, .cert-stage--current::before, .cert-stage--fail::before { background: var(--status-success); }
   .cert-stage__bullet { position: relative; z-index: 1; width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--layer); color: var(--fg-4); border: 1.5px solid var(--stroke-1); font-size: 12.5px; font-weight: 600; box-shadow: 0 0 0 4px var(--layer); }
   .cert-stage--done .cert-stage__bullet { background: var(--status-success); border-color: var(--status-success); color: #fff; }
+  /* Active step shows the Fluent spinner component inside the node (no custom loader / pulse). */
   .cert-stage--current .cert-stage__bullet { background: var(--layer); border-color: var(--brand); color: var(--brand); }
-  /* Active-stage pulse: a soft brand ring radiating outward to signal "in progress". */
-  .cert-stage--current .cert-stage__bullet::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--brand); opacity: .5; animation: certStagePulse 1.9s var(--ease-out) infinite; }
-  @keyframes certStagePulse { 0% { transform: scale(.9); opacity: .5; } 70% { transform: scale(1.45); opacity: 0; } 100% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .cert-stage--current .cert-stage__bullet::after { animation: none; opacity: .32; } }
   .cert-stage__body { flex: 0 0 auto; }
   .cert-stage__title { font-size: 13px; font-weight: 600; color: var(--fg-1); margin: 0; letter-spacing: -.01em; }
   .cert-stage--current .cert-stage__title { color: var(--brand); }
   .cert-stage--todo .cert-stage__title, .cert-stage--blocked .cert-stage__title { color: var(--fg-3); font-weight: 500; }
-  .cert-stage__desc { font-size: 11.5px; color: var(--fg-3); margin: var(--sp-2) 0 0; line-height: 1.45; max-width: 20ch; }
+  .cert-stage__desc { font-size: 11px; color: var(--fg-4); margin: var(--sp-2) 0 0; line-height: 1.35; max-width: 18ch; }   /* small subtext under each step */
   .cert-stage__time { display: none; }   /* per-step time estimates removed — the timeline speaks for itself */
   .cert-stage__pill { margin-top: var(--sp-2); }
   @media (max-width: 560px) {
@@ -1384,27 +1381,26 @@
   /* Post-update: the in-progress timeline collapses to a compact one-row summary (the developer has
      seen it before and the live-app hub is the real surface); a first submission stays expanded. */
   .cert-card__headtext { flex: 1 1 auto; min-width: 0; }
-  .cert-card__toggle { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--sp-4); background: transparent; border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: var(--sp-4) var(--sp-10) var(--sp-4) var(--sp-12); font: inherit; font-size: 12px; font-weight: 600; color: var(--fg-2); cursor: pointer; white-space: nowrap; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .cert-card__toggle { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: transparent; border: 1px solid var(--stroke-2); border-radius: var(--r-full); color: var(--fg-2); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
   .cert-card__toggle:hover { background: var(--subtle); color: var(--fg-1); }
+  .cert-card__toggle-txt { display: none; }   /* chevron-only toggle — the chevron alone signals expand/collapse */
   .cert-card__toggle[hidden] { display: none; }
   /* Withdraw/cancel lives INSIDE the in-review card (contextual to the status it acts on), not the
      top app header. The header withdraw and the old below-card #cert-actions strip are retired. */
   .cert-card__headactions { flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-8); }
   .cert-card__headactions .cert-card__toggle { align-self: center; }
-  #head-withdraw-btn { display: none; }
+  #head-withdraw-btn, #head-report-btn, #head-editfix-btn { display: none; }
   #cert-actions { display: none; }
   #cert-progress .cert-strip--summary { display: none; }
   .cert-card .cert-strip--summary { display: none; }
   .cert-strip--summary .cert-strip__eta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--fg-3); white-space: nowrap; padding-left: var(--sp-12); }
   .cert-strip--summary .cert-strip__eta--fail { color: var(--status-danger); }
   .cert-strip__stage--fail .cert-strip__dot { background: var(--status-danger); color: #fff; border-color: transparent; }
-  .cert-card.is-collapsed { padding: var(--sp-20) var(--sp-24); }
-  .cert-card.is-collapsed .cert-card__head { margin-bottom: 0; align-items: center; }
-  .cert-card.is-collapsed .cert-card__icon { width: 40px; height: 40px; }
-  .cert-card.is-collapsed .cert-card__title { font-size: 17px; line-height: 22px; }
-  .cert-card.is-collapsed .cert-card__sub { font-size: 13px; }
-  .cert-card.is-collapsed .cert-stages, .cert-card.is-collapsed .cert-eta { display: none; }
-  .cert-card.is-collapsed .cert-strip--summary { display: flex; }
+  /* Collapsed = header only (steps hidden). The header stays IDENTICAL to the expanded card — same
+     padding, icon and title/sub sizes — so nothing jumps in size or position when you expand/collapse.
+     Only the head's bottom margin drops (no steps below it). */
+  .cert-card.is-collapsed .cert-card__head { margin-bottom: 0; }
+  .cert-card.is-collapsed .cert-stages, .cert-card.is-collapsed .cert-eta, .cert-card.is-collapsed .cert-strip--summary { display: none; }
   /* Space the fail card off the live-app stats/hub that follow it in #cert-result. */
   #cert-result .cert-card { margin-bottom: var(--sp-20); }
   /* In-review: separate the "…in review" card (#cert-progress) from the live stats/hub that render
@@ -1471,22 +1467,62 @@
   .ez-ckcert__fix { display: block; font-size: 12px; color: var(--fg-2); margin-top: 3px; }
   .ez-ckcert__fix b { color: var(--fg-1); font-weight: 600; }
   .ez-ckcert__go:hover .ez-ckcert__label { text-decoration: underline; }
-  /* Visible in-editor certification fix tracker (#cert-fixbar) — the failed-submission "what to fix". */
-  .cert-fixbar { margin: 0 0 var(--sp-20); padding: var(--sp-16) var(--sp-20); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); }
-  .cert-fixbar[hidden] { display: none; }
-  .cert-fixbar.is-done { border-color: color-mix(in srgb, var(--status-success) 30%, var(--stroke-2)); background: color-mix(in srgb, var(--status-success) 6%, var(--layer)); }
-  .cert-fixbar__head { display: flex; align-items: center; gap: var(--sp-12); }
-  .cert-fixbar__icon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--r-8); background: color-mix(in srgb, var(--status-danger) 16%, transparent); color: var(--status-danger); }
-  .cert-fixbar__icon.is-done { background: color-mix(in srgb, var(--status-success) 16%, transparent); color: var(--status-success); }
-  .cert-fixbar__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .cert-fixbar__title { font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
-  .cert-fixbar__sub { font-size: 12.5px; color: var(--fg-3); }
-  .cert-fixbar__report { appearance: none; border: 0; background: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--brand); cursor: pointer; text-decoration: underline; }
-  .cert-fixbar__count { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--fg-2); white-space: nowrap; align-self: flex-start; }
-  .cert-fixbar__bar { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg-1) 12%, transparent); margin: var(--sp-12) 0; overflow: hidden; }
-  .cert-fixbar__bar span { display: block; height: 100%; background: var(--brand); border-radius: 2px; transition: width var(--dur-3) var(--ease-out); }
-  .cert-fixbar.is-done .cert-fixbar__bar span { background: var(--status-success); }
-  .cert-fixbar__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
+  /* Certification FEEDBACK — a SLIM banner at the top of the editor (the persistent, non-reflowing
+     entry point) that opens a spacious, easy-to-read modal dialog. No docking/reflow: the banner is
+     one thin row; all detail lives in the overlay (#cert-feedback-dialog). Kept inside #editor so it
+     hides with the editor after submit. */
+  .cert-banner { display: flex; align-items: center; gap: var(--sp-14); margin: 0 0 var(--sp-20); padding: var(--sp-12) var(--sp-16); border: 1px solid color-mix(in srgb, var(--status-danger) 38%, var(--stroke-2)); border-left: 3px solid var(--status-danger); border-radius: var(--r-8); background: color-mix(in srgb, var(--status-danger) 7%, var(--layer)); }
+  .cert-banner[hidden] { display: none; }
+  .cert-banner.is-done { border-color: color-mix(in srgb, var(--status-success) 38%, var(--stroke-2)); border-left-color: var(--status-success); background: color-mix(in srgb, var(--status-success) 7%, var(--layer)); }
+  .cert-banner__ico { flex: 0 0 auto; display: inline-flex; color: var(--status-danger); }
+  .cert-banner.is-done .cert-banner__ico { color: var(--status-success); }
+  .cert-banner__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .cert-banner__text strong { font-size: 13.5px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .cert-banner__text span { font-size: 12.5px; color: var(--fg-3); }
+  .cert-banner__meter { flex: 0 0 92px; height: 5px; border-radius: var(--r-full); background: color-mix(in srgb, var(--fg-1) 12%, transparent); overflow: hidden; }
+  .cert-banner__meter span { display: block; height: 100%; border-radius: var(--r-full); background: var(--status-danger); transition: width var(--dur-3) var(--ease-out); }
+  .cert-banner.is-done .cert-banner__meter span { background: var(--status-success); }
+  .cert-banner__count { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  @media (max-width: 620px) { .cert-banner__meter, .cert-banner__count { display: none; } }
+
+  /* Certification feedback dialog — spacious, one reviewer comment per block, easy to read. */
+  #cert-feedback-dialog, #cert-feedback-dialog::part(control), #cert-feedback-dialog::part(dialog) { width: min(620px, 94vw); max-width: min(620px, 94vw); }
+  #cert-feedback-dialog fluent-dialog-body::part(content) { overflow-y: auto; max-height: 66vh; scrollbar-gutter: stable; }
+  .cfb { padding-right: var(--sp-6); }
+  .cfb-intro { margin: 0 0 var(--sp-4); }
+  .cfb-intro p { font-size: 13px; line-height: 1.55; color: var(--fg-2); margin: 0; }
+  .cfb-intro a { color: var(--brand); }
+  .cfb-progress { display: flex; align-items: center; gap: var(--sp-10); margin-top: var(--sp-12); }
+  .cfb-progress__bar { flex: 1 1 auto; height: 6px; border-radius: var(--r-full); background: color-mix(in srgb, var(--fg-1) 12%, transparent); overflow: hidden; }
+  .cfb-progress__bar span { display: block; height: 100%; border-radius: var(--r-full); background: var(--brand); transition: width var(--dur-3) var(--ease-out); }
+  .cfb-progress__txt { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+  .cfb-item { padding: var(--sp-16) 0; border-top: 1px solid var(--stroke-3); }
+  .cfb-item:first-of-type { border-top: 0; padding-top: var(--sp-12); }
+  .cfb-item__head { display: flex; align-items: center; gap: var(--sp-10); flex-wrap: wrap; }
+  .cfb-item__policy { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11.5px; font-weight: 600; color: var(--brand); text-decoration: none; padding: 3px var(--sp-10); border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .cfb-item__policy:hover { background: color-mix(in srgb, var(--brand) 18%, transparent); }
+  .cfb-item__badge { display: inline-flex; align-items: center; gap: var(--sp-4); margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px var(--sp-8); border-radius: var(--r-full); }
+  .cfb-item__badge.is-done { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 14%, transparent); }
+  .cfb-item__badge.is-warn { color: var(--status-warning); background: color-mix(in srgb, var(--status-warning) 15%, transparent); }
+  .cfb-item__title { font-family: var(--font-display); font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.35; margin: var(--sp-10) 0 0; }
+  .cfb-item__note { font-size: 13.5px; line-height: 1.6; color: var(--fg-2); margin: var(--sp-6) 0 0; }
+  .cfb-item__media { display: flex; flex-direction: column; gap: var(--sp-8); margin-top: var(--sp-12); }
+  .cfb-media__chip { display: inline-flex; align-items: center; gap: var(--sp-8); align-self: flex-start; padding: var(--sp-6) var(--sp-10); border: 1px solid var(--stroke-2); border-radius: var(--r-6); background: var(--layer); color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .cfb-media__chip:hover { border-color: var(--brand); color: var(--fg-1); }
+  .cfb-media__chip > iconify-icon:first-child { color: var(--brand); }
+  .cfb-media__chev { color: var(--fg-4); transition: transform var(--dur-2) var(--ease-out); }
+  .cfb-media.is-open .cfb-media__chev { transform: rotate(180deg); }
+  .cfb-media__preview { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-8); padding: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); color: var(--fg-3); background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--fg-1) 4%, var(--layer)), color-mix(in srgb, var(--fg-1) 4%, var(--layer)) 10px, var(--layer) 10px, var(--layer) 20px); }
+  .cfb-media__preview > iconify-icon { flex: 0 0 auto; color: var(--brand); }
+  .cfb-media__preview strong { display: block; font-size: 13px; color: var(--fg-2); font-weight: 600; }
+  .cfb-media__preview span { font-size: 12px; }
+  .cfb-item__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-14); flex-wrap: wrap; }
+  .cfb-item__foot--info { justify-content: flex-start; }
+  .cfb-item__area { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12px; color: var(--fg-3); min-width: 0; }
+  .cfb-item__area iconify-icon { flex: 0 0 auto; color: var(--fg-4); }
+  .cfb-item__hint { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12px; color: var(--fg-3); }
+  .cfb-item__hint iconify-icon { color: var(--brand); }
+  .cfb-item.is-done .cfb-item__title { color: var(--fg-2); }
   .ez-ckcert__mark--static { cursor: default; color: var(--status-warning); }
   .ez-ckcert--manual.is-done .ez-ckcert__mark--static { color: var(--status-success); }
   .ez-ckcert__tag { display: inline-block; margin-left: var(--sp-6); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--status-warning); background: color-mix(in srgb, var(--status-warning) 15%, transparent); padding: 1px 7px; border-radius: var(--r-full); vertical-align: 1px; }
@@ -3263,6 +3299,18 @@
   .live-stat__value { font-size: 19px; font-weight: 600; color: var(--fg-1); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
   .live-stat__value small { font-size: 12px; font-weight: 400; color: var(--fg-3); margin-left: 3px; }
   @media (max-width: 640px) { .live-metrics { grid-template-columns: 1fr; } }
+  /* "Once you're live" preview — shown below the cert card while a FIRST submission is in review, to
+     tease the tools (add-ons, experiments, flights, analytics) that unlock once the app goes live. */
+  .live-preview { animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; }
+  .live-preview__badge { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); padding: var(--sp-4) var(--sp-10); border-radius: var(--r-full); margin-bottom: var(--sp-10); }
+  .live-preview__title { font-size: 16px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-2); }
+  .live-preview__sub { font-size: 13px; color: var(--fg-3); margin: 0; max-width: 62ch; line-height: 1.5; }
+  .live-preview__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); margin-top: var(--sp-16); }
+  .live-preview__card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-4); padding: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); }
+  .live-preview__card-ico { width: 36px; height: 36px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); margin-bottom: var(--sp-6); }
+  .live-preview__card-title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .live-preview__card-desc { font-size: 12.5px; color: var(--fg-3); line-height: 1.45; }
+  @media (max-width: 640px) { .live-preview__grid { grid-template-columns: 1fr; } }
 
   /* Hide the demo design-variant (A/B/C/D) switcher in the integrated portal. */
   .design-switch { display: none !important; }
@@ -3650,9 +3698,10 @@
         <ul class="upd-changes__list" id="upd-changes-list"></ul>
       </div>
 
-      <!-- Certification fix tracker — visible only while resolving a failed submission
-           (certFixActive). Lists each issue with jump-to-field + mark-fixed + progress. -->
-      <div id="cert-fixbar" class="cert-fixbar" hidden></div>
+      <!-- Certification feedback — a SLIM banner (persistent, non-reflowing entry point). "Review
+           feedback" opens the spacious #cert-feedback-dialog. Rendered by renderCertBanner; kept
+           inside #editor so it hides with the editor after submit. -->
+      <div id="cert-banner" class="cert-banner" hidden></div>
 
       <!-- "More fields" (Listing) / "More options" (Reach) toggle — sits above the step
            card, below the progress. Shown only on the Listing and Reach & price steps. -->
@@ -4467,7 +4516,7 @@
               <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
               Withdraw submission
             </fluent-button>
-            <button type="button" class="cert-card__toggle" id="cert-progress-toggle" aria-expanded="true" hidden>
+            <button type="button" class="cert-card__toggle" id="cert-progress-toggle" aria-expanded="true" aria-label="Hide steps" hidden>
               <span class="cert-card__toggle-txt">Hide steps</span>
               <iconify-icon icon="fluent:chevron-up-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             </button>
@@ -4490,7 +4539,7 @@
             <span class="cert-stage__bullet"><iconify-icon icon="fluent:checkmark-20-regular" width="14" height="14"></iconify-icon></span>
             <div class="cert-stage__body">
               <p class="cert-stage__title">Submission</p>
-              <p class="cert-stage__desc">Your package and details were received.</p>
+              <p class="cert-stage__desc">Package received</p>
             </div>
             <span class="cert-stage__time">Just now</span>
           </div>
@@ -4498,7 +4547,7 @@
             <span class="cert-stage__bullet"><fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner></span>
             <div class="cert-stage__body">
               <p class="cert-stage__title">Pre-processing</p>
-              <p class="cert-stage__desc">Malware scan, certificate validation, manifest review.</p>
+              <p class="cert-stage__desc">Automated checks</p>
             </div>
             <span class="cert-stage__time">~10 min</span>
           </div>
@@ -4506,7 +4555,7 @@
             <span class="cert-stage__bullet">3</span>
             <div class="cert-stage__body">
               <p class="cert-stage__title">Certification</p>
-              <p class="cert-stage__desc">Manual review against Store policies and age rating.</p>
+              <p class="cert-stage__desc">Policy & age review</p>
             </div>
             <span class="cert-stage__time">~1 day</span>
           </div>
@@ -4514,7 +4563,7 @@
             <span class="cert-stage__bullet">4</span>
             <div class="cert-stage__body">
               <p class="cert-stage__title">Publishing</p>
-              <p class="cert-stage__desc">Sign-off and rollout to Microsoft Store.</p>
+              <p class="cert-stage__desc">Sign-off & rollout</p>
             </div>
             <span class="cert-stage__time">~3 hours</span>
           </div>
@@ -4556,6 +4605,26 @@
 </div><!-- /.app -->
 
 <!-- IARC age-rating questionnaire dialog -->
+<!-- Certification feedback — the reviewer's comments (policy + note + media), opened from the slim
+     #cert-banner at the top of the editor. Spacious modal so it reads easily and never reflows the form. -->
+<fluent-dialog id="cert-feedback-dialog" modal-type="modal" aria-labelledby="cfb-title">
+  <fluent-dialog-body>
+    <span slot="title" id="cfb-title">
+      <iconify-icon icon="fluent:comment-multiple-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:6px;"></iconify-icon>
+      Certification feedback
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-cfb-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div id="cfb-content" class="cfb"></div>
+    <fluent-button slot="action" appearance="secondary" data-cert-report-link>
+      <iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+      See full report
+    </fluent-button>
+    <fluent-button slot="action" appearance="primary" data-cfb-close>Done</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
 <!-- Edit app name — the reserved product identity (availability-checked), shared with the listing. -->
 <fluent-dialog id="name-edit-dialog" modal-type="modal" aria-labelledby="name-edit-title">
   <fluent-dialog-body>
@@ -7663,13 +7732,9 @@
     }
     certFixActive = true;
     try { updateGate(); } catch (_) {}
-    // Open the header checklist once so the developer immediately sees the folded issues.
-    try {
-      const panel = document.getElementById('submit-checklist-panel'), wrap = document.getElementById('submit-checklist'), tog = document.getElementById('submit-checklist-toggle');
-      if (panel && panel.hidden) { panel.hidden = false; if (wrap) wrap.classList.add('is-open'); if (tog) tog.setAttribute('aria-expanded', 'true'); }
-    } catch (_) {}
-    try { renderChecklists(); } catch (_) {}
-    try { const fb = document.getElementById('cert-fixbar'); if (fb) setTimeout(() => { try { fb.scrollIntoView({ behavior: (typeof reduceMotion === 'function' && reduceMotion()) ? 'auto' : 'smooth', block: 'start' }); } catch (_) {} }, 220); } catch (_) {}
+    try { renderChecklists(); } catch (_) {}   // also refreshes the banner + dialog content
+    try { renderCertBanner(); } catch (_) {}
+    openCertDialog();                          // surface the reviewer's feedback straight away
   };
 
   // ---- Submit-readiness checklist (renders from CHECKLIST_ITEMS) -------------
@@ -7687,7 +7752,7 @@
           '<span class="ez-ckcert__mark ez-ckcert__mark--static"><iconify-icon icon="' + (done ? 'fluent:checkmark-circle-16-filled' : 'fluent:wrench-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
           '<button type="button" class="ez-ckcert__go" data-ck="' + idx + '">' +
             '<span class="ez-ckcert__label">' + it.label + (done ? '' : ' <span class="ez-ckcert__tag">Needs a new package</span>') + '</span>' +
-            '<span class="ez-ckcert__fix"><b>What to do:</b> ' + it.certFix.fix + '</span>' +
+            '<span class="ez-ckcert__fix"><b>Reviewer:</b> ' + it.certFix.note + '</span>' +
           '</button>' +
         '</div></li>';
       }
@@ -7697,7 +7762,7 @@
         '</button>' +
         '<button type="button" class="ez-ckcert__go" data-ck="' + idx + '">' +
           '<span class="ez-ckcert__label">' + it.label + '</span>' +
-          '<span class="ez-ckcert__fix"><b>Fix:</b> ' + it.certFix.fix + '</span>' +
+          '<span class="ez-ckcert__fix"><b>Reviewer:</b> ' + it.certFix.note + '</span>' +
         '</button>' +
       '</div></li>';
     }
@@ -7856,32 +7921,105 @@
     const railSpine = document.getElementById('submit-rail-spine');
     if (railSpine) railSpine.innerHTML = spineHtml;
     ckSpinePrev = ckSpineNext;
-    renderCertFixbar();
+    renderCertBanner();
+    renderCertDialog();
   }
-  // Visible in-editor certification fix tracker (v2's #submit-checklist is hidden, so the folded
-  // cert issues need a home the developer actually sees). Reuses ckItemRow (mark-fixed + jump) so it
-  // stays in sync with certFixed / the submit gate; leads with "N of M fixed" + a progress bar.
-  function renderCertFixbar() {
-    const bar = document.getElementById('cert-fixbar');
-    if (!bar) return;
-    if (!certFixActive) { bar.hidden = true; bar.innerHTML = ''; bar.classList.remove('is-done'); return; }
-    const items = CHECKLIST_ITEMS.filter(it => it.certFix);
-    const tot = items.length, fixed = items.filter(ckDone).length, left = tot - fixed, done = left === 0;
-    const hasManual = items.some(it => it.certFix && it.certFix.kind === 'rebuild');
-    const pct = tot ? Math.round(fixed / tot * 100) : 0;
-    bar.classList.toggle('is-done', done);
-    bar.innerHTML =
-      '<div class="cert-fixbar__head">' +
-        '<span class="cert-fixbar__icon' + (done ? ' is-done' : '') + '"><iconify-icon icon="' + (done ? 'fluent:checkmark-circle-20-filled' : 'fluent:wrench-screwdriver-20-regular') + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
-        '<span class="cert-fixbar__text">' +
-          '<strong class="cert-fixbar__title">' + (done ? 'All issues fixed \u2014 resubmit when ready' : ('Resolve ' + tot + ' ' + (tot === 1 ? 'issue' : 'issues') + ' from certification')) + '</strong>' +
-          '<span class="cert-fixbar__sub">' + (done ? 'Your changes are ready \u2014 use Submit for review on the left. ' : (hasManual ? 'Fix what you can here; some need a code fix and a new package. ' : 'Update each item, then mark it fixed. ')) + '<button type="button" class="cert-fixbar__report" data-cert-report-link>See full report</button></span>' +
+  const CERT_POLICIES_URL = 'https://learn.microsoft.com/en-us/windows/apps/publish/store-policies';
+  const certMediaOpen = new Set();   // "i.j" reviewer-media previews expanded in the dialog (kept across re-renders)
+
+  function certIsDone(it, i) { return it.kind === 'rebuild' ? certFailHasNewPackage() : !!certFixed[i]; }
+  function certTally() {
+    const issues = (window.CERT_ISSUES || []);
+    const fixed = issues.reduce(function (n, it, i) { return n + (certIsDone(it, i) ? 1 : 0); }, 0);
+    return { issues: issues, tot: issues.length, fixed: fixed, done: issues.length > 0 && fixed === issues.length };
+  }
+
+  // Slim banner at the top of the editor — the persistent, unobtrusive entry point to the reviewer's
+  // certification feedback. Shows status + progress at a glance; "Review feedback" opens the dialog.
+  // Never reflows the form (all detail lives in the modal). Hides with #editor after submit.
+  function renderCertBanner() {
+    const el = document.getElementById('cert-banner');
+    if (!el) return;
+    if (!certFixActive) { el.hidden = true; el.innerHTML = ''; el.classList.remove('is-done'); return; }
+    const t = certTally(), pct = t.tot ? Math.round(t.fixed / t.tot * 100) : 0;
+    el.classList.toggle('is-done', t.done);
+    el.innerHTML =
+      '<span class="cert-banner__ico"><iconify-icon icon="' + (t.done ? 'fluent:checkmark-circle-24-filled' : 'fluent:comment-multiple-24-regular') + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="cert-banner__text">' +
+        '<strong>' + (t.done ? 'Certification feedback addressed' : 'Certification feedback') + '</strong>' +
+        '<span>' + (t.done
+          ? 'You\u2019ve addressed all ' + t.tot + ' items \u2014 you\u2019re ready to resubmit.'
+          : 'The reviewer flagged ' + t.tot + ' ' + (t.tot === 1 ? 'item' : 'items') + ' to address before you resubmit.') +
         '</span>' +
-        '<span class="cert-fixbar__count">' + fixed + ' of ' + tot + ' fixed</span>' +
       '</div>' +
-      '<div class="cert-fixbar__bar"><span style="width:' + pct + '%"></span></div>' +
-      '<ul class="cert-fixbar__list">' + items.map(ckItemRow).join('') + '</ul>';
-    bar.hidden = false;
+      '<div class="cert-banner__meter"><span style="width:' + pct + '%"></span></div>' +
+      '<span class="cert-banner__count">' + t.fixed + '/' + t.tot + '</span>' +
+      '<fluent-button appearance="' + (t.done ? 'outline' : 'primary') + '" size="small" data-cfb-open>' +
+        '<iconify-icon slot="start" icon="fluent:comment-multiple-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Review feedback</fluent-button>';
+    el.hidden = false;
+  }
+
+  // Fill the feedback dialog: one reviewer comment per block — policy reference + note + optional
+  // media (expand inline) + "Mark as addressed" (drives the same certFixed state + submit gate). A
+  // rebuild item can't be ticked off — it clears only when a new package is uploaded.
+  function renderCertDialog() {
+    const host = document.getElementById('cfb-content');
+    if (!host || !certFixActive) return;
+    const t = certTally(), pct = t.tot ? Math.round(t.fixed / t.tot * 100) : 0;
+    const items = t.issues.map(function (it, i) {
+      const d = certIsDone(it, i), rebuild = it.kind === 'rebuild';
+      const media = (it.media || []).map(function (m, j) {
+        const key = i + '.' + j, open = certMediaOpen.has(key), isVid = m.type === 'video';
+        return '<div class="cfb-media' + (open ? ' is-open' : '') + '">' +
+          '<button type="button" class="cfb-media__chip" data-cfb-media="' + key + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+            '<iconify-icon icon="' + (isVid ? 'fluent:video-clip-16-regular' : 'fluent:image-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' + m.label +
+            '<iconify-icon class="cfb-media__chev" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+          '</button>' +
+          (open ? '<div class="cfb-media__preview"><iconify-icon icon="' + (isVid ? 'fluent:video-clip-24-regular' : 'fluent:image-24-regular') + '" width="34" height="34" aria-hidden="true"></iconify-icon>' +
+            '<div><strong>' + (isVid ? 'Reviewer recording' : 'Reviewer screenshot') + '</strong><span>Captured during certification (preview placeholder)</span></div></div>' : '') +
+        '</div>';
+      }).join('');
+      const badge = d
+        ? '<span class="cfb-item__badge is-done"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Addressed</span>'
+        : (rebuild ? '<span class="cfb-item__badge is-warn"><iconify-icon icon="fluent:wrench-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Needs a new package</span>' : '');
+      const foot = rebuild
+        ? '<div class="cfb-item__foot cfb-item__foot--info"><span class="cfb-item__hint"><iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Clears when you upload a new package.</span></div>'
+        : '<div class="cfb-item__foot">' +
+            (it.area ? '<span class="cfb-item__area"><iconify-icon icon="fluent:location-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' + it.area + '</span>' : '<span></span>') +
+            '<fluent-button appearance="' + (d ? 'subtle' : 'outline') + '" size="small" data-cfb-mark="' + i + '">' +
+              '<iconify-icon slot="start" icon="' + (d ? 'fluent:arrow-undo-16-regular' : 'fluent:checkmark-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+              (d ? 'Undo' : 'Mark as addressed') + '</fluent-button>' +
+          '</div>';
+      return '<section class="cfb-item' + (d ? ' is-done' : '') + '">' +
+        '<div class="cfb-item__head">' +
+          '<a class="cfb-item__policy" href="' + CERT_POLICIES_URL + '" target="_blank" rel="noopener"><iconify-icon icon="fluent:book-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Policy ' + it.policy + ' \u00b7 ' + it.policyTitle + '</a>' +
+          badge +
+        '</div>' +
+        '<h3 class="cfb-item__title">' + it.title + '</h3>' +
+        '<p class="cfb-item__note">' + it.note + '</p>' +
+        (media ? '<div class="cfb-item__media">' + media + '</div>' : '') +
+        foot +
+      '</section>';
+    }).join('');
+    host.innerHTML =
+      '<div class="cfb-intro">' +
+        '<p>The reviewer flagged these against <a href="' + CERT_POLICIES_URL + '" target="_blank" rel="noopener">Store Policy</a>. Update your details to match each note, then resubmit.</p>' +
+        '<div class="cfb-progress"><div class="cfb-progress__bar"><span style="width:' + pct + '%"></span></div><span class="cfb-progress__txt">' + (t.done ? 'All addressed' : t.fixed + ' of ' + t.tot + ' addressed') + '</span></div>' +
+      '</div>' + items;
+  }
+
+  function openCertDialog() {
+    renderCertDialog();
+    const dlg = document.getElementById('cert-feedback-dialog');
+    if (!dlg) return;
+    try { if (typeof dlg.show === 'function') dlg.show(); } catch (_) {}
+    try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (_) {}
+  }
+  function closeCertDialog() {
+    const dlg = document.getElementById('cert-feedback-dialog');
+    if (!dlg) return;
+    try { if (typeof dlg.hide === 'function') dlg.hide(); } catch (_) {}
+    try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (_) {}
   }
   function ckClosePanel() {
     const wrap = document.getElementById('submit-checklist'), panel = document.getElementById('submit-checklist-panel'), tog = document.getElementById('submit-checklist-toggle');
@@ -7919,6 +8057,14 @@
       try { if (isWizard && typeof showWzStep === 'function') showWzStep(WZ_STEPS.indexOf(sec)); else if (typeof setActiveSection === 'function') setActiveSection(sec); } catch (_) {}
       return;
     }
+    const cfbOpen = e.target.closest('[data-cfb-open]');
+    if (cfbOpen) { openCertDialog(); return; }
+    const cfbClose = e.target.closest('[data-cfb-close]');
+    if (cfbClose) { closeCertDialog(); return; }
+    const cfbMark = e.target.closest('[data-cfb-mark]');
+    if (cfbMark) { const ci = parseInt(cfbMark.getAttribute('data-cfb-mark'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
+    const cfbMedia = e.target.closest('[data-cfb-media]');
+    if (cfbMedia) { const k = cfbMedia.getAttribute('data-cfb-media'); if (certMediaOpen.has(k)) certMediaOpen.delete(k); else certMediaOpen.add(k); renderCertDialog(); return; }
     const ckfix = e.target.closest('[data-ckfix]');
     if (ckfix) { const ci = parseInt(ckfix.getAttribute('data-ckfix'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
     const rptLink = e.target.closest('[data-cert-report-link]');
@@ -12089,10 +12235,10 @@
   // skip Pre-processing (there's no appx manifest to pre-scan), so they run a 3-stage pipeline.
   function certStepModel(win32) {
     var steps = [
-      { key: 'submission',    title: 'Submission',     desc: 'Your package and details were received.' },
-      { key: 'preprocessing', title: 'Pre-processing', desc: 'Malware scan, certificate validation, manifest review.' },
-      { key: 'certification', title: 'Certification',  desc: 'Manual review against Store policies and age rating.' },
-      { key: 'publishing',    title: 'Publishing',     desc: 'Sign-off and rollout to Microsoft Store.' }
+      { key: 'submission',    title: 'Submission',     desc: 'Package received' },
+      { key: 'preprocessing', title: 'Pre-processing', desc: 'Automated checks' },
+      { key: 'certification', title: 'Certification',  desc: 'Policy & age review' },
+      { key: 'publishing',    title: 'Publishing',     desc: 'Sign-off & rollout' }
     ];
     return win32 ? steps.filter(function (s) { return s.key !== 'preprocessing'; }) : steps;
   }
@@ -12139,6 +12285,33 @@
     return inner + eta;
   }
   window.__certStagesHTML = certStagesHTML; window.__certStripHTML = certStripHTML;   // let the portal (tdp-bridge) reuse the same timeline
+  // While a FIRST submission is in certification, preview the tools that unlock once the app goes live
+  // (add-ons, experiments, flights, analytics) — a positive "what's next", not a locked wall.
+  function certLivePreviewHTML() {
+    var name = (typeof demoCertName === 'function') ? demoCertName() : 'your app';
+    var items = [
+      ['fluent:beaker-20-regular', 'Product page experiments', 'A/B test your Store listing to see what converts best.'],
+      ['fluent:puzzle-piece-20-regular', 'Add-ons', 'Sell in-app products and subscriptions.'],
+      ['fluent:airplane-take-off-20-regular', 'Package flights', 'Ship preview builds to test rings before a full rollout.'],
+      ['fluent:data-histogram-20-regular', 'Analytics & health', 'Track installs, ratings and crash health as customers arrive.']
+    ];
+    var cards = items.map(function (it) {
+      return '<div class="live-preview__card">' +
+        '<span class="live-preview__card-ico"><iconify-icon icon="' + it[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<strong class="live-preview__card-title">' + it[1] + '</strong>' +
+        '<span class="live-preview__card-desc">' + it[2] + '</span>' +
+      '</div>';
+    }).join('');
+    return '<section class="live-preview" aria-label="What unlocks once your app is live">' +
+      '<div class="live-preview__head">' +
+        '<span class="live-preview__badge"><iconify-icon icon="fluent:rocket-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Once you\u2019re live</span>' +
+        '<h3 class="live-preview__title">A few things unlock when ' + name + ' goes live</h3>' +
+        '<p class="live-preview__sub">Nothing to set up \u2014 these turn on automatically the moment your app passes certification.</p>' +
+      '</div>' +
+      '<div class="live-preview__grid">' + cards + '</div>' +
+    '</section>';
+  }
+  window.__certLivePreviewHTML = certLivePreviewHTML;
   function demoCertPassedHTML(isUpdate) {
     var r = adv.rollout || {};
     var note = (isUpdate && r.gradual && (r.percent || 0) < 100) ? ' It’s rolling out to <strong>' + (r.percent || 10) + '%</strong> of your customers first — raise it anytime below.' : '';
@@ -12152,19 +12325,21 @@
   function demoCertFailedHTML(isUpdate) {
     var n = (window.CERT_ISSUES || []).length || 0, word = n === 1 ? 'issue' : 'issues';
     var win32 = false; try { win32 = effectiveWin32(); } catch (e) {}
-    var failToggle = '<button type="button" class="cert-card__toggle"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    var failToggle = '<button type="button" class="cert-card__toggle" aria-label="View steps"><span class="cert-card__toggle-txt">View steps</span><iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
     var failStrip = '<div class="cert-strip cert-strip--summary" aria-hidden="true">' + certStripHTML('failed', win32) + '</div>';
     var stages = certStagesHTML('failed', win32);
+    // Actions live in the header (like the in-review card): View report + Fix & resubmit + the chevron.
+    var failActions = '<div class="cert-card__headactions">' +
+        '<fluent-button appearance="secondary" data-demo-cert="report"><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
+        '<fluent-button appearance="primary" data-demo-cert="fix"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
+        (isUpdate ? failToggle : '') +
+      '</div>';
     return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
       '<div class="cert-card__head"><span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
         '<div class="cert-card__headtext"><h2 class="cert-card__title">' + (isUpdate ? 'Your update needs attention' : 'Certification didn’t pass') + '</h2>' +
-        '<p class="cert-card__sub">We found ' + n + ' ' + word + ' in <strong>' + demoCertName() + '</strong>.' + (isUpdate ? ' Your live version is unaffected — fix these and resubmit.' : ' Open the report for the details, then fix and resubmit.') + '</p></div>' + (isUpdate ? failToggle : '') + '</div>' +
+        '<p class="cert-card__sub">We found ' + n + ' ' + word + ' in <strong>' + demoCertName() + '</strong>.' + (isUpdate ? ' Your live version is unaffected — fix these and resubmit.' : ' Open the report for the details, then fix and resubmit.') + '</p></div>' + failActions + '</div>' +
       (isUpdate ? failStrip : '') +
       '<div class="cert-stages">' + stages + '</div>' +
-      '<div class="app-status-card__actions" style="margin-top: var(--sp-16);">' +
-        '<fluent-button appearance="secondary" data-demo-cert="report"><iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View report</fluent-button>' +
-        '<fluent-button appearance="primary" data-demo-cert="fix"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
-      '</div>' +
     '</div>';
   }
   // Demo (?app=, no portal): mirror tdp-bridge's setHeadActions so the submitted header shows the
@@ -12178,7 +12353,7 @@
     if (rv) rv.hidden = (view !== 'passed');
   }
   function demoCertView(view) {
-    var isUpdate = false; try { isUpdate = !!inUpdateFlow; } catch (e) {}
+    var isUpdate = false; try { isUpdate = !!inUpdateFlow || !!(app && app.submissionIsUpdate); } catch (e) {}
     var prog = $('cert-progress'), res = $('cert-result'), act = $('cert-actions'), roll = $('cert-rollout');
     if (view === 'passed') {
       if (prog) prog.hidden = true;
@@ -12204,7 +12379,10 @@
         var pStages = prog.querySelector('.cert-stages'); if (pStages) pStages.innerHTML = certStagesHTML('progress', pwin32);
         var pStrip = prog.querySelector('.cert-strip--summary'); if (pStrip) pStrip.innerHTML = certStripHTML('progress', pwin32);
       }
-      if (res) { res.hidden = true; res.innerHTML = ''; }
+      if (res) {
+        if (!isUpdate) { res.hidden = false; res.innerHTML = certLivePreviewHTML(); }   // new app: preview what unlocks once live
+        else { res.hidden = true; res.innerHTML = ''; }
+      }
       setCertProgressDensity(isUpdate);
       if (act) act.hidden = false;
       demoCertPill('In review', 'in-review');
@@ -12221,6 +12399,7 @@
     var tog = card.querySelector('.cert-card__toggle');
     if (tog) {
       tog.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      tog.setAttribute('aria-label', collapsed ? 'View steps' : 'Hide steps');
       var t = tog.querySelector('.cert-card__toggle-txt'); if (t) t.textContent = collapsed ? 'View steps' : 'Hide steps';
       var ic = tog.querySelector('iconify-icon'); if (ic) ic.setAttribute('icon', collapsed ? 'fluent:chevron-down-20-regular' : 'fluent:chevron-up-20-regular');
     }
@@ -12599,6 +12778,7 @@
           all[idx].rollout = adv.rollout;
           if (v4Type) all[idx].packageType = v4Type;   // "What are you publishing" → portal Apps "Type" column
           try { all[idx].win32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : false; } catch (e) {}   // portal cert view uses this to drop Pre-processing for Win32
+          all[idx].submissionIsUpdate = !!inUpdateFlow;   // the cert view reads THIS (not "app was ever live") so a plain published app previews as a new app
           localStorage.setItem('msstore.apps', JSON.stringify(all));
         }
         saveFlowData();   // persist the full editor state so Review / Update rehydrate on reload

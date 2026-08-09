@@ -1,48 +1,61 @@
 // ============================================================================
-// cert-issues.js — shared certification-report data.
+// cert-issues.js — shared certification-FEEDBACK data.
 //
-// The plain-language issues (with Partner Center policy refs) used by BOTH the
-// in-flow inline timeline summary (tdp-bridge.js) and the standalone
-// certification report page (cert-report.html). Single source of truth.
+// The REAL model of a Store certification failure: each item is a reviewer
+// comment citing a Store Policy number, with the reviewer's free-text note and
+// (optionally) media they captured (screenshot / recording). There is NO
+// guaranteed mapping to a specific form field — the developer reads the feedback
+// and updates their publishing details, then resubmits. `area` is a soft hint
+// only; `section` is a coarse step target for a convenience "open" link.
+// Policy numbers reference Microsoft Store Policies v7.19:
+//   https://learn.microsoft.com/en-us/windows/apps/publish/store-policies
+// Used by the in-flow feedback panel (publish-v6) and the standalone report.
 // ============================================================================
 window.CERT_ISSUES = [
-  {    icon: "fluent:bug-20-regular",
-    kind: "rebuild",
-    title: "Your app closed unexpectedly during testing",
-    problem: "On a clean Windows 11 machine, the app crashed shortly after launch. Reviewers couldn’t trace it to a single cause.",
-    fix: "Reproduce it with the details in the report, fix it in your project, and upload a new package — there’s nothing to change in this form.",
-    policy: "10.1.1",
-    section: "step-package", focus: "#upload-zone"
+  {
+    icon: "fluent:bug-20-regular",
+    kind: "rebuild",                          // needs a code fix + new package — nothing to change in the form
+    policy: "10.4.2", policyTitle: "Usability",
+    title: "App closed unexpectedly during testing",
+    note: "On a clean Windows 11 (x64) PC the app closed a few seconds after launch \u2014 at the sign-in screen \u2014 so we couldn\u2019t continue testing. The recording shows the repro.",
+    media: [{ type: "video", label: "Screen recording" }],
+    area: "Your project \u2014 fix & upload a new package",
+    section: "step-package"
   },
-  {    icon: "fluent:rename-20-regular",
-    title: "Your Store name doesn\u2019t match the app on the device",
-    problem: "The name in your listing is different from the name Windows shows once the app is installed.",
-    fix: "Use the same product name in your listing that appears on the device.",
-    policy: "10.1.1.1",
-    section: "step-listing", focus: "#ez-pv-name"
+  {
+    icon: "fluent:rename-20-regular",
+    policy: "10.1.1", policyTitle: "Accurate representation",
+    title: "Store name doesn\u2019t match the app on the device",
+    note: "After install, Windows shows the app as \u201cExcel Viewer\u201d, but your Store listing name is \u201cExcel\u201d. Your listing name should match the name customers see on their device.",
+    media: [{ type: "image", label: "Screenshot from review" }],
+    area: "Store listing \u2014 name",
+    section: "step-listing"
   },
   {
     icon: "fluent:image-20-regular",
-    title: "Screenshots need to be real captures of your app",
-    problem: "The images in your listing aren\u2019t direct screenshots taken from the running product.",
-    fix: "Replace them with actual screenshots captured from your app.",
-    policy: "10.1.1.3",
-    section: "step-listing", focus: "#ez-pv-shots"
+    policy: "10.1.1", policyTitle: "Accurate representation",
+    title: "Screenshots don\u2019t reflect the actual app",
+    note: "Screenshots 2 and 4 don\u2019t look like captures from the running app \u2014 they appear to be stock imagery. Store screenshots must be real captures of your product.",
+    media: [{ type: "image", label: "Flagged screenshots" }],
+    area: "Store listing \u2014 screenshots",
+    section: "step-listing"
   },
   {
     icon: "fluent:text-description-20-regular",
-    title: "Your description is too short to be useful",
-    problem: "The description is only the app title or a few words, so it doesn\u2019t explain what the app does.",
-    fix: "Add a couple of clear sentences about what your app does and its main features.",
-    policy: "10.1.4.3",
-    section: "step-listing", focus: "#ez-pv-desc"
+    policy: "10.1.4", policyTitle: "Distinct function & value",
+    title: "Description is too short to be useful",
+    note: "The description is a single line and doesn\u2019t explain what the app does or its main features. Customers need enough detail to understand the app before installing.",
+    media: [],
+    area: "Store listing \u2014 description",
+    section: "step-listing"
   },
   {
     icon: "fluent:shield-keyhole-20-regular",
-    title: "Your privacy policy link doesn\u2019t show a privacy policy",
-    problem: "The privacy policy URL opens a page that doesn\u2019t actually display a privacy policy.",
-    fix: "Point the link to a page that clearly shows your app\u2019s privacy policy.",
-    policy: "10.5.1",
-    section: "step-listing", focus: "#ez-info-privacy"
+    policy: "10.5.1", policyTitle: "Personal information",
+    title: "Privacy policy link doesn\u2019t show a privacy policy",
+    note: "The privacy policy URL opens your marketing homepage, not a privacy policy. The link must go to a page that clearly presents your app\u2019s privacy policy.",
+    media: [{ type: "image", label: "Screenshot from review" }],
+    area: "Store listing \u2014 privacy policy",
+    section: "step-listing"
   }
 ];

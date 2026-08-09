@@ -11,7 +11,7 @@
 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 <script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-beta.133/dist/web-components.min.js"></script>
 <script type="module" src="fluent-bootstrap.js"></script>
-<script src="cert-issues.js"></script>
+<script src="cert-issues.js?v=2"></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   body { margin: 0; background: var(--canvas, #0f1218); color: var(--fg-1); font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
@@ -58,7 +58,11 @@
   .cert-issue__line span { color: var(--fg-2); }
   .cert-issue__line--fix b { color: var(--fg-1); font-weight: 600; }
   .cert-issue__foot { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-12); flex-wrap: wrap; }
-  .cert-issue__policy { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 11px; color: var(--fg-4); background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 2px var(--sp-8); }
+  .cert-issue__policy { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 11px; color: var(--fg-4); background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 2px var(--sp-8); text-decoration: none; }
+  .cert-issue__policy:hover { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); }
+  .cert-issue__media-row { display: flex; flex-wrap: wrap; gap: var(--sp-8); margin: var(--sp-8) 0 0; }
+  .cert-issue__media { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12px; color: var(--fg-2); background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-6); padding: var(--sp-4) var(--sp-8); }
+  .cert-issue__media iconify-icon { color: var(--brand); }
 
   .rep-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-16); margin-top: var(--sp-24); padding: var(--sp-20) var(--sp-24); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); flex-wrap: wrap; }
   .rep-foot p { margin: 0; font-size: 13px; color: var(--fg-3); max-width: 52ch; }
@@ -125,17 +129,22 @@
         row('Publisher', publisher) +
         row('Review completed', today);
 
-      document.getElementById('rep-issues-title').textContent = n + ' ' + (n === 1 ? 'issue' : 'issues') + ' to fix';
+      document.getElementById('rep-issues-title').textContent = n + ' ' + (n === 1 ? 'item' : 'items') + ' from the reviewer';
       document.getElementById('rep-issues').innerHTML = issues.map(function (it, i) {
+        var media = (it.media || []).map(function (m) {
+          var ic = m.type === 'video' ? 'fluent:video-clip-16-regular' : 'fluent:image-16-regular';
+          return '<span class="cert-issue__media"><iconify-icon icon="' + ic + '" width="14" height="14" aria-hidden="true"></iconify-icon>' + esc(m.label) + '</span>';
+        }).join('');
         return '<div class="cert-issue">' +
           '<span class="cert-issue__ico"><iconify-icon icon="' + it.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
           '<div class="cert-issue__body">' +
             '<p class="cert-issue__title">' + (i + 1) + '. ' + esc(it.title) + '</p>' +
-            '<div class="cert-issue__line cert-issue__line--problem"><iconify-icon icon="fluent:dismiss-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + esc(it.problem) + '</span></div>' +
-            '<div class="cert-issue__line cert-issue__line--fix"><iconify-icon icon="fluent:wrench-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span><b>Fix:</b> ' + esc(it.fix) + '</span></div>' +
+            '<div class="cert-issue__line cert-issue__line--problem"><iconify-icon icon="fluent:comment-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span><b>Reviewer note:</b> ' + esc(it.note) + '</span></div>' +
+            (media ? '<div class="cert-issue__media-row">' + media + '</div>' : '') +
+            '<div class="cert-issue__line cert-issue__line--fix"><iconify-icon icon="fluent:location-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span><b>Likely area:</b> ' + esc(it.area || '\u2014') + '</span></div>' +
             '<div class="cert-issue__foot">' +
-              '<fluent-button appearance="primary" size="small" data-fix="' + esc(it.section) + '"><iconify-icon slot="start" icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Fix this</fluent-button>' +
-              '<span class="cert-issue__policy"><iconify-icon icon="fluent:book-20-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Store Policy ' + esc(it.policy) + '</span>' +
+              (it.section ? '<fluent-button appearance="secondary" size="small" data-fix="' + esc(it.section) + '"><iconify-icon slot="start" icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Open in flow</fluent-button>' : '') +
+              '<a class="cert-issue__policy" href="https://learn.microsoft.com/en-us/windows/apps/publish/store-policies" target="_blank" rel="noopener"><iconify-icon icon="fluent:book-20-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Store Policy ' + esc(it.policy) + ' \u00b7 ' + esc(it.policyTitle) + '</a>' +
             '</div>' +
           '</div>' +
         '</div>';
