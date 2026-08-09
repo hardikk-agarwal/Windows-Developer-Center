@@ -728,6 +728,9 @@
   #field-edit-dialog fluent-text-input,
   #field-edit-dialog fluent-text-input::part(root),
   #field-edit-dialog fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
+  /* At 480px, fluent-dialog-body stacks the action buttons full-width — force the row layout so
+     Cancel/Done sit side-by-side, right-aligned, like every other dialog. */
+  #field-edit-dialog fluent-dialog-body::part(actions) { flex-direction: row; align-items: center; justify-content: flex-end; }
   /* Additional-information section visibility is JS-controlled (renderInfo). */
   #ez-info-section[hidden] { display: none !important; }
   .ez-chips { display: flex; flex-wrap: wrap; gap: var(--sp-6); align-items: center; padding: var(--sp-6); border: 1px solid var(--stroke-2); border-radius: var(--r-4); background: var(--canvas); }
@@ -871,14 +874,15 @@
   .ez-info-val { display: inline-flex; align-items: center; gap: 4px; width: fit-content; cursor: pointer; text-decoration: none; }
   .ez-info-val > iconify-icon { flex: 0 0 auto; }
   .ez-info-val:focus-visible { outline: 2px solid var(--store-link); outline-offset: 2px; border-radius: 3px; }
-  .ez-info-val--set { color: var(--fg-1); font-weight: 600; }
-  .ez-info-val--set:hover { color: var(--store-link); text-decoration: underline; }
+  .ez-info-val--set { color: var(--store-link); font-weight: 600; }
+  .ez-info-val--set:hover { text-decoration: underline; }
   .ez-info-val--empty { color: var(--fg-3); font-weight: 500; }
   .ez-info-val--empty > iconify-icon { color: var(--fg-3); }
   .ez-info-val--empty:hover, .ez-info-val--empty:hover > iconify-icon { color: var(--store-link); }
   .ez-info-val--req { color: var(--store-link); }
   .ez-info-val--req > iconify-icon { color: var(--store-link); }
-  .ez-info-static { color: var(--fg-1); font-weight: 600; }
+  .ez-info-static { color: var(--store-link); font-weight: 600; }
+  .ez-info-plain { color: var(--fg-1); font-weight: 600; }
   .ez-info-notset { color: var(--fg-3); font-weight: 500; }
   /* Inline editors inside the info grid get a visible box (the live-PDP inline edits are borderless). */
   .ez-live .ez-info-item .live-edit-input--info { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-4); padding: 4px 6px; color: var(--fg-1); width: 100%; box-sizing: border-box; outline: none; font: inherit; }
@@ -2795,9 +2799,9 @@
      trials now show inline in easy mode — no "More options" disclosure. applyPrice() gates them via
      the [hidden] attribute (storePaid = paid && !win32), so they appear only for Store-paid MSIX/PWA
      apps; Win32 (exe/msi/url) submissions don't support Store pricing, so they never see them. */
-  /* Win32 (exe/msi/url) submissions can't be limited to a private group — only
-     Public or Direct link. Hide the Private audience option for them. */
-  #flow-wrap.has-win32-pkg [data-choice="audience"] [data-value="private"] { display: none !important; }
+  /* Win32 (exe/msi/url) submissions can't be limited to a private group in the CURRENT product — only
+     Public or Direct link. Hide the Private audience option for them in MVP; Vision keeps it available. */
+  #flow-wrap.is-mvp.has-win32-pkg [data-choice="audience"] [data-value="private"] { display: none !important; }
   /* Sale pricing is an MSIX-only Store feature — hide it for Win32 submissions. */
   #flow-wrap.has-win32-pkg #price-sale-wrap { display: none !important; }
   .price-sales { display: flex; flex-direction: column; gap: var(--sp-6); }
@@ -2937,6 +2941,7 @@
   .ez-langsummary__first { display: inline-flex; align-items: center; padding: 2px var(--sp-8); border-radius: 999px; background: var(--subtle); border: 1px solid var(--stroke-2); font-size: 12px; color: var(--fg-1); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   .ez-langsummary__more { font-size: 12px; color: var(--fg-3); white-space: nowrap; cursor: default; text-decoration: underline dotted; text-underline-offset: 2px; }
   #pkg-lang-dialog, #pkg-lang-dialog::part(control), #pkg-lang-dialog::part(dialog) { width: min(480px, 92vw); }
+  #pkg-lang-dialog fluent-dialog-body::part(actions) { flex-direction: row; align-items: center; justify-content: flex-end; }
   #pkg-lang-dialog .markets-dialog__search { margin: 0 0 var(--sp-12); display: block; width: 100%; box-sizing: border-box; }
   #pkg-lang-dialog .markets-dialog__search::part(root), #pkg-lang-dialog .markets-dialog__search::part(control) { width: 100%; box-sizing: border-box; }
   #pkg-lang-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
@@ -3163,6 +3168,11 @@
   .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
     background: linear-gradient(135deg, #2886de, #115ea3); color: #fff; font-weight: 700; font-size: 13px; }
   .userchip__meta { display: none; }   /* header shows just the profile icon (name/status hidden, still updated by JS) */
+  /* Prototype fidelity toggle (page header): Vision (full experience) vs MVP (shippable-now subset). */
+  .pubmode { display: inline-flex; align-items: center; padding: 3px; gap: 2px; background: color-mix(in srgb, var(--fg-1) 8%, transparent); border: 1px solid var(--stroke-2); border-radius: var(--r-8); }
+  .pubmode__opt { display: inline-flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4) var(--sp-10); border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1; cursor: pointer; border-radius: var(--r-6); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .pubmode__opt:hover { color: var(--fg-1); }
+  .pubmode__opt.is-active { background: var(--brand); color: #fff; }
   .userchip__meta strong { font-size: 13px; color: var(--fg-1); }
   .userchip__meta span { font-size: 11.5px; color: var(--fg-3); display: flex; align-items: center; gap: 5px; }
   .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: #57c038; display: inline-block; }
@@ -3531,6 +3541,10 @@
   <header class="appbar" role="banner">
     <a class="brand" href="../store-portal.html" data-wdp-brand></a>
     <div class="appbar__right">
+      <div class="pubmode" role="group" aria-label="Prototype fidelity">
+        <button type="button" class="pubmode__opt is-active" data-pubmode="vision" aria-pressed="true" title="Vision — the full experience we’d want to build">Vision</button>
+        <button type="button" class="pubmode__opt" data-pubmode="mvp" aria-pressed="false" title="MVP — only what’s shippable today">MVP</button>
+      </div>
       <div class="userchip">
         <span class="avatar" id="avatar">—</span>
         <span class="userchip__meta">
@@ -5834,7 +5848,7 @@
 
     <div class="pkgd-fields">
       <div class="ez-field" id="pkgd-url-field" hidden>
-        <label class="ez-field__label" for="pkgd-url">Installer URL</label>
+        <label class="ez-field__label" for="pkgd-url">Installer URL <span class="field-mark field-mark--req" aria-label="required">*</span></label>
         <span class="ez-field__hint">Where the installer is downloaded from.</span>
         <fluent-text-input id="pkgd-url" class="pkgd-url"></fluent-text-input>
       </div>
@@ -8472,6 +8486,9 @@
     if (tok('neutral').test(name)) found.add('neutral');
     return Array.from(found);
   }
+  // fluent-textarea (beta.133) doesn't mirror the typed value onto the host .value property — the
+  // real text lives in the shadow <textarea>. Read THAT (host .value is a fallback for other controls).
+  function faVal(el) { if (!el) return ''; const s = el.shadowRoot && el.shadowRoot.querySelector('textarea'); return (s ? s.value : el.value) || ''; }
   function detectVersion(name) {
     const m = name.match(/(\d+\.\d+\.\d+(?:\.\d+)?)/);
     return m ? m[1] : '';
@@ -8674,7 +8691,8 @@
     pwa: { upload: false, url: true, urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
   };
   function applyV4PkgUI(type) {
-    const cfg = V4_PKG_UI[type] || V4_PKG_UI.msix;
+    let cfg = V4_PKG_UI[type] || V4_PKG_UI.msix;
+    if (isMvp() && type === 'win32') cfg = Object.assign({}, cfg, { upload: false });   // MVP: Win32 installers are URL-only
     const drop = document.getElementById('upload-zone'), urlPart = document.getElementById('pkg-url-part'), orDiv = document.getElementById('pkg-or');
     if (drop) drop.hidden = !cfg.upload;
     if (urlPart) urlPart.hidden = !cfg.url;
@@ -8693,6 +8711,35 @@
     return locked || v4Type;
   }
   function effectiveWin32() { return effectiveType() === 'win32'; }
+
+  // ---- Prototype fidelity: Vision (default) vs MVP -----------------------------------------
+  // Vision shows the full experience we'd want to build; MVP hides what isn't shippable yet. The
+  // header toggle persists the choice and adds .is-mvp to #flow-wrap; each behaviour reads isMvp().
+  let pubMode = 'vision';
+  try { if (localStorage.getItem('tdp.pubMode') === 'mvp') pubMode = 'mvp'; } catch (e) {}
+  function isMvp() { return pubMode === 'mvp'; }
+  function applyPubMode() {
+    const wrap = document.getElementById('flow-wrap');
+    if (wrap) wrap.classList.toggle('is-mvp', isMvp());
+    document.querySelectorAll('.pubmode__opt[data-pubmode]').forEach(function (b) {
+      const on = b.getAttribute('data-pubmode') === pubMode;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    try { applyV4PkgUI(effectiveType()); } catch (e) {}
+    try { window.__reachRefresh && window.__reachRefresh.audience && window.__reachRefresh.audience(); } catch (e) {}
+    try { updateGate(); } catch (e) {}
+  }
+  function setPubMode(m) {
+    pubMode = (m === 'mvp') ? 'mvp' : 'vision';
+    try { localStorage.setItem('tdp.pubMode', pubMode); } catch (e) {}
+    applyPubMode();
+  }
+  document.querySelectorAll('.pubmode__opt[data-pubmode]').forEach(function (b) {
+    b.addEventListener('click', function () { setPubMode(b.getAttribute('data-pubmode')); });
+  });
+  applyPubMode();
+
   function syncV4TypeChooser() {
     const wrap = document.getElementById('v4-type'), seg = document.getElementById('v4-type-seg');
     if (!wrap || !seg) return;
@@ -9235,7 +9282,7 @@
     updateRestrictedCapsProgress();
     restrictedCapsListEl.querySelectorAll('[data-cap-reason]').forEach(el => {
       el.addEventListener('input', () => {
-        capabilityReasons[el.getAttribute('data-cap-reason')] = el.value || '';
+        capabilityReasons[el.getAttribute('data-cap-reason')] = faVal(el);
         updateRestrictedCapsProgress();
         updateGate();
       });
@@ -9488,7 +9535,7 @@
   // every Win32 add (and on row click to edit). Confirm commits + validates in the background; Cancel
   // discards (a fresh add is removed; an edit reverts to its snapshot).
   const pkgDetailsDialog = $('pkg-details-dialog');
-  let pkgdId = null, pkgdIsNew = false, pkgdSnapshot = null;
+  let pkgdId = null, pkgdIsNew = false, pkgdSnapshot = null, pkgdTouched = false, pkgdArchManual = false;
   const pkgdEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
   function pkgdPkg() { return packages.find(p => p.id === pkgdId); }
   function renderPkgdLang() {
@@ -9531,7 +9578,44 @@
     else if (!archOk) msg = 'Select the architecture to confirm.';
     else if (!paramsOk) msg = 'Enter the silent-install parameters, or tick “My app installs silently”.';
     else if (!langOk) msg = 'Add at least one language to confirm.';
-    if (hint) { hint.hidden = !msg; if (msg) hint.innerHTML = '<iconify-icon icon="fluent:error-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon> ' + msg; }
+    // Don't flag errors the instant the dialog opens — only once the developer has interacted.
+    const showHint = pkgdTouched && !!msg;
+    if (hint) { hint.hidden = !showHint; if (showHint) hint.innerHTML = '<iconify-icon icon="fluent:error-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon> ' + msg; }
+  }
+  function renderPkgdFileChip() {
+    const file = $('pkgd-file'), pkg = pkgdPkg(); if (!file) return;
+    if (pkg && pkg.filename) { file.hidden = false; file.innerHTML = '<iconify-icon icon="fluent:window-apps-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon><span class="pkgd-file__name" title="' + pkgdEsc(pkg.filename) + '">' + pkgdEsc(pkg.filename) + '</span>'; }
+    else { file.hidden = true; file.innerHTML = ''; }
+  }
+  function renderPkgdArch() {
+    const archWrap = $('pkgd-arch-wrap'), pkg = pkgdPkg(); if (!archWrap || !pkg) return;
+    archWrap.innerHTML = archDropdownHtml('pkgd-arch', 'data-pkgd-arch', win32ArchOf(pkg));
+    const d = $('pkgd-arch');
+    if (d) d.addEventListener('change', () => {
+      const newArch = d.value;
+      if (newArch && win32LangsOf(pkg).some(code => langTakenByOther(newArch, code, pkg.id))) {
+        announce('Another ' + newArch + ' installer already uses one of these languages. Pick a different architecture or language.');
+        renderPkgdArch(); return;   // revert the dropdown
+      }
+      pkgdArchManual = true;   // the developer chose an architecture — stop auto-deriving it from the URL
+      pkg.arches = newArch ? [newArch] : [];
+      updatePkgdConfirm();
+    });
+  }
+  // Editing the installer URL live-updates the derived info (file name, EXE/MSI type, and the
+  // auto-detected architecture unless the developer set one) so the dialog reflects the current link.
+  function onPkgdUrlInput() {
+    const pkg = pkgdPkg(), urlInput = $('pkgd-url'); if (!pkg || pkg.source !== 'url' || !urlInput) return;
+    const raw = urlInput.value.trim();
+    pkg.url = raw;
+    pkg.filename = basenameOf(raw);
+    pkg.type = /\.msi(?:[?#]|$)/i.test(raw) ? 'Win32 MSI' : 'Win32 EXE';
+    renderPkgdFileChip();
+    if (!pkgdArchManual) {
+      const detected = detectArches(pkg.filename);
+      if (detected.join() !== (pkg.arches || []).join()) { pkg.arches = detected; renderPkgdArch(); }
+    }
+    updatePkgdConfirm();
   }
   function renderPkgdDialog() {
     const pkg = pkgdPkg(); if (!pkg) return;
@@ -9539,28 +9623,11 @@
     if (intro) intro.textContent = pkg.source === 'url'
       ? 'Paste a link to your hosted installer, then review the details and confirm. We’ll validate the package in the background.'
       : 'We read these from your installer’s file name — review them and confirm. We’ll validate the package in the background.';
-    const file = $('pkgd-file');
-    if (file) {
-      if (pkg.filename) { file.hidden = false; file.innerHTML = '<iconify-icon icon="fluent:window-apps-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon><span class="pkgd-file__name" title="' + pkgdEsc(pkg.filename) + '">' + pkgdEsc(pkg.filename) + '</span>'; }
-      else { file.hidden = true; file.innerHTML = ''; }   // a fresh "Add by link" has no file name yet
-    }
+    renderPkgdFileChip();
     const urlField = $('pkgd-url-field'), urlInput = $('pkgd-url');
     if (urlField) urlField.hidden = pkg.source !== 'url';
     if (urlInput && pkg.source === 'url') urlInput.value = pkg.url || '';
-    const archWrap = $('pkgd-arch-wrap');
-    if (archWrap) {
-      archWrap.innerHTML = archDropdownHtml('pkgd-arch', 'data-pkgd-arch', win32ArchOf(pkg));
-      const d = $('pkgd-arch');
-      if (d) d.addEventListener('change', () => {
-        const newArch = d.value;
-        if (newArch && win32LangsOf(pkg).some(code => langTakenByOther(newArch, code, pkg.id))) {
-          announce('Another ' + newArch + ' installer already uses one of these languages. Pick a different architecture or language.');
-          renderPkgdDialog(); return;   // revert the dropdown
-        }
-        pkg.arches = newArch ? [newArch] : [];
-        updatePkgdConfirm();   // architecture is mandatory — reflect it on Confirm
-      });
-    }
+    renderPkgdArch();
     const prmWrap = $('pkgd-params-wrap');
     if (prmWrap) {
       prmWrap.innerHTML = installParamsFieldHtml('pkgd-params', 'data-pkgd-params', pkg.installParams, pkg.type, pkg.silentNoParams);
@@ -9583,19 +9650,34 @@
   }
   function openPkgDetailsDialog(pkgId, isNew) {
     const pkg = packages.find(p => p.id === pkgId); if (!pkg || !pkg.win32) return;
-    pkgdId = pkgId; pkgdIsNew = !!isNew;
+    pkgdId = pkgId; pkgdIsNew = !!isNew; pkgdTouched = false;   // no validation errors until the developer interacts
+    // A pre-set arch that doesn't match the file name is a deliberate choice — don't auto-override it on URL edits.
+    pkgdArchManual = !!(pkg.arches && pkg.arches.length && pkg.arches.join() !== detectArches(pkg.filename || basenameOf(pkg.url || '')).join());
     pkgdSnapshot = { arches: (pkg.arches || []).slice(), installParams: pkg.installParams, langs: (pkg.langs || []).slice(), url: pkg.url, exitCodes: pkg.exitCodes ? JSON.parse(JSON.stringify(pkg.exitCodes)) : undefined, validation: pkg.validation ? Object.assign({}, pkg.validation) : undefined };
     const adv = $('pkgd-adv'), advBtn = $('pkgd-adv-toggle'), advLbl = $('pkgd-adv-label');
     if (adv) adv.hidden = true;
     if (advBtn) advBtn.setAttribute('aria-expanded', 'false');
     if (advLbl) advLbl.textContent = 'Show advanced options';
     renderPkgdDialog();
+    // MVP: Win32 installers ship as-is — hide the Convert-to-MSIX nudge + action (Vision keeps them).
+    const cvHide = isMvp();
+    const msixTip = pkgDetailsDialog.querySelector('.pkgd-msix-tip'); if (msixTip) msixTip.style.display = cvHide ? 'none' : '';
+    const cvBtn = document.getElementById('pkgd-convert'); if (cvBtn) cvBtn.style.display = cvHide ? 'none' : '';
     try { pkgDetailsDialog.show(); } catch (e) {}
     // A light-dismiss (backdrop / Escape) closes the inner <dialog> without hitting Cancel; treat it
     // the same as Cancel so an unconfirmed package never lingers and wrongly shows the step as “added”.
     if (!pkgDetailsDialog.__closeWired) {
       const inner = pkgDetailsDialog.shadowRoot && pkgDetailsDialog.shadowRoot.querySelector('dialog');
       if (inner) { pkgDetailsDialog.__closeWired = true; inner.addEventListener('close', () => { if (pkgdId != null) cancelPkgDetails(); }); }
+    }
+    // Reveal validation hints only after the first interaction (input/change) inside the dialog.
+    if (!pkgDetailsDialog.__touchWired) {
+      pkgDetailsDialog.__touchWired = true;
+      ['input', 'change'].forEach(function (ev) { pkgDetailsDialog.addEventListener(ev, function () { if (!pkgdTouched) { pkgdTouched = true; updatePkgdConfirm(); } }); });
+    }
+    if (!pkgDetailsDialog.__urlWired) {
+      pkgDetailsDialog.__urlWired = true;
+      const u0 = $('pkgd-url'); if (u0) u0.addEventListener('input', onPkgdUrlInput);
     }
     if (pkg.source === 'url' && !pkg.url) setTimeout(() => { const u = $('pkgd-url'); if (u) { try { u.focus(); } catch (e) {} } }, 60);
   }
@@ -9827,7 +9909,7 @@
     } else {
       const isMsi = /\.msi(?:[?#]|$)/i.test(url);
       const type = isMsi ? 'Win32 MSI' : 'Win32 EXE';
-      packages.push({ id, source: 'url', kind: 'win32', filename: basenameOf(url), type, win32: true, url, arches: [arch || 'x64'], langs: Array.isArray(langs) ? langs.slice() : firstWin32Langs(), installParams: (prm || '').trim(), capabilities: [], manifestParsed: true, sizeBytes: null, _pending: true });
+      packages.push({ id, source: 'url', kind: 'win32', filename: basenameOf(url), type, win32: true, url, arches: arch ? [arch] : detectArches(basenameOf(url)), langs: Array.isArray(langs) ? langs.slice() : firstWin32Langs(), installParams: (prm || '').trim(), capabilities: [], manifestParsed: true, sizeBytes: null, _pending: true });
       announce('Win32 installer added.');   // no render — the details dialog commits it on Confirm
     }
     return id;
@@ -10497,7 +10579,7 @@
   }
   function saveWhatsNew() {
     const ta = $('whatsnew-input');
-    adv.listing.whatsNew = ta ? (ta.value || '').trim() : '';
+    adv.listing.whatsNew = ta ? faVal(ta).trim() : '';
     renderWhatsNew();
     try { renderUpdateChanges(); } catch (e) {}
     try { $('whatsnew-dialog').hide(); } catch (e) {}
@@ -10521,7 +10603,7 @@
   async function whatsNewDialogDraft() {
     const chip = $('whatsnew-draft'), ta = $('whatsnew-input'); if (!ta) return;
     if (chip) chip.classList.add('is-busy');
-    ta.value = await genWhatsNew((ta.value || '').trim());
+    ta.value = await genWhatsNew(faVal(ta).trim());
     if (chip) chip.classList.remove('is-busy');
     if (typeof announce === 'function') announce('Release notes drafted with AI.');
   }
@@ -11454,7 +11536,7 @@
       alert('Image generation is disabled. Add imageEndpoint and imageModel to ai-config.js to enable.');
       return;
     }
-    const userPrompt = (imageEditAiPrompt && imageEditAiPrompt.value || '').trim();
+    const userPrompt = faVal(imageEditAiPrompt).trim();
     if (!userPrompt) { if (imageEditAiPrompt) imageEditAiPrompt.focus(); return; }
     const original = imageEditAiGo.innerHTML;
     imageEditAiGo.disabled = true;
@@ -13411,10 +13493,13 @@
     try { syncRolloutDialog(); } catch (e) {}
     // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
     syncPublishHoldUI();
+    // MVP: Win32 submissions don't expose release scheduling — hide the Release section (Vision shows it).
+    const holdOpts = $('submit-hold-opts');
+    if (holdOpts) holdOpts.style.display = (isMvp() && effectiveWin32()) ? 'none' : '';
     renderTestCreds();
     // Open the cert-team area only if it already has content (otherwise it stays a tidy one-liner).
     const credsSub = $('submit-creds');
-    if (credsSub) credsSub.open = !!((Array.isArray(adv.testCredentials) && adv.testCredentials.length) || ($('submit-notes') && ($('submit-notes').value || '').trim()));
+    if (credsSub) credsSub.open = !!((Array.isArray(adv.testCredentials) && adv.testCredentials.length) || ($('submit-notes') && faVal($('submit-notes')).trim()));
     try { submitDlg.show(); } catch (e) {}
   }
   $('submit').addEventListener('click', openSubmitFlow);
@@ -13435,7 +13520,7 @@
   function updateCredsSummary() {
     const sum = $('creds-summary'); if (!sum) return;
     const n = Array.isArray(adv.testCredentials) ? adv.testCredentials.filter(c => (c.name || '').trim() || (c.value || '').trim()).length : 0;
-    const hasNotes = ($('submit-notes') && ($('submit-notes').value || '').trim().length > 0);
+    const hasNotes = ($('submit-notes') && faVal($('submit-notes')).trim().length > 0);
     sum.textContent = n ? (n + ' credential' + (n > 1 ? 's' : '')) : (hasNotes ? 'Notes added' : 'None');
   }
   function syncPublishHoldUI() {
@@ -13612,9 +13697,9 @@
       c.innerHTML = sel.length ? sel.slice(0, 6).map(chip).join('') : '<span class="reach-row__hint">No groups selected yet.</span>';
     }
     function applyAudience() {
-      // Win32 (exe/msi/url) submissions can't target a private group — only Public
-      // or Direct link. If Private was selected, fall back to Public.
-      if (adv.audience.mode === 'private' && packages.some(p => p.win32 && !p._pending)) adv.audience.mode = 'public';
+      // Win32 (exe/msi/url) submissions can't target a private group in the CURRENT product — only
+      // Public or Direct link. In MVP, fall back to Public; Vision allows Private for Win32.
+      if (isMvp() && adv.audience.mode === 'private' && packages.some(p => p.win32 && !p._pending)) adv.audience.mode = 'public';
       setSeg('audience', adv.audience.mode);
       const m = adv.audience.mode;
       $('audience-private-row').hidden = m !== 'private';
@@ -15037,7 +15122,9 @@ function openPriceScheduleDialog() {
     }
     if (privacyTextInline) {
       privacyTextInline.value = L.privacyText || '';
-      privacyTextInline.addEventListener('input', () => { if (localeLocked()) { privacyTextInline.value = L.privacyText || ''; return; } L.privacyText = privacyTextInline.value || ''; persistAdvanced(); updateGate(); });
+      const commitPrivacyText = () => { if (localeLocked()) { privacyTextInline.value = L.privacyText || ''; return; } L.privacyText = faVal(privacyTextInline); persistAdvanced(); updateGate(); };
+      privacyTextInline.addEventListener('input', commitPrivacyText);
+      privacyTextInline.addEventListener('change', commitPrivacyText);
     }
     document.querySelectorAll('.privacy-mode-toggle .seg__opt').forEach(b => b.addEventListener('click', () => { if (localeLocked()) return; setPrivacyMode(b.dataset.privacyMode, true); }));
     setPrivacyMode(getPrivacyMode(), false);
@@ -15199,7 +15286,7 @@ function openPriceScheduleDialog() {
       const copyCell = stateVal('ez-info-copyright', (L.copyright || '').trim() ? esc(L.copyright) : '', 'Add copyright', false);
       const pubVal   = '<span class="ez-info-item__line ez-info-static">' + esc('Hardik Agarwal') + '</span><span class="ez-info-item__line">' + copyCell + '</span>';
       const subVal   = stateVal('ez-info-subcat', L.subcategory ? esc(L.subcategory) : '', 'Add subcategory', false);
-      const langsVal = '<span class="ez-info-static">' + esc(addedLocales().map(localeShortNameOf).join(', ')) + '</span>';
+      const langsVal = '<span class="ez-info-plain">' + esc(addedLocales().map(localeShortNameOf).join(', ')) + '</span>';
       // Support info (EU DSA) — account details by default, or custom per-app (always has a value).
       const sup = (adv.listing && adv.listing.support) || {};
       const supText = sup.mode === 'custom' ? 'Custom contact info' : 'Account contact info';
@@ -15253,6 +15340,12 @@ function openPriceScheduleDialog() {
     (function wirePrivacyEditClose() {
       const dlg = $('privacy-edit-dialog'); if (!dlg) return;
       dlg.querySelectorAll('[data-privacy-edit-close]').forEach(el => el.addEventListener('click', () => {
+        // Commit the fields on close — fluent-textarea doesn't reliably surface its value via 'input'.
+        if (!localeLocked()) {
+          if (privacyUrlInput)   L.privacyUrl  = (privacyUrlInput.value || '').trim();
+          if (privacyTextInline) L.privacyText = faVal(privacyTextInline);
+          persistAdvanced();
+        }
         try { dlg.hide(); } catch (e) {}
         renderInfo(); if (typeof updateGate === 'function') updateGate();
       }));
@@ -15269,7 +15362,7 @@ function openPriceScheduleDialog() {
       const saveBtn = $('license-edit-save');
       if (saveBtn) saveBtn.addEventListener('click', () => {
         const ta = $('license-terms-input');
-        if (ta) L.licenseTerms = (ta.value || '').trim();
+        if (ta) L.licenseTerms = faVal(ta).trim();
         try { dlg.hide(); } catch (e) {}
         renderInfo();
         if (typeof updateGate === 'function') updateGate(); // license terms is required → refresh gate + tabs + checklist
