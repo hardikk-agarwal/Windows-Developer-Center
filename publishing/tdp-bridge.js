@@ -63,7 +63,111 @@
     var banner = document.querySelector(".wz-banner"); if (banner) banner.style.paddingBottom = hide ? "var(--sp-20)" : "";
     // Bring back the portal's left nav once the app is in review/published.
     var appEl = document.querySelector(".app"); if (appEl) appEl.classList.toggle("has-rail", !!hide);
+    if (hide) { try { renderAppNav(); } catch (e) {} } else { var _an = document.getElementById("app-nav"); if (_an) _an.hidden = true; var _tg = document.getElementById("nav-apps-toggle"); if (_tg) _tg.hidden = true; }
     var mode = document.querySelector(".ez-mode"); if (mode) mode.style.display = hide ? "none" : "";
+  }
+
+  // ---- App-scope sidebar nav (hybrid rail): once the app is live, the "Apps" item in the portal's
+  //      global rail EXPANDS to disclose this app's capabilities nested beneath it — built from the SAME
+  //      LIVE_GROUPS the hub renders (single source of truth), so the rail lists exactly what the hub
+  //      lists. The sidebar lives outside #flow-wrap, so it persists across every L2 sub-view; each item
+  //      reuses the hub card's handler (startAppUpdate/startExperiments/startAddons/startAvailability). ----
+  // Capabilities come straight from the hub's LIVE_GROUPS so the two never drift. Placeholder cards with
+  // no action (Package flights, Share listing) get a slug key and are no-ops here, exactly as in the hub.
+  function appNavItems() {
+    var out = [];
+    LIVE_GROUPS.forEach(function (g) {
+      g.cards.forEach(function (c) {
+        out.push({ icon: c[0], label: c[1], key: c[4] || c[1].toLowerCase().replace(/[^a-z0-9]+/g, "-") });
+      });
+    });
+    return out;
+  }
+  function appNavIconHTML() {
+    var src = document.getElementById("app-icon");
+    if (src) {
+      // Prefer an <img>; else pull the URL out of the header's inline background-image. Reading
+      // style.backgroundImage yields url("...") WITH quotes — inlining that into a style attr breaks
+      // the HTML, so render an <img> from the extracted URL instead.
+      var img = src.querySelector("img");
+      if (img && img.getAttribute("src")) return '<span class="appnav__icon"><img src="' + esc(img.getAttribute("src")) + '" alt="" /></span>';
+      var m = (src.style.backgroundImage || "").match(/url\((['"]?)(.*?)\1\)/);
+      if (m && m[2]) return '<span class="appnav__icon"><img src="' + esc(m[2]) + '" alt="" /></span>';
+    }
+    var initial = (appName().replace(/^\s+/, "")[0] || "A").toUpperCase();
+    return '<span class="appnav__icon appnav__icon--tile">' + esc(initial) + '</span>';
+  }
+  // Which section is on screen right now (drives the highlight) — derived from the same signals the
+  // page back-arrow reads, so hub cards, the sidebar and the back-arrow always agree.
+  function appNavSection() {
+    try {
+      var ex = document.getElementById("experiments-panel"); if (ex && !ex.hidden) return "experiments";
+      var ad = document.getElementById("addons-panel"); if (ad && !ad.hidden) return "addons";
+      if (window.__inUpdateFlow) return "update";
+    } catch (e) {}
+    return "overview";
+  }
+  function setAppNavActive(k) {
+    var host = document.getElementById("app-nav"); if (!host) return;
+    Array.prototype.forEach.call(host.querySelectorAll("[data-app-nav]"), function (a) {
+      a.classList.toggle("is-active", a.getAttribute("data-app-nav") === k);
+    });
+  }
+  window.__setAppNavActive = setAppNavActive;
+  function renderAppNav() {
+    var host = document.getElementById("app-nav"); if (!host) return;
+    var toggle = document.getElementById("nav-apps-toggle");
+    // Only meaningful once a live version exists (published, or an update in review/failed over a live
+    // app). A first submission still in review/rejected has no live capabilities yet — keep it hidden.
+    var done = document.getElementById("state-done");
+    var live = (done && done.__result === "passed") || everLive() || submissionIsUpdate;
+    if (!live) { host.hidden = true; if (toggle) toggle.hidden = true; var _al = document.querySelector("#nav-apps-group .snav-parent__row > a"); if (_al) _al.classList.add("is-active"); return; }
+    var active = appNavSection();
+    var caps = appNavItems().map(function (n) {
+      return '<a href="#" class="' + (n.key === active ? "is-active" : "") + '" data-app-nav="' + n.key + '">' +
+        '<iconify-icon icon="' + n.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon>' + esc(n.label) + '</a>';
+    }).join("");
+    // App name is a read-only header (identity); "Overview" is the explicit landing page above the capabilities.
+    var homeItem = '<a href="#" class="' + (active === "overview" ? "is-active" : "") + '" data-app-nav="overview">' +
+      '<iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>';
+    host.innerHTML =
+      '<div class="appnav__header">' + appNavIconHTML() + '<span class="appnav__name">' + esc(appName()) + '</span></div>' +
+      '<nav class="appnav__list" aria-label="' + esc(appName()) + ' pages">' + homeItem + caps + '</nav>';
+    host.hidden = false;
+    if (toggle) toggle.hidden = false;
+    // Expanded: the selected LEAF carries the highlight, so the "Apps" category itself isn't filled (one selection).
+    var appsLink = document.querySelector("#nav-apps-group .snav-parent__row > a");
+    if (appsLink) appsLink.classList.remove("is-active");
+    if (!host.__wired) {
+      host.__wired = true;
+      host.addEventListener("click", function (e) {
+        var a = e.target.closest("[data-app-nav]"); if (!a) return; e.preventDefault();
+        var k = a.getAttribute("data-app-nav");
+        if (k === "overview") { if (typeof window.__appHome === "function") window.__appHome(); }
+        else if (k === "update") { if (typeof window.startAppUpdate === "function") window.startAppUpdate(); }
+        else if (k === "experiments") { if (typeof window.startExperiments === "function") window.startExperiments(); }
+        else if (k === "addons") { if (typeof window.startAddons === "function") window.startAddons(); }
+        else if (k === "availability") { if (typeof window.startAvailability === "function") window.startAvailability(); }
+        else { return; }   // Package flights / Share listing: placeholder capabilities, no-op like the hub
+        setAppNavActive(appNavSection());
+      });
+      try {
+        var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); });
+        var fw = document.getElementById("flow-wrap"); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ["class"] });
+        ["experiments-panel", "addons-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
+      } catch (e) {}
+    }
+    if (toggle && !toggle.__wired) {
+      toggle.__wired = true;
+      toggle.addEventListener("click", function () {
+        var grp = document.getElementById("nav-apps-group");
+        var collapsed = grp ? grp.classList.toggle("is-collapsed") : false;
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+        // Collapsed: "Apps" reclaims the selected highlight (the leaf is hidden); expanded: the leaf carries it.
+        var appsLink = document.querySelector("#nav-apps-group .snav-parent__row > a");
+        if (appsLink) appsLink.classList.toggle("is-active", collapsed);
+      });
+    }
   }
 
   // Demo: 5s after submit, certification "passes" — flip the panel to a published
@@ -359,6 +463,7 @@
     setNotify(!isUpdate);   // first submission keeps the notify banner; the update card already says "we'll email you"
     setHeadActions("progress");
     setSwitch("progress");
+    try { renderAppNav(); } catch (e) {}
   }
   function showPassed() {
     var done = $id("state-done"); if (done) done.__result = "passed";
@@ -373,6 +478,7 @@
     setNotify(false);   // published: the submission-notification banner no longer applies
     setHeadActions("passed");
     setSwitch("passed");
+    try { renderAppNav(); } catch (e) {}
   }
   function showFailed() {
     var done = $id("state-done"); if (done) done.__result = "failed";
@@ -390,6 +496,7 @@
       setNotify(true); setHeadActions("failed");
     }
     setSwitch("failed");
+    try { renderAppNav(); } catch (e) {}
   }
   function resolveTo(view) { clearCertTimer(); if (view === "passed") showPassed(); else if (view === "failed") showFailed(); else showProgress(); }
   function armCertTimer() { clearCertTimer(); certTimer = setTimeout(function () { resolveTo(nextOutcome); }, 4500); }

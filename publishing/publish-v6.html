@@ -25,7 +25,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=2" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=6" defer></script>
+<script src="tdp-bridge.js?v=15" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -3209,6 +3209,33 @@
   .snav--foot { border-top: 1px solid var(--colorNeutralStroke2, #272c3a); padding-top: 10px; }
   .snav--foot a { color: var(--colorNeutralForeground3, #8b909e); font-weight: 500; }
 
+  /* Hybrid rail: "Apps" expands to disclose THIS app's capabilities (from the hub) nested beneath it,
+     so you can move between them without returning to the hub. Foot stays pinned via .sidebar__top. */
+  .sidebar__top { display: flex; flex-direction: column; gap: var(--sp-2); min-height: 0; overflow-y: auto; }
+  .snav-parent { display: flex; flex-direction: column; }
+  .snav-parent__row { display: flex; align-items: stretch; gap: 2px; }
+  .snav-parent__row > a { flex: 1 1 auto; min-width: 0; }
+  .snav-parent__toggle { flex: none; width: 30px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: var(--colorNeutralForeground3, #8b909e); cursor: pointer; border-radius: var(--borderRadiusMedium, 4px); }
+  .snav-parent__toggle[hidden] { display: none; }
+  .snav-parent__toggle:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.08)); color: var(--colorNeutralForeground1, #fff); }
+  .snav-parent__toggle iconify-icon { transition: transform var(--dur-2, .12s) var(--ease-out, ease); }
+  .snav-parent__toggle[aria-expanded="false"] iconify-icon { transform: rotate(-90deg); }
+  /* Nested app capabilities under Apps — Fluent NavDrawer idiom: plain indentation (no tree/connector
+     line), one selected item at a time (the expanded "Apps" category itself is not filled). */
+  .appnav { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 4px; padding-left: 16px; }
+  .appnav[hidden], .snav-parent.is-collapsed .appnav { display: none; }
+  .appnav__list { display: flex; flex-direction: column; gap: 2px; }
+  .appnav__header { display: flex; align-items: center; gap: 10px; padding: 6px 12px; font-size: 13px; font-weight: 700; color: var(--colorNeutralForeground1, #fff); cursor: default; }
+  .appnav__list a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--borderRadiusMedium, 4px); text-decoration: none; font-size: 13px; font-weight: 600; color: var(--colorNeutralForeground2, #c6cad6); position: relative; }
+  .appnav__header iconify-icon, .appnav__list a iconify-icon { flex: none; display: inline-flex; }
+  .appnav__list a:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.08)); color: var(--colorNeutralForeground1, #fff); }
+  .appnav__list a.is-active { background: var(--colorBrandBackground2, rgba(40,153,245,.16)); color: var(--colorBrandForegroundLink, #4aa6ff); }
+  .appnav__list a.is-active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--colorBrandForeground1, #2899f5); }
+  .appnav__icon { width: 20px; height: 20px; border-radius: 5px; flex: none; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; background-size: cover; background-position: center; }
+  .appnav__icon--tile { background: linear-gradient(135deg, #2899f5, #8b5cf6); }
+  .appnav__icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .appnav__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   /* Live-app management hub (shown once published) — grouped soft panels: each group is one rounded
      surface holding its actions as rows with hairline dividers (Windows 11 Settings pattern). */
   .live-hub { display: flex; flex-direction: column; gap: var(--sp-20); }
@@ -3563,12 +3590,23 @@
 
   <!-- ===================== LEFT SIDEBAR (same as the portal — shown only when in review/published) ===================== -->
   <aside class="sidebar" aria-label="Store navigation">
+    <div class="sidebar__top">
     <nav class="snav">
       <a href="../store-portal.html#overview"><iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>
-      <a href="../store-portal.html#apps" class="is-active"><iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Apps</a>
+      <!-- Apps expands to disclose THIS app's capabilities (published / in-review); the nested #app-nav is injected by tdp-bridge renderAppNav(). -->
+      <div class="snav-parent" id="nav-apps-group">
+        <div class="snav-parent__row">
+          <a href="../store-portal.html#apps" class="is-active"><iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Apps</a>
+          <button type="button" class="snav-parent__toggle" id="nav-apps-toggle" aria-expanded="true" aria-label="Collapse app sections" hidden>
+            <iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+          </button>
+        </div>
+        <div class="appnav" id="app-nav" hidden></div>
+      </div>
       <a href="../store-portal.html#certificates"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Certificates</a>
       <a href="../store-portal.html#analytics"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Analytics</a>
     </nav>
+    </div>
     <div class="snav snav--foot">
       <a href="../store-portal.html"><iconify-icon icon="fluent:arrow-counterclockwise-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Reset demo state</a>
       <a href="../store-developer.html"><iconify-icon icon="fluent:sign-out-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Sign out</a>
@@ -12993,6 +13031,15 @@
       if (window.__inUpdateFlow) { e.preventDefault(); exitUpdateToHub(); return; }
       // else: on the hub / draft editor \u2014 follow the href to the Apps list.
     });
+    // Return to THIS app's hub from any sub-view — exposed for the app-scope sidebar (tdp-bridge),
+    // using the same exits the back arrow uses. No-op when already on the hub.
+    window.__appHome = function () {
+      if (panelOpen('experiments-panel') && typeof exitExperiments === 'function') { exitExperiments(); }
+      else if (panelOpen('addons-panel') && typeof exitAddons === 'function') { exitAddons(); }
+      else if (window.__reviewMode && typeof exitReviewDetails === 'function') { exitReviewDetails(); }
+      else if (window.__inUpdateFlow && typeof exitUpdateToHub === 'function') { exitUpdateToHub(); }
+      onViewChange();
+    };
     // Keep the label in sync as the view changes (review/update toggle a #flow-wrap class; the
     // experiments/add-ons panels toggle [hidden]).
     try {
