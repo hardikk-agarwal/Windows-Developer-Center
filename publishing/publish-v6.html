@@ -25,7 +25,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=2" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=3" defer></script>
+<script src="tdp-bridge.js?v=6" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -3308,6 +3308,11 @@
   .live-stat__label { font-size: 12px; color: var(--fg-3); }
   .live-stat__value { font-size: 19px; font-weight: 600; color: var(--fg-1); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
   .live-stat__value small { font-size: 12px; font-weight: 400; color: var(--fg-3); margin-left: 3px; }
+  .live-stat--link { text-decoration: none; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .live-stat--link:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 5%, var(--layer)); }
+  .live-stat--link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .live-stat__chev { flex: 0 0 auto; margin-left: auto; color: var(--fg-4); transition: color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
+  .live-stat--link:hover .live-stat__chev { color: var(--brand); transform: translateX(2px); }
   @media (max-width: 640px) { .live-metrics { grid-template-columns: 1fr; } }
   /* "Once you're live" preview — shown below the cert card while a FIRST submission is in review, to
      tease the tools (add-ons, experiments, flights, analytics) that unlock once the app goes live. */
@@ -7301,15 +7306,18 @@
     // primary action (Submit for review), enabled only when every section is complete.
     const incomplete = WZ_STEPS.filter(s => !wzStepComplete(s)).map(s => WZ_SECTION_NAMES[s]);
     const gate = $('gate-hint'), gateText = $('gate-text'), submit = $('submit');
+    // In an update there's nothing to resubmit until the developer actually changes a section.
+    const noUpdateChanges = inUpdateFlow && updateChangedSet.size === 0;
     // The action lives in the header now, so the readiness caption stays compact (a count);
     // the full "Finish X, Y and Z" detail rides on the Submit button's tooltip.
     if (gateText) gateText.textContent = incomplete.length
       ? incomplete.length + ' section' + (incomplete.length === 1 ? '' : 's') + (inUpdateFlow ? ' to fix' : ' left')
-      : (inUpdateFlow ? 'Ready to resubmit' : 'Ready to submit');
-    if (gate) gate.classList.toggle('ez-gate--ready', incomplete.length === 0);
+      : (inUpdateFlow ? (noUpdateChanges ? 'No changes yet' : 'Ready to resubmit') : 'Ready to submit');
+    if (gate) gate.classList.toggle('ez-gate--ready', incomplete.length === 0 && !noUpdateChanges);
     if (submit) {
-      submit.disabled = incomplete.length > 0;
+      submit.disabled = incomplete.length > 0 || noUpdateChanges;
       if (incomplete.length) submit.title = 'Finish ' + wzListJoin(incomplete) + ' to submit for review.';
+      else if (noUpdateChanges) submit.title = 'Edit any section to update your live listing before you can resubmit.';
       else submit.removeAttribute('title');
     }
     // Preview is always available — it opens the read-only listing as it stands, even before a package.
@@ -8117,12 +8125,17 @@
     const missing = ckRequiredIncomplete().map(it => it.label);
 
     const gate = $('gate-hint'), text = $('gate-text'), btn = $('submit');
+    // In an update, block Submit until the developer has actually changed a section (nothing to resubmit otherwise).
+    const noUpdateChanges = inUpdateFlow && updateChangedSet.size === 0;
     // Submit needs every required item done AND the developer to have opened Reach & price.
-    btn.disabled = missing.length !== 0 || !reachVisited;
+    btn.disabled = missing.length !== 0 || !reachVisited || noUpdateChanges;
     // In the wizard, updateWzChrome owns the hint text + ready state (one step at a time);
     // only the non-wizard easy/advanced flow uses this global summary line.
     if (!document.getElementById('flow-wrap').classList.contains('is-wizard')) {
-      if (missing.length === 0 && reachVisited) {
+      if (noUpdateChanges && missing.length === 0 && reachVisited) {
+        gate.classList.remove('ez-gate--ready');
+        text.textContent = 'No changes yet \u2014 edit any section to update your live listing.';
+      } else if (missing.length === 0 && reachVisited) {
         gate.classList.add('ez-gate--ready');
         text.textContent = 'Ready to submit. ' + advSummary() + ' · age rating set.';
       } else if (missing.length === 0) {

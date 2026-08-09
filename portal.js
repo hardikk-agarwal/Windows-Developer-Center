@@ -2884,6 +2884,18 @@
   else if (location.hash === "#signin") { state.signedIn = false; save(); showSignin(); }
   else if (state.signedIn && state.account) {
     showApp();
+    // Deep-link from a published app's live-hub metric: "?anaApp=<id>&anaTab=<tab>#analytics" opens
+    // that app's analytics on the requested tab (Installs→Acquisition, Crash rate→Crash, Rating→Ratings).
+    var anaDeep = /[?&]anaApp=([^&#]+)/.exec(location.search);
+    if (anaDeep) {
+      var _anaId = decodeURIComponent(anaDeep[1]);
+      var _anaTabM = /[?&]anaTab=([^&#]+)/.exec(location.search);
+      var _anaTab = _anaTabM ? decodeURIComponent(_anaTabM[1]) : "crashes";
+      if (ANA_TABS.some(function (t) { return t.key === _anaTab; })) anaTab = _anaTab;
+      if (appById(_anaId)) analyticsAppId = _anaId;
+      if (history.replaceState) history.replaceState(null, "", location.pathname + "#analytics");
+      goView("analytics"); renderAnalytics();
+    }
     // WDP path: arriving from signup with a freshly-added certificate → scan + populate its
     // apps now, showing the portal's own "Scanning installed apps…" skeleton.
     if (!STORE && state.discoverCert && state.discoverCert.thumb) {

@@ -75,13 +75,12 @@
       ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#"]
     ] },
     { title: "Insights & growth", accent: "growth", cards: [
-      ["fluent:data-histogram-20-regular", "View analytics", "Installs, usage, ratings and health.", "../" + PORTAL_FILE + "#analytics"],
       ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#", "experiments"]
     ] },
     { title: "Listing & monetization", accent: "mon", cards: [
-      ["fluent:eye-20-regular", "Store availability", "Control who can find and get your app.", "#", "availability"],
+      ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#", "addons"],
       ["fluent:share-20-regular", "Share listing", "Copy your Store listing link.", "#"],
-      ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#", "addons"]
+      ["fluent:eye-20-regular", "Store availability", "Control who can find and get your app.", "#", "availability"]
     ] }
   ];
   function liveRow(c, opts) {
@@ -237,10 +236,14 @@
     try { return JSON.parse(localStorage.getItem("tdp.appstats." + id) || "null"); } catch (e) { return null; }
   }
   function statFmt(n) { n = Math.round(n); if (n >= 1e6) return (+(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)) + "M"; if (n >= 1e3) return (+(n / 1e3).toFixed(n >= 1e4 ? 0 : 1)) + "K"; return "" + n; }
-  function liveStatCard(icon, label, value, mod) {
-    return '<div class="live-stat' + (mod ? " live-stat--" + mod : "") + '">' +
-      '<span class="live-stat__ico"><iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
-      '<div class="live-stat__body"><span class="live-stat__label">' + label + '</span><strong class="live-stat__value">' + value + '</strong></div></div>';
+  function liveStatCard(icon, label, value, mod, href) {
+    var cls = "live-stat" + (mod ? " live-stat--" + mod : "") + (href ? " live-stat--link" : "");
+    var inner = '<span class="live-stat__ico"><iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="live-stat__body"><span class="live-stat__label">' + label + '</span><strong class="live-stat__value">' + value + '</strong></div>' +
+      (href ? '<iconify-icon class="live-stat__chev" icon="fluent:chevron-right-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' : '');
+    return href
+      ? '<a class="' + cls + '" href="' + href + '" title="View ' + esc(label) + ' analytics">' + inner + '</a>'
+      : '<div class="' + cls + '">' + inner + '</div>';
   }
   // Once live, show the SAME headline figures as the portal Apps table (persisted to tdp.appstats.<id>
   // by portal.js). Falls back to the "no analytics yet" note when nothing has been recorded yet.
@@ -254,10 +257,13 @@
       '</div>';
     }
     var warn = (+s.crashRate) >= 5;
+    // Each headline metric links to its own analytics tab (Installs → Acquisition, Crash rate →
+    // Crash, Rating → Ratings), deep-linked to THIS app; the portal honours anaApp/anaTab on load.
+    var anaHref = function (tab) { return "../" + PORTAL_FILE + "?anaApp=" + encodeURIComponent(id) + "&anaTab=" + tab + "#analytics"; };
     return '<div class="live-metrics">' +
-      liveStatCard("fluent:arrow-download-20-regular", "Installs", statFmt(s.installs), "") +
-      liveStatCard("fluent:pulse-20-regular", "Crash rate", (+s.crashRate).toFixed(2) + "%", warn ? "warn" : "ok") +
-      liveStatCard("fluent:star-20-regular", "Rating", (+s.rating).toFixed(1) + ' <small>(' + statFmt(s.ratingCount) + ')</small>', "") +
+      liveStatCard("fluent:arrow-download-20-regular", "Installs", statFmt(s.installs), "", anaHref("acquisition")) +
+      liveStatCard("fluent:pulse-20-regular", "Crash rate", (+s.crashRate).toFixed(2) + "%", warn ? "warn" : "ok", anaHref("crashes")) +
+      liveStatCard("fluent:star-20-regular", "Rating", (+s.rating).toFixed(1) + ' <small>(' + statFmt(s.ratingCount) + ')</small>', "", anaHref("ratings")) +
     '</div>';
   }
   // The published "app overview": at-a-glance stats + the management hub. The app header already
