@@ -389,6 +389,8 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 .apptype--msix > iconify-icon { color: var(--brand); }
 .apptype--pwa > iconify-icon { color: #63b3ed; }
 .apptype--win32 > iconify-icon { color: #b99bf0; }
+/* Store Apps table: app type is plain secondary TEXT (no icon, no tag); status stays a proper colored pill. */
+.apptable--store .apptype { color: var(--text-2); font-size: 12.5px; }
 .th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
 .th-sort:hover { color: var(--text-2); }
 .th-sort.is-active { color: var(--text); }

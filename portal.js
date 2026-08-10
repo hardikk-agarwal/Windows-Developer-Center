@@ -855,7 +855,7 @@
           ? '<span class="pill pill--info pill--sm">In certification</span>'
           : '<span class="pill pill--ghost pill--sm">Draft</span>';
     var tm = appTypeMeta(a);
-    var typeCell = tm.label ? '<span class="apptype apptype--' + tm.key + '"><iconify-icon icon="' + tm.icon + '" width="15" height="15" aria-hidden="true"></iconify-icon>' + esc(tm.label) + '</span>' : '';
+    var typeCell = tm.label ? '<span class="apptype apptype--' + tm.key + '">' + esc(tm.label) + '</span>' : '';
     // Acquisition / usage / ratings only exist once an app is LIVE; pre-live rows show "—".
     var na = '<span class="muted">—</span>';
     var installs = na, crash = na, rating = na;
