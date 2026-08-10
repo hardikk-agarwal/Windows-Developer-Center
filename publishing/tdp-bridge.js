@@ -126,6 +126,13 @@
     var appsLink = grp.querySelector(".snav-parent__row > a");
     if (appsLink) appsLink.classList.toggle("is-active", collapsed);   // Apps active when collapsed; the leaf carries it when expanded
   }
+  // An update is certifying (in review) — used to block/label a second update everywhere.
+  function updateInProgress() {
+    var done = document.getElementById("state-done");
+    if (done && done.__result === "progress") return true;
+    var pill = document.getElementById("app-status");
+    return !!(pill && pill.textContent.trim() === "In review");
+  }
   function renderAppNav() {
     var host = document.getElementById("app-nav"); if (!host) return;
     var toggle = document.getElementById("nav-apps-toggle");
@@ -135,9 +142,11 @@
     var live = (done && done.__result === "passed") || everLive() || submissionIsUpdate;
     if (!live) { host.hidden = true; if (toggle) toggle.hidden = true; var _al = document.querySelector("#nav-apps-group .snav-parent__row > a"); if (_al) _al.classList.add("is-active"); return; }
     var active = appNavSection();
+    var updBusy = updateInProgress();
     var caps = appNavItems().map(function (n) {
-      return '<a href="#" class="' + (n.key === active ? "is-active" : "") + '" data-app-nav="' + n.key + '">' +
-        '<iconify-icon icon="' + n.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon>' + esc(n.label) + '</a>';
+      var busy = (n.key === "update") && updBusy;   // an update is certifying — can't stack another
+      return '<a href="#" class="' + (n.key === active ? "is-active " : "") + (busy ? "is-disabled" : "") + '" data-app-nav="' + n.key + '"' + (busy ? ' aria-disabled="true" title="An update is already in review"' : '') + '>' +
+        '<iconify-icon icon="' + n.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon>' + esc(n.label) + (busy ? '<span class="appnav__badge">In review</span>' : '') + '</a>';
     }).join("");
     // App name is a read-only header (identity); "Overview" is the explicit landing page above the capabilities.
     var homeItem = '<a href="#" class="' + (active === "overview" ? "is-active" : "") + '" data-app-nav="overview">' +
@@ -151,6 +160,7 @@
       host.__wired = true;
       host.addEventListener("click", function (e) {
         var a = e.target.closest("[data-app-nav]"); if (!a) return; e.preventDefault();
+        if (a.classList.contains("is-disabled")) return;   // e.g. Update while one is still in review
         var k = a.getAttribute("data-app-nav");
         var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons", flights: "startFlights" };
         if (k === "overview") { if (typeof window.__appHome === "function") window.__appHome(); }
@@ -347,7 +357,7 @@
         '<fluent-button appearance="primary" data-fix="step-listing"><iconify-icon slot="start" icon="fluent:wrench-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix &amp; resubmit</fluent-button>' +
         (isUpdate ? failToggle : '') +
       '</div>';
-    return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed' : '') + '">' +
+    return '<div class="cert-card cert-card--fail' + (isUpdate ? ' is-collapsed cert-card--compact' : '') + '">' +
       '<div class="cert-card__head">' +
         '<span class="cert-card__icon cert-card__icon--fail"><iconify-icon icon="fluent:error-circle-20-filled" width="28" height="28" aria-hidden="true"></iconify-icon></span>' +
         '<div class="cert-card__headtext">' +
