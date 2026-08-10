@@ -1700,14 +1700,15 @@
   }
   function symbolHistoryTable(app) {
     var d = anaData(app);
-    if (!d.history.length) return '<div class="empty empty--sm"><strong>No uploads yet</strong><p class="muted">Upload symbols to start building your audit trail.</p></div>';
+    var historyNote = '<div class="histnote" role="note"><iconify-icon icon="fluent:info-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><p>This history only includes symbols uploaded in the new portal. Symbols uploaded previously in the Windows Developer Program aren\u2019t shown here.</p></div>';
+    if (!d.history.length) return historyNote + '<div class="empty empty--sm"><strong>No uploads yet</strong><p class="muted">Upload symbols to start building your audit trail.</p></div>';
     var rows = d.history.map(function (h) {
       return '<tr><td><span class="symfile-cell"><iconify-icon icon="fluent:folder-zip-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span class="mono">' + esc(h.file) + '</span></span></td>' +
         '<td><span class="mono">' + esc(h.ver) + '</span></td>' +
         '<td><div class="histby">' + esc(h.by) + '</div><div class="histby__date muted">' + esc(h.date) + '</div></td>' +
         '<td class="atable__act"><fluent-link data-dl-sym="' + h.id + '"><iconify-icon icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Download</fluent-link></td></tr>';
     }).join("");
-    return '<div class="table-wrap"><table class="atable"><thead><tr><th>Symbol package</th><th>Version</th><th>Uploaded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    return historyNote + '<div class="table-wrap"><table class="atable"><thead><tr><th>Symbol package</th><th>Version</th><th>Uploaded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   function srcFile(fn) { var b = (fn.split("::")[0] || fn).toLowerCase().replace(/[^a-z]/g, ""); return (b || "module") + ".cpp"; }
   function stackFrames(app, f) {
