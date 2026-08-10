@@ -25,7 +25,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=2" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=15" defer></script>
+<script src="tdp-bridge.js?v=21" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -413,13 +413,13 @@
   .price-win32-note { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 32%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--subtle)); font-size: var(--font-size-base-200); line-height: 1.45; color: var(--fg-2); max-width: 520px; }
   .price-win32-note[hidden] { display: none; }
   .price-win32-note > iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
-  /* Win32 paid: disclosure-only Free trial (Store doesn't run it; the developer's own commerce does). */
+  /* Win32 paid: lightweight disclosure-only Free trial — label + one-liner + "Learn more" reveal. */
   .price-win32-trial { margin-top: var(--sp-16); padding-top: var(--sp-12); border-top: 1px dashed var(--stroke-3); display: flex; flex-direction: column; gap: var(--sp-8); max-width: 560px; }
   .price-win32-trial[hidden] { display: none; }
-  .price-win32-trial__head { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--font-size-base-300); }
-  .price-win32-trial__head > iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
+  .price-win32-trial__head { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-300); }
   .price-win32-trial__head strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
-  .price-win32-trial__tag { display: inline-flex; align-items: center; gap: 3px; margin-left: var(--sp-4); padding: 1px var(--sp-6); border-radius: 999px; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); font-size: 11px; font-weight: var(--font-weight-semibold); }
+  .price-win32-trial__learn { font-size: var(--font-size-base-200); }
+  .price-win32-trial__more[hidden] { display: none; }
   .price-advanced { margin-top: var(--sp-16); }
   .price-adv__label { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-8); }
   .price-adv__tag { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-4); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 1px 7px; }
@@ -3246,13 +3246,16 @@
   .live-row + .live-row { border-top: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); }
   .live-row:hover { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
   .live-row:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-  .live-row__ico { width: 38px; height: 38px; flex: 0 0 auto; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .live-row:hover .live-row__ico { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+  .live-row__ico { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: var(--fg-2); transition: color var(--dur-2) var(--ease-out); }
+  .live-row:hover .live-row__ico { color: var(--brand); }
   .live-row__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .live-row__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   .live-row__t span { font-size: 12.5px; line-height: 16px; color: var(--fg-3); }
   .live-row__chev { flex: 0 0 auto; color: var(--fg-4); transition: transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
   .live-row:hover .live-row__chev { color: var(--fg-2); transform: translateX(2px); }
+  /* Live-state pill on capability rows that carry a count (experiments / add-ons). */
+  .live-row__stat { flex: 0 0 auto; align-self: center; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: var(--r-full); background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); white-space: nowrap; }
+  .live-row__stat--none { background: color-mix(in srgb, var(--fg-1) 5%, transparent); color: var(--fg-4); font-weight: 500; }
 
   /* Adaptive app-status card — sits above the hub and answers "what's happening with my app now?"
      Morphs between Live (published), Update in review, and Needs attention. */
@@ -3297,11 +3300,11 @@
   .asc-btn--ghost:hover { background: var(--subtle); text-decoration: none; }
   /* "Update your app" row while its update is certifying — muted, non-interactive. */
   .live-row--busy { opacity: .7; cursor: default; }
-  .live-row--busy .live-row__ico { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .live-row--busy .live-row__ico { color: var(--brand); }
 
   /* ---- Store availability (post-publish): hub-card state, "hidden" notice card + the toggle dialog ---- */
   .live-row__tag { flex: 0 0 auto; align-self: center; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: var(--r-full); background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
-  .live-row--availability.is-unavailable .live-row__ico { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
+  .live-row--availability.is-unavailable .live-row__ico { color: var(--status-warning); }
   .app-status-card--paused { display: flex; align-items: center; gap: var(--sp-12); background: color-mix(in srgb, var(--status-warning) 9%, var(--layer)); border-color: color-mix(in srgb, var(--status-warning) 34%, var(--stroke-2)); }
   .app-status-card--paused .app-status-card__ico { background: color-mix(in srgb, var(--status-warning) 18%, transparent); color: var(--status-warning); }
   .app-status-card--paused .asc-btn--ghost { flex: 0 0 auto; align-self: center; }
@@ -4203,22 +4206,12 @@
         <div class="ez-substep">
           <h3 class="ez-substep__title">Disclosures <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
           <ul class="declarations__list">
-            <li class="declarations__item">
-              <span class="declarations__ico"><iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-              <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
-              <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="My app uses generative AI features" data-declaration="genAi">
-                  <button type="button" class="seg__opt" data-decl-val="no" id="decl-answer-first">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
-              </span>
-            </li>
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-commerce">
               <span class="declarations__ico"><iconify-icon icon="fluent:cart-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-              <label for="decl-ext-commerce" class="declarations__label">My app allows purchases outside the Microsoft Store</label>
+              <label for="decl-ext-commerce" class="declarations__label">This product allows users to make purchases, but does not use the Microsoft Store commerce system</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="My app allows purchases outside the Microsoft Store" data-declaration="externalCommerce">
+                <span class="seg decl-seg" role="radiogroup" aria-label="This product allows users to make purchases, but does not use the Microsoft Store commerce system" data-declaration="externalCommerce">
                   <button type="button" class="seg__opt" data-decl-val="no">No</button>
                   <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
                 </span>
@@ -4230,6 +4223,72 @@
               <label for="decl-drivers" class="declarations__label">This product depends on non-Microsoft drivers or NT services</label>
               <span class="declarations__answer">
                 <span class="seg decl-seg" role="radiogroup" aria-label="This product depends on non-Microsoft drivers or NT services" data-declaration="drivers">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
+              </span>
+            </li>
+            <!-- Both types -->
+            <li class="declarations__item" id="decl-item-accessibility">
+              <span class="declarations__ico"><iconify-icon icon="fluent:accessibility-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-accessibility" class="declarations__label">This product has been tested to meet accessibility guidelines</label>
+              <span class="declarations__answer">
+                <span class="seg decl-seg" role="radiogroup" aria-label="This product has been tested to meet accessibility guidelines" data-declaration="accessibility">
+                  <button type="button" class="seg__opt" data-decl-val="no" id="decl-answer-first">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
+              </span>
+            </li>
+            <!-- MSIX only -->
+            <li class="declarations__item" id="decl-item-alt-drives" hidden>
+              <span class="declarations__ico"><iconify-icon icon="fluent:hard-drive-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-alt-drives" class="declarations__label">Customers can install this product to alternate drives or removable storage</label>
+              <span class="declarations__answer">
+                <span class="seg decl-seg" role="radiogroup" aria-label="Customers can install this product to alternate drives or removable storage" data-declaration="altDrives">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
+              </span>
+            </li>
+            <!-- MSIX only -->
+            <li class="declarations__item" id="decl-item-onedrive" hidden>
+              <span class="declarations__ico"><iconify-icon icon="fluent:cloud-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-onedrive" class="declarations__label">Windows can include this product's data in automatic backups to OneDrive</label>
+              <span class="declarations__answer">
+                <span class="seg decl-seg" role="radiogroup" aria-label="Windows can include this product's data in automatic backups to OneDrive" data-declaration="oneDriveBackup">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
+              </span>
+            </li>
+            <!-- MSIX only -->
+            <li class="declarations__item" id="decl-item-broadcast" hidden>
+              <span class="declarations__ico"><iconify-icon icon="fluent:record-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-broadcast" class="declarations__label">Customers can use Windows 10/11 features to record and broadcast clips of this product</label>
+              <span class="declarations__answer">
+                <span class="seg decl-seg" role="radiogroup" aria-label="Customers can use Windows 10/11 features to record and broadcast clips of this product" data-declaration="broadcast">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
+              </span>
+            </li>
+            <!-- Both types -->
+            <li class="declarations__item" id="decl-item-pen-ink">
+              <span class="declarations__ico"><iconify-icon icon="fluent:inking-tool-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-pen-ink" class="declarations__label">This product supports pen and ink input</label>
+              <span class="declarations__answer">
+                <span class="seg decl-seg" role="radiogroup" aria-label="This product supports pen and ink input" data-declaration="penInk">
+                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
+                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
+                </span>
+              </span>
+            </li>
+            <!-- Both types -->
+            <li class="declarations__item">
+              <span class="declarations__ico"><iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+              <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
+              <span class="declarations__answer">
+                <span class="seg decl-seg" role="radiogroup" aria-label="My app uses generative AI features" data-declaration="genAi">
                   <button type="button" class="seg__opt" data-decl-val="no">No</button>
                   <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
                 </span>
@@ -4348,16 +4407,16 @@
               <iconify-icon icon="fluent:info-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
               <span>You handle pricing and payment through your own commerce — customers buy or license directly in your app. The Store lists it as a paid app but doesn’t process the transaction.</span>
             </div>
-            <!-- Free trial for Win32 paid apps is DISCLOSURE-ONLY: the Store doesn't run the trial — you
-                 offer it via your own installer/commerce — it's just surfaced on your listing so
-                 customers know one exists. Mirrors Partner Center's MSI/EXE “Free trial” field. -->
+            <!-- Free trial for Win32 paid apps: kept intentionally lightweight (label + Learn more).
+                 It's disclosure-only — the Store surfaces the trial but you run it via your own
+                 commerce — so that caveat lives behind “Learn more” to keep the default view simple. -->
             <div class="price-win32-trial" id="price-win32-trial" hidden>
               <div class="price-win32-trial__head">
-                <iconify-icon icon="fluent:gift-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
                 <strong>Free trial</strong>
-                <span class="price-win32-trial__tag"><iconify-icon icon="fluent:info-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon>Disclosure only</span>
+                <button type="button" class="link-btn price-win32-trial__learn" id="price-win32-trial-learn" aria-expanded="false" aria-controls="price-win32-trial-more">Learn more</button>
               </div>
-              <p class="reach-row__hint">Paid and subscription apps often let customers try the app free before buying. This tells customers a trial is available and shows on your Store listing — but <strong>you run and enforce the trial through your own installer and commerce</strong>; the Store doesn’t manage it. Free trials are disabled by default.</p>
+              <p class="reach-row__hint">Select whether you’d like to offer customers a free trial.</p>
+              <p class="reach-row__hint price-win32-trial__more" id="price-win32-trial-more" hidden>The Store shows the trial on your listing, but <strong>you run and enforce it through your own installer and commerce</strong> — the Store doesn’t manage it.</p>
               <div class="seg" role="radiogroup" aria-label="Free trial" data-choice="win32trial">
                 <button class="seg__opt seg__opt--active" data-value="none" type="button">No free trial</button>
                 <button class="seg__opt" data-value="trial" type="button">Free trial</button>
@@ -6960,7 +7019,7 @@
     publishHold: { mode: 'auto', date: '' },
     // Test credentials for the certification team (both package types): [{name, value}].
     testCredentials: [],
-    declarations: { genAi: false, externalCommerce: false, drivers: false },
+    declarations: { genAi: false, externalCommerce: false, drivers: false, accessibility: false, penInk: false, altDrives: true, oneDriveBackup: true, broadcast: true },
     iarcId: '',
     listing: { shortDesc: '', features: '', whatsNew: '', keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
       // Support info (EU DSA contact details). mode 'account' = use account-level
@@ -8139,9 +8198,15 @@
   // driver/service dependency. Runs from updateGate, and setV4Type calls updateGate on change.
   function syncDisclosureItems() {
     const isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending));
-    const commerceItem = $('decl-item-commerce'), driversItem = $('decl-item-drivers');
-    if (commerceItem) commerceItem.hidden = isWin32;
-    if (driversItem) driversItem.hidden = !isWin32;
+    const setHidden = (id, hide) => { const el = $(id); if (el) el.hidden = hide; };
+    // MSIX-only disclosures
+    setHidden('decl-item-commerce', isWin32);
+    setHidden('decl-item-alt-drives', isWin32);
+    setHidden('decl-item-onedrive', isWin32);
+    setHidden('decl-item-broadcast', isWin32);
+    // Win32-only disclosure
+    setHidden('decl-item-drivers', !isWin32);
+    // accessibility, pen & ink and generative AI apply to both types (always shown)
   }
 
   function updateGate() {
@@ -9780,6 +9845,7 @@
       pkg.manifestParsed = true;
       if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Convert to MSIX'; }
       if (confirmBtn) confirmBtn.disabled = false;
+      pkgdId = null;   // resolved via Convert — the inner-dialog close handler must not re-cancel (that would discard this just-converted pkg)
       try { pkgDetailsDialog.hide(); } catch (e) {}
       state.pkg = packages.some(p => !p._pending);
       renderPackages();
@@ -12293,7 +12359,7 @@
     // Disclosures moved to the Disclosures & age rating step — echo them here so the developer
     // still confirms what they declared at the moment they submit.
     const d = adv.declarations || {};
-    const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers'].filter(Boolean);
+    const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers', d.accessibility && 'Accessibility tested', d.penInk && 'Pen & ink input', d.altDrives && 'Alternate drives', d.oneDriveBackup && 'OneDrive backup', d.broadcast && 'Record & broadcast'].filter(Boolean);
     if (declared.length) rows.push(['Disclosures', declared.join(' \u00b7 '), 'fluent:shield-20-regular']);
     if (inUpdateFlow && adv.rollout && adv.rollout.gradual) rows.push(['Rollout', 'Gradual \u00b7 ' + (adv.rollout.percent || 10) + '%' + (adv.rollout.mandatory ? ' \u00b7 Mandatory' : ''), 'fluent:arrow-trending-lines-20-regular']);
     else if (inUpdateFlow && adv.rollout && adv.rollout.mandatory) rows.push(['Rollout', 'All at once \u00b7 Mandatory', 'fluent:arrow-trending-lines-20-regular']);
@@ -12986,7 +13052,10 @@
     try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
     $('editor').hidden = true;
     $('submit-bar').hidden = true;
+    // Same as exitUpdateToHub: re-assert the published result before #state-done is revealed.
+    try { var d = $('state-done'); if (d) d.__result = 'passed'; } catch (e) {}
     $('state-done').hidden = false;
+    try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e) {}
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
   // From read-only review \u2192 editable update: drop review mode, then hand off to the update flow.
@@ -13002,7 +13071,11 @@
     var pill = $('app-status'); if (pill) { pill.textContent = 'Published'; pill.className = 'status-pill status-pill--published'; }
     $('editor').hidden = true;
     $('submit-bar').hidden = true;
+    // Restore the published result BEFORE revealing #state-done, else tdp-bridge's observer sees a
+    // null result (entering the flow wiped it) and re-runs the in-progress timeline.
+    try { var d = $('state-done'); if (d) d.__result = 'passed'; } catch (e) {}
     $('state-done').hidden = false;
+    try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e) {}
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
   // ---- Page back arrow (\u201c\u2190 Apps\u201d): go UP one level. From a sub-view (Review details, Update,
@@ -13834,6 +13907,14 @@
     if (amtEl) amtEl.addEventListener('input', () => { adv.price.amount = parseFloat(amtEl.value) || 0; persistAdvanced(); updateGate(); });
     if (durEl) durEl.addEventListener('change', () => { adv.trial.duration = durEl.value || '7'; applyTrial(); persistAdvanced(); });
 
+    const w32Learn = $('price-win32-trial-learn');   // reveal the disclosure-only caveat on demand
+    if (w32Learn) w32Learn.addEventListener('click', () => {
+      const more = $('price-win32-trial-more'); if (!more) return;
+      const show = more.hidden; more.hidden = !show;
+      w32Learn.textContent = show ? 'Hide' : 'Learn more';
+      w32Learn.setAttribute('aria-expanded', show ? 'true' : 'false');
+    });
+
     const copyBtn = $('audience-link-copy');
     if (copyBtn) copyBtn.addEventListener('click', () => {
       const url = ($('audience-link-url') || {}).textContent || '';
@@ -13871,7 +13952,9 @@
   // ones that apply to their app.
   function applicableDeclKeys() {
     var isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(function (p) { return p.win32 && !p._pending; }));
-    return ['genAi', isWin32 ? 'drivers' : 'externalCommerce'];
+    return isWin32
+      ? ['genAi', 'accessibility', 'penInk', 'drivers']
+      : ['genAi', 'accessibility', 'penInk', 'externalCommerce', 'altDrives', 'oneDriveBackup', 'broadcast'];
   }
   function disclosuresAnswered() { return applicableDeclKeys().every(function (k) { return adv.declarations[k] != null; }); }
   // Amber "answer required" outline is gated on declFlagged (set on leaving Compliance blank) and
@@ -15279,9 +15362,10 @@ function openPriceScheduleDialog() {
       // from the uploaded package and show automatically; the developer's minimums are appended.
       const facts = (typeof window.__pkgSysreqFacts === 'function') ? window.__pkgSysreqFacts() : { avail: '', os: '', arch: '' };
       const CAP_LABEL = { touch: 'Touch screen', keyboard: 'Keyboard', mouse: 'Mouse', gamepad: 'Gamepad', microphone: 'Microphone', camera: 'Camera' };
+      // Store-style peripheral values — one row each, "Integrated X" for built-in devices, matching the real PDP.
+      const CAP_VALUE = { touch: 'Integrated touch screen', keyboard: 'Integrated Keyboard', mouse: 'Integrated Mouse', gamepad: 'Gamepad', microphone: 'Integrated Microphone', camera: 'Integrated Camera' };
       // Combine Minimum + Recommended into "min (Minimum), rec (Recommended)" like the real Store listing.
       const pair = (minV, recV) => { const p = []; if (minV) p.push(minV + ' (Minimum)'); if (recV) p.push(recV + ' (Recommended)'); return p.join(', '); };
-      const capsTxt = arr => (arr && arr.length) ? arr.map(c => CAP_LABEL[c] || c).join(', ') : '';
       const rows = [];
       if (facts.avail) rows.push(['Available on', facts.avail]);
       if (facts.os) rows.push(['OS', facts.os]);
@@ -15291,7 +15375,15 @@ function openPriceScheduleDialog() {
       const cpuRow = pair(sr.cpu, rc.cpu); if (cpuRow) rows.push(['Processor', cpuRow]);
       const gpuRow = pair(sr.gpu, rc.gpu); if (gpuRow) rows.push(['Graphics', gpuRow]);
       const stoRow = pair(sr.storage, rc.storage); if (stoRow) rows.push(['Storage', stoRow]);
-      const capsRow = pair(capsTxt(sr.caps), capsTxt(rc.caps)); if (capsRow) rows.push(['Also requires', capsRow]);
+      // Peripherals appear as their own Store-style rows ("Mouse: Integrated Mouse") rather than one
+      // combined line; a cap set for both columns gets (Minimum)/(Recommended), a min-only one shows plainly.
+      Object.keys(CAP_LABEL).forEach(function (c) {
+        var isMin = (sr.caps || []).indexOf(c) >= 0, isRec = (rc.caps || []).indexOf(c) >= 0;
+        if (!isMin && !isRec) return;
+        var base = CAP_VALUE[c] || ('Integrated ' + CAP_LABEL[c]);
+        var val = (isMin && isRec) ? (base + ' (Minimum), ' + base + ' (Recommended)') : (isRec && !isMin) ? (base + ' (Recommended)') : base;
+        rows.push([CAP_LABEL[c], val]);
+      });
       if (sec) sec.classList.toggle('is-provided', rows.length > 0);
       if (!rows.length) { ul.innerHTML = ''; return; }
       ul.innerHTML = rows.map(r => '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span><strong>' + r[0] + ':</strong> ' + esc(r[1]) + '</span></li>').join('');

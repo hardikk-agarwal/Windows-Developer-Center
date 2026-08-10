@@ -114,6 +114,17 @@
     });
   }
   window.__setAppNavActive = setAppNavActive;
+  // On the Overview the hub already lists the capabilities, so collapse the sidebar's app section
+  // (not redundant); any capability sub-view expands it for quick switching between capabilities.
+  function syncAppNavExpansion() {
+    var grp = document.getElementById("nav-apps-group"); if (!grp) return;
+    var collapsed = appNavSection() === "overview";
+    grp.classList.toggle("is-collapsed", collapsed);
+    var toggle = document.getElementById("nav-apps-toggle");
+    if (toggle) toggle.setAttribute("aria-expanded", String(!collapsed));
+    var appsLink = grp.querySelector(".snav-parent__row > a");
+    if (appsLink) appsLink.classList.toggle("is-active", collapsed);   // Apps active when collapsed; the leaf carries it when expanded
+  }
   function renderAppNav() {
     var host = document.getElementById("app-nav"); if (!host) return;
     var toggle = document.getElementById("nav-apps-toggle");
@@ -135,24 +146,25 @@
       '<nav class="appnav__list" aria-label="' + esc(appName()) + ' pages">' + homeItem + caps + '</nav>';
     host.hidden = false;
     if (toggle) toggle.hidden = false;
-    // Expanded: the selected LEAF carries the highlight, so the "Apps" category itself isn't filled (one selection).
-    var appsLink = document.querySelector("#nav-apps-group .snav-parent__row > a");
-    if (appsLink) appsLink.classList.remove("is-active");
     if (!host.__wired) {
       host.__wired = true;
       host.addEventListener("click", function (e) {
         var a = e.target.closest("[data-app-nav]"); if (!a) return; e.preventDefault();
         var k = a.getAttribute("data-app-nav");
+        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons" };
         if (k === "overview") { if (typeof window.__appHome === "function") window.__appHome(); }
-        else if (k === "update") { if (typeof window.startAppUpdate === "function") window.startAppUpdate(); }
-        else if (k === "experiments") { if (typeof window.startExperiments === "function") window.startExperiments(); }
-        else if (k === "addons") { if (typeof window.startAddons === "function") window.startAddons(); }
-        else if (k === "availability") { if (typeof window.startAvailability === "function") window.startAvailability(); }
+        else if (subviews[k]) {
+          // Switch cleanly: exit any open sub-view back to the hub FIRST so panels don't nest (else
+          // exiting the next one would restore the previous sub-view instead of the hub), then open it.
+          if (typeof window.__appHome === "function") window.__appHome();
+          if (typeof window[subviews[k]] === "function") window[subviews[k]]();
+        }
+        else if (k === "availability") { if (typeof window.startAvailability === "function") window.startAvailability(); }   // a dialog — opens over the current view
         else { return; }   // Package flights / Share listing: placeholder capabilities, no-op like the hub
-        setAppNavActive(appNavSection());
+        setAppNavActive(appNavSection()); syncAppNavExpansion();
       });
       try {
-        var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); });
+        var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); syncAppNavExpansion(); });
         var fw = document.getElementById("flow-wrap"); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ["class"] });
         ["experiments-panel", "addons-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
       } catch (e) {}
@@ -168,6 +180,7 @@
         if (appsLink) appsLink.classList.toggle("is-active", collapsed);
       });
     }
+    syncAppNavExpansion();   // collapse on the Overview, expand in a capability sub-view
   }
 
   // Demo: 5s after submit, certification "passes" — flip the panel to a published
@@ -187,6 +200,14 @@
       ["fluent:eye-20-regular", "Store availability", "Control who can find and get your app.", "#", "availability"]
     ] }
   ];
+  // Live-state pill for capability rows that carry a count (experiments / add-ons) — makes the
+  // Overview cards INFORMATIVE (state the terse sidebar can't show), not just a duplicate menu.
+  // Always shown (incl. an empty "None yet") so the state is visible even before anything is set up.
+  function liveRowStat(action) {
+    if (action === "experiments") { var e = dashCount("tdp.experiments."); return '<span class="live-row__stat' + (e ? '' : ' live-row__stat--none') + '">' + (e ? e + ' running' : 'None yet') + '</span>'; }
+    if (action === "addons") { var a = dashCount("tdp.addons."); return '<span class="live-row__stat' + (a ? '' : ' live-row__stat--none') + '">' + (a ? a + ' active' : 'None yet') + '</span>'; }
+    return '';
+  }
   function liveRow(c, opts) {
     // While an update is certifying, the "Update your app" row becomes a non-interactive status
     // chip — you can't stack a second submission on a pending one.
@@ -207,6 +228,7 @@
     }
     return '<a class="live-row" href="' + c[3] + '"' + act + '><span class="live-row__ico"><iconify-icon icon="' + c[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
       '<span class="live-row__t"><strong>' + esc(c[1]) + '</strong><span>' + esc(c[2]) + '</span></span>' +
+      liveRowStat(c[4]) +
       '<iconify-icon class="live-row__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
   }
   // The management hub — the developer's home for a live app. Always present once shipped; only the
@@ -218,6 +240,8 @@
     }).join("");
     return '<div class="live-hub">' + groups + '</div>';
   }
+  // Live-state counts for the app-overview capability rows (experiments / add-ons).
+  function dashCount(prefix) { try { var a = JSON.parse(localStorage.getItem(prefix + id) || "[]"); return Array.isArray(a) ? a.length : 0; } catch (e) { return 0; } }
   // Adaptive status card that answers "what's happening with my app right now?"
   function liveStatusCard() {
     return '<div class="app-status-card app-status-card--live">' +
@@ -384,7 +408,7 @@
       '<a class="asc-btn asc-btn--ghost" href="#" data-live-action="availability">Manage</a>' +
     '</div>';
   }
-  function passHTML() { return availabilityCardHTML() + liveStatsHTML() + hubHTML(); }
+  function passHTML() { return liveStatsHTML() + hubHTML(); }
   // Re-render the live hub in place (after the availability toggle changes) without a full reload.
   window.__renderLiveHub = function () { var res = $id("cert-result"), done = $id("state-done"); if (res && done && done.__result === "passed") { res.innerHTML = passHTML(); } };
 
