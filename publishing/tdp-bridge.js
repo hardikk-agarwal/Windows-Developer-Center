@@ -103,6 +103,7 @@
     try {
       var ex = document.getElementById("experiments-panel"); if (ex && !ex.hidden) return "experiments";
       var ad = document.getElementById("addons-panel"); if (ad && !ad.hidden) return "addons";
+      var fl = document.getElementById("flights-panel"); if (fl && !fl.hidden) return "flights";
       if (window.__inUpdateFlow) return "update";
     } catch (e) {}
     return "overview";
@@ -151,7 +152,7 @@
       host.addEventListener("click", function (e) {
         var a = e.target.closest("[data-app-nav]"); if (!a) return; e.preventDefault();
         var k = a.getAttribute("data-app-nav");
-        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons" };
+        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons", flights: "startFlights" };
         if (k === "overview") { if (typeof window.__appHome === "function") window.__appHome(); }
         else if (subviews[k]) {
           // Switch cleanly: exit any open sub-view back to the hub FIRST so panels don't nest (else
@@ -160,13 +161,14 @@
           if (typeof window[subviews[k]] === "function") window[subviews[k]]();
         }
         else if (k === "availability") { if (typeof window.startAvailability === "function") window.startAvailability(); }   // a dialog — opens over the current view
+        else if (k === "identity") { if (typeof window.__openIdentityDialog === "function") window.__openIdentityDialog(); }   // manifest identity — a reference dialog
         else { return; }   // Package flights / Share listing: placeholder capabilities, no-op like the hub
         setAppNavActive(appNavSection()); syncAppNavExpansion();
       });
       try {
         var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); syncAppNavExpansion(); });
         var fw = document.getElementById("flow-wrap"); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ["class"] });
-        ["experiments-panel", "addons-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
+        ["experiments-panel", "addons-panel", "flights-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
       } catch (e) {}
     }
     if (toggle && !toggle.__wired) {
@@ -189,7 +191,8 @@
   var LIVE_GROUPS = [
     { title: "Updates", accent: "brand", cards: [
       ["fluent:arrow-upload-20-regular", "Update your app", "Submit a new package or version.", "#", "update"],
-      ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#"]
+      ["fluent:document-text-20-regular", "Package identity", "Names & IDs for your AppxManifest.xml.", "#", "identity"],
+      ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#", "flights"]
     ] },
     { title: "Insights & growth", accent: "growth", cards: [
       ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#", "experiments"]
@@ -206,6 +209,7 @@
   function liveRowStat(action) {
     if (action === "experiments") { var e = dashCount("tdp.experiments."); return '<span class="live-row__stat' + (e ? '' : ' live-row__stat--none') + '">' + (e ? e + ' running' : 'None yet') + '</span>'; }
     if (action === "addons") { var a = dashCount("tdp.addons."); return '<span class="live-row__stat' + (a ? '' : ' live-row__stat--none') + '">' + (a ? a + ' active' : 'None yet') + '</span>'; }
+    if (action === "flights") { var f = dashCount("tdp.flights."); return '<span class="live-row__stat' + (f ? '' : ' live-row__stat--none') + '">' + (f ? f + ' active' : 'None yet') + '</span>'; }
     return '';
   }
   function liveRow(c, opts) {
@@ -357,9 +361,8 @@
     '</div>';
   }
 
-  // A just-published app has no telemetry yet. Instead of a wall of empty "0 / —" cards, show ONE
-  // compact placeholder that sets expectations; the full metric dashboard would replace this once
-  // real data exists.
+  // A just-published app has no telemetry yet — we still show the three metric cards with 0 / —
+  // placeholders (per request) so the headline layout + analytics links are present from go-live.
   function appStatsData() {
     try { return JSON.parse(localStorage.getItem("tdp.appstats." + id) || "null"); } catch (e) { return null; }
   }
@@ -374,24 +377,22 @@
       : '<div class="' + cls + '">' + inner + '</div>';
   }
   // Once live, show the SAME headline figures as the portal Apps table (persisted to tdp.appstats.<id>
-  // by portal.js). Falls back to the "no analytics yet" note when nothing has been recorded yet.
+  // by portal.js). Before any telemetry exists we STILL show the three metric cards (0 / — placeholders)
+  // so the layout is stable and the analytics links are always available — no separate empty note.
   function liveStatsHTML() {
-    var s = appStatsData();
-    if (!s || s.installs == null) {
-      return '<div class="live-metrics-empty">' +
-        '<span class="live-metrics-empty__ico"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
-        '<div class="live-metrics-empty__text"><strong>No analytics yet</strong>' +
-          '<span>Installs, ratings and health will appear here as customers discover your app — usually within a day or two of going live.</span></div>' +
-      '</div>';
-    }
-    var warn = (+s.crashRate) >= 5;
+    var s = appStatsData() || {};
+    var hasInstalls = s.installs != null, hasCrash = s.crashRate != null, hasRating = s.rating != null;
+    var warn = hasCrash && (+s.crashRate) >= 5;
     // Each headline metric links to its own analytics tab (Installs → Acquisition, Crash rate →
     // Crash, Rating → Ratings), deep-linked to THIS app; the portal honours anaApp/anaTab on load.
     var anaHref = function (tab) { return "../" + PORTAL_FILE + "?anaApp=" + encodeURIComponent(id) + "&anaTab=" + tab + "#analytics"; };
+    var installVal = hasInstalls ? statFmt(s.installs) : "0";
+    var crashVal = hasCrash ? (+s.crashRate).toFixed(2) + "%" : "—";
+    var ratingVal = hasRating ? (+s.rating).toFixed(1) + ' <small>(' + statFmt(s.ratingCount || 0) + ')</small>' : "—";
     return '<div class="live-metrics">' +
-      liveStatCard("fluent:arrow-download-20-regular", "Installs", statFmt(s.installs), "", anaHref("acquisition")) +
-      liveStatCard("fluent:pulse-20-regular", "Crash rate", (+s.crashRate).toFixed(2) + "%", warn ? "warn" : "ok", anaHref("crashes")) +
-      liveStatCard("fluent:star-20-regular", "Rating", (+s.rating).toFixed(1) + ' <small>(' + statFmt(s.ratingCount) + ')</small>', "", anaHref("ratings")) +
+      liveStatCard("fluent:arrow-download-20-regular", "Installs", installVal, "", anaHref("acquisition")) +
+      liveStatCard("fluent:pulse-20-regular", "Crash rate", crashVal, warn ? "warn" : "ok", anaHref("crashes")) +
+      liveStatCard("fluent:star-20-regular", "Rating", ratingVal, "", anaHref("ratings")) +
     '</div>';
   }
   // The published "app overview": at-a-glance stats + the management hub. The app header already
@@ -509,7 +510,7 @@
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
     var isUpdate = submissionIsUpdate;   // locked when the submission view opened; preview clicks don't flip it
     if (prog) prog.hidden = true;
-    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (failHTML(true) + liveStatsHTML() + hubHTML()) : failHTML(false); }
+    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (failHTML(true) + liveStatsHTML() + hubHTML()) : (failHTML(false) + (window.__certLivePreviewHTML ? window.__certLivePreviewHTML({ collapsed: true }) : "")); }
     if (act) act.hidden = true;
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
     if (isUpdate) {
@@ -572,6 +573,10 @@
         if (availability) { e.preventDefault(); if (typeof window.startAvailability === "function") window.startAvailability(); return; }
         var addons = e.target.closest('[data-live-action="addons"]');
         if (addons) { e.preventDefault(); if (typeof window.startAddons === "function") window.startAddons(); return; }
+        var flights = e.target.closest('[data-live-action="flights"]');
+        if (flights) { e.preventDefault(); if (typeof window.startFlights === "function") window.startFlights(); return; }
+        var identity = e.target.closest('[data-live-action="identity"]');
+        if (identity) { e.preventDefault(); if (typeof window.__openIdentityDialog === "function") window.__openIdentityDialog(); return; }
         var report = e.target.closest("[data-cert-report]");
         if (report) { e.preventDefault(); window.open("cert-report.html?id=" + encodeURIComponent(id), "_blank", "noopener"); return; }
         var edit = e.target.closest("[data-edit]");

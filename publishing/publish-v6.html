@@ -25,7 +25,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=2" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=21" defer></script>
+<script src="tdp-bridge.js?v=27" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -41,8 +41,15 @@
   /* Header + mode toggle */
   .ez-head { margin-bottom: var(--sp-24); }
   .ez-head__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-24); flex-wrap: wrap; }
-  .ez-back { display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 13px; color: var(--fg-3); text-decoration: none; margin-bottom: var(--sp-10); }
+  .ez-crumbs { display: flex; align-items: center; gap: var(--sp-8); margin-bottom: var(--sp-10); min-width: 0; }
+  .ez-back { display: inline-flex; align-items: center; justify-content: center; color: var(--fg-3); text-decoration: none; flex: 0 0 auto; }
   .ez-back:hover { color: var(--brand); }
+  .ez-crumbs__list { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-4); margin: 0; padding: 0; list-style: none; font-size: 13px; min-width: 0; }
+  .ez-crumbs__item { display: inline-flex; align-items: center; gap: var(--sp-4); min-width: 0; }
+  .ez-crumbs__item:not(:first-child)::before { content: "/"; color: var(--fg-3); opacity: .5; flex: 0 0 auto; }
+  .ez-crumbs__link { color: var(--fg-3); text-decoration: none; border-radius: 4px; padding: 1px 4px; white-space: nowrap; }
+  .ez-crumbs__link:hover { color: var(--brand); text-decoration: underline; }
+  .ez-crumbs__current { color: var(--fg-1); font-weight: var(--font-weight-semibold); padding: 1px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* App-overview header (icon + name + meta), styled to match variant B. */
   .ez-apphead { display: flex; align-items: center; gap: var(--sp-16); min-width: 0; }
   .ez-apphead__text { min-width: 0; }
@@ -422,7 +429,6 @@
   .price-win32-trial__more[hidden] { display: none; }
   .price-advanced { margin-top: var(--sp-16); }
   .price-adv__label { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-8); }
-  .price-adv__tag { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-4); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 1px 7px; }
   /* Advanced pricing tools as a clean settings-card: icon tile + title + one-line description + chevron. */
   .price-toolcard { max-width: 520px; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); overflow: hidden; }
   .price-toolcard > *:not(:first-child) { border-top: 1px solid var(--stroke-2); }
@@ -491,10 +497,6 @@
   .declarations__label { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 500; color: var(--fg-1); cursor: pointer; }
   .declarations__answer { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; }
   .declarations__yn { font-size: 12px; color: var(--fg-3); min-width: 22px; text-align: right; }
-  /* Anything answered Yes tints, so what you've declared is obvious at a glance. */
-  .declarations__item.is-on { background: color-mix(in srgb, var(--brand) 7%, transparent); }
-  .declarations__item.is-on .declarations__ico { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
-  .declarations__item.is-on .declarations__yn { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
   @media (prefers-reduced-motion: reduce) {
     .declarations__item, .declarations__ico { transition: none; }
   }
@@ -1385,8 +1387,8 @@
   /* Post-update: the in-progress timeline collapses to a compact one-row summary (the developer has
      seen it before and the live-app hub is the real surface); a first submission stays expanded. */
   .cert-card__headtext { flex: 1 1 auto; min-width: 0; }
-  .cert-card__toggle { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: transparent; border: 1px solid var(--stroke-2); border-radius: var(--r-full); color: var(--fg-2); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .cert-card__toggle:hover { background: var(--subtle); color: var(--fg-1); }
+  .cert-card__toggle { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; padding: 4px; background: transparent; border: 0; border-radius: 6px; color: var(--fg-3); cursor: pointer; transition: color var(--dur-2) var(--ease-out); }
+  .cert-card__toggle:hover { color: var(--fg-1); }
   .cert-card__toggle-txt { display: none; }   /* chevron-only toggle — the chevron alone signals expand/collapse */
   .cert-card__toggle[hidden] { display: none; }
   /* Withdraw/cancel lives INSIDE the in-review card (contextual to the status it acts on), not the
@@ -1500,17 +1502,26 @@
   .cfb-progress__bar { flex: 1 1 auto; height: 6px; border-radius: var(--r-full); background: color-mix(in srgb, var(--fg-1) 12%, transparent); overflow: hidden; }
   .cfb-progress__bar span { display: block; height: 100%; border-radius: var(--r-full); background: var(--brand); transition: width var(--dur-3) var(--ease-out); }
   .cfb-progress__txt { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--fg-3); font-variant-numeric: tabular-nums; }
-  .cfb-item { padding: var(--sp-16) 0; border-top: 1px solid var(--stroke-3); }
-  .cfb-item:first-of-type { border-top: 0; padding-top: var(--sp-12); }
-  .cfb-item__head { display: flex; align-items: center; gap: var(--sp-10); flex-wrap: wrap; }
-  .cfb-item__policy { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11.5px; font-weight: 600; color: var(--brand); text-decoration: none; padding: 3px var(--sp-10); border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 10%, transparent); }
-  .cfb-item__policy:hover { background: color-mix(in srgb, var(--brand) 18%, transparent); }
-  .cfb-item__badge { display: inline-flex; align-items: center; gap: var(--sp-4); margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px var(--sp-8); border-radius: var(--r-full); }
-  .cfb-item__badge.is-done { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 14%, transparent); }
-  .cfb-item__badge.is-warn { color: var(--status-warning); background: color-mix(in srgb, var(--status-warning) 15%, transparent); }
-  .cfb-item__title { font-family: var(--font-display); font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.35; margin: var(--sp-10) 0 0; }
-  .cfb-item__note { font-size: 13.5px; line-height: 1.6; color: var(--fg-2); margin: var(--sp-6) 0 0; }
-  .cfb-item__media { display: flex; flex-direction: column; gap: var(--sp-8); margin-top: var(--sp-12); }
+  .cfb-item { display: flex; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-6) 0; border-top: 1px solid var(--stroke-3); }
+  .cfb-item:first-of-type { border-top: 0; }
+  .cfb-check { flex: 0 0 auto; margin-top: var(--sp-10); width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--stroke-1); border-radius: 50%; background: transparent; color: #fff; cursor: pointer; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .cfb-check:hover { border-color: var(--brand); }
+  .cfb-check:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .cfb-item.is-done .cfb-check { background: var(--status-success); border-color: var(--status-success); }
+  .cfb-item__main { flex: 1 1 auto; min-width: 0; }
+  .cfb-item__summary { display: flex; align-items: center; gap: var(--sp-10); width: 100%; padding: var(--sp-8) 0; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; border-radius: var(--r-6); }
+  .cfb-item__summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .cfb-item__heading { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-4); }
+  .cfb-item__policy { font-size: 11.5px; font-weight: 600; color: var(--brand); padding: 2px var(--sp-8); border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .cfb-item__title { font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.4; }
+  .cfb-item.is-done .cfb-item__title { color: var(--fg-3); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--fg-3) 55%, transparent); }
+  .cfb-item__tag { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--sp-4); font-size: 11px; font-weight: 600; color: var(--status-warning); background: color-mix(in srgb, var(--status-warning) 14%, transparent); padding: 2px var(--sp-8); border-radius: var(--r-full); }
+  .cfb-item__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  .cfb-item.is-open .cfb-item__chev { transform: rotate(180deg); }
+  .cfb-item__body { padding: 0 0 var(--sp-10); }
+  .cfb-item__note { font-size: 13px; line-height: 1.6; color: var(--fg-2); margin: 0 0 var(--sp-10); }
+  .cfb-item__media { display: flex; flex-direction: column; gap: var(--sp-8); }
+  @media (prefers-reduced-motion: reduce) { .cfb-check, .cfb-item__chev { transition: none; } }
   .cfb-media__chip { display: inline-flex; align-items: center; gap: var(--sp-8); align-self: flex-start; padding: var(--sp-6) var(--sp-10); border: 1px solid var(--stroke-2); border-radius: var(--r-6); background: var(--layer); color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
   .cfb-media__chip:hover { border-color: var(--brand); color: var(--fg-1); }
   .cfb-media__chip > iconify-icon:first-child { color: var(--brand); }
@@ -1520,13 +1531,6 @@
   .cfb-media__preview > iconify-icon { flex: 0 0 auto; color: var(--brand); }
   .cfb-media__preview strong { display: block; font-size: 13px; color: var(--fg-2); font-weight: 600; }
   .cfb-media__preview span { font-size: 12px; }
-  .cfb-item__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-14); flex-wrap: wrap; }
-  .cfb-item__foot--info { justify-content: flex-start; }
-  .cfb-item__area { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12px; color: var(--fg-3); min-width: 0; }
-  .cfb-item__area iconify-icon { flex: 0 0 auto; color: var(--fg-4); }
-  .cfb-item__hint { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12px; color: var(--fg-3); }
-  .cfb-item__hint iconify-icon { color: var(--brand); }
-  .cfb-item.is-done .cfb-item__title { color: var(--fg-2); }
   .ez-ckcert__mark--static { cursor: default; color: var(--status-warning); }
   .ez-ckcert--manual.is-done .ez-ckcert__mark--static { color: var(--status-success); }
   .ez-ckcert__tag { display: inline-block; margin-left: var(--sp-6); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--status-warning); background: color-mix(in srgb, var(--status-warning) 15%, transparent); padding: 1px 7px; border-radius: var(--r-full); vertical-align: 1px; }
@@ -1834,6 +1838,40 @@
   #exp-dialog fluent-dialog-body::part(content), #addon-dialog fluent-dialog-body::part(content) { overflow-y: auto; max-height: 66vh; }
   .exp-dialog__sub { margin: 0 0 var(--sp-16); font-size: 12.5px; line-height: 17px; color: var(--fg-3); }
   #exp-dialog .exp-form--dialog, #addon-dialog .exp-form--dialog { max-width: none; gap: var(--sp-16); }
+  /* Package flights sub-view + its create dialog (reuse the exp-/addon- primitives). */
+  #flights-panel[hidden] { display: none; }
+  #flight-dialog, #flight-dialog::part(control), #flight-dialog::part(dialog) { width: min(520px, 94vw); max-width: min(520px, 94vw); }
+  #flight-dialog fluent-dialog-body::part(content) { overflow-y: auto; max-height: 66vh; }
+
+  /* ===== Submission history (read-only timeline sub-view) ===== */
+  #history-panel[hidden] { display: none; }
+  .subhist__count { align-self: center; font-size: 12px; font-weight: 600; color: var(--fg-2); background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 3px 10px; white-space: nowrap; }
+  .subhist { display: flex; flex-direction: column; margin-top: var(--sp-8); }
+  .subhist__item { display: grid; grid-template-columns: 24px 1fr; gap: var(--sp-12); }
+  .subhist__rail { position: relative; display: flex; justify-content: center; }
+  .subhist__dot { width: 12px; height: 12px; border-radius: var(--r-full); background: var(--brand); margin-top: 18px; box-shadow: 0 0 0 4px var(--layer); z-index: 1; }
+  .subhist__item--muted .subhist__dot { background: var(--stroke-3); }
+  .subhist__line { position: absolute; top: 24px; bottom: -4px; left: 50%; width: 2px; transform: translateX(-50%); background: var(--stroke-2); }
+  .subhist__item:last-child .subhist__line { display: none; }
+  .subhist__card { display: block; width: 100%; min-width: 0; text-align: left; font: inherit; color: inherit; border: 1px solid var(--stroke-2); border-radius: 10px; background: var(--layer); padding: var(--sp-12) var(--sp-16); margin-bottom: var(--sp-12); cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .subhist__card:hover { border-color: var(--stroke-3); background: var(--subtle); }
+  .subhist__card:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .subhist__view { margin-top: 8px; display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--brand); }
+  .subhist__top { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
+  .subhist__ver { font-weight: var(--font-weight-semibold); color: var(--fg-1); font-size: 14px; }
+  .subhist__type { font-size: 11px; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: .03em; }
+  .subhist__badge { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--fg-2); }
+  .subhist__sdot { width: 8px; height: 8px; border-radius: var(--r-full); background: var(--fg-3); }
+  .subhist__badge--live { color: var(--status-success); }
+  .subhist__badge--live .subhist__sdot { background: var(--status-success); }
+  .subhist__badge--inreview { color: var(--brand); }
+  .subhist__badge--inreview .subhist__sdot { background: var(--brand); }
+  .subhist__badge--attention { color: var(--status-danger); }
+  .subhist__badge--attention .subhist__sdot { background: var(--status-danger); }
+  .subhist__badge--superseded { color: var(--fg-3); }
+  .subhist__badge--superseded .subhist__sdot { background: var(--fg-3); }
+  .subhist__meta { margin: 7px 0 0; font-size: 12.5px; color: var(--fg-3); display: flex; align-items: center; gap: 7px; }
+  .subhist__current { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--brand); border: 1px solid var(--stroke-2); border-radius: var(--r-full); padding: 1px 8px; margin-left: 2px; }
 
   /* ===== Add-ons (in-app products) manager ===== */
   #addons-panel[hidden] { display: none; }
@@ -3016,7 +3054,7 @@
   #flow-wrap.is-wizard { max-width: 1040px; padding: var(--sp-40) var(--sp-24) var(--sp-48); }
   @media (max-width: 600px) { #flow-wrap.is-wizard { padding: var(--sp-20) var(--sp-16) var(--sp-40); } }
   /* Back link sits on the canvas, above the banner — page nav, separate from the entity card. */
-  #flow-wrap.is-wizard > .ez-back { margin: 0 0 var(--sp-12); }
+  #flow-wrap.is-wizard > .ez-crumbs { margin: 0 0 var(--sp-12); }
 
   /* 3. THE BANNER BAND — app identity + tabs on one elevated Mica surface (no bottom pad so
         the tabs seat flush on its lower edge as the commanding layer). */
@@ -3346,16 +3384,24 @@
   @media (max-width: 640px) { .live-metrics { grid-template-columns: 1fr; } }
   /* "Once you're live" preview — shown below the cert card while a FIRST submission is in review, to
      tease the tools (add-ons, experiments, flights, analytics) that unlock once the app goes live. */
-  .live-preview { animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; }
-  .live-preview__badge { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); padding: var(--sp-4) var(--sp-10); border-radius: var(--r-full); margin-bottom: var(--sp-10); }
-  .live-preview__title { font-size: 16px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-2); }
-  .live-preview__sub { font-size: 13px; color: var(--fg-3); margin: 0; max-width: 62ch; line-height: 1.5; }
-  .live-preview__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); margin-top: var(--sp-16); }
-  .live-preview__card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-4); padding: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); }
-  .live-preview__card-ico { width: 36px; height: 36px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); margin-bottom: var(--sp-6); }
-  .live-preview__card-title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .live-preview { animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; margin-top: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 2%, var(--layer)); overflow: hidden; }
+  .live-preview__summary { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); cursor: pointer; list-style: none; }
+  .live-preview__summary::-webkit-details-marker { display: none; }
+  .live-preview__summary:hover { background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .live-preview__summary:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  .live-preview__badge { display: inline-flex; align-items: center; gap: var(--sp-6); flex: 0 0 auto; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); padding: var(--sp-4) var(--sp-10); border-radius: var(--r-full); }
+  .live-preview__title { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--fg-1); margin: 0; }
+  .live-preview__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  .live-preview[open] .live-preview__chev { transform: rotate(180deg); }
+  .live-preview__body { padding: 0 var(--sp-16) var(--sp-16); }
+  .live-preview__sub { font-size: 13px; color: var(--fg-3); margin: 0 0 var(--sp-12); max-width: 62ch; line-height: 1.5; }
+  .live-preview__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
+  .live-preview__card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-4); padding: var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-10); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); }
+  .live-preview__card-ico { width: 32px; height: 32px; border-radius: var(--r-8); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); margin-bottom: var(--sp-4); }
+  .live-preview__card-title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
   .live-preview__card-desc { font-size: 12.5px; color: var(--fg-3); line-height: 1.45; }
   @media (max-width: 640px) { .live-preview__grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .live-preview__chev { transition: none; } }
 
   /* Hide the demo design-variant (A/B/C/D) switcher in the integrated portal. */
   .design-switch { display: none !important; }
@@ -3623,9 +3669,12 @@
     <!-- SR announcer -->
     <div id="sr-announcer" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;"></div>
 
-    <!-- Page-level back navigation: sits above the entity banner, on the canvas (web convention —
-         page navigation is separate from the entity-identity header card). -->
-    <a class="ez-back" href="../store-portal.html#apps"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> <span class="ez-back__txt">Apps</span></a>
+    <!-- Page-level breadcrumb + back arrow: sits above the entity banner, on the canvas (web
+         convention — page navigation is separate from the entity-identity header card). -->
+    <nav class="ez-crumbs" id="ez-crumbs" aria-label="Breadcrumb">
+      <a class="ez-back" href="../store-portal.html#apps" aria-label="Go back one level"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>
+      <ol class="ez-crumbs__list" id="ez-crumbs-list"></ol>
+    </nav>
 
     <!-- V2 left-stepper layout: identity + vertical steps + submit stack into a sticky left rail;
          the step content sits in the right column. Two direct children of .wz-layout. -->
@@ -3657,8 +3706,8 @@
         <!-- Contextual header actions (submitted view only): Withdraw while in review, View in Store once published. -->
         <div class="wz-head-actions" id="wz-head-actions">
           <fluent-button appearance="secondary" id="head-review-btn" hidden>
-            <iconify-icon slot="start" icon="fluent:document-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Review details
+            <iconify-icon slot="start" icon="fluent:history-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            View submissions
           </fluent-button>
           <fluent-button appearance="secondary" id="head-withdraw-btn" hidden>
             <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -3924,7 +3973,7 @@
             </div>
           </div>
           <div class="sysreq-caps">
-            <span class="sysreq-caps__lbl">Also requires <span class="muted">(optional)</span></span>
+            <span class="sysreq-caps__lbl">Also requires</span>
             <div class="sysreq-chips" id="sysreq-caps">
               <button type="button" class="sysreq-chip" data-sr-cap="touch" aria-pressed="false"><iconify-icon icon="fluent:tap-single-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Touch screen</button>
               <button type="button" class="sysreq-chip" data-sr-cap="keyboard" aria-pressed="false"><iconify-icon icon="fluent:keyboard-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Keyboard</button>
@@ -4347,7 +4396,6 @@
               <button class="seg__opt seg__opt--active" data-value="all" type="button">All 240</button>
               <button class="seg__opt" data-value="choose" type="button">Choose markets</button>
             </div>
-            <p class="reach-row__hint" id="markets-all-hint">Auto-distribute to new markets as they open.</p>
             <div class="markets-choose-row" id="markets-choose-row" hidden>
               <span id="markets-chips-container" style="display:contents;"></span>
               <fluent-button appearance="secondary" size="small" id="markets-pick-btn">
@@ -4424,7 +4472,7 @@
             </div>
             <div class="price-paid-row" id="price-paid-row" hidden>
               <div class="price-field">
-                <label for="price-amount" class="price-field__label">Base price</label>
+                <label for="price-amount" class="price-field__label">Base price <span class="field-mark field-mark--req" aria-label="required">*</span></label>
                 <div class="price-field__inputs">
                   <fluent-dropdown id="price-currency" class="price-currency-dropdown" aria-label="Currency">
                     <fluent-listbox>
@@ -4470,7 +4518,7 @@
                  a clean, optional settings card. Each row opens its dialog; sale chips render below.
                  Sales stay hidden for Win32. Button ids + label spans preserved for the price JS. -->
             <div class="price-advanced" id="price-advanced" hidden>
-              <p class="price-adv__label">Advanced pricing <span class="price-adv__tag">Optional</span></p>
+              <p class="price-adv__label">Advanced pricing</p>
               <div class="price-toolcard">
                 <button type="button" class="price-tool" id="price-overrides-btn">
                   <span class="price-tool__ic"><iconify-icon icon="fluent:globe-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
@@ -4703,6 +4751,12 @@
       <!-- Add-ons (in-app products) manager — opened from the live hub "Manage add-ons" row. -->
       <div id="addons-panel" hidden></div>
 
+      <!-- Package flights (ship a preview build to a ring of testers) — opened from the live hub row. -->
+      <div id="flights-panel" hidden></div>
+
+      <!-- Submission history (read-only timeline of every version submitted) — opened from the live hub row. -->
+      <div id="history-panel" hidden></div>
+
       <div class="submit-strip" id="cert-actions" style="margin-top: var(--sp-16);">
         <div class="submit-strip__text">
           <h3 class="submit-strip__title">Need to make changes?</h3>
@@ -4824,6 +4878,36 @@
     <div id="addon-dialog-body"></div>
     <fluent-button slot="action" appearance="secondary" data-addon-dclose>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="addon-save" data-addon-save disabled>Create add-on</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Create a package flight (a pre-release ring of testers). Opened from the flights panel. -->
+<fluent-dialog id="flight-dialog" modal-type="modal" aria-labelledby="flight-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="flight-dialog-title">
+      <iconify-icon icon="fluent:airplane-take-off-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
+      New flight
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-flight-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="exp-dialog__sub">Name your flight and pick a ring. After it&rsquo;s created, upload a preview package from <strong>Update your app</strong> and invite your testers.</p>
+    <div class="exp-form exp-form--dialog">
+      <div class="field">
+        <label class="field__lbl" for="flight-name">Flight name</label>
+        <fluent-text-input id="flight-name" appearance="outline" placeholder="e.g. Beta ring" style="width:100%"></fluent-text-input>
+      </div>
+      <div class="field">
+        <label class="field__lbl">Ring</label>
+        <div class="addon-seg" id="flight-ring">
+          <button type="button" class="addon-seg__opt is-active" data-flight-ring="alpha" aria-pressed="true">Alpha</button>
+          <button type="button" class="addon-seg__opt" data-flight-ring="beta" aria-pressed="false">Beta</button>
+        </div>
+        <p class="addon-note">Alpha reaches your earliest testers; Beta is a wider pre-release ring.</p>
+      </div>
+    </div>
+    <fluent-button slot="action" appearance="secondary" data-flight-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="flight-create" data-flight-create>Create flight</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -4998,7 +5082,7 @@
   <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="grammar"><iconify-icon icon="fluent:text-grammar-checkmark-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix spelling &amp; grammar</button>
 </div>
 
-<!-- Autofill-with-AI dialog: describe the app in a line, draft description + category. -->
+<!-- Autofill-with-AI dialog: describe the app in a line, draft the full listing (description, short description, features, search keywords, category). -->
 <fluent-dialog id="ai-autofill-dialog" modal-type="modal" aria-labelledby="ai-autofill-title">
   <fluent-dialog-body>
     <span slot="title" id="ai-autofill-title">
@@ -5009,7 +5093,7 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <p class="ez-ai-dialog__intro" id="ai-dialog-intro">Describe your app in a line and we'll draft your description, category, search keywords, and feature highlights. You can edit everything after.</p>
+    <p class="ez-ai-dialog__intro" id="ai-dialog-intro">Describe your app in a line and we'll draft your description, short description, feature highlights, search keywords, and category. You can edit everything after.</p>
     <fluent-text-input id="ai-pitch" class="ez-ai-dialog__input" placeholder="e.g. A fast, private note-taking app"></fluent-text-input>
 
     <fluent-button slot="action" appearance="secondary" data-ai-close>Cancel</fluent-button>
@@ -6968,6 +7052,7 @@
     }
     function openIdentity() { renderRows(); try { dlg.show(); } catch (e) {} }
     function closeIdentity() { try { dlg.hide(); } catch (e) {} }
+    window.__openIdentityDialog = openIdentity;   // reused by the published hub (tdp-bridge) to grab identity for a new MSIX
     if (showBtn) showBtn.addEventListener('click', openIdentity);
     dlg.querySelectorAll('[data-identity-dialog-close]').forEach(el => el.addEventListener('click', closeIdentity));
     if (copyBtn) copyBtn.addEventListener('click', () => copyText(buildIdentitySnippet(), copyBtn));
@@ -7822,29 +7907,20 @@
   function ckRequiredIncomplete() { return CHECKLIST_ITEMS.filter(it => ckRequired(it) && !ckDone(it)); }
 
   // ---- Certification issues fold into THIS checklist ------------------------
-  // When a rejected app is being fixed, the cert issues become required checklist
-  // items in their section (Store listing), so the single header checklist is the
-  // one place that shows "what's left" — no separate panel taking over the editor.
-  // Each stays not-done (and gates "Submit for review") until the developer marks it
-  // fixed, and jumps straight to the field when its label is clicked.
-  let certFixActive = false, certFixInjected = false, certFailPkgIds = null;
+  // When a rejected app is being fixed, the cert issues appear as SELF-TRACKED,
+  // NON-BLOCKING checklist items (required:false) — a personal to-do list the
+  // developer ticks off as they address each note. Marking ≠ fixed (only re-review
+  // confirms), so it never gates "Submit for review": resubmit whenever you're ready.
+  let certFixActive = false, certFixInjected = false;
   const certFixed = {};
   function certIssuesLeft() { return (window.CERT_ISSUES || []).filter((_, i) => !certFixed[i]).length; }
-  // A "rebuild" issue (crash, security, perf) can't be ticked off in the form — it's resolved by
-  // fixing the project and uploading a NEW package, so it reads "done" only once a fresh package exists.
-  function certFailHasNewPackage() {
-    if (!certFailPkgIds) return false;
-    return (typeof packages !== 'undefined') && packages.some(function (p) { return p && !p._pending && !certFailPkgIds.has(p.id); });
-  }
   window.certFixActivate = function () {
-    certFailPkgIds = new Set((typeof packages !== 'undefined' ? packages : []).map(function (p) { return p.id; }));
     if (!certFixInjected) {
       (window.CERT_ISSUES || []).forEach(function (ci, i) {
-        var rebuild = ci.kind === 'rebuild';
         CHECKLIST_ITEMS.push({
           section: ci.section, label: ci.title, certFix: ci, certIdx: i, focus: ci.focus,
-          required: true, applies: () => certFixActive,
-          done: rebuild ? (function () { return certFailHasNewPackage(); }) : (function () { return !!certFixed[i]; })
+          required: false, applies: () => certFixActive,
+          done: function () { return !!certFixed[i]; }
         });
       });
       certFixInjected = true;
@@ -8030,8 +8106,8 @@
     if (certFixActive) {
       const tot = (window.CERT_ISSUES || []).length, left = certIssuesLeft();
       html = (left > 0
-        ? '<div class="ck-certnote"><iconify-icon icon="fluent:error-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon><span>Certification found <b>' + tot + '</b> ' + (tot === 1 ? 'issue' : 'issues') + ' — fix each and mark it done. <b>' + (tot - left) + ' of ' + tot + ' fixed</b>.</span></div>'
-        : '<div class="ck-certnote ck-certnote--done"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon><span>All <b>' + tot + '</b> certification ' + (tot === 1 ? 'issue' : 'issues') + ' fixed — resubmit when ready.</span></div>'
+        ? '<div class="ck-certnote"><iconify-icon icon="fluent:comment-multiple-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>Certification flagged <b>' + tot + '</b> ' + (tot === 1 ? 'issue' : 'issues') + ' to review — tick off what you’ve addressed (<b>' + (tot - left) + ' of ' + tot + '</b>). Resubmit whenever you’re ready.</span></div>'
+        : '<div class="ck-certnote ck-certnote--done"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon><span>You’ve ticked off all <b>' + tot + '</b> certification ' + (tot === 1 ? 'issue' : 'issues') + ' — resubmit when ready.</span></div>'
       ) + html;
     }
     panel.innerHTML = html;
@@ -8045,8 +8121,9 @@
   }
   const CERT_POLICIES_URL = 'https://learn.microsoft.com/en-us/windows/apps/publish/store-policies';
   const certMediaOpen = new Set();   // "i.j" reviewer-media previews expanded in the dialog (kept across re-renders)
+  const certExpanded = new Set();    // which cert issues are expanded in the dialog (index; kept across re-renders)
 
-  function certIsDone(it, i) { return it.kind === 'rebuild' ? certFailHasNewPackage() : !!certFixed[i]; }
+  function certIsDone(it, i) { return !!certFixed[i]; }
   function certTally() {
     const issues = (window.CERT_ISSUES || []);
     const fixed = issues.reduce(function (n, it, i) { return n + (certIsDone(it, i) ? 1 : 0); }, 0);
@@ -8067,8 +8144,8 @@
       '<div class="cert-banner__text">' +
         '<strong>' + (t.done ? 'Certification feedback addressed' : 'Certification feedback') + '</strong>' +
         '<span>' + (t.done
-          ? 'You\u2019ve addressed all ' + t.tot + ' items \u2014 you\u2019re ready to resubmit.'
-          : 'The reviewer flagged ' + t.tot + ' ' + (t.tot === 1 ? 'item' : 'items') + ' to address before you resubmit.') +
+          ? 'You\u2019ve ticked off all ' + t.tot + ' items \u2014 resubmit whenever you\u2019re ready.'
+          : 'The reviewer flagged ' + t.tot + ' ' + (t.tot === 1 ? 'item' : 'items') + ' \u2014 review them, then resubmit whenever you\u2019re ready.') +
         '</span>' +
       '</div>' +
       '<div class="cert-banner__meter"><span style="width:' + pct + '%"></span></div>' +
@@ -8078,52 +8155,54 @@
     el.hidden = false;
   }
 
-  // Fill the feedback dialog: one reviewer comment per block — policy reference + note + optional
-  // media (expand inline) + "Mark as addressed" (drives the same certFixed state + submit gate). A
-  // rebuild item can't be ticked off — it clears only when a new package is uploaded.
+  // Fill the feedback dialog as a self-tracked TO-DO CHECKLIST: each issue is a collapsed row
+  // (checkbox + policy + title); expanding it reveals the reviewer's note + any media. The checkbox
+  // is the developer's OWN progress marker (certFixed) — non-blocking, so they resubmit when ready.
   function renderCertDialog() {
     const host = document.getElementById('cfb-content');
     if (!host || !certFixActive) return;
     const t = certTally(), pct = t.tot ? Math.round(t.fixed / t.tot * 100) : 0;
     const items = t.issues.map(function (it, i) {
-      const d = certIsDone(it, i), rebuild = it.kind === 'rebuild';
+      const d = !!certFixed[i], rebuild = it.kind === 'rebuild', open = certExpanded.has(i);
       const media = (it.media || []).map(function (m, j) {
-        const key = i + '.' + j, open = certMediaOpen.has(key), isVid = m.type === 'video';
-        return '<div class="cfb-media' + (open ? ' is-open' : '') + '">' +
-          '<button type="button" class="cfb-media__chip" data-cfb-media="' + key + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+        const key = i + '.' + j, mo = certMediaOpen.has(key), isVid = m.type === 'video';
+        return '<div class="cfb-media' + (mo ? ' is-open' : '') + '">' +
+          '<button type="button" class="cfb-media__chip" data-cfb-media="' + key + '" aria-expanded="' + (mo ? 'true' : 'false') + '">' +
             '<iconify-icon icon="' + (isVid ? 'fluent:video-clip-16-regular' : 'fluent:image-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' + m.label +
             '<iconify-icon class="cfb-media__chev" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
           '</button>' +
-          (open ? '<div class="cfb-media__preview"><iconify-icon icon="' + (isVid ? 'fluent:video-clip-24-regular' : 'fluent:image-24-regular') + '" width="34" height="34" aria-hidden="true"></iconify-icon>' +
+          (mo ? '<div class="cfb-media__preview"><iconify-icon icon="' + (isVid ? 'fluent:video-clip-24-regular' : 'fluent:image-24-regular') + '" width="34" height="34" aria-hidden="true"></iconify-icon>' +
             '<div><strong>' + (isVid ? 'Reviewer recording' : 'Reviewer screenshot') + '</strong><span>Captured during certification (preview placeholder)</span></div></div>' : '') +
         '</div>';
       }).join('');
-      const badge = d
-        ? '<span class="cfb-item__badge is-done"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Addressed</span>'
-        : (rebuild ? '<span class="cfb-item__badge is-warn"><iconify-icon icon="fluent:wrench-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Needs a new package</span>' : '');
-      const foot = rebuild
-        ? '<div class="cfb-item__foot cfb-item__foot--info"><span class="cfb-item__hint"><iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Clears when you upload a new package.</span></div>'
-        : '<div class="cfb-item__foot">' +
-            (it.area ? '<span class="cfb-item__area"><iconify-icon icon="fluent:location-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' + it.area + '</span>' : '<span></span>') +
-            '<fluent-button appearance="' + (d ? 'subtle' : 'outline') + '" size="small" data-cfb-mark="' + i + '">' +
-              '<iconify-icon slot="start" icon="' + (d ? 'fluent:arrow-undo-16-regular' : 'fluent:checkmark-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
-              (d ? 'Undo' : 'Mark as addressed') + '</fluent-button>' +
-          '</div>';
-      return '<section class="cfb-item' + (d ? ' is-done' : '') + '">' +
-        '<div class="cfb-item__head">' +
-          '<a class="cfb-item__policy" href="' + CERT_POLICIES_URL + '" target="_blank" rel="noopener"><iconify-icon icon="fluent:book-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Policy ' + it.policy + ' \u00b7 ' + it.policyTitle + '</a>' +
-          badge +
+      const tag = rebuild ? '<span class="cfb-item__tag"><iconify-icon icon="fluent:wrench-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Needs a new package</span>' : '';
+      const body = open
+        ? '<div class="cfb-item__body">' +
+            '<p class="cfb-item__note">' + it.note + '</p>' +
+            (media ? '<div class="cfb-item__media">' + media + '</div>' : '') +
+          '</div>'
+        : '';
+      return '<div class="cfb-item' + (d ? ' is-done' : '') + (open ? ' is-open' : '') + '">' +
+        '<button type="button" class="cfb-check" data-cfb-mark="' + i + '" role="checkbox" aria-checked="' + (d ? 'true' : 'false') + '" aria-label="Mark as addressed">' +
+          '<iconify-icon icon="' + (d ? 'fluent:checkmark-16-filled' : '') + '" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+        '</button>' +
+        '<div class="cfb-item__main">' +
+          '<button type="button" class="cfb-item__summary" data-cfb-expand="' + i + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+            '<span class="cfb-item__heading">' +
+              '<span class="cfb-item__policy">Policy ' + it.policy + ' \u00b7 ' + it.policyTitle + '</span>' +
+              '<span class="cfb-item__title">' + it.title + '</span>' +
+            '</span>' +
+            tag +
+            '<iconify-icon class="cfb-item__chev" icon="fluent:chevron-down-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+          '</button>' +
+          body +
         '</div>' +
-        '<h3 class="cfb-item__title">' + it.title + '</h3>' +
-        '<p class="cfb-item__note">' + it.note + '</p>' +
-        (media ? '<div class="cfb-item__media">' + media + '</div>' : '') +
-        foot +
-      '</section>';
+      '</div>';
     }).join('');
     host.innerHTML =
       '<div class="cfb-intro">' +
-        '<p>The reviewer flagged these against <a href="' + CERT_POLICIES_URL + '" target="_blank" rel="noopener">Store Policy</a>. Update your details to match each note, then resubmit.</p>' +
-        '<div class="cfb-progress"><div class="cfb-progress__bar"><span style="width:' + pct + '%"></span></div><span class="cfb-progress__txt">' + (t.done ? 'All addressed' : t.fixed + ' of ' + t.tot + ' addressed') + '</span></div>' +
+        '<p>The reviewer flagged these against <a href="' + CERT_POLICIES_URL + '" target="_blank" rel="noopener">Store Policy</a>. Expand each to read the note, tick off what you\u2019ve addressed, and resubmit whenever you\u2019re ready \u2014 marking is just for your own tracking.</p>' +
+        '<div class="cfb-progress"><div class="cfb-progress__bar"><span style="width:' + pct + '%"></span></div><span class="cfb-progress__txt">' + (t.done ? 'All ticked off' : t.fixed + ' of ' + t.tot + ' ticked off') + '</span></div>' +
       '</div>' + items;
   }
 
@@ -8184,6 +8263,8 @@
     if (cfbMark) { const ci = parseInt(cfbMark.getAttribute('data-cfb-mark'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
     const cfbMedia = e.target.closest('[data-cfb-media]');
     if (cfbMedia) { const k = cfbMedia.getAttribute('data-cfb-media'); if (certMediaOpen.has(k)) certMediaOpen.delete(k); else certMediaOpen.add(k); renderCertDialog(); return; }
+    const cfbExpand = e.target.closest('[data-cfb-expand]');
+    if (cfbExpand) { const ei = parseInt(cfbExpand.getAttribute('data-cfb-expand'), 10); if (certExpanded.has(ei)) certExpanded.delete(ei); else certExpanded.add(ei); renderCertDialog(); return; }
     const ckfix = e.target.closest('[data-ckfix]');
     if (ckfix) { const ci = parseInt(ckfix.getAttribute('data-ckfix'), 10); certFixed[ci] = !certFixed[ci]; renderChecklists(); updateGate(); return; }
     const rptLink = e.target.closest('[data-cert-report-link]');
@@ -8663,6 +8744,7 @@
     return Array.from(set);
   }
   function hasAllCapabilityReasons() {
+    if (window.__reviewMode) return true;   // a live/past submission viewed read-only was already justified at certification
     return collectRestrictedCapabilities().every(c => (capabilityReasons[c] || '').trim().length > 0);
   }
 
@@ -10409,6 +10491,7 @@
     // The header title mirrors the listing's (shared, default-language) app name.
     const hdr = document.getElementById('app-name');
     if (hdr) hdr.textContent = (fName.value || '').trim() || (typeof app !== 'undefined' && app.name) || 'Untitled app';
+    try { if (window.__renderCrumbs) window.__renderCrumbs(); } catch (e) {}
     updateGate(); ezRenderPreview();
   }
   function syncDesc() {
@@ -10447,12 +10530,9 @@
   let aiDescOnly = false;
   function openAiDialog(mode) {
     // The Description chip drafts ONLY the description; the header button drafts the whole
-    // listing. And the dialog only lists the advanced fields (search keywords, feature
-    // highlights) when Advanced options are on — otherwise those sections aren't visible,
-    // so promising them is confusing. Keep the copy matched to what the developer can see.
+    // listing (description, short description, feature highlights, search keywords, category).
     aiDescOnly = (mode === 'desc');
     try {
-      const advOn = (document.getElementById('flow-wrap').getAttribute('data-mode') === 'advanced');
       const titleEl = document.getElementById('ai-dialog-title-text');
       const introEl = document.getElementById('ai-dialog-intro');
       const labelEl = document.getElementById('ai-autofill-label');
@@ -10460,9 +10540,7 @@
       if (labelEl) labelEl.textContent = aiDescOnly ? 'Draft description' : 'Autofill';
       if (introEl) introEl.textContent = aiDescOnly
         ? 'Describe your app in a line and we\u2019ll draft your description. You can edit it after.'
-        : advOn
-          ? 'Describe your app in a line and we\u2019ll draft your description, category, search keywords, and feature highlights. You can edit everything after.'
-          : 'Describe your app in a line and we\u2019ll draft your description and category. You can edit them after.';
+        : 'Describe your app in a line and we\u2019ll draft your description, short description, feature highlights, search keywords, and category. You can edit everything after.';
     } catch (e) {}
     // Seed the pitch from the packaged site's manifest so the draft starts from the real app.
     try {
@@ -11360,7 +11438,7 @@
     document.querySelectorAll('.ai-filling').forEach(el => el.classList.remove('ai-filling'));
     ezRenderPreview();
     announce(descOnly ? 'Description drafted with AI.'
-      : 'Listing drafted with AI: description, category, short summary, features, and search terms.');
+      : 'Listing drafted with AI: description, short description, features, search keywords, and category.');
   }
   $('ai-autofill').addEventListener('click', () => runAutofill(false));
 
@@ -12177,6 +12255,28 @@
   let ratingDraft = null;
   let ratingAppTypeDraft = null;   // so Cancel restores the app type too, not just the answers
 
+  // Gate "Preview rating" until the developer scrolls through the whole questionnaire, so no
+  // content questions are answered blind. Sticky once the end is reached; reset on a fresh open.
+  let ratingReachedEnd = false;
+  function ratingScrollEl() {
+    const body = document.querySelector('#rating-dialog fluent-dialog-body');
+    return (body && body.shadowRoot) ? body.shadowRoot.querySelector('[part~="content"]') : null;
+  }
+  function updateRatingPreviewGate() {
+    const pb = $('rating-preview-btn');
+    if (!pb || pb.hidden) return;   // only phase 1's action is gated (it's hidden in the preview phase)
+    const sc = ratingScrollEl();
+    if (!sc) ratingReachedEnd = true;   // can't find the scroller → don't block
+    else if (sc.clientHeight > 0 && sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) ratingReachedEnd = true;
+    pb.disabled = !ratingReachedEnd;
+    if (pb.disabled) pb.title = 'Scroll through all the questions to preview your rating.';
+    else pb.removeAttribute('title');
+  }
+  function wireRatingScrollGate() {
+    const sc = ratingScrollEl();
+    if (sc && !sc.__ratingGateWired) { sc.__ratingGateWired = true; sc.addEventListener('scroll', updateRatingPreviewGate, { passive: true }); }
+  }
+
   function renderRatingQuestions(answers) {
     if (!ratingMount) return;
     const note = RATING_SCOPE_NOTE[ratingAppType];
@@ -12238,6 +12338,7 @@
         }
       });
     });
+    updateRatingPreviewGate();   // re-gate: answering can add/remove sub-questions → the scroll height changes
   }
 
   // Question 1: app type. Changing it swaps which sections are asked below, so the whole
@@ -12299,7 +12400,11 @@
       ? 'These are your confirmed answers. Change anything to update the rating.'
       : "Answer these questions about your app's content. The rating updates as you change answers.";
     ratingPhase('questions');
+    ratingReachedEnd = false;
+    const pgb = $('rating-preview-btn'); if (pgb) { pgb.disabled = true; pgb.title = 'Scroll through all the questions to preview your rating.'; }
     try { ratingDialog.show(); } catch (e) {}
+    setTimeout(() => { wireRatingScrollGate(); updateRatingPreviewGate(); }, 60);
+    setTimeout(updateRatingPreviewGate, 320);   // safety re-check once the dialog has laid out
   }
   function closeRatingDialog(restore) {
     if (restore && ratingDraft) { contentAnswers = ratingDraft; ratingAppType = ratingAppTypeDraft; }
@@ -12486,7 +12591,8 @@
   window.__certStagesHTML = certStagesHTML; window.__certStripHTML = certStripHTML;   // let the portal (tdp-bridge) reuse the same timeline
   // While a FIRST submission is in certification, preview the tools that unlock once the app goes live
   // (add-ons, experiments, flights, analytics) — a positive "what's next", not a locked wall.
-  function certLivePreviewHTML() {
+  function certLivePreviewHTML(opts) {
+    var collapsed = !!(opts && opts.collapsed);
     var name = (typeof demoCertName === 'function') ? demoCertName() : 'your app';
     var items = [
       ['fluent:beaker-20-regular', 'Product page experiments', 'A/B test your Store listing to see what converts best.'],
@@ -12501,14 +12607,17 @@
         '<span class="live-preview__card-desc">' + it[2] + '</span>' +
       '</div>';
     }).join('');
-    return '<section class="live-preview" aria-label="What unlocks once your app is live">' +
-      '<div class="live-preview__head">' +
+    return '<details class="live-preview"' + (collapsed ? '' : ' open') + '>' +
+      '<summary class="live-preview__summary">' +
         '<span class="live-preview__badge"><iconify-icon icon="fluent:rocket-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Once you\u2019re live</span>' +
-        '<h3 class="live-preview__title">A few things unlock when ' + name + ' goes live</h3>' +
+        '<span class="live-preview__title">A few things unlock when ' + name + ' goes live</span>' +
+        '<iconify-icon class="live-preview__chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '</summary>' +
+      '<div class="live-preview__body">' +
         '<p class="live-preview__sub">Nothing to set up \u2014 these turn on automatically the moment your app passes certification.</p>' +
+        '<div class="live-preview__grid">' + cards + '</div>' +
       '</div>' +
-      '<div class="live-preview__grid">' + cards + '</div>' +
-    '</section>';
+    '</details>';
   }
   window.__certLivePreviewHTML = certLivePreviewHTML;
   function demoCertPassedHTML(isUpdate) {
@@ -12562,7 +12671,7 @@
       try { renderCertRollout(); } catch (e) {}
     } else if (view === 'failed') {
       if (prog) prog.hidden = true;
-      if (res) { res.hidden = false; res.innerHTML = demoCertFailedHTML(isUpdate); }
+      if (res) { res.hidden = false; res.innerHTML = demoCertFailedHTML(isUpdate) + (isUpdate ? '' : certLivePreviewHTML({ collapsed: true })); }   // new app: still tease what unlocks, collapsed
       if (act) act.hidden = true;
       if (roll) roll.hidden = true;
       demoCertPill('Action needed', 'rejected');
@@ -12980,6 +13089,7 @@
           all[idx].submissionIsUpdate = !!inUpdateFlow;   // the cert view reads THIS (not "app was ever live") so a plain published app previews as a new app
           localStorage.setItem('msstore.apps', JSON.stringify(all));
         }
+        try { recordSubmission(!!inUpdateFlow); } catch (e) {}   // log this package in the app's submission history
         saveFlowData();   // persist the full editor state so Review / Update rehydrate on reload
       } catch (e) {}
       try { submitDlg.hide(); } catch (e) {}
@@ -12990,6 +13100,13 @@
       $('state-done').hidden = false;
       try { renderCertRollout(); relabelUpdateCancel(); } catch (e) {}
       try { if (!CERT_HAS_PORTAL) demoCertView('progress'); } catch (e) {}
+      // Update submitted: we're done EDITING, so leave the update sub-view — this drops is-subview and
+      // reveals the app-identity header (icon + name + state) in every submitted state (in review /
+      // published / needs attention). The cert view still knows it's an update from the PERSISTED
+      // submissionIsUpdate flag (msstore.apps + the in-memory app), not inUpdateFlow.
+      if (app) app.submissionIsUpdate = !!inUpdateFlow;
+      inUpdateFlow = false; window.__inUpdateFlow = false;
+      try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
       const pill = $('app-status');
       if (pill) { pill.textContent = 'In review'; pill.className = 'status-pill status-pill--in-review'; }
       announce('Submitted for review. Certification in progress.');
@@ -13042,6 +13159,10 @@
     $('state-done').hidden = true;
     $('editor').hidden = false;
     $('submit-bar').hidden = true;
+    // A completed/live submission is already done - re-render so review mode reads as complete
+    // (restricted capabilities show as justified, no "action needed" prompts).
+    try { if (typeof renderPackages === 'function') renderPackages(); } catch (e) {}
+    try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}
     try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
     announce('Viewing your published app \u2014 read-only. Select a step to review it.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
@@ -13055,12 +13176,17 @@
     // Same as exitUpdateToHub: re-assert the published result before #state-done is revealed.
     try { var d = $('state-done'); if (d) d.__result = 'passed'; } catch (e) {}
     $('state-done').hidden = false;
+    // Opened from the submissions list — it's still mounted underneath, so return to it, not the hub.
+    if (reviewFromHistory) { reviewFromHistory = false; window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' }); return; }
     try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e) {}
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
   // From read-only review \u2192 editable update: drop review mode, then hand off to the update flow.
   function updateFromReview() {
     reviewMode = false; window.__reviewMode = false;
+    reviewFromHistory = false;
+    try { if (typeof renderPackages === 'function') renderPackages(); } catch (e) {}   // back to the real (editable) capability state before the update flow
+    try { if (typeof closeHistoryPanel === 'function') closeHistoryPanel(); } catch (e) {}   // leaving the list for the update flow — restore the hub underneath
     try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
     if (typeof window.startAppUpdate === 'function') window.startAppUpdate();
   }
@@ -13084,10 +13210,37 @@
   (function () {
     var back = document.querySelector('.ez-back'); if (!back) return;
     function panelOpen(id) { var p = document.getElementById(id); return !!(p && !p.hidden); }
-    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel')); }
-    function syncBackLabel() {
-      var txt = back.querySelector('.ez-back__txt'); if (!txt) return;
-      txt.textContent = inSubview() ? ((fName && fName.value.trim()) || (app && app.name) || 'Overview') : 'Apps';
+    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel') || panelOpen('flights-panel') || panelOpen('history-panel')); }
+    function subviewTitle() {
+      if (panelOpen('experiments-panel')) return 'Product page experiments';
+      if (panelOpen('addons-panel')) return 'Manage add-ons';
+      if (panelOpen('flights-panel')) return 'Package flights';
+      if (panelOpen('history-panel')) return 'View submissions';
+      if (window.__inUpdateFlow) return 'Update your app';
+      return '';
+    }
+    function appCrumbName() { return (fName && fName.value.trim()) || (app && app.name) || 'New app'; }
+    // Full trail: Apps / App / Sub-view (read-only submission details nest one deeper). Every level
+    // except the last is a jump link; the last is the current page.
+    function buildCrumbs() {
+      var crumbs = [{ label: 'Apps', href: '../store-portal.html#apps' }];
+      if (!inSubview()) { crumbs.push({ label: appCrumbName(), current: true }); return crumbs; }
+      crumbs.push({ label: appCrumbName(), action: 'home' });
+      if (window.__reviewMode) {
+        crumbs.push({ label: 'View submissions', action: 'exitReview' });
+        crumbs.push({ label: reviewSubLabel || 'Submission details', current: true });
+      } else {
+        crumbs.push({ label: subviewTitle() || appCrumbName(), current: true });
+      }
+      return crumbs;
+    }
+    function renderCrumbs() {
+      var listEl = document.getElementById('ez-crumbs-list'); if (!listEl) return;
+      listEl.innerHTML = buildCrumbs().map(function (c) {
+        if (c.current) return '<li class="ez-crumbs__item"><span class="ez-crumbs__current" aria-current="page">' + expEsc(c.label) + '</span></li>';
+        if (c.href) return '<li class="ez-crumbs__item"><a class="ez-crumbs__link" href="' + c.href + '">' + expEsc(c.label) + '</a></li>';
+        return '<li class="ez-crumbs__item"><a class="ez-crumbs__link" href="#" data-crumb="' + (c.action || '') + '">' + expEsc(c.label) + '</a></li>';
+      }).join('');
     }
     // In an L2 sub-view, drop the app-identity header \u2014 the breadcrumb + the sub-view's own title
     // carry context. Guard the write so toggling is-subview doesn't re-trigger our #flow-wrap observer.
@@ -13096,20 +13249,34 @@
       var want = inSubview();
       if (want !== fw.classList.contains('is-subview')) fw.classList.toggle('is-subview', want);
     }
-    function onViewChange() { syncSubviewChrome(); syncBackLabel(); }
+    function onViewChange() { syncSubviewChrome(); renderCrumbs(); }
+    window.__renderCrumbs = renderCrumbs;
+    var crumbList = document.getElementById('ez-crumbs-list');
+    if (crumbList) crumbList.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-crumb]'); if (!a) return;
+      e.preventDefault();
+      var c = a.getAttribute('data-crumb');
+      if (c === 'home') { if (typeof window.__appHome === 'function') window.__appHome(); }
+      else if (c === 'exitReview' && typeof exitReviewDetails === 'function') { exitReviewDetails(); }
+    });
     back.addEventListener('click', function (e) {
+      if (window.__reviewMode && typeof exitReviewDetails === 'function') { e.preventDefault(); exitReviewDetails(); return; }
       if (panelOpen('experiments-panel') && typeof exitExperiments === 'function') { e.preventDefault(); exitExperiments(); return; }
       if (panelOpen('addons-panel') && typeof exitAddons === 'function') { e.preventDefault(); exitAddons(); return; }
-      if (window.__reviewMode && typeof exitReviewDetails === 'function') { e.preventDefault(); exitReviewDetails(); return; }
+      if (panelOpen('flights-panel') && typeof exitFlights === 'function') { e.preventDefault(); exitFlights(); return; }
+      if (panelOpen('history-panel') && typeof exitHistory === 'function') { e.preventDefault(); exitHistory(); return; }
       if (window.__inUpdateFlow) { e.preventDefault(); exitUpdateToHub(); return; }
       // else: on the hub / draft editor \u2014 follow the href to the Apps list.
     });
     // Return to THIS app's hub from any sub-view — exposed for the app-scope sidebar (tdp-bridge),
     // using the same exits the back arrow uses. No-op when already on the hub.
     window.__appHome = function () {
+      // Read-only details can sit on top of the submissions list — clear it (a full exit) first.
+      if (window.__reviewMode && typeof exitReviewDetails === 'function') { reviewFromHistory = false; exitReviewDetails(); }
       if (panelOpen('experiments-panel') && typeof exitExperiments === 'function') { exitExperiments(); }
       else if (panelOpen('addons-panel') && typeof exitAddons === 'function') { exitAddons(); }
-      else if (window.__reviewMode && typeof exitReviewDetails === 'function') { exitReviewDetails(); }
+      else if (panelOpen('flights-panel') && typeof exitFlights === 'function') { exitFlights(); }
+      else if (panelOpen('history-panel') && typeof exitHistory === 'function') { exitHistory(); }
       else if (window.__inUpdateFlow && typeof exitUpdateToHub === 'function') { exitUpdateToHub(); }
       onViewChange();
     };
@@ -13118,7 +13285,7 @@
     try {
       var mo = new MutationObserver(onViewChange);
       var fw = document.getElementById('flow-wrap'); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ['class'] });
-      ['experiments-panel', 'addons-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
+      ['experiments-panel', 'addons-panel', 'flights-panel', 'history-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
     } catch (e) {}
     onViewChange();
   })();
@@ -13616,6 +13783,244 @@
       dlg.addEventListener('toggle', function (e) { if (e.detail && e.detail.newState === 'closed') addonDraft = null; });
     }
   })();
+
+  // ---- Package flights: ship a preview package to a ring of testers before a full rollout. A second-
+  //      level sub-view (like Product page experiments / Add-ons): own zero state + "Create flight"
+  //      action; created flights persist per app (tdp.flights.<id>) and surface a count in the hub row. ----
+  let flights = [];
+  var flightDraft = null, _flightsHidden = [];
+  function flightKey() { return (app && app.id != null) ? 'tdp.flights.' + app.id : null; }
+  function loadFlights() { try { flights = JSON.parse(localStorage.getItem(flightKey()) || '[]'); } catch (e) { flights = []; } if (!Array.isArray(flights)) flights = []; }
+  function saveFlights() { try { var k = flightKey(); if (k) localStorage.setItem(k, JSON.stringify(flights)); } catch (e) {} }
+  window.startFlights = function () {
+    loadFlights();
+    flightDraft = null;
+    var panel = $('flights-panel'); if (!panel) return;
+    _flightsHidden = [];
+    var sd = $('state-done');
+    if (sd) Array.prototype.forEach.call(sd.children, function (ch) {
+      if (ch.id === 'flights-panel') return;
+      _flightsHidden.push([ch, ch.hidden]); ch.hidden = true;
+    });
+    panel.hidden = false;
+    renderFlights();
+    announce('Package flights.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
+  function exitFlights() {
+    if ($('flights-panel')) $('flights-panel').hidden = true;
+    _flightsHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+    _flightsHidden = [];
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  function renderFlights() { var p = $('flights-panel'); if (!p) return; p.innerHTML = flightsListHTML(); }
+  function flightsListHTML() {
+    var head = '<div class="exp__head">' +
+      '<div class="exp__htext"><h2 class="exp__title">Package flights</h2>' +
+      '<p class="exp__sub">Ship a preview package to a group of testers before a full rollout \u2014 catch issues on a ring of real devices first.</p></div>' +
+      (flights.length ? '<fluent-button appearance="primary" data-flight-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New flight</fluent-button>' : '') +
+      '</div>';
+    var body = flights.length
+      ? '<div class="addon-list">' + flights.map(flightCardHTML).join('') + '</div>'
+      : '<div class="exp-empty">' + spotArt('arrow-upload', 'exp-empty__art') +
+        '<h3 class="exp-empty__title">Test a build before everyone gets it</h3>' +
+        '<p class="exp-empty__sub">Create a flight to roll out a preview package to a ring of testers \u2014 gather feedback and catch issues before the full rollout.</p>' +
+        '<fluent-button appearance="primary" data-flight-new><iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Create flight</fluent-button></div>';
+    return '<div class="exp">' + head + body + '</div>';
+  }
+  function flightCardHTML(f) {
+    var ring = f.ring === 'beta' ? 'Beta' : 'Alpha';
+    return '<div class="addon-card" data-flight-id="' + f.id + '">' +
+      '<span class="addon-card__ico addon-card__ico--unlock"><iconify-icon icon="fluent:airplane-take-off-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="addon-card__body"><div class="addon-card__top"><strong class="addon-card__name">' + expEsc(f.name) + '</strong>' +
+      '<span class="addon-status addon-status--live">' + ring + ' ring</span></div>' +
+      '<span class="addon-card__meta">No package yet \u2014 upload one from Update your app</span></div>' +
+      '<span class="addon-card__acts">' +
+        '<fluent-button appearance="subtle" size="small" data-flight-del="' + f.id + '" aria-label="Delete ' + expEsc(f.name) + '"><iconify-icon icon="fluent:delete-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>' +
+      '</span></div>';
+  }
+  function flightNameVal() {
+    var el = $('flight-name'); if (!el) return '';
+    var sh = el.shadowRoot && el.shadowRoot.querySelector('input');
+    return ((sh && sh.value) || el.value || (flightDraft && flightDraft.name) || '').trim();
+  }
+  function syncFlightRing() {
+    Array.prototype.forEach.call(document.querySelectorAll('#flight-ring [data-flight-ring]'), function (b) {
+      var on = !!flightDraft && b.getAttribute('data-flight-ring') === flightDraft.ring;
+      b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function openFlightDialog() {
+    flightDraft = { name: '', ring: 'alpha' };
+    var nameEl = $('flight-name'); if (nameEl) { try { nameEl.value = ''; } catch (e) {} }
+    syncFlightRing();
+    var dlg = $('flight-dialog'); if (dlg && dlg.show) dlg.show();
+    setTimeout(function () { try { $('flight-name').focus(); } catch (e) {} }, 60);
+  }
+  function closeFlightDialog() { var dlg = $('flight-dialog'); if (dlg && dlg.hide) dlg.hide(); }
+  function createFlight() {
+    var ring = (flightDraft && flightDraft.ring) || 'alpha';
+    var name = flightNameVal() || (ring === 'beta' ? 'Beta ring' : 'Alpha ring');
+    flights.unshift({ id: 'flt-' + Date.now().toString(36), name: name, ring: ring, status: 'active', created: Date.now() });
+    saveFlights();
+    closeFlightDialog(); flightDraft = null;
+    renderFlights();
+    announce('Flight \u201c' + name + '\u201d created \u2014 upload a preview package from Update your app.');
+  }
+  (function wireFlights() {
+    var p = $('flights-panel');
+    if (p) p.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-flight-new]')) { openFlightDialog(); return; }
+      var dl = t.closest('[data-flight-del]'); if (dl) { var fid = dl.getAttribute('data-flight-del'); flights = flights.filter(function (x) { return x.id !== fid; }); saveFlights(); renderFlights(); announce('Flight removed.'); return; }
+    });
+    var dlg = $('flight-dialog');
+    if (dlg) {
+      dlg.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t.closest('[data-flight-close]')) { closeFlightDialog(); return; }
+        var r = t.closest('[data-flight-ring]'); if (r) { if (flightDraft) { flightDraft.ring = r.getAttribute('data-flight-ring'); syncFlightRing(); } return; }
+        if (t.closest('[data-flight-create]')) { createFlight(); return; }
+      });
+      dlg.addEventListener('input', function (e) { if (flightDraft && e.target && e.target.id === 'flight-name') flightDraft.name = e.target.value; });
+      dlg.addEventListener('toggle', function (e) { if (e.detail && e.detail.newState === 'closed') flightDraft = null; });
+    }
+  })();
+
+  // ---- Submission history: a read-only timeline of every package submitted for this app (newest
+  //      first). Lives in the Updates group; the hub row shows the count ("5 submissions"). Recorded
+  //      on each submit; a live app opened with no record yet gets a believable baseline so the
+  //      history is never empty and the count is consistent everywhere. ----
+  var _histHidden = [], reviewFromHistory = false, reviewSubLabel = '';
+  function subKey() { return (app && app.id != null) ? 'tdp.submissions.' + app.id : null; }
+  function readSubs() { try { var a = JSON.parse(localStorage.getItem(subKey()) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function writeSubs(a) { try { var k = subKey(); if (k) localStorage.setItem(k, JSON.stringify(a)); } catch (e) {} }
+  function appIsLive() {
+    try {
+      var done = document.getElementById('state-done');
+      if (done && done.__result === 'passed') return true;
+      if (app && app.submissionIsUpdate) return true;
+      if (app && localStorage.getItem('tdp.everLive.' + app.id) === '1') return true;
+      return ((app && app.status) || '') === 'published';
+    } catch (e) { return false; }
+  }
+  // Fill an empty record for a live app with a believable baseline (created + two past updates), once.
+  // Idempotent: a real submit writes entries first, so ensureSubs then leaves the real history alone.
+  function ensureSubs() {
+    var subs = readSubs();
+    if (subs.length || !appIsLive()) return subs;
+    var day = 86400000, now = Date.now();
+    subs = [
+      { id: 's3', type: 'update', v: '1.2.0', date: now - 12 * day, status: 'published' },
+      { id: 's2', type: 'update', v: '1.1.0', date: now - 46 * day, status: 'published' },
+      { id: 's1', type: 'new', v: '1.0.0', date: now - 92 * day, status: 'published' }
+    ];
+    writeSubs(subs);
+    return subs;
+  }
+  window.__ensureSubs = ensureSubs;
+  function nextSubVersion(subs) {
+    var m = /^(\d+)\.(\d+)\.(\d+)/.exec((subs && subs[0] && subs[0].v) || '');
+    return m ? (m[1] + '.' + (parseInt(m[2], 10) + 1) + '.0') : '1.0.0';
+  }
+  // Called from doSubmit: log this submission at the top of the history (status settles from the
+  // live cert state when the timeline renders).
+  function recordSubmission(isUpdate) {
+    var subs = ensureSubs();
+    subs.unshift({ id: 'sub-' + Date.now().toString(36), type: isUpdate ? 'update' : 'new', v: nextSubVersion(subs), date: Date.now(), status: 'inreview' });
+    writeSubs(subs);
+  }
+  function currentSubStatus() {
+    var done = document.getElementById('state-done'), r = done && done.__result;
+    if (r === 'passed') return 'published';
+    if (r === 'failed') return 'attention';
+    if (r === 'progress') return 'inreview';
+    return 'published';
+  }
+  function subStatusMeta(s) {
+    if (s === 'inreview') return { cls: 'inreview', label: 'In review' };
+    if (s === 'attention') return { cls: 'attention', label: 'Needs attention' };
+    if (s === 'superseded') return { cls: 'superseded', label: 'Superseded' };
+    return { cls: 'live', label: 'Live' };   // the current store version (only the newest published one)
+  }
+  function fmtSubDate(ms) { try { return new Date(ms).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } }
+  window.startHistory = function () {
+    var panel = $('history-panel'); if (!panel) return;
+    _histHidden = [];
+    var sd = $('state-done');
+    if (sd) Array.prototype.forEach.call(sd.children, function (ch) {
+      if (ch.id === 'history-panel') return;
+      _histHidden.push([ch, ch.hidden]); ch.hidden = true;
+    });
+    panel.hidden = false;
+    renderHistory();
+    announce('Submission history.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
+  function closeHistoryPanel() {
+    if ($('history-panel')) $('history-panel').hidden = true;
+    _histHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+    _histHidden = [];
+  }
+  function exitHistory() {
+    closeHistoryPanel();
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  function renderHistory() { var p = $('history-panel'); if (!p) return; p.innerHTML = historyListHTML(); }
+  function historyListHTML() {
+    var subs = ensureSubs();
+    var latestStatus = subs.length ? currentSubStatus() : 'published';
+    // Only ONE version is live at a time: the newest PUBLISHED submission. If the newest is still in
+    // review or needs attention, the previously published one is live; anything older is superseded.
+    var liveIndex = (latestStatus === 'published') ? 0 : 1;
+    var head = '<div class="exp__head">' +
+      '<div class="exp__htext"><h2 class="exp__title">Submission history</h2>' +
+      '<p class="exp__sub">Every package you\u2019ve submitted for this app, newest first \u2014 with its version, date, and status.</p></div>' +
+      (subs.length ? '<span class="subhist__count">' + subs.length + ' submission' + (subs.length === 1 ? '' : 's') + '</span>' : '') +
+      '</div>';
+    var body = subs.length
+      ? '<div class="subhist">' + subs.map(function (s, i) { return historyRowHTML(s, i, latestStatus, liveIndex); }).join('') + '</div>'
+      : '<div class="exp-empty">' + spotArt('arrow-upload', 'exp-empty__art') +
+        '<h3 class="exp-empty__title">No submissions yet</h3>' +
+        '<p class="exp-empty__sub">When you submit a package for review, it\u2019ll show up here as a version in your history.</p></div>';
+    return '<div class="exp">' + head + body + '</div>';
+  }
+  function historyRowHTML(s, i, latestStatus, liveIndex) {
+    var isLatest = i === 0;
+    // Live = the current store version (newest published); older published entries are superseded.
+    var status = isLatest ? (latestStatus === 'published' ? 'live' : latestStatus)
+      : (i === liveIndex ? 'live' : 'superseded');
+    var meta = subStatusMeta(status);
+    var type = s.type === 'new' ? 'New app' : 'Update';
+    return '<div class="subhist__item' + (status === 'superseded' ? ' subhist__item--muted' : '') + '">' +
+      '<div class="subhist__rail"><span class="subhist__dot"></span><span class="subhist__line"></span></div>' +
+      '<button type="button" class="subhist__card" data-sub-open="' + expEsc(s.id) + '">' +
+        '<div class="subhist__top">' +
+          '<span class="subhist__ver">Version ' + expEsc(s.v) + '</span>' +
+          '<span class="subhist__type">' + type + '</span>' +
+          '<span class="subhist__badge subhist__badge--' + meta.cls + '"><span class="subhist__sdot"></span>' + meta.label + '</span>' +
+        '</div>' +
+        '<span class="subhist__meta">' +
+          '<iconify-icon icon="fluent:calendar-ltr-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' +
+          'Submitted ' + fmtSubDate(s.date) +
+          (isLatest ? '<span class="subhist__current">Latest</span>' : '') +
+        '</span>' +
+        '<span class="subhist__view">View details<iconify-icon icon="fluent:chevron-right-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon></span>' +
+      '</button>' +
+    '</div>';
+  }
+  // Click a submission → open the existing read-only "published details" view; remember we came from
+  // the list so Done / back returns here rather than jumping to the hub.
+  (function wireHistory() {
+    var p = $('history-panel');
+    if (p) p.addEventListener('click', function (e) {
+      var card = e.target.closest('[data-sub-open]'); if (!card) return;
+      reviewFromHistory = true;
+      var ver = card.querySelector('.subhist__ver');
+      reviewSubLabel = ver ? ver.textContent.trim() : 'Submission details';
+      goReviewDetails();
+    });
+  })();
   function openSubmitFlow() {
     if ($('submit').disabled) return;
     // Reset the confirm button first — a previous submit left it disabled + "Submitting…", which
@@ -13736,7 +14141,7 @@
   // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store (published) is a demo stub.
   if ($('head-withdraw-btn')) $('head-withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('head-viewstore-btn')) $('head-viewstore-btn').addEventListener('click', () => announce('Opening your Store listing…'));
-  if ($('head-review-btn')) $('head-review-btn').addEventListener('click', goReviewDetails);
+  if ($('head-review-btn')) $('head-review-btn').addEventListener('click', function () { if (typeof window.startHistory === 'function') window.startHistory(); });
   if ($('review-done-btn')) $('review-done-btn').addEventListener('click', exitReviewDetails);
   if ($('review-update-btn')) $('review-update-btn').addEventListener('click', updateFromReview);
 
@@ -13813,14 +14218,11 @@
       setSeg('markets', adv.markets.mode);
       const choose = adv.markets.mode === 'choose';
       $('markets-choose-row').hidden = !choose;
-      $('markets-newregions-row').hidden = !choose;
-      $('markets-all-hint').hidden = adv.markets.mode !== 'all';
-      if (choose) {
-        // Fluent checkbox renders its tick only once :state(checked) is set via a real toggle — the
-        // `checked` attribute/property alone won't show it — so drive the default with a click.
-        const nr = $('markets-new-regions');
-        if (nr && !!nr.checked !== (adv.markets.newRegions !== false)) nr.click();
-      }
+      $('markets-newregions-row').hidden = false;   // new-regions applies to All 240 and Choose alike
+      // Fluent checkbox renders its tick only once :state(checked) is set via a real toggle — the
+      // `checked` attribute/property alone won't show it — so drive the default with a click.
+      const nr = $('markets-new-regions');
+      if (nr && !!nr.checked !== (adv.markets.newRegions !== false)) nr.click();
       renderMarketChips();
     }
 
@@ -13943,6 +14345,12 @@
     if (durEl) durEl.value = adv.trial.duration;
 
     applyMarkets(); applyAudience(); applyPrice();
+    // Fluent checkbox upgrades async — the boot-time applyMarkets can run before #markets-new-regions
+    // is defined, so its default tick wouldn't render. Re-sync once it's ready (now that the
+    // new-regions checkbox is visible in the All 240 view too).
+    if (window.customElements && customElements.whenDefined) {
+      customElements.whenDefined('fluent-checkbox').then(() => { try { applyMarkets(); } catch (e) {} });
+    }
 
     // Let the dialogs refresh the reach UI after saving selections.
     window.__reachRefresh = { markets: applyMarkets, groups: renderGroupChips, price: applyPrice, audience: applyAudience };
