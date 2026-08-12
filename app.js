@@ -4,8 +4,8 @@
 
   /* ----- Destination URLs ----- */
   var ROUTES = window.MKT_ROUTES || {
-    create: "portal.html#signin",
-    portal: "portal.html#signin"
+    create: "signup.html?from=wdp",
+    portal: "developer-portal.html?src=wdp&signin=1#certificates"
   };
 
   /* ----- Inline icons rendered as CSS mask-style backgrounds ----- */

@@ -25,12 +25,12 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=2" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=29" defer></script>
+<script src="tdp-bridge.js?v=59" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
      design-mode switch). Defined once here so the two stops aren't duplicated as raw hex. */
-  :root { --ai-blue: #4C8BF5; --ai-lavender: #B794F4; }
+  :root { --ai-blue: #4C8BF5; --ai-lavender: #B794F4; --topbar-h: 56px; }   /* --topbar-h matches the portal's 56px header height */
 
   /* ===================== Easy-mode layout (Variant C) =====================
      Deliberately stripped: no left rail, a single calm centered column, only
@@ -42,8 +42,11 @@
   .ez-head { margin-bottom: var(--sp-24); }
   .ez-head__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-24); flex-wrap: wrap; }
   .ez-crumbs { display: flex; align-items: center; gap: var(--sp-8); margin-bottom: var(--sp-10); min-width: 0; }
+  /* Breadcrumb back arrow = the single "up a level" back for FOCUSED flows (publish wizard, update, review)
+     where the app rail is hidden. In rail states the rail's "All apps" owns back, so hide the arrow there. */
   .ez-back { display: inline-flex; align-items: center; justify-content: center; color: var(--fg-3); text-decoration: none; flex: 0 0 auto; }
   .ez-back:hover { color: var(--brand); }
+  .app.has-rail .ez-back { display: none; }
   .ez-crumbs__list { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-4); margin: 0; padding: 0; list-style: none; font-size: 13px; min-width: 0; }
   .ez-crumbs__item { display: inline-flex; align-items: center; gap: var(--sp-4); min-width: 0; }
   .ez-crumbs__item:not(:first-child)::before { content: "/"; color: var(--fg-3); opacity: .5; flex: 0 0 auto; }
@@ -69,6 +72,13 @@
   .ez-apphead__meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-10); font-size: 13px; color: var(--fg-3); margin: var(--sp-6) 0 0; }
   .ez-apphead__meta span { display: inline-flex; align-items: center; gap: var(--sp-4); }
   .ez-apphead__sep { opacity: .5; }
+  /* "Published · View in Store": the live-listing jump rides on the status pill (folded out of the
+     header actions), so once the app is live the status itself is the affordance. Visibility is JS-owned. */
+  .ez-apphead__storelink { align-items: center; gap: var(--sp-4); border: 0; background: transparent; padding: 0; margin: 0; font: inherit; font-size: 12px; font-weight: var(--font-weight-semibold); line-height: 16px; color: var(--brand); cursor: pointer; border-radius: var(--r-4); }
+  .ez-apphead__storelink::before { content: "·"; margin-right: var(--sp-6); color: var(--fg-3); font-weight: var(--font-weight-regular); }
+  .ez-apphead__storelink:hover { text-decoration: underline; }
+  .ez-apphead__storelink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .ez-apphead__storelink iconify-icon { flex: 0 0 auto; }
 
   .ez-mode { display: inline-flex; padding: 3px; gap: 2px; background: var(--subtle); border: 1px solid var(--stroke-2); border-radius: var(--r-8); flex: 0 0 auto; }
   .ez-mode__opt { display: inline-flex; align-items: center; gap: var(--sp-6); padding: var(--sp-6) var(--sp-12); border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; font-weight: 600; border-radius: var(--r-6); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
@@ -1759,8 +1769,8 @@
   .exp__back { flex: 0 0 auto; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-8); border: 1px solid var(--stroke-2); background: var(--layer); color: var(--fg-2); cursor: pointer; }
   .exp__back:hover { background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); color: var(--fg-1); }
   .exp__htext { flex: 1 1 auto; min-width: 0; }
-  .exp__title { margin: 0; font-size: 20px; font-weight: 600; color: var(--fg-1); }
-  .exp__sub { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--fg-3); text-wrap: pretty; }
+  .exp__title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.25; color: var(--fg-1); }
+  .exp__sub { margin: 5px 0 0; font-size: 13px; line-height: 18px; color: var(--fg-3); text-wrap: pretty; }
   .exp__head fluent-button { flex: 0 0 auto; }
   /* Empty state */
   .exp-empty { text-align: center; padding: var(--sp-32) var(--sp-24); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); }
@@ -1886,6 +1896,50 @@
   #addons-panel[hidden] { display: none; }
   .addon-types { display: grid; gap: var(--sp-10); }
   .addon-list { display: flex; flex-direction: column; gap: var(--sp-12); }
+
+  /* ===== Manage app names (reserve / per-language / free) ===== */
+  #names-panel[hidden] { display: none; }
+  .rname-tabletitle { margin: var(--sp-24) 0 var(--sp-6); font-size: 15px; font-weight: 600; color: var(--fg-1); }
+  .rname-policy { margin: 0 0 var(--sp-12); font-size: 12.5px; line-height: 1.5; color: var(--fg-3); }
+  .rname-tablewrap { border: 1px solid var(--stroke-2); border-radius: var(--r-12); overflow: hidden; background: var(--layer); margin-bottom: var(--sp-8); }
+  .rname-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .rname-table thead th { text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-3); padding: 12px var(--sp-16); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); border-bottom: 1px solid var(--stroke-2); }
+  .rname-table th.rname-th-acts { text-align: right; }
+  .rname-table td { padding: 14px var(--sp-16); border-bottom: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); vertical-align: middle; }
+  .rname-table tbody tr:last-child td { border-bottom: none; }
+  .rname-table tbody tr { transition: background var(--dur-2) var(--ease-out); }
+  .rname-table tbody tr:hover td { background: color-mix(in srgb, var(--brand) 4%, transparent); }
+  .rname-cell-name { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; min-width: 0; }
+  .rname-name { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .rname-cell-langs { color: var(--fg-2); }
+  .rname-cell-date { color: var(--fg-3); white-space: nowrap; }
+  .rname-dash { color: var(--fg-4); }
+  .rname-cell-acts { display: flex; justify-content: flex-end; align-items: center; gap: 2px; }
+  .rname-iconbtn { width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; border-radius: var(--r-8); color: var(--fg-3); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .rname-iconbtn:hover { background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-1); }
+  .rname-iconbtn--danger:hover { background: color-mix(in srgb, var(--status-danger) 14%, transparent); color: var(--status-danger); }
+  .rname-iconbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .rname-iconbtn--empty { visibility: hidden; }
+  .rname__confirm { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 12.5px; color: var(--fg-2); }
+  .rname-reserve { margin-top: var(--sp-4); padding: var(--sp-16) var(--sp-18) var(--sp-18); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); }
+  .rname-reserve__title { margin: 0 0 3px; font-size: 15px; font-weight: 600; color: var(--fg-1); }
+  .rname-reserve__sub { margin: 0 0 var(--sp-14); font-size: 12.5px; color: var(--fg-2); }
+  .rname-reserve__row { display: flex; gap: var(--sp-10); align-items: center; }
+  .rname-reserve__row fluent-text-input { flex: 1; }
+  .rname-hint { margin: 0; font-size: 12.5px; display: flex; align-items: center; gap: 7px; color: var(--fg-2); }
+  .rname-hint:empty { display: none; }
+  .rname-hint:not(:empty) { margin-top: var(--sp-12); }
+  .rname-hint--ok { color: var(--status-success); }
+  .rname-hint--err { color: var(--status-danger); }
+  .rname-note { display: flex; gap: var(--sp-10); margin-top: var(--sp-20); padding: var(--sp-12) var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 3%, var(--layer)); font-size: 12.5px; color: var(--fg-2); line-height: 1.5; }
+  .rname-note iconify-icon { flex: none; color: var(--brand); margin-top: 1px; }
+  .rname-note a { color: var(--brand); }
+  .rname-langs { display: flex; flex-direction: column; gap: 2px; margin-top: var(--sp-8); }
+  .rname-lang { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8) var(--sp-10); border-radius: var(--r-6); cursor: pointer; }
+  .rname-lang:hover { background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
+  .rname-lang__name { font-size: 13.5px; color: var(--fg-1); }
+  .rname-lang__used { margin-left: auto; font-size: 11.5px; color: var(--fg-3); }
+  .rname-dlg__intro { font-size: 13px; color: var(--fg-2); line-height: 1.5; margin: 0 0 var(--sp-8); }
   .addon-card { display: flex; align-items: center; gap: var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); padding: var(--sp-14) var(--sp-16); }
   .addon-card__ico { flex: 0 0 auto; width: 42px; height: 42px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 13%, transparent); color: var(--brand); }
   .addon-card__ico--consumable { background: color-mix(in srgb, #e0a43b 18%, transparent); color: #e0a43b; }
@@ -3200,18 +3254,22 @@
   /* Same header as the rest of the Windows Developer Program — mirrors portal.css .appbar
      (values inlined so it renders identically without loading portal.css). The .app grid
      is collapsed to topbar + full-width main (no rail). */
-  .app { grid-template-rows: 56px 1fr; grid-template-columns: 1fr; grid-template-areas: "topbar" "main"; }
-  .appbar { grid-area: topbar; height: 56px; display: flex; align-items: center; gap: 20px; padding: 0 20px;
-    background: var(--layer); border-bottom: 1px solid var(--stroke-2); }
+  .app { grid-template-rows: var(--topbar-h) 1fr; grid-template-columns: 1fr; grid-template-areas: "topbar" "main"; background: var(--subtle); }
+  .appbar { grid-area: topbar; height: var(--topbar-h); display: flex; align-items: center; gap: 20px; padding: 0 20px;
+    background: var(--subtle); }
+  /* Match the portal frame: the content is a rounded pane floating on the seamless chrome. */
+  .main { margin: 0 10px 10px; border-radius: 14px; }
   .brand { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--fg-1); text-decoration: none; }
   .brand__name { font-weight: 600; }
   .brand__divider { width: 1px; height: 16px; background: var(--stroke-1); }
   .brand__sub { color: var(--fg-3); font-weight: 600; }
-  .appbar__right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+  .appbar__right { display: flex; align-items: center; gap: 14px; margin-left: auto; position: relative; }
   .iconbtn { position: relative; width: 36px; height: 36px; display: grid; place-items: center;
     background: transparent; border: 0; border-radius: 4px; color: var(--fg-3); cursor: pointer; }
   .iconbtn:hover { background: var(--subtle); color: var(--fg-1); }
-  .userchip { display: flex; align-items: center; gap: 10px; }
+  .userchip { display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 0; cursor: pointer; color: inherit; border-radius: 50%; }
+  .userchip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .userchip:hover fluent-avatar, .userchip[aria-expanded="true"] fluent-avatar { box-shadow: 0 0 0 2px var(--brand); border-radius: 50%; }
   .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
     background: linear-gradient(135deg, #2886de, #115ea3); color: #fff; font-weight: 700; font-size: 13px; }
   .userchip__meta { display: none; }   /* header shows just the profile icon (name/status hidden, still updated by JS) */
@@ -3225,6 +3283,57 @@
   .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: #57c038; display: inline-block; }
   .verified-dot--off { background: #6b7080; }
   .verified-dot--warn { background: #ffb900; }
+  /* Profile flyout — account menu anchored under the avatar (same as the developer portal). */
+  .pflyout { position: absolute; top: calc(100% + 8px); right: 0; width: 320px; max-width: calc(100vw - 24px);
+    background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12);
+    box-shadow: var(--shadow-16, 0 12px 34px -8px rgba(0,0,0,.55)); padding: 16px; z-index: 100; animation: pfIn .14s ease both; }
+  .pflyout[hidden] { display: none; }
+  @keyframes pfIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+  .pflyout__head { display: flex; align-items: flex-start; gap: 14px; }
+  .pflyout__id { min-width: 0; display: flex; flex-direction: column; }
+  .pflyout__name { font-size: 16px; font-weight: 600; color: var(--fg-1); line-height: 1.3; }
+  .pflyout__email { font-size: 12.5px; color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pflyout__profile { font-size: 13px; color: var(--brand); text-decoration: none; margin-top: 5px; width: fit-content; }
+  .pflyout__profile:hover { text-decoration: underline; }
+  .pflyout__sep { height: 1px; background: var(--stroke-2); margin: 14px 0; }
+  .pflyout__label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 8px; }
+  .pflyout__acct { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--r-6); background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
+  .pflyout__check { color: var(--brand); flex: none; }
+  .pflyout__acct-email { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pflyout__star { color: var(--fg-3); flex: none; }
+  .pflyout__foot { display: flex; flex-direction: column; gap: 2px; }
+  .pflyout__item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--r-6); font-size: 14px; color: var(--fg-1); text-decoration: none; background: transparent; border: 0; cursor: pointer; text-align: left; width: 100%; font-family: inherit; }
+  .pflyout__item iconify-icon { color: var(--fg-2); flex: none; }
+  .pflyout__item:hover { background: color-mix(in srgb, var(--fg-1) 8%, transparent); }
+  .pfseg { display: flex; gap: 3px; padding: 3px; background: var(--canvas); border: 1px solid var(--stroke-2); border-radius: var(--r-6); }
+  .pfseg__opt { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 4px; border: 0; background: transparent; color: var(--fg-2); font-family: inherit; font-size: 12px; font-weight: 600; border-radius: var(--r-4); cursor: pointer; transition: background .12s ease, color .12s ease; }
+  .pfseg__opt iconify-icon { flex: none; }
+  .pfseg__opt:hover { color: var(--fg-1); background: color-mix(in srgb, var(--fg-1) 8%, transparent); }
+  .pfseg__opt.is-active { background: color-mix(in srgb, var(--fg-1) 10%, transparent); color: var(--fg-1); }
+  .pfseg__opt.is-active iconify-icon { color: var(--brand); }
+  /* Notification bell + flyout (same as the developer portal). */
+  .iconbtn__badge { position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background: var(--status-danger); color: #fff; font-size: 10px; font-weight: 700; line-height: 1; border-radius: 999px; border: 2px solid var(--subtle); }
+  .iconbtn__badge[hidden] { display: none; }
+  .nflyout { position: absolute; top: calc(100% + 8px); right: 0; width: 360px; max-width: calc(100vw - 24px); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); box-shadow: var(--shadow-16, 0 12px 34px -8px rgba(0,0,0,.55)); z-index: 100; overflow: hidden; animation: pfIn .14s ease both; }
+  .nflyout[hidden] { display: none; }
+  .nflyout__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--stroke-2); }
+  .nflyout__title { font-size: 15px; font-weight: 600; color: var(--fg-1); }
+  .nflyout__markall { background: transparent; border: 0; padding: 0; color: var(--brand); font-family: inherit; font-size: 12.5px; cursor: pointer; }
+  .nflyout__markall:hover { text-decoration: underline; }
+  .nflyout__list { max-height: min(60vh, 440px); overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .nitem { display: flex; align-items: flex-start; gap: 12px; padding: 11px 12px; border: 0; background: transparent; border-radius: var(--r-6); cursor: pointer; text-align: left; width: 100%; font-family: inherit; }
+  .nitem:hover { background: color-mix(in srgb, var(--fg-1) 8%, transparent); }
+  .nitem__ico { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+  .nitem__ico--success { background: color-mix(in srgb, var(--status-success) 18%, transparent); color: var(--status-success); }
+  .nitem__ico--error { background: color-mix(in srgb, var(--status-danger) 18%, transparent); color: var(--status-danger); }
+  .nitem__ico--warning { background: color-mix(in srgb, var(--status-warning) 20%, transparent); color: var(--status-warning); }
+  .nitem__ico--info { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--brand); }
+  .nitem__body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+  .nitem__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
+  .nitem__text { font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  .nitem__time { font-size: 11.5px; color: var(--fg-3); margin-top: 3px; }
+  .nitem__dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-top: 6px; }
+  .nitem.is-read .nitem__title { font-weight: 500; color: var(--fg-2); }
   /* Editable app name in the header — opens the availability-checked name dialog. */
   .ez-apphead__namebtn { display: inline-flex; align-items: center; gap: var(--sp-6); background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; border-radius: var(--r-4); min-width: 0; max-width: 100%; }
   .ez-apphead__nameedit { color: var(--fg-4); opacity: 0; flex: 0 0 auto; transition: opacity var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
@@ -3244,15 +3353,17 @@
      webDarkTheme), so it renders identically. Shown when in review/published. */
   .app.has-rail { grid-template-columns: 244px 1fr; grid-template-areas: "topbar topbar" "rail main"; }
   .sidebar { grid-area: rail; display: none; flex-direction: column; justify-content: space-between;
-    padding: 14px 12px; background: var(--colorNeutralBackground4, #0e1119); border-right: 1px solid var(--colorNeutralStroke2, #272c3a); }
+    padding: 14px 12px; background: var(--subtle); }
   .app.has-rail .sidebar { display: flex; }
   .snav { display: flex; flex-direction: column; gap: 2px; }
   .snav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--borderRadiusMedium, 4px);
     font-size: 14px; font-weight: 600; color: var(--colorNeutralForeground2, #c6cad6); text-decoration: none; position: relative; }
   .snav a iconify-icon { flex: none; display: inline-flex; }
-  .snav a:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.08)); color: var(--colorNeutralForeground1, #fff); }
-  .snav a.is-active { background: var(--colorBrandBackground2, rgba(40,153,245,.16)); color: var(--colorBrandForegroundLink, #4aa6ff); }
-  .snav a.is-active::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--colorBrandForeground1, #2899f5); }
+  .snav a:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.06)); color: var(--fg-1); }
+  /* Windows 11 nav selection — neutral fill + brand accent bar (matches the portal, not the old blue pill). */
+  .snav a.is-active { background: var(--colorSubtleBackgroundSelected, #333); color: var(--fg-1); }
+  .snav a.is-active iconify-icon { color: var(--brand); }
+  .snav a.is-active::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--brand); }
   .snav--foot { border-top: 1px solid var(--colorNeutralStroke2, #272c3a); padding-top: 10px; }
   .snav--foot a { color: var(--colorNeutralForeground3, #8b909e); font-weight: 500; }
 
@@ -3276,8 +3387,8 @@
   .appnav__list a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--borderRadiusMedium, 4px); text-decoration: none; font-size: 13px; font-weight: 600; color: var(--colorNeutralForeground2, #c6cad6); position: relative; }
   .appnav__header iconify-icon, .appnav__list a iconify-icon { flex: none; display: inline-flex; }
   .appnav__list a:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.08)); color: var(--colorNeutralForeground1, #fff); }
-  .appnav__list a.is-active { background: var(--colorBrandBackground2, rgba(40,153,245,.16)); color: var(--colorBrandForegroundLink, #4aa6ff); }
-  .appnav__list a.is-active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--colorBrandForeground1, #2899f5); }
+  .appnav__list a.is-active { background: var(--colorSubtleBackgroundSelected, #333); color: var(--fg-1); }
+  .appnav__list a.is-active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--brand); }
   .appnav__list a.is-disabled { opacity: .55; cursor: default; }
   .appnav__list a.is-disabled:hover { background: none; color: var(--colorNeutralForeground2, #c6cad6); }
   .appnav__badge { margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--colorBrandForegroundLink, #4aa6ff); white-space: nowrap; }
@@ -3285,6 +3396,39 @@
   .appnav__icon--tile { background: linear-gradient(135deg, #2899f5, #8b5cf6); }
   .appnav__icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .appnav__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---- Contextual app rail: "All apps" (up a level) + app identity header + grouped capability
+     sections. The Overview/capability rows reuse the global .snav a look, so the app rail and the
+     portal rail feel like one system; only the back link, identity and group headers are bespoke. ---- */
+  .snav a.app-rail__back { font-size: 12.5px; font-weight: 600; color: var(--colorNeutralForeground3, #8b909e); padding: 6px 12px; gap: 8px; }
+  .snav a.app-rail__back:hover { background: transparent; color: var(--fg-1); }
+  .app-rail__id { display: flex; align-items: center; gap: 10px; padding: 4px 12px 8px; }
+  .app-rail__id .appnav__icon { width: 28px; height: 28px; border-radius: 6px; font-size: 12px; }
+  .app-rail__name { font-size: 15px; font-weight: 700; color: var(--fg-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-rail__sep { height: 1px; background: var(--colorNeutralStroke2, #272c3a); margin: 2px 0 6px; }
+  .app-rail__group { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
+  .app-rail__ghdr { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--colorNeutralForeground3, #8b909e); padding: 2px 12px 4px; }
+  .app-rail__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* App switcher: the identity header becomes a button (chevron) that opens a fixed-position menu of
+     the developer's apps — quick-jump without going back to the Apps list. Menu is body-level so the
+     sidebar's overflow can't clip it. */
+  .app-rail__id--btn { width: 100%; border: 0; background: transparent; cursor: pointer; text-align: left; border-radius: var(--borderRadiusMedium, 4px); font: inherit; }
+  .app-rail__id--btn:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.06)); }
+  .app-rail__chev { margin-left: auto; flex: none; color: var(--fg-3); }
+  .app-switch__menu { position: fixed; z-index: 200; max-width: 320px; max-height: 60vh; overflow-y: auto; padding: 6px; background: var(--layer, #292929); border: 1px solid var(--stroke-2, #3d3d3d); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.45); }
+  .app-switch__menu[hidden] { display: none; }
+  .app-switch__hdr { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-3); padding: 6px 10px 4px; }
+  .app-switch__opt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; background: transparent; cursor: pointer; text-align: left; border-radius: 6px; color: var(--fg-1); }
+  .app-switch__opt:hover { background: var(--colorSubtleBackgroundHover, rgba(255,255,255,.06)); }
+  .app-switch__opt.is-current { background: var(--colorSubtleBackgroundSelected, #333); }
+  .app-switch__ico { width: 28px; height: 28px; border-radius: 6px; flex: none; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; background-size: cover; background-position: center; }
+  .app-switch__ico--tile { background: linear-gradient(135deg, #2899f5, #8b5cf6); }
+  .app-switch__ico img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .app-switch__metatext { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+  .app-switch__optname { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-switch__status { font-size: 11.5px; color: var(--fg-3); }
+  .app-switch__check { flex: none; color: var(--brand); }
 
   /* Live-app management hub (shown once published) — grouped soft panels: each group is one rounded
      surface holding its actions as rows with hairline dividers (Windows 11 Settings pattern). */
@@ -3363,13 +3507,40 @@
   .avail-status.is-available .avail-status__ico { color: var(--status-success); }
   .avail-status.is-unavailable { background: color-mix(in srgb, var(--status-warning) 10%, var(--canvas-tint)); }
   .avail-status.is-unavailable .avail-status__ico { color: var(--status-warning); }
-  .avail-opt { display: flex; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-10); cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .avail-opts { display: flex; flex-direction: column; gap: var(--sp-10); }
+  .avail-opt { display: flex; width: 100%; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-10); cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
   .avail-opt:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 4%, transparent); }
-  .avail-opt:has(input:checked) { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 7%, transparent); }
-  .avail-opt input { flex: 0 0 auto; margin: 2px 0 0; accent-color: var(--brand); width: 16px; height: 16px; }
+  .avail-opt:has(fluent-radio[checked]) { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 7%, transparent); }
+  .avail-opt fluent-radio { flex: 0 0 auto; margin-top: 1px; }
+  .avail-opt fluent-radio[checked]::part(checked-indicator) { background: var(--brand); }
   .avail-opt__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .avail-opt__body strong { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
   .avail-opt__body span { font-size: 12.5px; line-height: 16px; color: var(--fg-2); }
+  /* Store availability + Package identity as L3 pages (panels reuse the .exp shell). */
+  .avail-actions { display: flex; margin-top: var(--sp-20); }
+  #availability-panel .avail-opts { margin-top: var(--sp-16); }
+  #identity-panel .manifest-identity__rows { margin-top: var(--sp-8); max-width: 760px; }
+  .identity-panel__actions { display: flex; flex-wrap: wrap; gap: var(--sp-10); margin-top: var(--sp-20); }
+  /* ===== Share your product (social channels) ===== */
+  #share-dialog[hidden] { display: none; }
+  .share-app { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--stroke-2); border-radius: var(--r-10); }
+  .share-app__icon { flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--r-10); display: grid; place-items: center; font-size: 18px; font-weight: 600; color: #fff; background: linear-gradient(135deg, var(--brand), #6E56CF); background-size: cover; background-position: center; }
+  .share-app__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .share-app__name { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .share-app__cat { font-size: 12.5px; color: var(--fg-3); }
+  .share-msg { position: relative; margin-top: var(--sp-14); }
+  .share-msg fluent-textarea { width: 100%; }
+  .share-msg fluent-textarea::part(root) { width: 100%; }
+  .share-msg fluent-textarea::part(control) { width: 100%; box-sizing: border-box; min-height: 92px; padding-bottom: 26px; }
+  .share-msg__count { position: absolute; left: 14px; bottom: 10px; font-size: 11.5px; color: var(--fg-4); pointer-events: none; font-variant-numeric: tabular-nums; }
+  .share-hint { margin: var(--sp-18) 0 var(--sp-14); font-size: 13px; color: var(--fg-2); }
+  .share-channels { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-16) var(--sp-8); }
+  .share-ch { display: flex; flex-direction: column; align-items: center; gap: 8px; background: none; border: 0; cursor: pointer; font: inherit; padding: 6px 2px; border-radius: var(--r-10); transition: background var(--dur-2) var(--ease-out); }
+  .share-ch:hover { background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
+  .share-ch:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .share-ch__disc { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+  .share-ch__label { font-size: 12px; color: var(--fg-2); text-align: center; line-height: 1.3; }
+  @media (max-width: 560px) { .share-channels { grid-template-columns: repeat(4, 1fr); } }
 
   /* A just-published app has no telemetry yet — one compact "no analytics yet" placeholder instead
      of a wall of empty metric cards. The 3-up dashboard (.live-stat*) would return once data exists. */
@@ -3380,23 +3551,150 @@
   .live-metrics-empty__text span { font-size: 12px; line-height: 1.45; color: var(--fg-3); }
   /* Live headline stats (installs / crash rate / rating) — mirrors the portal Apps-table figures. */
   .live-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); margin-bottom: var(--sp-20); }
-  .live-stat { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-14) var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: var(--layer); }
-  .live-stat__ico { flex: 0 0 auto; width: 38px; height: 38px; border-radius: var(--r-10); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
-  .live-stat--ok .live-stat__ico { background: color-mix(in srgb, var(--status-success) 16%, transparent); color: var(--status-success); }
-  .live-stat--warn .live-stat__ico { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
-  .live-stat__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .live-stat__label { font-size: 12px; color: var(--fg-3); }
-  .live-stat__value { font-size: 19px; font-weight: 600; color: var(--fg-1); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .live-stat { position: relative; display: flex; flex-direction: column; padding: var(--sp-16) var(--sp-16) 0; border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); background: var(--layer); overflow: hidden; min-height: 132px; }
+  .live-stat__label { font-size: 13px; font-weight: 600; color: var(--fg-2); }
+  .live-stat__row { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 2px; }
+  .live-stat__value { font-size: 30px; line-height: 1.1; font-weight: 700; color: var(--fg-1); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
   .live-stat__value small { font-size: 12px; font-weight: 400; color: var(--fg-3); margin-left: 3px; }
+  .live-delta { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .live-delta--good { color: var(--status-success); }
+  .live-delta--bad { color: var(--status-danger); }
+  .live-stat__sub { font-size: 12px; color: var(--fg-3); }
+  .live-stat__spark { display: block; width: calc(100% + 32px); height: 34px; margin: auto -16px 0; }
   .live-stat--link { text-decoration: none; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
   .live-stat--link:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 5%, var(--layer)); }
   .live-stat--link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .live-stat__chev { flex: 0 0 auto; margin-left: auto; color: var(--fg-4); transition: color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
-  .live-stat--link:hover .live-stat__chev { color: var(--brand); transform: translateX(2px); }
+  .live-stat__go { position: absolute; top: 12px; right: 12px; color: var(--fg-4); opacity: 0; transform: translate(-2px, 2px); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
+  .live-stat--link:hover .live-stat__go, .live-stat--link:focus-visible .live-stat__go { opacity: 1; transform: none; color: var(--brand); }
+  .live-stat__empty { font-size: 15px; font-weight: 500; color: var(--fg-4); }
+  /* Pre-data metric: forward-looking ("when this shows up"), not a blank "No data yet". */
+  .live-stat__empty--soon { display: inline-flex; align-items: center; gap: var(--sp-6); font-size: 13.5px; font-weight: 500; color: var(--fg-3); }
+  .live-stat__empty--soon iconify-icon { color: var(--fg-4); flex: 0 0 auto; }
   @media (max-width: 640px) { .live-metrics { grid-template-columns: 1fr; } }
+  /* Recommended next steps — proactive, adaptive discovery of high-value actions (health/visibility/
+     growth/monetization). Lighter than the capability panels; each card routes like a hub card. */
+  .live-recs { margin-bottom: var(--sp-20); }
+  .live-recs__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); margin: 0 0 var(--sp-10); }
+  .live-recs__title { font-size: 14px; font-weight: 600; color: var(--fg-1); margin: 0; }
+  .live-recs__meta { font-size: 11.5px; color: var(--fg-3); }
+  .live-recs__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
+  .live-recs__grid[data-count="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .live-recs__grid[data-count="1"] { grid-template-columns: 1fr; }
+  @media (max-width: 720px) { .live-recs__grid[data-count="3"] { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .live-recs__grid { grid-template-columns: 1fr; } }
+  .live-rec { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-14) var(--sp-16); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); background: var(--layer); text-decoration: none; color: var(--fg-1); transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .live-rec:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 5%, var(--layer)); }
+  .live-rec:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .live-rec__ico { flex: 0 0 auto; width: 36px; height: 36px; border-radius: var(--r-8); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); }
+  .live-rec__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
+  .live-rec__t strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  .live-rec__t span { font-size: 12.5px; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; }
+  .live-rec__chev { flex: 0 0 auto; margin-left: auto; color: var(--fg-4); transition: color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
+  .live-rec:hover .live-rec__chev { color: var(--brand); transform: translateX(2px); }
+
+  /* ---- App dashboard modules (status, not nav): metric trends · recent activity · ratings · active-now ---- */
+  .live-stat__delta { display: inline-flex; align-items: center; gap: 2px; font-size: 11.5px; font-weight: 600; margin-top: 3px; }
+  .live-stat__delta--up { color: var(--status-success); }
+  .live-stat__delta--down { color: var(--status-danger); }
+  .dash-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--sp-16); margin-bottom: var(--sp-20); align-items: stretch; }
+  @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+  .dash-card { border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); background: var(--layer); padding: var(--sp-16) var(--sp-18); margin-bottom: var(--sp-20); }
+  .dash-grid .dash-card { margin-bottom: 0; }
+  .dash-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-bottom: var(--sp-8); }
+  .dash-card__title { font-size: 14px; font-weight: 600; color: var(--fg-1); margin: 0; }
+  .dash-card__link { font-size: 12.5px; color: var(--brand); text-decoration: none; white-space: nowrap; }
+  .dash-card__link:hover { text-decoration: underline; }
+  .dash-act-list { list-style: none; margin: 0; padding: 0; }
+  .dash-act { display: flex; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-12) 0; }
+  .dash-act + .dash-act { border-top: 1px solid color-mix(in srgb, var(--fg-1) 7%, transparent); }
+  .dash-act__ico { flex: 0 0 auto; width: 32px; height: 32px; border-radius: var(--r-8, 8px); display: grid; place-items: center; }
+  .dash-act__ico--success { background: color-mix(in srgb, var(--status-success) 16%, transparent); color: var(--status-success); }
+  .dash-act__ico--danger { background: color-mix(in srgb, var(--status-danger) 16%, transparent); color: var(--status-danger); }
+  .dash-act__ico--warn { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: var(--status-warning); }
+  .dash-act__ico--info, .dash-act__ico--brand { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+  .dash-act__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .dash-act__title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
+  .dash-act__sub { font-size: 12px; color: var(--fg-3); }
+  .dash-act__time { flex: 0 0 auto; font-size: 11.5px; color: var(--fg-4); white-space: nowrap; padding-top: 2px; }
+  .dash-rev__top { margin-bottom: var(--sp-12); }
+  .dash-rev__score { display: flex; align-items: baseline; gap: var(--sp-10); flex-wrap: wrap; }
+  .dash-rev__score > strong { font-size: 34px; font-weight: 600; color: var(--fg-1); line-height: 1; letter-spacing: -.02em; }
+  .dash-rev__stars { display: inline-flex; gap: 1px; color: var(--status-warning); align-self: center; }
+  .dash-rev__count { font-size: 12px; color: var(--fg-3); }
+  .dash-rev__bars { display: flex; flex-direction: column; gap: 6px; }
+  .dash-rev__row { display: flex; align-items: center; gap: 8px; }
+  .dash-rev__k { width: 26px; font-size: 12px; color: var(--fg-3); }
+  .dash-rev__bar { flex: 1 1 auto; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--fg-1) 8%, transparent); overflow: hidden; }
+  .dash-rev__fill { display: block; height: 100%; background: var(--brand); border-radius: 3px; }
+  .dash-rev__pct { width: 34px; text-align: right; font-size: 11.5px; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+
+  /* ---- Lifecycle-aware Overview: demo toggle · launch welcome/checklist · anomaly · monetization ---- */
+  .dash-stagebar { display: flex; align-items: center; gap: var(--sp-10); flex-wrap: wrap; margin-bottom: var(--sp-16); padding: 8px 10px 8px 12px; border: 1px dashed var(--stroke-2); border-radius: var(--r-10); background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .dash-stagebar__tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); }
+  .dash-stagebar__label { font-size: 12.5px; color: var(--fg-2); font-weight: 600; }
+  .dash-seg-group { display: inline-flex; margin-left: auto; background: color-mix(in srgb, var(--fg-1) 6%, transparent); border-radius: 999px; padding: 2px; gap: 2px; }
+  .dash-seg { border: 0; background: transparent; padding: 5px 14px; border-radius: 999px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--fg-2); cursor: pointer; }
+  .dash-seg:hover { color: var(--fg-1); }
+  .dash-seg.is-active { background: var(--brand); color: #fff; }
+  .dash-card__meta { font-size: 11.5px; color: var(--fg-3); }
+  /* Unified adaptive top banner (welcome / momentum / healthy / needs-attention / hidden) — one component, three tones. */
+  .dash-banner { display: flex; gap: var(--sp-14); align-items: center; padding: var(--sp-14) var(--sp-16); border-radius: var(--r-12); margin-bottom: var(--sp-16); border: 1px solid transparent; }
+  .dash-banner__ico { flex: none; width: 40px; height: 40px; border-radius: var(--r-10); display: grid; place-items: center; }
+  .dash-banner__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .dash-banner__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .dash-banner__title { font-size: 15px; font-weight: 700; color: var(--fg-1); }
+  .dash-banner__sub { font-size: 13px; color: var(--fg-2); line-height: 1.5; }
+  .dash-banner fluent-button { flex: none; }
+  .dash-banner--brand { background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 14%, var(--layer)), var(--layer)); border-color: color-mix(in srgb, var(--brand) 20%, transparent); }
+  .dash-banner--brand .dash-banner__ico { background: color-mix(in srgb, var(--brand) 20%, transparent); color: var(--brand); }
+  .dash-banner--success { background: linear-gradient(135deg, color-mix(in srgb, var(--status-success) 12%, var(--layer)), var(--layer)); border-color: color-mix(in srgb, var(--status-success) 22%, transparent); }
+  .dash-banner--success .dash-banner__ico { background: color-mix(in srgb, var(--status-success) 18%, transparent); color: var(--status-success); }
+  .dash-banner--warn { background: color-mix(in srgb, var(--status-warning) 12%, var(--layer)); border-color: color-mix(in srgb, var(--status-warning) 28%, transparent); }
+  .dash-banner--warn .dash-banner__ico { background: color-mix(in srgb, var(--status-warning) 20%, transparent); color: var(--status-warning); }
+  .live-stat__collecting { font-size: 11.5px; color: var(--fg-4); margin-top: 3px; font-style: italic; }
+  .dash-rev-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 4px 0 2px; }
+  .dash-rev-empty__ico { width: 40px; height: 40px; border-radius: var(--r-8, 8px); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-3); margin-bottom: 6px; }
+  .dash-rev-empty strong { font-size: 14px; color: var(--fg-1); }
+  .dash-rev-empty span { font-size: 12.5px; color: var(--fg-3); line-height: 1.5; }
+  .dash-card--empty { display: flex; flex-direction: column; }
+  .dash-card--empty .dash-rev-empty { flex: 1 1 auto; justify-content: center; }
+  .dash-rev__themes { margin-top: var(--sp-14); }
+  .dash-rev__themes-h { display: block; font-size: 11.5px; color: var(--fg-3); margin-bottom: 8px; }
+  .dash-rev__themechips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dash-theme { display: inline-flex; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--fg-1) 8%, transparent); font-size: 12px; color: var(--fg-2); }
+  .dash-mon { margin-bottom: var(--sp-20); }
+  .dash-mon__row { display: flex; gap: var(--sp-16); flex-wrap: wrap; }
+  .dash-mon__stat { flex: 1 1 200px; display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-10); background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
+  .dash-mon__ico { flex: none; width: 36px; height: 36px; border-radius: var(--r-8, 8px); display: grid; place-items: center; background: color-mix(in srgb, var(--fg-1) 8%, transparent); color: var(--fg-2); }
+  .dash-mon__data { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .dash-mon__label { font-size: 12px; color: var(--fg-3); }
+  .dash-mon__value { font-size: 22px; font-weight: 600; color: var(--fg-1); font-variant-numeric: tabular-nums; }
+  .dash-mon__stat .dash-trend { margin-left: auto; }
+  .dash-toast { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 200; padding: 10px 16px; border-radius: 999px; background: var(--layer); border: 1px solid var(--stroke-2); box-shadow: 0 8px 24px rgba(0,0,0,.4); color: var(--fg-1); font-size: 13px; font-weight: 500; opacity: 1; pointer-events: none; animation: dashToastIn .18s var(--ease-out); }
+  @keyframes dashToastIn { from { transform: translate(-50%, 10px); } to { transform: translate(-50%, 0); } }
+
+  /* Floating demo stage control — collapsed by default, out of the page flow (mirrors .cert-switch) */
+  .demo-fab { position: fixed; right: 20px; bottom: 20px; z-index: 120; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .demo-fab[hidden] { display: none; }
+  .demo-fab__toggle { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px dashed var(--stroke-2); border-radius: 999px; background: var(--layer); box-shadow: 0 8px 24px rgba(0,0,0,.35); color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out); }
+  .demo-fab__toggle:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); }
+  .demo-fab__toggle > iconify-icon:first-child { color: var(--brand); }
+  .demo-fab__lbl { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-3); }
+  .demo-fab__cur { color: var(--fg-1); }
+  .demo-fab__chev { color: var(--fg-4); transition: transform var(--dur-2) var(--ease-out); }
+  .demo-fab.is-open .demo-fab__chev { transform: rotate(180deg); }
+  .demo-fab__panel { display: none; width: 232px; padding: 12px; background: var(--layer); border: 1px dashed var(--stroke-2); border-radius: var(--r-12); box-shadow: 0 14px 36px rgba(0,0,0,.45); }
+  .demo-fab.is-open .demo-fab__panel { display: block; animation: aiHintIn .16s var(--ease-out) both; }
+  .demo-fab__title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-3); margin-bottom: 10px; }
+  .demo-fab__title iconify-icon { color: var(--brand); }
+  .demo-fab__segs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .demo-fab__segs button { border: 1px solid var(--stroke-2); background: transparent; color: var(--fg-2); font: inherit; font-size: 12.5px; font-weight: 600; padding: 9px 6px; border-radius: var(--r-8); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .demo-fab__segs button:hover { background: var(--subtle); color: var(--fg-1); }
+  .demo-fab__segs button.is-active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .demo-fab__note { display: block; margin-top: 10px; font-size: 11px; color: var(--fg-4); line-height: 1.4; }
   /* "Once you're live" preview — shown below the cert card while a FIRST submission is in review, to
      tease the tools (add-ons, experiments, flights, analytics) that unlock once the app goes live. */
-  .live-preview { animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; margin-top: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 2%, var(--layer)); overflow: hidden; }
+  .live-preview { animation: certResultIn var(--dur-3, 240ms) var(--ease-out) both; margin-top: var(--sp-16); border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: radial-gradient(130% 85% at 0% 0%, color-mix(in srgb, var(--brand) 8%, transparent) 0%, transparent 58%), var(--layer); overflow: hidden; }
   .live-preview__summary { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); cursor: pointer; list-style: none; }
   .live-preview__summary::-webkit-details-marker { display: none; }
   .live-preview__summary:hover { background: color-mix(in srgb, var(--fg-1) 3%, transparent); }
@@ -3406,10 +3704,10 @@
   .live-preview__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
   .live-preview[open] .live-preview__chev { transform: rotate(180deg); }
   .live-preview__body { padding: 0 var(--sp-16) var(--sp-16); }
-  .live-preview__sub { font-size: 13px; color: var(--fg-3); margin: 0 0 var(--sp-12); max-width: 62ch; line-height: 1.5; }
-  .live-preview__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
-  .live-preview__card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-4); padding: var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-10); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); }
-  .live-preview__card-ico { width: 32px; height: 32px; border-radius: var(--r-8); display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); margin-bottom: var(--sp-4); }
+  .live-preview__sub { font-size: 13px; color: var(--fg-3); margin: 0 0 var(--sp-16); max-width: 62ch; line-height: 1.5; }
+  .live-preview__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-24); }
+  .live-preview__card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); padding: 0; }
+  .live-preview__card-ico { width: 36px; height: 36px; border-radius: var(--r-8); display: grid; place-items: center; color: var(--brand); background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 20%, transparent), color-mix(in srgb, var(--brand) 8%, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 20%, transparent); margin-bottom: var(--sp-6); }
   .live-preview__card-title { font-size: 13.5px; font-weight: 600; color: var(--fg-1); }
   .live-preview__card-desc { font-size: 12.5px; color: var(--fg-3); line-height: 1.45; }
   @media (max-width: 640px) { .live-preview__grid { grid-template-columns: 1fr; } }
@@ -3503,7 +3801,7 @@
 
   /* Submitted (in-review / published): collapse the grid and turn the left rail into a full-width
      APP HEADER CARD on top — app identity on the left + a contextual action on the right (Withdraw
-     while in review, View in Store once published). Steps, preview, submit, the mode toggle and the
+     while in review, Update once published; View in Store rides on the status pill). Steps, preview, submit, the mode toggle and the
      now-empty editor body are hidden. (The wizard itself keeps its left rail.) */
   #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) { display: block; }
   #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) .wz-banner { position: static; z-index: auto; margin: 0 0 var(--sp-20); }
@@ -3516,6 +3814,9 @@
   /* Header action area (right of the identity) — only in the submitted view; buttons toggled by state. */
   #flow-wrap.wz-v2 #wz-head-actions { display: none; }
   #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) #wz-head-actions { display: flex; gap: var(--sp-8); flex: 0 0 auto; }
+  /* The View-in-Store link mirrors the header actions: submitted (published) view only, and only once JS un-hides it. */
+  #flow-wrap.wz-v2 #app-storelink { display: none; }
+  #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) #app-storelink:not([hidden]) { display: inline-flex; }
   /* Withdraw now lives in the header, so drop the body "Need to make changes?" strip. */
   #flow-wrap.wz-v2 #cert-actions { display: none; }
   /* No rail in the submitted view, so it doesn't need the wizard's full 1360px. Narrow the whole
@@ -3634,43 +3935,200 @@
   <header class="appbar" role="banner">
     <a class="brand" href="../store-portal.html" data-wdp-brand></a>
     <div class="appbar__right">
-      <div class="pubmode" role="group" aria-label="Prototype fidelity">
-        <button type="button" class="pubmode__opt is-active" data-pubmode="vision" aria-pressed="true" title="Vision — the full experience we’d want to build">Vision</button>
-        <button type="button" class="pubmode__opt" data-pubmode="mvp" aria-pressed="false" title="MVP — only what’s shippable today">MVP</button>
-      </div>
-      <div class="userchip">
-        <span class="avatar" id="avatar">—</span>
+      <button class="iconbtn" id="notifBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Notifications" title="Notifications">
+        <iconify-icon icon="fluent:alert-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        <span class="iconbtn__badge" id="notifBadge" hidden>0</span>
+      </button>
+      <button class="userchip" id="profileBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Account manager">
+        <fluent-avatar id="avatar" size="32" color="brand"></fluent-avatar>
         <span class="userchip__meta">
           <strong id="accountName">Your organization</strong>
           <span id="accountStatus"><span class="verified-dot verified-dot--off"></span>Not verified</span>
         </span>
+      </button>
+      <div class="pflyout" id="profileFlyout" aria-label="Account manager" hidden>
+        <div class="pflyout__head">
+          <fluent-avatar id="pfAvatar" size="48" color="brand"></fluent-avatar>
+          <div class="pflyout__id">
+            <strong class="pflyout__name" id="pfName">—</strong>
+            <span class="pflyout__email" id="pfEmail"></span>
+            <a class="pflyout__profile" href="#" data-pf-profile>My profile</a>
+          </div>
+        </div>
+        <div class="pflyout__sep"></div>
+        <div class="pflyout__section">
+          <span class="pflyout__label">Signed in as</span>
+          <div class="pflyout__acct">
+            <iconify-icon class="pflyout__check" icon="fluent:checkmark-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
+            <span class="pflyout__acct-email" id="pfAcctEmail"></span>
+            <iconify-icon class="pflyout__star" icon="fluent:star-16-filled" width="15" height="15" aria-hidden="true" title="Primary account"></iconify-icon>
+          </div>
+        </div>
+        <div class="pflyout__sep"></div>
+        <div class="pflyout__theme">
+          <span class="pflyout__label">Theme</span>
+          <div class="pfseg" role="radiogroup" aria-label="Theme">
+            <button class="pfseg__opt" type="button" data-theme-mode="system" role="radio" aria-checked="false"><iconify-icon icon="fluent:desktop-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>System</button>
+            <button class="pfseg__opt" type="button" data-theme-mode="light" role="radio" aria-checked="false"><iconify-icon icon="fluent:weather-sunny-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Light</button>
+            <button class="pfseg__opt" type="button" data-theme-mode="dark" role="radio" aria-checked="false"><iconify-icon icon="fluent:weather-moon-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Dark</button>
+          </div>
+        </div>
+        <div class="pflyout__sep"></div>
+        <div class="pflyout__section">
+          <span class="pflyout__label">Prototype fidelity</span>
+          <div class="pfseg" role="group" aria-label="Prototype fidelity">
+            <button class="pfseg__opt" type="button" data-pubmode="vision" title="Vision — the full experience we’d want to build">Vision</button>
+            <button class="pfseg__opt" type="button" data-pubmode="mvp" title="MVP — only what’s shippable today">MVP</button>
+          </div>
+        </div>
+        <div class="pflyout__sep"></div>
+        <div class="pflyout__foot">
+          <a class="pflyout__item" href="#" data-pf-settings><iconify-icon icon="fluent:settings-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Account settings</a>
+          <a class="pflyout__item" href="../store-developer.html" data-pf-switch><iconify-icon icon="fluent:person-add-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Sign in with another account</a>
+          <a class="pflyout__item pflyout__item--signout" href="../store-developer.html" data-pf-signout><iconify-icon icon="fluent:sign-out-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Sign out</a>
+        </div>
+      </div>
+      <div class="nflyout" id="notifFlyout" aria-label="Notifications" hidden>
+        <div class="nflyout__head">
+          <span class="nflyout__title">Notifications</span>
+          <button type="button" class="nflyout__markall" data-notif-markall>Mark all as read</button>
+        </div>
+        <div class="nflyout__list" id="notifList"></div>
       </div>
     </div>
   </header>
   <script src="../wdp-header.js"></script>
+  <script>
+  /* Profile flyout + theme switcher — same behaviour as the developer portal. */
+  (function () {
+    var THEME_KEY = 'msstore.theme';
+    var pBtn = document.getElementById('profileBtn');
+    var pFly = document.getElementById('profileFlyout');
+    var tt = document.getElementById('theme-toggle');
+    if (!pBtn || !pFly) return;
+    function osScheme() { return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
+    function curTheme() { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+    function themeMode() { var v = null; try { v = localStorage.getItem(THEME_KEY); } catch (e) {} return (v === 'light' || v === 'dark') ? v : 'system'; }
+    function setThemeMode(m) {
+      try {
+        if (m === 'system') { localStorage.removeItem(THEME_KEY); document.documentElement.setAttribute('data-theme', osScheme()); }
+        else { localStorage.setItem(THEME_KEY, m); document.documentElement.setAttribute('data-theme', m); }
+      } catch (e) { document.documentElement.setAttribute('data-theme', m === 'light' ? 'light' : 'dark'); }
+      syncTheme();
+    }
+    function syncSeg() {
+      var mode = themeMode();
+      pFly.querySelectorAll('.pfseg__opt[data-theme-mode]').forEach(function (b) {
+        var on = b.getAttribute('data-theme-mode') === mode;
+        b.classList.toggle('is-active', on); b.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+    }
+    function syncToggle() {
+      if (!tt) return;
+      var dark = curTheme() === 'dark', ic = tt.querySelector('iconify-icon');
+      if (ic) ic.setAttribute('icon', dark ? 'fluent:weather-sunny-20-regular' : 'fluent:weather-moon-20-regular');
+      tt.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+      tt.title = tt.getAttribute('aria-label');
+    }
+    function syncTheme() { syncSeg(); syncToggle(); }
+    function closeFly() { pFly.hidden = true; pBtn.setAttribute('aria-expanded', 'false'); }
+    pBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var nf = document.getElementById('notifFlyout'), nb = document.getElementById('notifBtn');
+      if (nf) { nf.hidden = true; if (nb) nb.setAttribute('aria-expanded', 'false'); }
+      var open = pFly.hidden; pFly.hidden = !open;
+      pBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) syncSeg();
+    });
+    document.addEventListener('click', function (e) { if (!pFly.hidden && !pFly.contains(e.target) && !pBtn.contains(e.target)) closeFly(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !pFly.hidden) closeFly(); });
+    pFly.addEventListener('click', function (e) {
+      var seg = e.target.closest('.pfseg__opt[data-theme-mode]');
+      if (seg) { setThemeMode(seg.getAttribute('data-theme-mode')); return; }
+      if (e.target.closest('[data-pf-profile]') || e.target.closest('[data-pf-settings]')) { e.preventDefault(); closeFly(); }
+    });
+    if (tt) tt.addEventListener('click', function () { setThemeMode(curTheme() === 'dark' ? 'light' : 'dark'); });
+    new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    syncTheme();
+  })();
 
-  <!-- ===================== LEFT SIDEBAR (same as the portal — shown only when in review/published) ===================== -->
-  <aside class="sidebar" aria-label="Store navigation">
+  /* Notification center — same behaviour as the developer portal. */
+  (function () {
+    var nBtn = document.getElementById('notifBtn'), nFly = document.getElementById('notifFlyout'), list = document.getElementById('notifList'), badge = document.getElementById('notifBadge');
+    if (!nBtn || !nFly) return;
+    var READ_KEY = 'msstore.notifs.read';
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function readSet() { try { var a = JSON.parse(localStorage.getItem(READ_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+    function saveRead(ids) { try { localStorage.setItem(READ_KEY, JSON.stringify(ids)); } catch (e) {} }
+    function items() {
+      var apps = (function () { try { var s = JSON.parse(localStorage.getItem('tdp.portal.unified.v1')); return (s && s.apps) || []; } catch (e) { return []; } })();
+      var stat = function (id) { try { return JSON.parse(localStorage.getItem('tdp.appstats.' + id)); } catch (e) { return null; } };
+      var nm = function (a) { return a.storeName || a.name || 'Your app'; };
+      var live = function (a) { return a.store || a.storeStatus === 'published'; };
+      var ana = function (a, tab) { return '../developer-portal.html?anaApp=' + encodeURIComponent(a.id) + '&anaTab=' + tab + '#analytics'; };
+      var flow = function (a) { return 'publish-v6.html?from=wdp&id=' + encodeURIComponent(a.id); };
+      var num = function (n) { try { return Math.round(n).toLocaleString('en-US'); } catch (e) { return String(n); } };
+      // Real feed built from the portal's apps + cached per-app stats (tdp.appstats.<id>).
+      var errs = [], warns = [], reviewing = [], published = [], reviews = [], signed = [];
+      apps.forEach(function (a) {
+        if (a.storeStatus === 'rejected') errs.push({ id: 'certfail-' + a.id, type: 'error', icon: 'fluent:error-circle-20-filled', title: 'Certification failed', text: nm(a) + ' didn\u2019t pass certification. Review the failures and resubmit.', time: a.storeCreated || '', href: flow(a) });
+        else if (a.storeStatus === 'in-review') reviewing.push({ id: 'review-' + a.id, type: 'info', icon: 'fluent:clock-20-filled', title: 'Submission in review', text: nm(a) + ' is being certified \u2014 typically 24\u201348 hours.', time: a.storeCreated || '', href: flow(a) });
+        else if (live(a)) {
+          published.push({ id: 'pub-' + a.id, type: 'success', icon: 'fluent:checkmark-circle-20-filled', title: 'App published', text: nm(a) + ' is live in the Microsoft Store.', time: a.storeCreated || '', href: ana(a, 'acquisition') });
+          var s = stat(a.id);
+          if (s && s.crashRate >= 5) warns.push({ id: 'crash-' + a.id, type: 'warning', icon: 'fluent:arrow-trending-lines-20-filled', title: 'Crash rate is elevated', text: nm(a) + ' crash rate is ' + Number(s.crashRate).toFixed(2) + '% \u2014 worth a look.', time: '', href: ana(a, 'crashes') });
+          if (s && s.ratingCount > 0) reviews.push({ id: 'rating-' + a.id, type: 'info', icon: 'fluent:star-20-filled', title: 'Ratings & reviews', text: nm(a) + ' is at ' + Number(s.rating).toFixed(1) + '\u2605 from ' + num(s.ratingCount) + ' ratings.', time: '', href: ana(a, 'ratings') });
+        }
+        else if (a.discovered || a.certId) signed.push(a);
+      });
+      var out = errs.concat(warns, reviewing, published, reviews);
+      if (signed.length) out.push({ id: 'signed-analytics', type: 'info', icon: 'fluent:pulse-20-filled', title: 'Crash analytics ready', text: 'Crash & hang analytics are ready for ' + (signed.length === 1 ? nm(signed[0]) : signed.length + ' apps you signed') + '.', time: '', href: ana(signed[0], 'crashes') });
+      if (!out.length) out.push({ id: 'allcaught', type: 'info', icon: 'fluent:checkmark-circle-20-filled', title: 'You\u2019re all caught up', text: 'Updates about your apps will show up here.', time: '' });
+      return out;
+    }
+    function render() {
+      var read = readSet(), all = items(), unread = 0;
+      if (list) list.innerHTML = all.map(function (n) {
+        var isRead = read.indexOf(n.id) !== -1; if (!isRead) unread++;
+        return '<button type="button" class="nitem' + (isRead ? ' is-read' : '') + '" data-notif-id="' + n.id + '" data-href="' + esc(n.href || '') + '">' +
+          '<span class="nitem__ico nitem__ico--' + n.type + '"><iconify-icon icon="' + n.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+          '<span class="nitem__body"><span class="nitem__title">' + esc(n.title) + '</span><span class="nitem__text">' + esc(n.text) + '</span><span class="nitem__time">' + esc(n.time) + '</span></span>' +
+          (isRead ? '' : '<span class="nitem__dot" aria-hidden="true"></span>') + '</button>';
+      }).join('');
+      else all.forEach(function (n) { if (read.indexOf(n.id) === -1) unread++; });
+      if (badge) { badge.textContent = unread > 9 ? '9+' : String(unread); badge.hidden = unread === 0; }
+      nBtn.setAttribute('aria-label', unread ? 'Notifications (' + unread + ' unread)' : 'Notifications');
+    }
+    function markRead(id) { var r = readSet(); if (r.indexOf(id) === -1) { r.push(id); saveRead(r); } render(); }
+    function markAll() { var r = readSet(); items().forEach(function (n) { if (r.indexOf(n.id) === -1) r.push(n.id); }); saveRead(r); render(); }
+    function closeN() { nFly.hidden = true; nBtn.setAttribute('aria-expanded', 'false'); }
+    nBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = nFly.hidden;
+      var pf = document.getElementById('profileFlyout'), pb = document.getElementById('profileBtn');
+      if (pf) { pf.hidden = true; if (pb) pb.setAttribute('aria-expanded', 'false'); }
+      nFly.hidden = !open; nBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) { if (!nFly.hidden && !nFly.contains(e.target) && !nBtn.contains(e.target)) closeN(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !nFly.hidden) closeN(); });
+    nFly.addEventListener('click', function (e) {
+      if (e.target.closest('[data-notif-markall]')) { e.preventDefault(); markAll(); return; }
+      var it = e.target.closest('[data-notif-id]');
+      if (it) { markRead(it.getAttribute('data-notif-id')); var href = it.getAttribute('data-href'); closeN(); if (href) location.href = href; }
+    });
+    render();
+  })();
+  </script>
+
+  <!-- ===================== LEFT SIDEBAR — CONTEXTUAL APP RAIL (shown only when in review/published) =====================
+       Inside an app the rail is NOT the account rail; it's this app's navigation (All apps ↑ / identity /
+       Overview / capability sections). Rendered by tdp-bridge renderAppNav() into #app-rail. -->
+  <aside class="sidebar" aria-label="App navigation">
     <div class="sidebar__top">
-    <nav class="snav">
-      <a href="../store-portal.html#overview"><iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>
-      <!-- Apps expands to disclose THIS app's capabilities (published / in-review); the nested #app-nav is injected by tdp-bridge renderAppNav(). -->
-      <div class="snav-parent" id="nav-apps-group">
-        <div class="snav-parent__row">
-          <a href="../store-portal.html#apps" class="is-active"><iconify-icon icon="fluent:apps-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Apps</a>
-          <button type="button" class="snav-parent__toggle" id="nav-apps-toggle" aria-expanded="true" aria-label="Collapse app sections" hidden>
-            <iconify-icon icon="fluent:chevron-down-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-          </button>
-        </div>
-        <div class="appnav" id="app-nav" hidden></div>
-      </div>
-      <a href="../store-portal.html#certificates"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Certificates</a>
-      <a href="../store-portal.html#analytics"><iconify-icon icon="fluent:data-histogram-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Analytics</a>
-    </nav>
+      <nav class="snav" id="app-rail" aria-label="App"></nav>
     </div>
     <div class="snav snav--foot">
-      <a href="../store-portal.html"><iconify-icon icon="fluent:arrow-counterclockwise-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Reset demo state</a>
-      <a href="../store-developer.html"><iconify-icon icon="fluent:sign-out-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Sign out</a>
+      <a href="../developer-portal.html"><iconify-icon icon="fluent:arrow-counterclockwise-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Reset demo state</a>
     </div>
   </aside>
 
@@ -3684,7 +4142,7 @@
     <!-- Page-level breadcrumb + back arrow: sits above the entity banner, on the canvas (web
          convention — page navigation is separate from the entity-identity header card). -->
     <nav class="ez-crumbs" id="ez-crumbs" aria-label="Breadcrumb">
-      <a class="ez-back" href="../store-portal.html#apps" aria-label="Go back one level"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>
+      <a class="ez-back" href="../store-portal.html#apps" aria-label="Go back"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>
       <ol class="ez-crumbs__list" id="ez-crumbs-list"></ol>
     </nav>
 
@@ -3704,6 +4162,10 @@
             </div>
             <div class="ez-apphead__meta">
               <span class="status-pill status-pill--draft" id="app-status">Draft</span>
+              <button type="button" class="ez-apphead__storelink" id="app-storelink" hidden title="Open your live listing in the Microsoft Store">
+                View in Store
+                <iconify-icon icon="fluent:open-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>
+              </button>
             </div>
           </div>
         </div>
@@ -3715,7 +4177,9 @@
             <iconify-icon icon="fluent:options-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon> Advanced
           </button>
         </div>
-        <!-- Contextual header actions (submitted view only): Withdraw while in review, View in Store once published. -->
+        <!-- Contextual header actions (submitted view only): once published the primary action is Update;
+             View submissions is secondary (View in Store rides on the status pill). Withdraw while in
+             review; report/fix when failed. -->
         <div class="wz-head-actions" id="wz-head-actions">
           <fluent-button appearance="secondary" id="head-review-btn" hidden>
             <iconify-icon slot="start" icon="fluent:history-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -3725,10 +4189,6 @@
             <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             Withdraw submission
           </fluent-button>
-          <fluent-button appearance="primary" id="head-viewstore-btn" hidden>
-            <iconify-icon slot="start" icon="fluent:open-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            View in Store
-          </fluent-button>
           <fluent-button appearance="primary" id="head-report-btn" hidden>
             <iconify-icon slot="start" icon="fluent:document-bullet-list-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             See report
@@ -3736,6 +4196,10 @@
           <fluent-button appearance="secondary" id="head-editfix-btn" hidden>
             <iconify-icon slot="start" icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             Edit &amp; fix
+          </fluent-button>
+          <fluent-button appearance="primary" id="head-update-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:arrow-upload-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Update
           </fluent-button>
         </div>
       </div>
@@ -4636,16 +5100,6 @@
 
     <!-- ===== Submitted / in-review state (ported verbatim from variant B) ===== -->
     <section id="state-done" hidden>
-      <!-- Notification audience (in review) — who gets the cert pass/fail email. -->
-      <div class="notify-banner">
-        <iconify-icon class="notify-banner__icon" icon="fluent:alert-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-        <div class="notify-banner__text">
-          <strong>Submission notification audience</strong>
-          <span>Choose who gets emailed when this submission passes or fails certification.</span>
-        </div>
-        <fluent-button appearance="secondary" size="small" id="notify-audience-open">Manage</fluent-button>
-      </div>
-
       <!-- Prototype preview switcher — jump between certification outcomes (demo/testing only). -->
       <div class="cert-switch" id="cert-switch" role="group" aria-label="Preview certification result">
         <span class="cert-switch__label"><iconify-icon icon="fluent:eye-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Preview</span>
@@ -4752,6 +5206,17 @@
       </div>
       </div><!-- /#cert-progress -->
 
+      <!-- Notification audience (in review) — who gets the cert pass/fail email. Sits BELOW the
+           certification status so the status card stays the hero; setNotify() still toggles it. -->
+      <div class="notify-banner">
+        <iconify-icon class="notify-banner__icon" icon="fluent:alert-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        <div class="notify-banner__text">
+          <strong>Submission notification audience</strong>
+          <span>Choose who gets emailed when this submission passes or fails certification.</span>
+        </div>
+        <fluent-button appearance="secondary" size="small" id="notify-audience-open">Manage</fluent-button>
+      </div>
+
       <!-- Certification result (passed or failed) — rendered by tdp-bridge.js -->
       <div id="cert-result" hidden></div>
 
@@ -4762,6 +5227,15 @@
 
       <!-- Add-ons (in-app products) manager — opened from the live hub "Manage add-ons" row. -->
       <div id="addons-panel" hidden></div>
+
+      <!-- Manage app names (reserve names, per-language names, free unused) — opened from the live hub. -->
+      <div id="names-panel" hidden></div>
+
+      <!-- Package identity (manifest names & IDs) — L3 page, opened from the live hub / sidebar. -->
+      <div id="identity-panel" hidden></div>
+
+      <!-- Store availability (hide from new customers) — L3 page, opened from the live hub / sidebar. -->
+      <div id="availability-panel" hidden></div>
 
       <!-- Package flights (ship a preview build to a ring of testers) — opened from the live hub row. -->
       <div id="flights-panel" hidden></div>
@@ -4826,31 +5300,47 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
-<!-- Store availability (post-publish): a quick control to hide the app from NEW customers while
-     existing customers keep access. Opened from the live hub's "Store availability" card. -->
-<fluent-dialog id="availability-dialog" modal-type="modal" aria-labelledby="availability-title">
+<!-- Use a reserved name for specific languages — opened from Manage app names. -->
+<fluent-dialog id="name-langs-dialog" modal-type="modal" aria-labelledby="name-langs-title">
   <fluent-dialog-body>
-    <span slot="title" id="availability-title">
-      <iconify-icon icon="fluent:eye-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
-      Store availability
+    <span slot="title" id="name-langs-title">
+      <iconify-icon icon="fluent:local-language-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
+      Use for languages
     </span>
-    <fluent-button slot="title-action" appearance="subtle" data-availability-close aria-label="Close">
+    <fluent-button slot="title-action" appearance="subtle" data-namelangs-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <div class="avail-status is-available" id="avail-status">
-      <iconify-icon class="avail-status__ico" icon="fluent:checkmark-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
-      <span id="avail-status-text">Your app is available in the Microsoft Store.</span>
+    <p class="rname-dlg__intro" id="name-langs-intro"></p>
+    <div class="rname-langs" id="name-langs-list"></div>
+    <fluent-button slot="action" appearance="secondary" data-namelangs-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="name-langs-apply">Apply</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Store availability moved to an L3 page (#availability-panel), rendered by availabilityPanel() —
+     the sidebar/hub now navigates to it like every other capability. -->
+
+<!-- Share your product: post the listing to social channels with a prefilled message + a link.
+     Opened from the "Share listing" capability row and the Grow-your-app checklist. -->
+<fluent-dialog id="share-dialog" modal-type="modal" aria-labelledby="share-title">
+  <fluent-dialog-body>
+    <span slot="title" id="share-title">Share your product</span>
+    <fluent-button slot="title-action" appearance="subtle" data-share-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <div class="share-app">
+      <div class="share-app__icon" id="share-app-icon">A</div>
+      <div class="share-app__text">
+        <strong class="share-app__name" id="share-app-name">This app</strong>
+        <span class="share-app__cat" id="share-app-cat">Microsoft Store</span>
+      </div>
     </div>
-    <label class="avail-opt">
-      <input type="radio" name="availability" value="available" checked />
-      <span class="avail-opt__body"><strong>Available</strong><span>Discoverable in Store search, browse, and direct links — anyone can find and get your app.</span></span>
-    </label>
-    <label class="avail-opt">
-      <input type="radio" name="availability" value="unavailable" />
-      <span class="avail-opt__body"><strong>Unavailable to new customers</strong><span>Hidden from search, browse, and direct links. Existing customers keep access and can reinstall.</span></span>
-    </label>
-    <fluent-button slot="action" appearance="secondary" data-availability-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="availability-apply">Apply</fluent-button>
+    <div class="share-msg">
+      <fluent-textarea id="share-msg-input" appearance="outline" resize="none" maxlength="280" aria-label="Message to share"></fluent-textarea>
+      <span class="share-msg__count" id="share-msg-count">0/280</span>
+    </div>
+    <p class="share-hint">Choose a channel to share this message and a link to your product.</p>
+    <div class="share-channels" id="share-channels"></div>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -5150,7 +5640,7 @@
   <fluent-dialog-body>
     <span slot="title" id="cpx-title">
       <iconify-icon class="cpx-logo" icon="fluent:sparkle-20-filled" aria-hidden="true"></iconify-icon>
-      Publish with AI
+      Set up with AI
     </span>
     <fluent-button slot="title-action" appearance="subtle" data-cpx-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -6435,8 +6925,8 @@
     document.querySelectorAll('a[href*="store-developer.html"]').forEach(function (el) {
       el.setAttribute('href', el.getAttribute('href').replace('store-developer.html', 'index.html'));
     });
-    const sub = document.querySelector('.brand__sub'); if (sub) sub.textContent = 'Windows Developer Portal';
-    const brand = document.querySelector('.appbar .brand'); if (brand) brand.setAttribute('aria-label', 'Microsoft Windows Developer Portal');
+    const sub = document.querySelector('.brand__sub'); if (sub) sub.textContent = 'Windows Developer Center';
+    const brand = document.querySelector('.appbar .brand'); if (brand) brand.setAttribute('aria-label', 'Microsoft Windows Developer Center');
     const aside = document.querySelector('aside.sidebar'); if (aside) aside.setAttribute('aria-label', 'Program navigation');
   })();
 
@@ -7064,7 +7554,74 @@
     }
     function openIdentity() { renderRows(); try { dlg.show(); } catch (e) {} }
     function closeIdentity() { try { dlg.hide(); } catch (e) {} }
-    window.__openIdentityDialog = openIdentity;   // reused by the published hub (tdp-bridge) to grab identity for a new MSIX
+    window.__openIdentityDialog = openIdentity;   // the Package-step reference dialog (quick lookup while uploading)
+    // Package identity as an L3 page (#identity-panel) for the published hub/sidebar — the same reference
+    // rows as the dialog, but a navigable destination. (The dialog above stays for the Package step banner.)
+    var _identityHidden = [];
+    function identityRowsHTML() {
+      const idv = deriveIdentityValues();
+      const rows = [
+        { label: 'Package Identity Name', value: idv.identityName, note: 'Goes in <Identity Name="…">' },
+        { label: 'Publisher', value: idv.publisherCn, note: 'Goes in <Identity Publisher="…">' },
+        { label: 'Publisher Display Name', value: idv.publisherDisplay, note: 'Goes in <PublisherDisplayName>' },
+        { label: 'App Display Name', value: idv.appDisplayName, note: 'Goes in <DisplayName>' },
+        { label: 'Package Family Name', value: idv.pfn, note: 'Derived — used for app:protocol URIs and PowerShell' },
+        { label: 'Store ID', value: idv.storeId, note: 'Reservation ID — referenced in apps.microsoft.com URL' }
+      ];
+      return rows.map(r =>
+        '<div class="manifest-identity__row">' +
+          '<span class="manifest-identity__label" title="' + esc(r.note) + '">' + esc(r.label) + '</span>' +
+          '<code class="manifest-identity__value" title="' + esc(r.value) + '">' + esc(r.value) + '</code>' +
+          '<button class="manifest-identity__copy" type="button" data-copy-value="' + esc(r.value) + '" aria-label="Copy ' + esc(r.label) + '">' +
+            '<iconify-icon icon="fluent:copy-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+          '</button>' +
+        '</div>'
+      ).join('');
+    }
+    function identityPanelHTML() {
+      return '<div class="exp">' +
+        '<div class="exp__head"><div class="exp__htext"><h2 class="exp__title">Package identity</h2>' +
+        '<p class="exp__sub">The names and IDs that identify your app to Windows and the Store. Paste them into your <code>AppxManifest.xml</code> before building — they\u2019re locked to your reservation and never change.</p></div></div>' +
+        '<div class="manifest-identity__rows">' + identityRowsHTML() + '</div>' +
+        '<div class="identity-panel__actions">' +
+          '<fluent-button appearance="secondary" id="ip-download-manifest"><iconify-icon slot="start" icon="fluent:arrow-download-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Download starter AppxManifest.xml</fluent-button>' +
+          '<fluent-button appearance="primary" id="ip-copy-snippet"><iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Copy &lt;Identity&gt; snippet</fluent-button>' +
+        '</div>' +
+      '</div>';
+    }
+    function ipDownloadManifest() {
+      var blob = new Blob([buildStarterManifest()], { type: 'application/xml' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'AppxManifest.xml'; document.body.appendChild(a); a.click();
+      document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }
+    window.startIdentity = function () {
+      var panel = $('identity-panel'); if (!panel) return;
+      _identityHidden = [];
+      var sd = $('state-done');
+      if (sd) Array.prototype.forEach.call(sd.children, function (ch) { if (ch.id === 'identity-panel') return; _identityHidden.push([ch, ch.hidden]); ch.hidden = true; });
+      panel.hidden = false;
+      panel.innerHTML = identityPanelHTML();
+      announce('Package identity.');
+      window.scrollTo({ top: 0, behavior: (typeof reduceMotion === 'function' && reduceMotion()) ? 'auto' : 'smooth' });
+    };
+    window.exitIdentity = function () {
+      var panel = $('identity-panel'); if (!panel) return;
+      panel.hidden = true;
+      _identityHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+      _identityHidden = [];
+      window.scrollTo({ top: 0, behavior: (typeof reduceMotion === 'function' && reduceMotion()) ? 'auto' : 'smooth' });
+    };
+    (function wireIdentityPanel() {
+      var panel = $('identity-panel'); if (!panel) return;
+      panel.addEventListener('click', function (e) {
+        var cp = e.target.closest('[data-copy-value]');
+        if (cp) { copyText(cp.getAttribute('data-copy-value'), cp); return; }
+        var snip = e.target.closest('#ip-copy-snippet'); if (snip) { copyText(buildIdentitySnippet(), snip); return; }
+        if (e.target.closest('#ip-download-manifest')) { ipDownloadManifest(); return; }
+      });
+    })();
     if (showBtn) showBtn.addEventListener('click', openIdentity);
     dlg.querySelectorAll('[data-identity-dialog-close]').forEach(el => el.addEventListener('click', closeIdentity));
     if (copyBtn) copyBtn.addEventListener('click', () => copyText(buildIdentitySnippet(), copyBtn));
@@ -7368,6 +7925,10 @@
   const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Content & ratings', 'step-reach': 'Reach & price' };
   const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
   let wzIndex = 0;
+  // In an update, a section the developer hasn't touched is exactly what's already live (it passed
+  // certification), so it counts as complete/valid — the update gate is “≥1 change”, not “re-complete
+  // everything”. Guarded on updateSnapshot so it only applies once the baseline is captured.
+  function updUnchanged(id) { return inUpdateFlow && updateSnapshot && !updateChangedSet.has(id); }
   function wzStepComplete(id) {
     // Derived from the CHECKLIST_ITEMS registry (the one source of truth shared
     // with the gate + the per-section checklist), so adding a required field
@@ -7377,6 +7938,7 @@
     // VISITED the step (reachVisited) — so "Submit for review" can't enable until
     // Reach & price has been opened. The gate, the "N to finish" count, and the
     // step dots all read this, so they stay in agreement.
+    if (updUnchanged(id)) return true;
     if (id === 'step-reach' && !reachVisited) return false;
     return !ckSection(id).some(it => ckRequired(it) && !ckDone(it));
   }
@@ -7396,7 +7958,8 @@
       // Reach & price is valid on defaults, but shouldn't read "complete" (green ✓) until
       // the user has actually opened it — otherwise the step shows done before it's seen.
       // Submission stays allowed on defaults (the gate reads wzStepComplete, not this).
-      if (id === 'step-reach' && !reachVisited) return wzStepStarted(id) ? 'in-progress' : 'not-started';
+      // (An unchanged section in an update is already live, so it stays complete.)
+      if (id === 'step-reach' && !reachVisited && !updUnchanged(id)) return wzStepStarted(id) ? 'in-progress' : 'not-started';
       return 'complete';
     }
     return wzStepStarted(id) ? 'in-progress' : 'not-started';
@@ -7476,7 +8039,7 @@
       if (dot) dot.innerHTML = '<iconify-icon icon="' + icon + '" width="18" height="18" aria-hidden="true"></iconify-icon>';
       // Trailing indicator: a count of what's still to do, or "Review" for a section that's valid on
       // defaults (Reach & price) but not yet opened. Done sections show just the check — no trailing text.
-      const leftN = locked ? 0 : ckSection(id).filter(it => ckRequired(it) && !ckDone(it)).length;
+      const leftN = (locked || updUnchanged(id)) ? 0 : ckSection(id).filter(it => ckRequired(it) && !ckDone(it)).length;
       // In an update the live app is already valid — "Review" doesn't apply; lead with changed/unchanged instead.
       const needsReview = !locked && !inUpdateFlow && leftN === 0 && status !== 'complete';
       const isChanged = inUpdateFlow && !locked && updateChangedSet.has(id);
@@ -7484,7 +8047,7 @@
       if (leftN > 0 || needsReview) {
         if (!badge) { badge = document.createElement('span'); badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
         badge.className = 'wz-stepind__badge' + (needsReview ? ' wz-stepind__badge--review' : '');
-        badge.textContent = needsReview ? 'Review' : leftN;
+        badge.textContent = needsReview ? 'Review' : leftN + ' left';
       } else if (badge) { badge.remove(); }
       // The badge + status icon are aria-hidden decoration, so carry the same status in the button's name.
       const a11yStatus = locked ? 'locked' : leftN > 0 ? (leftN + (leftN === 1 ? ' item left' : ' items left')) : isChanged ? 'updated' : needsReview ? 'review' : status === 'complete' ? 'done' : 'not started';
@@ -7531,13 +8094,14 @@
         cont.setAttribute('appearance', wzStepComplete(WZ_STEPS[wzIndex]) ? 'primary' : 'secondary');
       }
     }
-    // On the last step (Reach & price), the footer also carries Submit for review —
-    // disabled until every section is complete (mirrors the header action).
+    // On the last step (Reach & price), the footer also carries Submit for review — disabled until
+    // every section is complete AND (in an update) at least one section has actually changed.
     const footSubmit = $('wz-submit-foot');
     if (footSubmit) {
       footSubmit.hidden = !isLast;
-      footSubmit.disabled = incomplete.length > 0;
+      footSubmit.disabled = incomplete.length > 0 || noUpdateChanges;
       if (incomplete.length) footSubmit.title = 'Finish ' + wzListJoin(incomplete) + ' to submit for review.';
+      else if (noUpdateChanges) footSubmit.title = 'Edit any section to update your live listing before you can resubmit.';
       else footSubmit.removeAttribute('title');
     }
   }
@@ -8931,7 +9495,7 @@
   function applyPubMode() {
     const wrap = document.getElementById('flow-wrap');
     if (wrap) wrap.classList.toggle('is-mvp', isMvp());
-    document.querySelectorAll('.pubmode__opt[data-pubmode]').forEach(function (b) {
+    document.querySelectorAll('[data-pubmode]').forEach(function (b) {
       const on = b.getAttribute('data-pubmode') === pubMode;
       b.classList.toggle('is-active', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -8945,7 +9509,7 @@
     try { localStorage.setItem('tdp.pubMode', pubMode); } catch (e) {}
     applyPubMode();
   }
-  document.querySelectorAll('.pubmode__opt[data-pubmode]').forEach(function (b) {
+  document.querySelectorAll('[data-pubmode]').forEach(function (b) {
     b.addEventListener('click', function () { setPubMode(b.getAttribute('data-pubmode')); });
   });
   applyPubMode();
@@ -12177,6 +12741,7 @@
     }
     function close() { try { dlg.hide(); } catch (e) {} }
     window.__openNameEdit = open;
+    window.__setAppName = function (v) { try { fName.value = v; if (typeof syncName === 'function') syncName(); } catch (e) {} };
     if (input) input.addEventListener('input', check);
     if (dlg) dlg.querySelectorAll('[data-name-edit-close]').forEach(function (el) { el.addEventListener('click', close); });
     if (saveBtn) saveBtn.addEventListener('click', function () {
@@ -12665,7 +13230,7 @@
   // Demo (?app=, no portal): mirror tdp-bridge's setHeadActions so the submitted header shows the
   // right buttons (View in Store + Review details when published).
   function demoHeadActions(view) {
-    var w = $('head-withdraw-btn'), v = $('head-viewstore-btn'), r = $('head-report-btn'), e = $('head-editfix-btn'), rv = $('head-review-btn');
+    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), rv = $('head-review-btn');
     if (w) w.hidden = (view !== 'progress');
     if (v) v.hidden = (view !== 'passed');
     if (r) r.hidden = (view !== 'failed');
@@ -13227,14 +13792,16 @@
   //      Product page experiments, Add-ons) it returns to THIS app's hub; only from the hub itself does
   //      it follow its href to the Apps list. The label tracks the level so it never lies. ----
   (function () {
-    var back = document.querySelector('.ez-back'); if (!back) return;
     function panelOpen(id) { var p = document.getElementById(id); return !!(p && !p.hidden); }
-    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel') || panelOpen('flights-panel') || panelOpen('history-panel')); }
+    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel') || panelOpen('flights-panel') || panelOpen('history-panel') || panelOpen('names-panel') || panelOpen('identity-panel') || panelOpen('availability-panel')); }
     function subviewTitle() {
       if (panelOpen('experiments-panel')) return 'Product page experiments';
       if (panelOpen('addons-panel')) return 'Manage add-ons';
       if (panelOpen('flights-panel')) return 'Package flights';
       if (panelOpen('history-panel')) return 'View submissions';
+      if (panelOpen('names-panel')) return 'Manage app names';
+      if (panelOpen('identity-panel')) return 'Package identity';
+      if (panelOpen('availability-panel')) return 'Store availability';
       if (window.__inUpdateFlow) return 'Update your app';
       return '';
     }
@@ -13242,7 +13809,7 @@
     // Full trail: Apps / App / Sub-view (read-only submission details nest one deeper). Every level
     // except the last is a jump link; the last is the current page.
     function buildCrumbs() {
-      var crumbs = [{ label: 'Apps', href: '../store-portal.html#apps' }];
+      var crumbs = [{ label: 'Apps', href: '../' + (window.__portalFile || 'store-portal.html') + '#apps' }];
       if (!inSubview()) { crumbs.push({ label: appCrumbName(), current: true }); return crumbs; }
       crumbs.push({ label: appCrumbName(), action: 'home' });
       if (window.__reviewMode) {
@@ -13255,6 +13822,7 @@
     }
     function renderCrumbs() {
       var listEl = document.getElementById('ez-crumbs-list'); if (!listEl) return;
+      var back = document.querySelector('.ez-back'); if (back) back.setAttribute('href', '../' + (window.__portalFile || 'store-portal.html') + '#apps');
       listEl.innerHTML = buildCrumbs().map(function (c) {
         if (c.current) return '<li class="ez-crumbs__item"><span class="ez-crumbs__current" aria-current="page">' + expEsc(c.label) + '</span></li>';
         if (c.href) return '<li class="ez-crumbs__item"><a class="ez-crumbs__link" href="' + c.href + '">' + expEsc(c.label) + '</a></li>';
@@ -13278,14 +13846,18 @@
       if (c === 'home') { if (typeof window.__appHome === 'function') window.__appHome(); }
       else if (c === 'exitReview' && typeof exitReviewDetails === 'function') { exitReviewDetails(); }
     });
-    back.addEventListener('click', function (e) {
+    // Breadcrumb back = up one level. Shown only in rail-less focused flows (wizard/update/review); CSS hides it when the rail is present.
+    var back = document.querySelector('.ez-back');
+    if (back) back.addEventListener('click', function (e) {
       if (window.__reviewMode && typeof exitReviewDetails === 'function') { e.preventDefault(); exitReviewDetails(); return; }
       if (panelOpen('experiments-panel') && typeof exitExperiments === 'function') { e.preventDefault(); exitExperiments(); return; }
       if (panelOpen('addons-panel') && typeof exitAddons === 'function') { e.preventDefault(); exitAddons(); return; }
       if (panelOpen('flights-panel') && typeof exitFlights === 'function') { e.preventDefault(); exitFlights(); return; }
       if (panelOpen('history-panel') && typeof exitHistory === 'function') { e.preventDefault(); exitHistory(); return; }
+      if (panelOpen('names-panel') && typeof exitNames === 'function') { e.preventDefault(); exitNames(); return; }
+      if (panelOpen('identity-panel') && typeof window.exitIdentity === 'function') { e.preventDefault(); window.exitIdentity(); return; }
+      if (panelOpen('availability-panel') && typeof window.exitAvailability === 'function') { e.preventDefault(); window.exitAvailability(); return; }
       if (window.__inUpdateFlow) { e.preventDefault(); exitUpdateToHub(); return; }
-      // else: on the hub / draft editor \u2014 follow the href to the Apps list.
     });
     // Return to THIS app's hub from any sub-view — exposed for the app-scope sidebar (tdp-bridge),
     // using the same exits the back arrow uses. No-op when already on the hub.
@@ -13296,6 +13868,9 @@
       else if (panelOpen('addons-panel') && typeof exitAddons === 'function') { exitAddons(); }
       else if (panelOpen('flights-panel') && typeof exitFlights === 'function') { exitFlights(); }
       else if (panelOpen('history-panel') && typeof exitHistory === 'function') { exitHistory(); }
+      else if (panelOpen('names-panel') && typeof exitNames === 'function') { exitNames(); }
+      else if (panelOpen('identity-panel') && typeof window.exitIdentity === 'function') { window.exitIdentity(); }
+      else if (panelOpen('availability-panel') && typeof window.exitAvailability === 'function') { window.exitAvailability(); }
       else if (window.__inUpdateFlow && typeof exitUpdateToHub === 'function') { exitUpdateToHub(); }
       onViewChange();
     };
@@ -13304,9 +13879,183 @@
     try {
       var mo = new MutationObserver(onViewChange);
       var fw = document.getElementById('flow-wrap'); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ['class'] });
-      ['experiments-panel', 'addons-panel', 'flights-panel', 'history-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
+      ['experiments-panel', 'addons-panel', 'flights-panel', 'history-panel', 'names-panel', 'identity-panel', 'availability-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
     } catch (e) {}
     onViewChange();
+  })();
+
+  // ---- Manage app names: reserve names (per language / in advance), see which is in use, free
+  //      unused ones, and set the default. Mirrors Partner Center's "Manage app names" page. ----
+  var NAME_LANGS = [
+    ['en-US', 'English (United States)'], ['en-GB', 'English (United Kingdom)'], ['fr-FR', 'French (France)'],
+    ['de-DE', 'German (Germany)'], ['es-ES', 'Spanish (Spain)'], ['it-IT', 'Italian (Italy)'],
+    ['pt-BR', 'Portuguese (Brazil)'], ['ja-JP', 'Japanese'], ['zh-CN', 'Chinese (Simplified)'], ['ko-KR', 'Korean']
+  ];
+  var NAME_TAKEN = ['whatsapp', 'spotify', 'netflix', 'instagram', 'tiktok', 'facebook', 'microsoft word', 'powerpoint', 'photoshop', 'chrome', 'gmail', 'zoom'];
+  function nameLangLabel(c) { for (var i = 0; i < NAME_LANGS.length; i++) if (NAME_LANGS[i][0] === c) return NAME_LANGS[i][1]; return c; }
+  function nameLangShort(c) { return nameLangLabel(c).replace(/\s*\(.*\)$/, ''); }
+  function namesKey() { return (app && app.id != null) ? 'tdp.appnames.' + app.id : null; }
+  var reservedNames = null, nameCheck = { name: '', ok: false }, namesTimer = null, namesConfirmFree = -1, namesUseIdx = -1, _namesHidden = [];
+  function namesCurName() { return (app && (app.storeName || app.name)) || 'This app'; }
+  function loadNames() {
+    try { reservedNames = JSON.parse(localStorage.getItem(namesKey()) || 'null'); } catch (e) { reservedNames = null; }
+    if (!reservedNames || !Array.isArray(reservedNames.reserved) || !reservedNames.reserved.length) {
+      reservedNames = { reserved: [{ name: namesCurName(), reservedOn: Date.now(), primary: true, langs: ['en-US'] }] };
+      saveNames();
+    }
+    if (!reservedNames.reserved.some(function (r) { return r.primary; })) reservedNames.reserved[0].primary = true;
+    return reservedNames;
+  }
+  function saveNames() { try { var k = namesKey(); if (k) localStorage.setItem(k, JSON.stringify(reservedNames)); } catch (e) {} }
+  function namesFmtDate(ts) { try { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } }
+  function nameExpiry(r) { if (r.primary || (r.langs && r.langs.length)) return null; return { days: Math.ceil((r.reservedOn + 90 * 864e5 - Date.now()) / 864e5) }; }
+  window.startNames = function () {
+    loadNames();
+    var panel = $('names-panel'); if (!panel) return;
+    _namesHidden = [];
+    var sd = $('state-done');
+    if (sd) Array.prototype.forEach.call(sd.children, function (ch) { if (ch.id === 'names-panel') return; _namesHidden.push([ch, ch.hidden]); ch.hidden = true; });
+    panel.hidden = false; nameCheck = { name: '', ok: false }; namesConfirmFree = -1;
+    renderNames();
+    announce('Manage app names.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
+  function exitNames() {
+    if ($('names-panel')) $('names-panel').hidden = true;
+    _namesHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+    _namesHidden = [];
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  function nameRowHTML(r, i) {
+    var inUse = r.primary || (r.langs && r.langs.length), status = '';
+    if (r.primary) status = '<fluent-badge appearance="tint" color="brand" size="small"><iconify-icon slot="start" icon="fluent:star-16-filled" width="11" height="11" aria-hidden="true"></iconify-icon>Default name</fluent-badge>';
+    else if (!inUse) {
+      // Countdown only when a name is nearing release; the policy note below carries the 90-day rule otherwise.
+      var ex = nameExpiry(r), d = ex ? ex.days : null, soon = d != null && d > 0 && d <= 30;
+      var nmLabel = (d != null && d <= 0) ? 'Reservation expired' : soon ? ('Expires in ' + d + ' day' + (d === 1 ? '' : 's')) : 'Not in use';
+      var nmColor = (d != null && d <= 0) ? 'danger' : soon ? 'warning' : 'subtle';
+      status = '<fluent-badge appearance="tint" color="' + nmColor + '" size="small">' + nmLabel + '</fluent-badge>';
+    }
+    var langs = (r.langs && r.langs.length) ? r.langs.map(function (c) { return expEsc(nameLangShort(c)); }).join(', ') : '<span class="rname-dash">\u2014</span>';
+    var nm = expEsc(r.name), acts;
+    if (namesConfirmFree === i) {
+      acts = '<span class="rname__confirm">Free this name?<fluent-button appearance="primary" size="small" data-name-freeyes="' + i + '">Free</fluent-button><fluent-button appearance="subtle" size="small" data-name-freeno>Keep</fluent-button></span>';
+    } else {
+      // Fixed icon-button slots so the shared action lines up across every row (mirrors the apps table).
+      var s1 = (!r.primary)
+        ? '<button class="rname-iconbtn" title="Set as default" aria-label="Set ' + nm + ' as the default name" data-name-default="' + i + '"><iconify-icon icon="fluent:star-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>'
+        : '<span class="rname-iconbtn rname-iconbtn--empty" aria-hidden="true"></span>';
+      var s2 = '<button class="rname-iconbtn" title="Use for specific languages" aria-label="Use ' + nm + ' for specific languages" data-name-use="' + i + '"><iconify-icon icon="fluent:local-language-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>';
+      var s3 = (!r.primary && reservedNames.reserved.length > 1)
+        ? '<button class="rname-iconbtn rname-iconbtn--danger" title="Free this name" aria-label="Free ' + nm + '" data-name-free="' + i + '"><iconify-icon icon="fluent:delete-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button>'
+        : '<span class="rname-iconbtn rname-iconbtn--empty" aria-hidden="true"></span>';
+      acts = s1 + s2 + s3;
+    }
+    return '<tr class="rname-row">' +
+      '<td><div class="rname-cell-name"><span class="rname-name">' + nm + '</span>' + status + '</div></td>' +
+      '<td class="rname-cell-langs">' + langs + '</td>' +
+      '<td class="rname-cell-date">' + namesFmtDate(r.reservedOn) + '</td>' +
+      '<td><div class="rname-cell-acts">' + acts + '</div></td></tr>';
+  }
+  function namesListHTML() {
+    var rows = reservedNames.reserved.map(nameRowHTML).join('');
+    var head = '<div class="exp__head"><div class="exp__htext"><h2 class="exp__title">Manage app names</h2>' +
+      '<p class="exp__sub">The names reserved for your app. Use a different name in each language, reserve names in advance to use later, and free the ones you don\u2019t need \u2014 your app appears under its <strong>default</strong> name.</p></div></div>';
+    var reserve = '<div class="rname-reserve"><h3 class="rname-reserve__title">Reserve a name</h3>' +
+      '<p class="rname-reserve__sub">Reserve a name for another language, or to rename your app later \u2014 we check availability as you type.</p>' +
+      '<div class="rname-reserve__row"><fluent-text-input id="rname-input" appearance="outline" maxlength="50" placeholder="Enter a name to reserve"></fluent-text-input>' +
+      '<fluent-button appearance="primary" id="rname-reserve" disabled><iconify-icon slot="start" icon="fluent:bookmark-add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Reserve name</fluent-button></div>' +
+      '<p class="rname-hint" id="rname-hint"></p></div>';
+    var table = '<h3 class="rname-tabletitle">Reserved names</h3>' +
+      '<p class="rname-policy">Names left unused for 90 days are automatically released, so other developers can reserve them.</p>' +
+      '<div class="rname-tablewrap"><table class="rname-table"><thead><tr>' +
+      '<th scope="col">Name</th><th scope="col">Languages</th><th scope="col">Reserved</th><th scope="col" class="rname-th-acts">Actions</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    var note = '<div class="rname-note"><iconify-icon icon="fluent:info-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '<span><strong>Renaming a published app?</strong> Reserve the new name here, set it as the default, then submit an update that uses it. <a href="https://learn.microsoft.com/windows/apps/publish/partner-center/msix/manage-app-name-reservations" target="_blank" rel="noopener noreferrer">Learn more</a></span></div>';
+    return '<div class="exp">' + head + reserve + table + note + '</div>';
+  }
+  function renderNames() { var p = $('names-panel'); if (p) p.innerHTML = namesListHTML(); }
+  function namesSetHint(cls, html, canReserve) {
+    var h = $('rname-hint'); if (h) { h.className = 'rname-hint' + (cls ? ' rname-hint--' + cls : ''); h.innerHTML = html; }
+    var b = $('rname-reserve'); if (b) { if (canReserve) b.removeAttribute('disabled'); else b.setAttribute('disabled', ''); }
+  }
+  function namesCheck() {
+    var input = $('rname-input'); if (!input) return;
+    var v = (input.value || '').trim(); nameCheck = { name: v, ok: false };
+    if (v.length < 2) { namesSetHint('err', 'Enter at least 2 characters.', false); return; }
+    var taken = NAME_TAKEN.indexOf(v.toLowerCase()) >= 0 || reservedNames.reserved.some(function (r) { return r.name.toLowerCase() === v.toLowerCase(); });
+    namesSetHint('', '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner> Checking availability\u2026', false);
+    clearTimeout(namesTimer);
+    namesTimer = setTimeout(function () {
+      var cur = $('rname-input'); if (cur && (cur.value || '').trim() !== v) return;
+      if (taken) namesSetHint('err', '\u201c' + expEsc(v) + '\u201d is already reserved \u2014 try another.', false);
+      else { nameCheck = { name: v, ok: true }; namesSetHint('ok', '<span class="verified-dot"></span> \u201c' + expEsc(v) + '\u201d is available', true); }
+    }, 550);
+  }
+  function namesReserve() {
+    if (!nameCheck.ok || !nameCheck.name) return;
+    var nm = nameCheck.name;
+    reservedNames.reserved.push({ name: nm, reservedOn: Date.now(), primary: false, langs: [] });
+    saveNames(); nameCheck = { name: '', ok: false }; renderNames();
+    announce('Reserved \u201c' + nm + '\u201d.');
+  }
+  function namesSetDefault(i) {
+    var r = reservedNames.reserved[i]; if (!r || r.primary) return;
+    reservedNames.reserved.forEach(function (x) { x.primary = false; });
+    r.primary = true;
+    try { if (app) { app.name = r.name; app.storeName = r.name; } if (typeof window.__setAppName === 'function') window.__setAppName(r.name); } catch (e) {}
+    saveNames(); renderNames();
+    announce('\u201c' + r.name + '\u201d is now your app\u2019s default name.');
+  }
+  function namesFree(i) {
+    var r = reservedNames.reserved[i]; if (!r || r.primary || reservedNames.reserved.length <= 1) return;
+    var nm = r.name; reservedNames.reserved.splice(i, 1); namesConfirmFree = -1;
+    saveNames(); renderNames();
+    announce('Released \u201c' + nm + '\u201d \u2014 it\u2019s free for others to reserve.');
+  }
+  function namesOpenUse(i) {
+    var r = reservedNames.reserved[i]; if (!r) return; namesUseIdx = i;
+    var intro = $('name-langs-intro'); if (intro) intro.innerHTML = 'Pick the languages whose Store listing should use <strong>' + expEsc(r.name) + '</strong>. Each language uses exactly one name.';
+    var list = $('name-langs-list');
+    if (list) list.innerHTML = NAME_LANGS.map(function (l) {
+      var code = l[0], checked = r.langs && r.langs.indexOf(code) >= 0;
+      var other = reservedNames.reserved.filter(function (x, xi) { return xi !== i && x.langs && x.langs.indexOf(code) >= 0; })[0];
+      return '<label class="rname-lang"><input type="checkbox" value="' + code + '"' + (checked ? ' checked' : '') + ' /><span class="rname-lang__name">' + expEsc(l[1]) + '</span>' +
+        (other ? '<span class="rname-lang__used">uses \u201c' + expEsc(other.name) + '\u201d</span>' : '') + '</label>';
+    }).join('');
+    var dlg = $('name-langs-dialog'); if (dlg && dlg.show) dlg.show();
+  }
+  function namesCloseUse() { var dlg = $('name-langs-dialog'); if (dlg && dlg.hide) dlg.hide(); namesUseIdx = -1; }
+  function namesApplyUse() {
+    var r = reservedNames.reserved[namesUseIdx]; if (!r) { namesCloseUse(); return; }
+    var boxes = $('name-langs-list') ? $('name-langs-list').querySelectorAll('input[type=checkbox]') : [], chosen = [];
+    Array.prototype.forEach.call(boxes, function (cb) { if (cb.checked) chosen.push(cb.value); });
+    reservedNames.reserved.forEach(function (x, xi) { if (xi !== namesUseIdx && x.langs) x.langs = x.langs.filter(function (c) { return chosen.indexOf(c) < 0; }); });
+    r.langs = chosen;
+    saveNames(); namesCloseUse(); renderNames();
+    announce('Updated the languages using \u201c' + r.name + '\u201d.');
+  }
+  (function wireNames() {
+    var p = $('names-panel');
+    if (p) {
+      p.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t.closest('#rname-reserve')) { namesReserve(); return; }
+        var d = t.closest('[data-name-default]'); if (d) { namesSetDefault(+d.getAttribute('data-name-default')); return; }
+        var u = t.closest('[data-name-use]'); if (u) { namesOpenUse(+u.getAttribute('data-name-use')); return; }
+        var f = t.closest('[data-name-free]'); if (f) { namesConfirmFree = +f.getAttribute('data-name-free'); renderNames(); return; }
+        var fy = t.closest('[data-name-freeyes]'); if (fy) { namesFree(+fy.getAttribute('data-name-freeyes')); return; }
+        if (t.closest('[data-name-freeno]')) { namesConfirmFree = -1; renderNames(); return; }
+      });
+      p.addEventListener('input', function (e) { if (e.target && e.target.id === 'rname-input') namesCheck(); });
+      p.addEventListener('keydown', function (e) { if (e.target && e.target.id === 'rname-input' && e.key === 'Enter') { e.preventDefault(); if (nameCheck.ok) namesReserve(); else namesCheck(); } });
+    }
+    var dlg = $('name-langs-dialog');
+    if (dlg) dlg.addEventListener('click', function (e) {
+      if (e.target.closest('[data-namelangs-close]')) { namesCloseUse(); return; }
+      if (e.target.closest('#name-langs-apply')) { namesApplyUse(); return; }
+    });
   })();
 
   // ---- Store availability: post-publish quick control to hide the app from NEW customers (existing
@@ -13315,8 +14064,28 @@
   function getAvailability() { try { var k = availKey(); return (k && localStorage.getItem(k) === 'unavailable') ? 'unavailable' : 'available'; } catch (e) { return 'available'; } }
   function setAvailabilityState(v) { try { var k = availKey(); if (k) localStorage.setItem(k, v === 'unavailable' ? 'unavailable' : 'available'); } catch (e) {} }
   window.__getAvailability = getAvailability;
-  (function availabilityDialog() {
-    var dlg = $('availability-dialog'); if (!dlg) return;
+  // Store availability as an L3 page: renders into #availability-panel (hides the hub while open), the
+  // same nav model as the other capabilities. Save persists + refreshes the hub underneath.
+  (function availabilityPanel() {
+    var _availHidden = [];
+    function availPanelHTML() {
+      var un = getAvailability() === 'unavailable';
+      return '<div class="exp">' +
+        '<div class="exp__head"><div class="exp__htext"><h2 class="exp__title">Store availability</h2>' +
+        '<p class="exp__sub">Control whether <strong>new</strong> customers can find and get your app in the Microsoft Store. Existing customers always keep access and can reinstall.</p></div></div>' +
+        '<div class="avail-status ' + (un ? 'is-unavailable' : 'is-available') + '" id="avail-status">' +
+          '<iconify-icon class="avail-status__ico" icon="' + (un ? 'fluent:eye-off-20-regular' : 'fluent:checkmark-circle-20-filled') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+          '<span id="avail-status-text">' + (un ? 'Your app is hidden from new customers. Existing customers still have access.' : 'Your app is available in the Microsoft Store.') + '</span>' +
+        '</div>' +
+        '<div id="avail-radios" class="avail-opts" role="radiogroup" aria-label="Store availability">' +
+          '<label class="avail-opt"><fluent-radio value="available"' + (un ? '' : ' checked') + '></fluent-radio>' +
+            '<span class="avail-opt__body"><strong>Available</strong><span>Discoverable in Store search, browse, and direct links — anyone can find and get your app.</span></span></label>' +
+          '<label class="avail-opt"><fluent-radio value="unavailable"' + (un ? ' checked' : '') + '></fluent-radio>' +
+            '<span class="avail-opt__body"><strong>Unavailable to new customers</strong><span>Hidden from search, browse, and direct links. Existing customers keep access and can reinstall.</span></span></label>' +
+        '</div>' +
+        '<div class="avail-actions"><fluent-button appearance="primary" id="availability-apply"><iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Save changes</fluent-button></div>' +
+      '</div>';
+    }
     function paintStatus(cur) {
       var box = $('avail-status'); if (!box) return;
       var un = cur === 'unavailable';
@@ -13326,23 +14095,111 @@
         ? 'Your app is hidden from new customers. Existing customers still have access.'
         : 'Your app is available in the Microsoft Store.';
     }
+    function availRadios() { var p = $('availability-panel'); return p ? p.querySelectorAll('#avail-radios fluent-radio') : []; }
+    function availMirror() { var rr = availRadios(); for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute('checked', !!rr[i].checked); }
+    function availGet() { var rr = availRadios(); for (var i = 0; i < rr.length; i++) if (rr[i].checked) return rr[i].getAttribute('value'); return 'available'; }
+    function availSelect(v) { var rr = availRadios(); for (var i = 0; i < rr.length; i++) rr[i].checked = (rr[i].getAttribute('value') === v); availMirror(); paintStatus(v); }
     window.startAvailability = function () {
-      var cur = getAvailability();
-      var r = dlg.querySelector('input[name="availability"][value="' + cur + '"]'); if (r) r.checked = true;
-      paintStatus(cur);
+      var panel = $('availability-panel'); if (!panel) return;
+      _availHidden = [];
+      var sd = $('state-done');
+      if (sd) Array.prototype.forEach.call(sd.children, function (ch) { if (ch.id === 'availability-panel') return; _availHidden.push([ch, ch.hidden]); ch.hidden = true; });
+      panel.hidden = false;
+      panel.innerHTML = availPanelHTML();
+      announce('Store availability.');
+      window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+    };
+    window.exitAvailability = function () {
+      var panel = $('availability-panel'); if (!panel) return;
+      panel.hidden = true;
+      _availHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+      _availHidden = [];
+      window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+    };
+    (function wireAvailabilityPanel() {
+      var panel = $('availability-panel'); if (!panel) return;
+      panel.addEventListener('click', function (e) {
+        var card = e.target.closest('.avail-opt');
+        if (card) { var r = card.querySelector('fluent-radio'); if (r) availSelect(r.getAttribute('value')); return; }
+        if (e.target.closest('#availability-apply')) {
+          var v = availGet();
+          setAvailabilityState(v);
+          paintStatus(v);
+          try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e2) {}
+          try { if (typeof announce === 'function') announce(v === 'unavailable' ? 'Your app is now hidden from new customers.' : 'Your app is now available to everyone.'); } catch (e2) {}
+        }
+      });
+      panel.addEventListener('change', function () { availMirror(); paintStatus(availGet()); });
+    })();
+  })();
+
+  /* ============ Share your product: share the live listing to social channels ============
+     Opened from the "Share listing" capability row / the Grow-your-app checklist (tdp-bridge calls
+     window.startShareListing). A prefilled, editable message + a product link, posted via each
+     platform's share intent (or copied for Discord / Copy link). Built in the Fluent design language. */
+  (function shareDialog() {
+    var dlg = $('share-dialog'); if (!dlg) return;
+    var PRODUCT_URL = 'https://apps.microsoft.com/detail/9N2KRDT2DD0S';
+    var CHANNELS = [
+      { k: 'x', label: 'X (Twitter)', icon: 'simple-icons:x', color: '#000000' },
+      { k: 'linkedin', label: 'LinkedIn', icon: 'simple-icons:linkedin', color: '#0A66C2' },
+      { k: 'reddit', label: 'Reddit', icon: 'simple-icons:reddit', color: '#FF4500' },
+      { k: 'whatsapp', label: 'WhatsApp', icon: 'simple-icons:whatsapp', color: '#25D366' },
+      { k: 'discord', label: 'Discord', icon: 'simple-icons:discord', color: '#5865F2' },
+      { k: 'telegram', label: 'Telegram', icon: 'simple-icons:telegram', color: '#26A5E4' },
+      { k: 'copy', label: 'Copy link', icon: 'fluent:link-20-regular', color: '' }
+    ];
+    function shareName() { var h = document.getElementById('app-name'); var t = h && h.textContent ? h.textContent.trim() : ''; if (t && !/^loading/i.test(t)) return t; try { return appName(); } catch (e) { return 'This app'; } }
+    function shareCat() { var c = document.getElementById('ez-pv-category'); var t = c && c.textContent ? c.textContent.trim() : ''; return (t && !/click|pick|^category$/i.test(t)) ? t : 'Microsoft Store'; }
+    function defaultMsg() { return 'Hey, my app "' + shareName() + '" is now available on the #MicrosoftStore! Download it today.'; }
+    function copyText(t) { try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t)['catch'](function () {}); } catch (e) {} }
+    function say(m) { try { if (typeof announce === 'function') announce(m); } catch (e) {} }
+    function syncCount() { var ta = $('share-msg-input'), c = $('share-msg-count'); if (ta && c) c.textContent = ((ta.value || '').length) + '/280'; }
+    function buildChannels() {
+      var host = $('share-channels'); if (!host) return;
+      host.innerHTML = CHANNELS.map(function (c) {
+        var copy = c.k === 'copy';
+        var discStyle = copy ? 'background:color-mix(in srgb, var(--fg-1) 12%, transparent);color:var(--fg-1)' : 'background:' + c.color;
+        return '<button type="button" class="share-ch" data-share-ch="' + c.k + '" title="' + (copy ? 'Copy link' : 'Share on ' + c.label) + '">' +
+          '<span class="share-ch__disc" style="' + discStyle + '"><iconify-icon icon="' + c.icon + '" width="' + (copy ? 20 : 22) + '" height="' + (copy ? 20 : 22) + '" aria-hidden="true"></iconify-icon></span>' +
+          '<span class="share-ch__label">' + c.label + '</span></button>';
+      }).join('');
+    }
+    function flashCopied(k) {
+      var lbl = dlg.querySelector('[data-share-ch="' + k + '"] .share-ch__label'); if (!lbl) return;
+      var prev = lbl.getAttribute('data-prev') || lbl.textContent; lbl.setAttribute('data-prev', prev); lbl.textContent = 'Copied!';
+      setTimeout(function () { try { lbl.textContent = lbl.getAttribute('data-prev'); } catch (e) {} }, 1500);
+    }
+    function shareVia(k) {
+      var msg = ($('share-msg-input') && $('share-msg-input').value) || defaultMsg();
+      var eu = encodeURIComponent(PRODUCT_URL), em = encodeURIComponent(msg), full = encodeURIComponent(msg + ' ' + PRODUCT_URL);
+      var open = function (u) { try { window.open(u, '_blank', 'noopener'); } catch (e) {} };
+      if (k === 'x') { open('https://x.com/intent/tweet?text=' + full); say('Opening X to share.'); }
+      else if (k === 'linkedin') { open('https://www.linkedin.com/sharing/share-offsite/?url=' + eu); say('Opening LinkedIn to share.'); }
+      else if (k === 'reddit') { open('https://www.reddit.com/submit?url=' + eu + '&title=' + em); say('Opening Reddit to share.'); }
+      else if (k === 'whatsapp') { open('https://wa.me/?text=' + full); say('Opening WhatsApp to share.'); }
+      else if (k === 'telegram') { open('https://t.me/share/url?url=' + eu + '&text=' + em); say('Opening Telegram to share.'); }
+      else if (k === 'discord') { copyText(msg + ' ' + PRODUCT_URL); flashCopied('discord'); say('Message copied — paste it into Discord.'); }
+      else if (k === 'copy') { copyText(PRODUCT_URL); flashCopied('copy'); say('Store link copied to clipboard.'); }
+    }
+    window.startShareListing = function () {
+      var nEl = $('share-app-name'); if (nEl) nEl.textContent = shareName();
+      var cEl = $('share-app-cat'); if (cEl) cEl.textContent = shareCat();
+      var src = $('app-icon'), dst = $('share-app-icon');
+      if (src && dst) {
+        var bg = src.style.backgroundImage;
+        if (bg && bg !== 'none') { dst.style.backgroundImage = bg; dst.textContent = ''; }
+        else { dst.style.backgroundImage = ''; dst.textContent = (shareName() || 'A').charAt(0).toUpperCase(); }
+      }
+      var ta = $('share-msg-input'); if (ta) ta.value = defaultMsg();
+      buildChannels(); syncCount();
       try { dlg.show(); } catch (e) {}
     };
-    Array.prototype.forEach.call(dlg.querySelectorAll('[data-availability-close]'), function (b) { b.addEventListener('click', function () { try { dlg.hide(); } catch (e) {} }); });
-    dlg.addEventListener('change', function (e) { if (e.target && e.target.name === 'availability') paintStatus(e.target.value); });
-    var apply = $('availability-apply');
-    if (apply) apply.addEventListener('click', function () {
-      var sel = dlg.querySelector('input[name="availability"]:checked');
-      var v = sel ? sel.value : 'available';
-      setAvailabilityState(v);
-      try { dlg.hide(); } catch (e) {}
-      try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e) {}
-      try { if (typeof announce === 'function') announce(v === 'unavailable' ? 'Your app is now hidden from new customers.' : 'Your app is now available to everyone.'); } catch (e) {}
+    dlg.addEventListener('click', function (e) {
+      if (e.target.closest('[data-share-close]')) { try { dlg.hide(); } catch (e2) {} return; }
+      var ch = e.target.closest('[data-share-ch]'); if (ch) { e.preventDefault(); shareVia(ch.getAttribute('data-share-ch')); }
     });
+    dlg.addEventListener('input', function (e) { if (e.target && e.target.id === 'share-msg-input') syncCount(); });
   })();
 
   /* ============ Product page experiments: A/B test the live listing's logo or screenshots ============
@@ -14157,10 +15014,12 @@
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
   if ($('withdraw-btn')) $('withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('cert-withdraw-btn')) $('cert-withdraw-btn').addEventListener('click', withdrawSubmission);
-  // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store (published) is a demo stub.
+  // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store
+  // (published, now beside the status pill) is a demo stub.
   if ($('head-withdraw-btn')) $('head-withdraw-btn').addEventListener('click', withdrawSubmission);
-  if ($('head-viewstore-btn')) $('head-viewstore-btn').addEventListener('click', () => announce('Opening your Store listing…'));
+  if ($('app-storelink')) $('app-storelink').addEventListener('click', () => announce('Opening your Store listing…'));
   if ($('head-review-btn')) $('head-review-btn').addEventListener('click', function () { if (typeof window.startHistory === 'function') window.startHistory(); });
+  if ($('head-update-btn')) $('head-update-btn').addEventListener('click', function () { if (typeof window.startAppUpdate === 'function') window.startAppUpdate(); });
   if ($('review-done-btn')) $('review-done-btn').addEventListener('click', exitReviewDetails);
   if ($('review-update-btn')) $('review-update-btn').addEventListener('click', updateFromReview);
 

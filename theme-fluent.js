@@ -1,4 +1,4 @@
-// Windows Developer Portal — shared Fluent 2 theme controller for the root pages
+// Windows Developer Center — shared Fluent 2 theme controller for the root pages
 // (portal, signup, store-portal, marketing). Single source of truth for light/dark:
 //   • applies the Fluent 2 theme with setTheme(webLightTheme|webDarkTheme) from <html data-theme>
 //   • swaps <img data-theme-image="NAME"> between assets/NAME-light.png and assets/NAME-dark.png

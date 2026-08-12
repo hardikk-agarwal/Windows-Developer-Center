@@ -1,6 +1,6 @@
-/* Windows Developer Portal — shared header brand lockup (single source of truth).
+/* Windows Developer Center — shared header brand lockup (single source of truth).
    Fills every <a class="brand" data-wdp-brand> across all pages with the
-   "Microsoft | Windows Developer Portal" lockup, so the brand name, logo, and
+   "Microsoft | Windows Developer Center" lockup, so the brand name, logo, and
    accessible label live in ONE place. Each page keeps its own header shell,
    right-side content, and the brand link's href. Change the name/logo here once
    and it updates the portal, the Store portal, the publishing flow, and the
@@ -8,7 +8,7 @@
 (function () {
   "use strict";
   var NAME = "Microsoft";
-  var SUB = "Windows Developer Portal";
+  var SUB = "Windows Developer Center";
   var INNER =
     '<svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">' +
       '<rect x="1" y="1" width="10" height="10" fill="#F25022"/>' +

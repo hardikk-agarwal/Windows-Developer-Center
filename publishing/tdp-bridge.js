@@ -11,16 +11,23 @@
   var id = new URLSearchParams(location.search).get("id");
   if (!id) return;
 
-  // Which portal launched this flow? Find the app in either variant's state and sync
-  // back to that one (TDP portal is the default). No portal files are modified.
+  // Which portal launched this flow? Find the app in whichever portal state holds it and sync
+  // back to THAT one. The unified portal (developer-portal.html) is the current default; the
+  // store.v1 / v5 keys are legacy portals kept working for older entry points.
   var TDP_KEY = (function () {
-    try {
-      var s = JSON.parse(localStorage.getItem("tdp.portal.store.v1"));
-      if (s && Array.isArray(s.apps) && s.apps.some(function (a) { return a.id === id; })) return "tdp.portal.store.v1";
-    } catch (e) {}
-    return "tdp.portal.v5";
+    var keys = ["tdp.portal.unified.v1", "tdp.portal.store.v1", "tdp.portal.v5"];
+    for (var i = 0; i < keys.length; i++) {
+      try {
+        var s = JSON.parse(localStorage.getItem(keys[i]));
+        if (s && Array.isArray(s.apps) && s.apps.some(function (a) { return a.id === id; })) return keys[i];
+      } catch (e) {}
+    }
+    return "tdp.portal.unified.v1";
   })();
-  var PORTAL_FILE = TDP_KEY === "tdp.portal.store.v1" ? "store-portal.html" : "portal.html";
+  var PORTAL_FILE = TDP_KEY === "tdp.portal.store.v1" ? "store-portal.html"
+    : TDP_KEY === "tdp.portal.v5" ? "portal.html"
+    : "developer-portal.html";
+  window.__portalFile = PORTAL_FILE;   // let the page's breadcrumb/back-arrow route "up to Apps" to the SAME portal the rail does
 
   function readJSON(k, d) {
     try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }
@@ -63,26 +70,15 @@
     var banner = document.querySelector(".wz-banner"); if (banner) banner.style.paddingBottom = hide ? "var(--sp-20)" : "";
     // Bring back the portal's left nav once the app is in review/published.
     var appEl = document.querySelector(".app"); if (appEl) appEl.classList.toggle("has-rail", !!hide);
-    if (hide) { try { renderAppNav(); } catch (e) {} } else { var _an = document.getElementById("app-nav"); if (_an) _an.hidden = true; var _tg = document.getElementById("nav-apps-toggle"); if (_tg) _tg.hidden = true; }
+    if (hide) { try { renderAppNav(); } catch (e) {} }   // sidebar hidden via has-rail when !hide, so nothing to clear
     var mode = document.querySelector(".ez-mode"); if (mode) mode.style.display = hide ? "none" : "";
   }
 
-  // ---- App-scope sidebar nav (hybrid rail): once the app is live, the "Apps" item in the portal's
-  //      global rail EXPANDS to disclose this app's capabilities nested beneath it — built from the SAME
-  //      LIVE_GROUPS the hub renders (single source of truth), so the rail lists exactly what the hub
-  //      lists. The sidebar lives outside #flow-wrap, so it persists across every L2 sub-view; each item
-  //      reuses the hub card's handler (startAppUpdate/startExperiments/startAddons/startAvailability). ----
-  // Capabilities come straight from the hub's LIVE_GROUPS so the two never drift. Placeholder cards with
-  // no action (Package flights, Share listing) get a slug key and are no-ops here, exactly as in the hub.
-  function appNavItems() {
-    var out = [];
-    LIVE_GROUPS.forEach(function (g) {
-      g.cards.forEach(function (c) {
-        out.push({ icon: c[0], label: c[1], key: c[4] || c[1].toLowerCase().replace(/[^a-z0-9]+/g, "-") });
-      });
-    });
-    return out;
-  }
+  // ---- Contextual app rail: inside an app the left sidebar STOPS being the account rail and BECOMES
+  //      this app's navigation — "All apps" (up a level) + the app identity + Overview + the app's
+  //      capability sections, grouped exactly like the hub (LIVE_GROUPS = single source of truth) so the
+  //      rail and the hub never drift. The sidebar lives outside #flow-wrap, so it persists across every
+  //      L2 sub-view; each item reuses the hub card's handler (startAppUpdate/startExperiments/…). ----
   function appNavIconHTML() {
     var src = document.getElementById("app-icon");
     if (src) {
@@ -104,28 +100,21 @@
       var ex = document.getElementById("experiments-panel"); if (ex && !ex.hidden) return "experiments";
       var ad = document.getElementById("addons-panel"); if (ad && !ad.hidden) return "addons";
       var fl = document.getElementById("flights-panel"); if (fl && !fl.hidden) return "flights";
+      var nm = document.getElementById("names-panel"); if (nm && !nm.hidden) return "names";
+      var idn = document.getElementById("identity-panel"); if (idn && !idn.hidden) return "identity";
+      var av = document.getElementById("availability-panel"); if (av && !av.hidden) return "availability";
+      var hi = document.getElementById("history-panel"); if (hi && !hi.hidden) return "history";
       if (window.__inUpdateFlow) return "update";
     } catch (e) {}
     return "overview";
   }
   function setAppNavActive(k) {
-    var host = document.getElementById("app-nav"); if (!host) return;
+    var host = document.getElementById("app-rail"); if (!host) return;
     Array.prototype.forEach.call(host.querySelectorAll("[data-app-nav]"), function (a) {
       a.classList.toggle("is-active", a.getAttribute("data-app-nav") === k);
     });
   }
   window.__setAppNavActive = setAppNavActive;
-  // On the Overview the hub already lists the capabilities, so collapse the sidebar's app section
-  // (not redundant); any capability sub-view expands it for quick switching between capabilities.
-  function syncAppNavExpansion() {
-    var grp = document.getElementById("nav-apps-group"); if (!grp) return;
-    var collapsed = appNavSection() === "overview";
-    grp.classList.toggle("is-collapsed", collapsed);
-    var toggle = document.getElementById("nav-apps-toggle");
-    if (toggle) toggle.setAttribute("aria-expanded", String(!collapsed));
-    var appsLink = grp.querySelector(".snav-parent__row > a");
-    if (appsLink) appsLink.classList.toggle("is-active", collapsed);   // Apps active when collapsed; the leaf carries it when expanded
-  }
   // An update is certifying (in review) — used to block/label a second update everywhere.
   function updateInProgress() {
     var done = document.getElementById("state-done");
@@ -133,66 +122,157 @@
     var pill = document.getElementById("app-status");
     return !!(pill && pill.textContent.trim() === "In review");
   }
+  // ---- App switcher: the rail's identity header doubles as a quick-switch between THIS developer's
+  //      apps (Play Console / App Store Connect idiom) so you never have to bounce back to the Apps
+  //      list to jump apps. Only shown when there's more than one app. ----
+  function appList() {
+    var st = readJSON(TDP_KEY, null);
+    var apps = (st && Array.isArray(st.apps)) ? st.apps : [];
+    return apps.map(function (a) {
+      return { id: a.id, name: (a.storeName || a.name || "Untitled app"), icon: a.icon || null,
+               status: a.storeStatus || a.status || (a.store ? "published" : "") };
+    });
+  }
+  // Preserve the entry context (?from=…) when switching apps; only swap the id (drop the cache-buster).
+  function switchUrl(newId) {
+    var qs = new URLSearchParams(location.search); qs.set("id", newId); qs.delete("_cb");
+    return location.pathname + "?" + qs.toString();
+  }
+  var STATUS_LABEL = { published: "Live", "in-review": "In review", rejected: "Needs attention", "in-progress": "Draft" };
+  function appSwitchIconHTML(a) {
+    if (a.icon) { var src = /^(data:|https?:|\/)/.test(a.icon) ? a.icon : "data:image/png;base64," + a.icon; return '<span class="app-switch__ico"><img src="' + esc(src) + '" alt="" /></span>'; }
+    var initial = ((a.name || "A").replace(/^\s+/, "")[0] || "A").toUpperCase();
+    return '<span class="app-switch__ico app-switch__ico--tile">' + esc(initial) + '</span>';
+  }
+  function renderAppSwitchMenu(apps) {
+    var menu = document.getElementById("app-switch-menu");
+    if (!menu) {
+      menu = document.createElement("div");
+      menu.id = "app-switch-menu"; menu.className = "app-switch__menu"; menu.setAttribute("role", "listbox"); menu.hidden = true;
+      document.body.appendChild(menu);
+      menu.addEventListener("click", function (e) {
+        var opt = e.target.closest("[data-switch-id]"); if (!opt) return;
+        var nid = opt.getAttribute("data-switch-id");
+        if (nid && nid !== id) { location.href = switchUrl(nid); } else { closeAppSwitch(); }
+      });
+    }
+    menu.innerHTML = '<div class="app-switch__hdr">Your apps</div>' +
+      apps.map(function (a) {
+        var cur = a.id === id, st = STATUS_LABEL[a.status] || "";
+        return '<button type="button" role="option" class="app-switch__opt' + (cur ? " is-current" : "") + '" data-switch-id="' + esc(a.id) + '"' + (cur ? ' aria-selected="true"' : '') + '>' +
+          appSwitchIconHTML(a) +
+          '<span class="app-switch__metatext"><span class="app-switch__optname">' + esc(cur ? appName() : a.name) + '</span>' + (st ? '<span class="app-switch__status">' + esc(st) + '</span>' : '') + '</span>' +
+          (cur ? '<iconify-icon class="app-switch__check" icon="fluent:checkmark-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' : '') +
+        '</button>';
+      }).join("");
+  }
+  function switchBtn() { return document.querySelector("#app-rail [data-app-switch]"); }
+  function positionAppSwitch() {
+    var menu = document.getElementById("app-switch-menu"), btn = switchBtn(); if (!menu || !btn) return;
+    var r = btn.getBoundingClientRect();
+    menu.style.left = Math.round(r.left) + "px"; menu.style.top = Math.round(r.bottom + 6) + "px"; menu.style.minWidth = Math.round(r.width) + "px";
+  }
+  function onAppSwitchOutside(e) { if (e.target.closest("#app-switch-menu") || e.target.closest("[data-app-switch]")) return; closeAppSwitch(); }
+  function onAppSwitchKey(e) { if (e.key === "Escape") { closeAppSwitch(); var b = switchBtn(); if (b) b.focus(); } }
+  function openAppSwitch() {
+    renderAppSwitchMenu(appList());   // rebuild fresh every open → live names (incl. the current app) + current status
+    var menu = document.getElementById("app-switch-menu"), btn = switchBtn(); if (!menu || !btn) return;
+    positionAppSwitch(); menu.hidden = false; btn.setAttribute("aria-expanded", "true");
+    setTimeout(function () {
+      document.addEventListener("click", onAppSwitchOutside, true);
+      document.addEventListener("keydown", onAppSwitchKey, true);
+      window.addEventListener("resize", positionAppSwitch);
+      var sc = document.querySelector(".sidebar__top"); if (sc) sc.addEventListener("scroll", positionAppSwitch);
+    }, 0);
+  }
+  function closeAppSwitch() {
+    var menu = document.getElementById("app-switch-menu"), btn = switchBtn();
+    if (menu) menu.hidden = true; if (btn) btn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("click", onAppSwitchOutside, true);
+    document.removeEventListener("keydown", onAppSwitchKey, true);
+    window.removeEventListener("resize", positionAppSwitch);
+    var sc = document.querySelector(".sidebar__top"); if (sc) sc.removeEventListener("scroll", positionAppSwitch);
+  }
   function renderAppNav() {
-    var host = document.getElementById("app-nav"); if (!host) return;
-    var toggle = document.getElementById("nav-apps-toggle");
-    // Only meaningful once a live version exists (published, or an update in review/failed over a live
-    // app). A first submission still in review/rejected has no live capabilities yet — keep it hidden.
+    var host = document.getElementById("app-rail"); if (!host) return;
     var done = document.getElementById("state-done");
-    var live = (done && done.__result === "passed") || everLive() || submissionIsUpdate;
-    if (!live) { host.hidden = true; if (toggle) toggle.hidden = true; var _al = document.querySelector("#nav-apps-group .snav-parent__row > a"); if (_al) _al.classList.add("is-active"); return; }
+    // Capability sections only make sense once a live version exists (published, or an update in
+    // review/failed over a live app). A first submission still in review shows just the essentials.
+    var live = (done && done.__result === "passed") || submissionIsUpdate;
     var active = appNavSection();
     var updBusy = updateInProgress();
-    var caps = appNavItems().map(function (n) {
-      var busy = (n.key === "update") && updBusy;   // an update is certifying — can't stack another
-      return '<a href="#" class="' + (n.key === active ? "is-active " : "") + (busy ? "is-disabled" : "") + '" data-app-nav="' + n.key + '"' + (busy ? ' aria-disabled="true" title="An update is already in review"' : '') + '>' +
-        '<iconify-icon icon="' + n.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon>' + esc(n.label) + (busy ? '<span class="appnav__badge">In review</span>' : '') + '</a>';
-    }).join("");
-    // App name is a read-only header (identity); "Overview" is the explicit landing page above the capabilities.
-    var homeItem = '<a href="#" class="' + (active === "overview" ? "is-active" : "") + '" data-app-nav="overview">' +
-      '<iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>';
-    host.innerHTML =
-      '<div class="appnav__header">' + appNavIconHTML() + '<span class="appnav__name">' + esc(appName()) + '</span></div>' +
-      '<nav class="appnav__list" aria-label="' + esc(appName()) + ' pages">' + homeItem + caps + '</nav>';
-    host.hidden = false;
-    if (toggle) toggle.hidden = false;
+    function navItem(icon, label, key) {
+      var busy = (key === "update") && updBusy;   // an update is certifying — can't stack another
+      return '<a href="#" data-app-nav="' + key + '" class="' + (key === active ? "is-active" : "") + (busy ? " is-disabled" : "") + '"' + (busy ? ' aria-disabled="true" title="An update is already in review"' : '') + '>' +
+        '<iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon><span class="app-rail__label">' + esc(label) + '</span>' + (busy ? '<span class="appnav__badge">In review</span>' : '') + '</a>';
+    }
+    // Up a level: back to the portal's Apps list. The account rail (Overview/Analytics/…) lives there.
+    // App identity — which app you're inside. With >1 app it doubles as a quick-switch (chevron + menu).
+    // "All apps": persistent up-link to the portal's Apps list. The rail owns it because it is always
+    // visible; the page breadcrumb scrolls off on long pages, so it cannot be the only way back.
+    var back = '<a class="app-rail__back" href="../' + PORTAL_FILE + '#apps"><iconify-icon icon="fluent:arrow-left-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span class="app-rail__label">All apps</span></a>';
+    var apps = appList(), multi = apps.length > 1;
+    var idRow = multi
+      ? '<button type="button" class="app-rail__id app-rail__id--btn" data-app-switch aria-haspopup="listbox" aria-expanded="false" aria-label="' + esc(appName()) + ' — switch app">' + appNavIconHTML() + '<span class="app-rail__name">' + esc(appName()) + '</span><iconify-icon class="app-rail__chev" icon="fluent:chevron-down-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>'
+      : '<div class="app-rail__id">' + appNavIconHTML() + '<span class="app-rail__name">' + esc(appName()) + '</span></div>';
+    var overview = navItem("fluent:home-20-regular", "Overview", "overview");
+    // Capability sections, grouped exactly like the hub (LIVE_GROUPS = single source of truth).
+    var groups = "";
+    if (live) {
+      groups = LIVE_GROUPS.map(function (g) {
+        var rows = g.cards.map(function (c) { return navItem(c[0], c[1], c[4] || c[1].toLowerCase().replace(/[^a-z0-9]+/g, "-")); }).join("");
+        return '<div class="app-rail__group"><span class="app-rail__ghdr">' + esc(g.title) + '</span>' + rows + '</div>';
+      }).join("");
+    } else {
+      // First submission still in review/failed (not live yet): show only what's usable before you're
+      // live — name reservations + the manifest identity reference. Everything else unlocks once
+      // published (previewed in the Overview's "Once you're live" teaser), so it stays hidden, not greyed.
+      groups = '<div class="app-rail__group">' +
+        navItem("fluent:tag-multiple-20-regular", "Manage app names", "names") +
+        navItem("fluent:document-text-20-regular", "Package identity", "identity") +
+        '</div>';
+    }
+    host.innerHTML = back + idRow + '<div class="app-rail__sep"></div>' + overview + groups;
+    if (!multi) { closeAppSwitch(); }   // single app → no switcher; hide any stale menu. Multi builds lazily on open.
     if (!host.__wired) {
       host.__wired = true;
       host.addEventListener("click", function (e) {
+        if (e.target.closest("[data-app-switch]")) {   // the identity header → toggle the app switcher
+          e.preventDefault();
+          var menu = document.getElementById("app-switch-menu");
+          if (menu && !menu.hidden) { closeAppSwitch(); } else { openAppSwitch(); }
+          return;
+        }
         var a = e.target.closest("[data-app-nav]"); if (!a) return; e.preventDefault();
         if (a.classList.contains("is-disabled")) return;   // e.g. Update while one is still in review
         var k = a.getAttribute("data-app-nav");
-        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons", flights: "startFlights" };
+        // Every capability is an L3 page (panel) now: exit any open sub-view back to the hub FIRST so
+        // panels don't nest, then open the target. (Store availability + Package identity became pages,
+        // so the rail behaves identically for every item.)
+        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons", flights: "startFlights", names: "startNames", identity: "startIdentity", availability: "startAvailability" };
         if (k === "overview") { if (typeof window.__appHome === "function") window.__appHome(); }
         else if (subviews[k]) {
-          // Switch cleanly: exit any open sub-view back to the hub FIRST so panels don't nest (else
-          // exiting the next one would restore the previous sub-view instead of the hub), then open it.
           if (typeof window.__appHome === "function") window.__appHome();
           if (typeof window[subviews[k]] === "function") window[subviews[k]]();
         }
-        else if (k === "availability") { if (typeof window.startAvailability === "function") window.startAvailability(); }   // a dialog — opens over the current view
-        else if (k === "identity") { if (typeof window.__openIdentityDialog === "function") window.__openIdentityDialog(); }   // manifest identity — a reference dialog
-        else { return; }   // Package flights / Share listing: placeholder capabilities, no-op like the hub
-        setAppNavActive(appNavSection()); syncAppNavExpansion();
+        else { return; }
+        setAppNavActive(appNavSection());
       });
       try {
-        var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); syncAppNavExpansion(); });
+        var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); });
         var fw = document.getElementById("flow-wrap"); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ["class"] });
-        ["experiments-panel", "addons-panel", "flights-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
+        ["experiments-panel", "addons-panel", "flights-panel", "names-panel", "identity-panel", "availability-panel", "history-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
+        // The heading (#app-name) is hydrated/renamed AFTER this first render, so mirror it live into
+        // the rail identity — otherwise the rail can show a stale name (e.g. "Excel" vs "Excel Pro").
+        var nameEl = document.getElementById("app-name");
+        if (nameEl) {
+          var syncRailName = function () { var n = document.querySelector("#app-rail .app-rail__name"); if (n) n.textContent = appName(); };
+          new MutationObserver(syncRailName).observe(nameEl, { childList: true, characterData: true, subtree: true });
+          syncRailName();
+        }
       } catch (e) {}
     }
-    if (toggle && !toggle.__wired) {
-      toggle.__wired = true;
-      toggle.addEventListener("click", function () {
-        var grp = document.getElementById("nav-apps-group");
-        var collapsed = grp ? grp.classList.toggle("is-collapsed") : false;
-        toggle.setAttribute("aria-expanded", String(!collapsed));
-        // Collapsed: "Apps" reclaims the selected highlight (the leaf is hidden); expanded: the leaf carries it.
-        var appsLink = document.querySelector("#nav-apps-group .snav-parent__row > a");
-        if (appsLink) appsLink.classList.toggle("is-active", collapsed);
-      });
-    }
-    syncAppNavExpansion();   // collapse on the Overview, expand in a capability sub-view
+    try { mountDemoFab(); syncDemoFab(live); } catch (e) {}   // floating demo stage control, only while the live dashboard is up
   }
 
   // Demo: 5s after submit, certification "passes" — flip the panel to a published
@@ -201,15 +281,15 @@
   var LIVE_GROUPS = [
     { title: "Updates", accent: "brand", cards: [
       ["fluent:arrow-upload-20-regular", "Update your app", "Submit a new package or version.", "#", "update"],
-      ["fluent:document-text-20-regular", "Package identity", "Names & IDs for your AppxManifest.xml.", "#", "identity"],
-      ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#", "flights"]
+      ["fluent:airplane-take-off-20-regular", "Package flights", "Ship preview builds to test rings.", "#", "flights"],
+      ["fluent:tag-multiple-20-regular", "Manage app names", "Reserve names & set a name per language.", "#", "names"],
+      ["fluent:document-text-20-regular", "Package identity", "Names & IDs for your AppxManifest.xml.", "#", "identity"]
     ] },
     { title: "Insights & growth", accent: "growth", cards: [
       ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#", "experiments"]
     ] },
     { title: "Listing & monetization", accent: "mon", cards: [
       ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#", "addons"],
-      ["fluent:share-20-regular", "Share listing", "Copy your Store listing link.", "#"],
       ["fluent:eye-20-regular", "Store availability", "Control who can find and get your app.", "#", "availability"]
     ] }
   ];
@@ -419,9 +499,420 @@
       '<a class="asc-btn asc-btn--ghost" href="#" data-live-action="availability">Manage</a>' +
     '</div>';
   }
-  function passHTML() { return liveStatsHTML() + hubHTML(); }
+  // Proactive discovery: a small, curated set of "what's worth doing next" for THIS app, derived from
+  // its real state — so the overview isn't just a menu of everything, it points you at the high-value
+  // moves. Adaptive (health > visibility > growth > monetization), capped at 3, empty when all is well.
+  // Each card reuses the hub's routing (data-live-action → window.start<X>) or deep-links to analytics.
+  function nextStepsHTML() {
+    var recs = [], s = appStatsData() || {};
+    if (s.crashRate != null && (+s.crashRate) >= 5) {
+      recs.push({ icon: "fluent:pulse-20-regular", accent: "warn", title: "Investigate elevated crashes",
+        sub: "Crash rate is " + (+s.crashRate).toFixed(2) + "% — above the 5% healthy bar.",
+        href: "../" + PORTAL_FILE + "?anaApp=" + encodeURIComponent(id) + "&anaTab=crashes#analytics" });
+    }
+    if (availUnavailable()) {
+      recs.push({ icon: "fluent:eye-20-regular", accent: "brand", title: "Make your app discoverable",
+        sub: "It's currently hidden from new customers in the Store.", action: "availability" });
+    }
+    if (dashCount("tdp.experiments.") === 0) {
+      recs.push({ icon: "fluent:beaker-20-regular", accent: "growth", title: "A/B test your Store listing",
+        sub: "Run a product page experiment to see what converts.", action: "experiments" });
+    }
+    if (dashCount("tdp.addons.") === 0) {
+      recs.push({ icon: "fluent:puzzle-piece-20-regular", accent: "mon", title: "Add in-app products",
+        sub: "Offer add-ons or subscriptions to your customers.", action: "addons" });
+    }
+    recs = recs.slice(0, 3);
+    if (!recs.length) return "";
+    var cards = recs.map(function (r) {
+      var attrs = r.href ? 'href="' + r.href + '"' : 'href="#" data-live-action="' + r.action + '"';
+      return '<a class="live-rec live-rec--' + r.accent + '" ' + attrs + '>' +
+        '<span class="live-rec__ico"><iconify-icon icon="' + r.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="live-rec__t"><strong>' + esc(r.title) + '</strong><span>' + esc(r.sub) + '</span></span>' +
+        '<iconify-icon class="live-rec__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
+    }).join("");
+    return '<section class="live-recs"><h3 class="live-recs__title">Recommended next steps</h3>' +
+      '<div class="live-recs__grid">' + cards + '</div></section>';
+  }
+  // ---- App dashboard (the published Overview): a STATUS surface, NOT a nav mirror. The rail owns
+  //      navigation; here we answer "how is my app doing & what's happening" — health with trends,
+  //      recommended next steps, recent activity, ratings, and anything currently active. ----
+  function dashHash(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return Math.abs(h); }
+  function dashDelta(up, good, text) {
+    var clean = String(text).replace(/^[+\u2212-]\s*/, "").replace(/\s+this week$/i, "");   // triangle shows direction; drop the sign/period
+    return '<span class="live-delta live-delta--' + (good ? "good" : "bad") + '">' + (up ? "\u25B2" : "\u25BC") + " " + esc(clean) + '</span>';
+  }
+  function dashMetric(icon, label, value, mod, href, trend, spark) {
+    var cls = "live-stat" + (mod ? " live-stat--" + mod : "") + (href ? " live-stat--link" : "");
+    var go = href ? '<span class="live-stat__go" aria-hidden="true"><iconify-icon icon="fluent:arrow-up-right-16-regular" width="15" height="15"></iconify-icon></span>' : "";
+    var inner = go + '<span class="live-stat__label">' + label + '</span>' +
+      '<div class="live-stat__row"><strong class="live-stat__value">' + value + '</strong>' + (trend || "") + '</div>' +
+      (spark ? '<span class="live-stat__sub">Last 7 days</span>' : "") + (spark || "");
+    return href ? '<a class="' + cls + '" href="' + href + '" title="View ' + esc(label) + ' analytics">' + inner + '</a>' : '<div class="' + cls + '">' + inner + '</div>';
+  }
+  // Health at a glance — the same headline figures as the portal Apps table, now with a deterministic
+  // week-over-week trend so the developer sees DIRECTION, not just a number.
+  function healthBandHTML() {
+    var s = appStatsData() || {};
+    var hasI = s.installs != null, hasC = s.crashRate != null, hasR = s.rating != null;
+    var warn = hasC && (+s.crashRate) >= 5;
+    var ana = function (t) { return "../" + PORTAL_FILE + "?anaApp=" + encodeURIComponent(id) + "&anaTab=" + t + "#analytics"; };
+    var hi = dashHash(id + "i"), hc = dashHash(id + "c"), hr = dashHash(id + "r");
+    var iUp = (hi % 10) < 7, iMag = (hi % 17) + 4;              // installs mostly up, 4..20%
+    var cUp = (hc % 10) < 4, cMag = ((hc % 9) + 1) / 10;        // crash mostly down (good), 0.1..0.9 pts
+    var rUp = (hr % 10) < 6, rMag = ((hr % 3) + 1) / 10;        // rating ±0.1..0.3
+    var iTrend = hasI ? dashDelta(iUp, iUp, (iUp ? "+" : "\u2212") + iMag + "% this week") : "";
+    var cTrend = hasC ? dashDelta(cUp, !cUp, (cUp ? "+" : "\u2212") + cMag.toFixed(1) + " pts") : "";
+    var rTrend = hasR ? dashDelta(rUp, rUp, (rUp ? "+" : "\u2212") + rMag.toFixed(1)) : "";
+    var iVal = hasI ? statFmt(s.installs) : "0";
+    var cVal = hasC ? (+s.crashRate).toFixed(2) + "%" : "\u2014";
+    var rVal = hasR ? (+s.rating).toFixed(1) + ' <small>(' + statFmt(s.ratingCount || 0) + ')</small>' : "\u2014";
+    return '<div class="live-metrics">' +
+      dashMetric("fluent:arrow-download-20-regular", "Installs", iVal, "", ana("acquisition"), iTrend) +
+      dashMetric("fluent:pulse-20-regular", "Crash rate", cVal, warn ? "warn" : "ok", ana("crashes"), cTrend) +
+      dashMetric("fluent:star-20-regular", "Rating", rVal, "", ana("ratings"), rTrend) +
+    '</div>';
+  }
+  function dashSubmissions() { var a = readJSON("tdp.submissions." + id, null); return Array.isArray(a) ? a : []; }
+  function dashRelTime(ms) {
+    var d = Date.now() - ms, day = 864e5;
+    if (d < 36e5) return Math.max(1, Math.round(d / 6e4)) + " min ago";
+    if (d < day) return Math.max(1, Math.round(d / 36e5)) + " h ago";
+    if (d < 2 * day) return "Yesterday";
+    if (d < 7 * day) return Math.round(d / day) + " days ago";
+    if (d < 30 * day) return Math.max(1, Math.round(d / (7 * day))) + " wk ago";
+    return new Date(ms).toLocaleDateString();
+  }
+  // What's happened lately — grounded in real submissions, plus stable milestones derived from the
+  // app's own stats. This is genuinely NEW information (the rail can't show it), not a nav copy.
+  function activityHTML() {
+    var items = [], s = appStatsData() || {}, subs = dashSubmissions();
+    if (subs.length) {
+      var sub = subs[0];
+      var M = { published: ["fluent:checkmark-circle-20-filled", "success", "Version " + sub.v + " is live", "Passed certification and rolled out to the Store."],
+                "in-review": ["fluent:clock-20-filled", "info", "Version " + sub.v + " is in review", "We’re certifying your latest submission."],
+                rejected: ["fluent:error-circle-20-filled", "danger", "Version " + sub.v + " needs attention", "Certification found issues to fix."] };
+      var m = M[sub.status] || M.published;
+      items.push({ i: m[0], a: m[1], t: m[2], s: m[3], d: Math.max(0, (Date.now() - sub.date) / 864e5) });
+    } else {
+      items.push({ i: "fluent:rocket-20-filled", a: "success", t: "Your app is live", s: "Published and available to customers in the Store.", d: (dashHash(id + "live") % 40) + 6 });
+    }
+    if (s.installs != null) {
+      var ms = s.installs >= 1e6 ? "1M" : s.installs >= 1e5 ? "100K" : s.installs >= 1e4 ? "10K" : s.installs >= 1e3 ? "1K" : null;
+      if (ms) items.push({ i: "fluent:arrow-download-20-filled", a: "brand", t: "Installs passed " + ms, s: statFmt(s.installs) + " lifetime installs and counting.", d: 2 + dashHash(id + "in") % 4 });
+    }
+    if (s.rating != null) {
+      var nr = (dashHash(id + "nr") % 9) + 2;
+      items.push({ i: "fluent:star-20-filled", a: "warn", t: nr + " new ratings this week", s: "Your rating is holding at " + (+s.rating).toFixed(1) + "\u2605.", d: 1 + dashHash(id + "nr2") % 3 });
+    }
+    if (s.crashRate != null) {
+      var w = (+s.crashRate) >= 5;
+      items.push({ i: w ? "fluent:warning-20-filled" : "fluent:shield-checkmark-20-filled", a: w ? "danger" : "success", t: w ? "Crash rate needs a look" : "Stability looks healthy", s: (w ? "Crash rate is elevated at " : "Crash rate is steady at ") + (+s.crashRate).toFixed(2) + "%.", d: 3 + dashHash(id + "cr") % 5 });
+    }
+    items.sort(function (x, y) { return x.d - y.d; });   // most recent first
+    var rows = items.slice(0, 5).map(function (it) {
+      var time = it.d < 1 ? "Today" : it.d < 2 ? "Yesterday" : Math.round(it.d) + " days ago";
+      return '<li class="dash-act"><span class="dash-act__ico dash-act__ico--' + it.a + '"><iconify-icon icon="' + it.i + '" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="dash-act__body"><span class="dash-act__title">' + esc(it.t) + '</span><span class="dash-act__sub">' + esc(it.s) + '</span></div>' +
+        '<span class="dash-act__time">' + esc(time) + '</span></li>';
+    }).join("");
+    return '<section class="dash-card"><div class="dash-card__head"><h3 class="dash-card__title">Recent activity</h3>' +
+      '<a class="dash-card__link" href="#" data-live-action="history">View submissions</a></div>' +
+      '<ul class="dash-act-list">' + rows + '</ul></section>';
+  }
+  function dashStars(r) {
+    var out = "", full = Math.round(r);
+    for (var i = 1; i <= 5; i++) out += '<iconify-icon icon="' + (i <= full ? "fluent:star-16-filled" : "fluent:star-16-regular") + '" width="14" height="14" aria-hidden="true"></iconify-icon>';
+    return '<span class="dash-rev__stars">' + out + '</span>';
+  }
+  // Ratings & reviews — sentiment at a glance (score + distribution). High-value, and not in the rail.
+  function reviewsSummaryHTML() {
+    var s = appStatsData() || {};
+    if (s.rating == null) return "";
+    var r = +s.rating, total = s.ratingCount || 0;
+    var dist = r >= 4.5 ? [70, 20, 6, 2, 2] : r >= 4.0 ? [55, 27, 10, 5, 3] : r >= 3.5 ? [45, 25, 15, 8, 7] : r >= 3.0 ? [35, 25, 18, 12, 10] : [22, 20, 20, 18, 20];
+    var bars = dist.map(function (p, i) { return '<div class="dash-rev__row"><span class="dash-rev__k">' + (5 - i) + '\u2605</span><span class="dash-rev__bar"><span class="dash-rev__fill" style="width:' + p + '%"></span></span><span class="dash-rev__pct">' + p + '%</span></div>'; }).join("");
+    var href = "../" + PORTAL_FILE + "?anaApp=" + encodeURIComponent(id) + "&anaTab=ratings#analytics";
+    return '<section class="dash-card dash-rev"><div class="dash-card__head"><h3 class="dash-card__title">Ratings &amp; reviews</h3><a class="dash-card__link" href="' + href + '">See reviews</a></div>' +
+      '<div class="dash-rev__top"><div class="dash-rev__score"><strong>' + r.toFixed(1) + '</strong>' + dashStars(r) + '<span class="dash-rev__count">' + statFmt(total) + ' ratings</span></div></div>' +
+      '<div class="dash-rev__bars">' + bars + '</div></section>';
+  }
+  // Only what's actually running right now — shown when there IS live state, omitted otherwise. This is
+  // status (not a menu), so it never lists an empty capability.
+  function activeNowHTML() {
+    var chips = [];
+    var e = dashCount("tdp.experiments."); if (e) chips.push(["fluent:beaker-20-regular", e + " experiment" + (e > 1 ? "s" : "") + " running", "experiments"]);
+    var f = dashCount("tdp.flights."); if (f) chips.push(["fluent:airplane-take-off-20-regular", f + " flight" + (f > 1 ? "s" : "") + " active", "flights"]);
+    var a = dashCount("tdp.addons."); if (a) chips.push(["fluent:puzzle-piece-20-regular", a + " add-on" + (a > 1 ? "s" : "") + " live", "addons"]);
+    if (availUnavailable()) chips.push(["fluent:eye-off-20-regular", "Hidden from new customers", "availability"]);
+    if (!chips.length) return "";
+    var out = chips.map(function (c) { return '<a class="dash-chip" href="#" data-live-action="' + c[2] + '"><iconify-icon icon="' + c[0] + '" width="15" height="15" aria-hidden="true"></iconify-icon>' + esc(c[1]) + '</a>'; }).join("");
+    return '<section class="dash-active"><h3 class="dash-active__title">Active now</h3><div class="dash-active__chips">' + out + '</div></section>';
+  }
+  // ==== Lifecycle-aware Overview =================================================================
+  // The published Overview adapts to where the app is in its life: LAUNCH (just live — guide + build
+  // momentum), GROWING (early data + growth), ESTABLISHED (health, anomalies, insight, monetization).
+  // A demo toggle forces a stage so we can show the triad how the page evolves; "Auto" derives the
+  // stage from real signals (install volume) so every module tells ONE coherent story.
+  function demoStageGet() { try { return localStorage.getItem("tdp.demoStage") || ""; } catch (e) { return ""; } }
+  function demoStageSet(v) { try { v ? localStorage.setItem("tdp.demoStage", v) : localStorage.removeItem("tdp.demoStage"); } catch (e) {} }
+  window.__setDemoStage = function (v) { demoStageSet(v); if (window.__renderLiveHub) window.__renderLiveHub(); syncDemoFab(true); };
+  // Floating, collapsed-by-default demo control (mirrors the cert "Preview" pill) — kept OUT of the page
+  // flow so it never clutters the real UI. Lives at .app level so it survives dashboard re-renders.
+  function mountDemoFab() {
+    if (document.getElementById("demo-fab")) return;
+    var host = document.querySelector(".app") || document.body;
+    var fab = document.createElement("div");
+    fab.id = "demo-fab"; fab.className = "demo-fab"; fab.hidden = true;
+    var seg = function (v, l) { return '<button type="button" data-demo-stage="' + v + '">' + l + '</button>'; };
+    fab.innerHTML =
+      '<div class="demo-fab__panel" role="group" aria-label="Preview app lifecycle stage">' +
+        '<span class="demo-fab__title"><iconify-icon icon="fluent:beaker-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Preview lifecycle stage</span>' +
+        '<div class="demo-fab__segs">' + seg("launch", "Launch") + seg("growing", "Growing") + seg("established", "Established") + seg("", "Auto") + '</div>' +
+        '<span class="demo-fab__note">Demo only — previews how this page evolves as the app matures.</span>' +
+      '</div>' +
+      '<button type="button" class="demo-fab__toggle" data-demo-fab-toggle aria-expanded="false" aria-label="Preview app lifecycle stage (demo)">' +
+        '<iconify-icon icon="fluent:beaker-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        '<span class="demo-fab__lbl">Demo</span><span class="demo-fab__cur">Auto</span>' +
+        '<iconify-icon class="demo-fab__chev" icon="fluent:chevron-up-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+      '</button>';
+    host.appendChild(fab);
+    fab.addEventListener("click", function (e) {
+      var tg = e.target.closest("[data-demo-fab-toggle]");
+      if (tg) { var open = fab.classList.toggle("is-open"); tg.setAttribute("aria-expanded", String(open)); return; }
+      var s = e.target.closest("[data-demo-stage]");
+      if (s) window.__setDemoStage(s.getAttribute("data-demo-stage"));
+    });
+  }
+  function syncDemoFab(show) {
+    var fab = document.getElementById("demo-fab"); if (!fab) return;
+    fab.hidden = !show;
+    var cur = demoStageGet() || "";
+    var c = fab.querySelector(".demo-fab__cur"); if (c) c.textContent = cur === "launch" ? "Launch" : cur === "growing" ? "Growing" : cur === "established" ? "Established" : "Auto";
+    Array.prototype.forEach.call(fab.querySelectorAll("[data-demo-stage]"), function (b) { b.classList.toggle("is-active", (b.getAttribute("data-demo-stage") || "") === cur); });
+  }
+  function anaTab(t) { return "../" + PORTAL_FILE + "?anaApp=" + encodeURIComponent(id) + "&anaTab=" + t + "#analytics"; }
+  function resolveStage() {
+    var o = demoStageGet(); if (o) return o;
+    var s = appStatsData() || {}, n = s.installs || 0;
+    return n < 500 ? "launch" : n < 50000 ? "growing" : "established";
+  }
+  // Coherent data bundle for the stage. Forced (demo) => a clean synthetic profile; auto => real stats.
+  function stageProfile() {
+    var stage = resolveStage(), forced = !!demoStageGet();
+    if (forced && stage === "launch") return { stage: "launch", installs: 180, installsTrend: null, crashRate: null, crashTrend: null, rating: null, ratingCount: 0, ratingTrend: null, ageDays: 2, version: "1.0.0", versionDaysAgo: 2, anomaly: null, themes: [], addons: 0, exps: 0, revenue: 0 };
+    if (forced && stage === "established") return { stage: "established", installs: 842000, installsTrend: { pct: 3, up: true }, crashRate: 4.9, crashTrend: { pts: 1.6, up: true }, rating: 3.9, ratingCount: 12400, ratingTrend: { delta: 0.2, up: false }, ageDays: 760, version: "3.4.1", versionDaysAgo: 9, anomaly: { title: "Crash rate spiked after 3.4.1", text: "Started after your 3.4.1 release 9 days ago — mostly at launch.", tab: "crashes" }, themes: ["startup crashes", "sign-in", "dark mode"], addons: 3, exps: 1, revenue: 18400 };
+    if (forced) return { stage: "growing", installs: 8600, installsTrend: { pct: 34, up: true }, crashRate: 1.8, crashTrend: { pts: 0.3, up: false }, rating: 4.3, ratingCount: 210, ratingTrend: { delta: 0.2, up: true }, ageDays: 38, version: "1.2.0", versionDaysAgo: 6, anomaly: null, themes: [], addons: 0, exps: 0, revenue: 0 };
+    // auto: real stats + derived (coherent) trends
+    var s = appStatsData() || {}, hi = dashHash(id + "i"), hc = dashHash(id + "c"), hr = dashHash(id + "r");
+    var P = { stage: stage, installs: s.installs != null ? s.installs : null, crashRate: s.crashRate != null ? +s.crashRate : null, rating: s.rating != null ? +s.rating : null, ratingCount: s.ratingCount || 0, addons: dashCount("tdp.addons."), exps: dashCount("tdp.experiments."), themes: [], anomaly: null, revenue: 0 };
+    var subs = dashSubmissions(); if (subs.length) { P.version = subs[0].v; P.versionDaysAgo = Math.max(0, (Date.now() - subs[0].date) / 864e5); }
+    if (stage === "launch") { P.installsTrend = P.crashTrend = P.ratingTrend = null; }
+    else {
+      P.installsTrend = P.installs != null ? { pct: (hi % 17) + 4, up: (hi % 10) < 7 } : null;
+      P.crashTrend = P.crashRate != null ? { pts: ((hc % 9) + 1) / 10, up: (hc % 10) < 4 } : null;
+      P.ratingTrend = P.rating != null ? { delta: ((hr % 3) + 1) / 10, up: (hr % 10) < 6 } : null;
+    }
+    if (stage === "established" && P.crashRate != null && P.crashRate >= 5 && P.crashTrend && P.crashTrend.up)
+      P.anomaly = { title: "Crash rate is climbing", text: "Climbing since your recent release \u2014 worth a look before it hits your rating.", tab: "crashes" };
+    if (stage === "established") P.themes = ["performance", "sign-in"];
+    return P;
+  }
+  function dashStageBar() {
+    var cur = demoStageGet() || "auto";
+    var seg = function (val, label) { var k = val || "auto"; return '<button type="button" class="dash-seg' + (k === cur ? " is-active" : "") + '" data-demo-stage="' + val + '">' + label + '</button>'; };
+    return '<div class="dash-stagebar"><span class="dash-stagebar__tag"><iconify-icon icon="fluent:beaker-20-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Demo</span>' +
+      '<span class="dash-stagebar__label">Lifecycle stage</span>' +
+      '<div class="dash-seg-group" role="group" aria-label="Preview app lifecycle stage">' + seg("launch", "Launch") + seg("growing", "Growing") + seg("established", "Established") + seg("", "Auto") + '</div></div>';
+  }
+  function dashCollecting(txt) { return '<fluent-badge size="small" appearance="tint" color="subtle" class="dash-trend dash-trend--muted">' + esc(txt || "Collecting…") + '</fluent-badge>'; }
+  // Sparkline — the SAME chart as the analytics summary cards (portal.js spark()) for consistency:
+  // a 12%-opacity filled area under a 2px polyline, full-bleeding to the card's bottom edge.
+  function dashSpark(values, color) {
+    var W = 280, H = 54, mx = -Infinity, mn = Infinity;
+    values.forEach(function (v) { if (v > mx) mx = v; if (v < mn) mn = v; });
+    var n = values.length, rng = (mx - mn) || 1;
+    var pts = values.map(function (v, i) { return (W * i / (n - 1)).toFixed(1) + "," + (H - 5 - (H - 11) * (v - mn) / rng).toFixed(1); }).join(" ");
+    return '<svg class="live-stat__spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,' + H + ' ' + pts + ' ' + W + ',' + H + '" fill="' + color + '" opacity=".12"/><polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2"/></svg>';
+  }
+  // Deterministic ~14-point series trending up/down (seeded per app+metric) to feed the sparkline.
+  function dashSeries(seed, up) {
+    var n = 14, out = [];
+    for (var i = 0; i < n; i++) { var t = i / (n - 1), drift = (up ? t : 1 - t) * 34, noise = ((dashHash(seed + "|" + i) % 1000) / 1000 - 0.5) * 18; out.push(50 + drift + noise); }
+    return out;
+  }
+  function dashHealth(P) {
+    // The crash card warns when it's genuinely a problem — over the absolute 5% bar OR the active
+    // anomaly — so the metric card agrees with the banner instead of reading "normal".
+    var warn = (P.crashRate != null && P.crashRate >= 5) || !!(P.anomaly && P.anomaly.tab === "crashes");
+    // Pre-data metrics read forward-looking ("when this shows up"), not a blank "No data yet".
+    var soon = function (txt) { return '<span class="live-stat__empty live-stat__empty--soon"><iconify-icon icon="fluent:clock-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' + txt + '</span>'; };
+    var iVal = P.installs != null ? statFmt(P.installs) : soon("Rolling out");
+    var iTr = P.installsTrend ? dashDelta(P.installsTrend.up, P.installsTrend.up, (P.installsTrend.up ? "+" : "−") + P.installsTrend.pct + "% this week") : "";
+    var cVal = P.crashRate != null ? P.crashRate.toFixed(2) + "%" : soon("After first runs");
+    var cTr = P.crashTrend ? dashDelta(P.crashTrend.up, !P.crashTrend.up, (P.crashTrend.up ? "+" : "−") + P.crashTrend.pts.toFixed(1) + " pts") : "";
+    var rVal = P.rating != null ? P.rating.toFixed(1) + ' <small>(' + statFmt(P.ratingCount) + ')</small>' : soon("After first reviews");
+    var rTr = P.ratingTrend ? dashDelta(P.ratingTrend.up, P.ratingTrend.up, (P.ratingTrend.up ? "+" : "−") + P.ratingTrend.delta.toFixed(1)) : "";
+    return '<div class="live-metrics">' +
+      dashMetric("fluent:arrow-download-20-regular", "Installs", iVal, "", anaTab("acquisition"), iTr, P.installsTrend ? dashSpark(dashSeries(id + "sInst", P.installsTrend.up), "#4ad17a") : "") +
+      dashMetric("fluent:pulse-20-regular", "Crash rate", cVal, warn ? "warn" : "ok", anaTab("crashes"), cTr, P.crashTrend ? dashSpark(dashSeries(id + "sCrash", P.crashTrend.up), "var(--brand)") : "") +
+      dashMetric("fluent:star-20-regular", "Rating", rVal, "", anaTab("ratings"), rTr, P.ratingTrend ? dashSpark(dashSeries(id + "sRate", P.ratingTrend.up), "#f7b955") : "") +
+    '</div>';
+  }
+  function dashRecs(P) {
+    var recs = [];
+    if (P.stage === "launch") {
+      recs.push(["fluent:share-20-regular", "brand", "Share your Store listing", "Drive your first installs from your own channels.", "share", null]);
+      recs.push(["fluent:local-language-20-regular", "growth", "Add more languages", "Reach customers in their language.", "names", null]);
+      recs.push(["fluent:beaker-20-regular", "growth", "Run a listing experiment", "A/B test your screenshots to lift installs.", "experiments", null]);
+      recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Set up add-ons or subscriptions to earn.", "addons", null]);
+    } else if (P.stage === "established") {
+      // A mature app leads with health & growth, not "get your first installs" — so the relevant moves
+      // come first and Share trails (still discoverable, but no longer the headline).
+      if (P.ratingTrend && !P.ratingTrend.up) recs.push(["fluent:comment-20-regular", "brand", "Reply to recent reviews", "Responding helps win customers back.", null, anaTab("ratings")]);
+      if (P.exps) recs.push(["fluent:beaker-20-regular", "growth", "Review your live experiment", "See which variant is winning.", "experiments", null]);
+      else recs.push(["fluent:beaker-20-regular", "growth", "Experiment on your listing", "Test screenshots to lift conversion.", "experiments", null]);
+      if (!P.addons) recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Monetize your install base with add-ons.", "addons", null]);
+      recs.push(["fluent:share-20-regular", "brand", "Share your Store listing", "Reach more customers from your own channels.", "share", null]);
+    } else {
+      recs.push(["fluent:share-20-regular", "brand", "Share your Store listing", "Drive installs from your own channels.", "share", null]);
+      if (!P.exps) recs.push(["fluent:beaker-20-regular", "growth", "A/B test your Store listing", "See which listing converts best.", "experiments", null]);
+      if (!P.addons) recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Offer add-ons or subscriptions.", "addons", null]);
+    }
+    recs = recs.slice(0, P.stage === "launch" ? 4 : 3);
+    if (!recs.length) return "";
+    var meta = P.stage === "launch" ? '<span class="live-recs__meta">Set your app up to grow</span>' : "";
+    var cards = recs.map(function (r) {
+      var attrs = r[5] ? 'href="' + r[5] + '"' : 'href="#" data-live-action="' + r[4] + '"';
+      return '<a class="live-rec live-rec--' + r[1] + '" ' + attrs + '><span class="live-rec__ico"><iconify-icon icon="' + r[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="live-rec__t"><strong>' + esc(r[2]) + '</strong><span>' + esc(r[3]) + '</span></span>' +
+        '<iconify-icon class="live-rec__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></a>';
+    }).join("");
+    return '<section class="live-recs"><div class="live-recs__head"><h3 class="live-recs__title">Recommended next steps</h3>' + meta + '</div><div class="live-recs__grid" data-count="' + recs.length + '">' + cards + '</div></section>';
+  }
+  function dashBanner(P) {
+    // Needs-attention wins: a real problem to act on now.
+    if (P.anomaly) {
+      return '<section class="dash-banner dash-banner--warn">' +
+        '<span class="dash-banner__ico"><iconify-icon icon="fluent:warning-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="dash-banner__body"><strong class="dash-banner__title">' + esc(P.anomaly.title) + '</strong>' +
+        '<span class="dash-banner__sub">' + esc(P.anomaly.text) + '</span></div>' +
+        '<fluent-button appearance="primary" data-ana="' + P.anomaly.tab + '">Investigate</fluent-button></section>';
+    }
+    // Operational status: the app is hidden from new customers.
+    if (availUnavailable()) {
+      return '<section class="dash-banner dash-banner--warn">' +
+        '<span class="dash-banner__ico"><iconify-icon icon="fluent:eye-off-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="dash-banner__body"><strong class="dash-banner__title">Your app is hidden from new customers</strong>' +
+        '<span class="dash-banner__sub">Existing customers keep access, but new customers can\u2019t find or install it until you make it available.</span></div>' +
+        '<fluent-button appearance="primary" data-live-action="availability">Make available</fluent-button></section>';
+    }
+    // Elevated crashes without a formal anomaly are still a needs-attention state in any live stage.
+    if (P.crashRate != null && P.crashRate >= 5) {
+      return '<section class="dash-banner dash-banner--warn">' +
+        '<span class="dash-banner__ico"><iconify-icon icon="fluent:warning-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="dash-banner__body"><strong class="dash-banner__title">Crash rate needs a look</strong>' +
+        '<span class="dash-banner__sub">You\u2019re above the 5% healthy bar \u2014 worth investigating before it affects your rating.</span></div>' +
+        '<fluent-button appearance="primary" data-ana="crashes">Investigate</fluent-button></section>';
+    }
+    // Stage-appropriate orientation / encouragement — present in EVERY stage so the top slot is consistent.
+    var ico, tone, title, sub;
+    if (P.stage === "launch") {
+      ico = "fluent:rocket-20-filled"; tone = "brand"; title = "You\u2019re live in the Microsoft Store";
+      sub = "<strong>" + esc(appName()) + "</strong> is published and discoverable. Installs and ratings take a day or two to show \u2014 here\u2019s how to build early momentum.";
+    } else if (P.stage === "growing") {
+      ico = "fluent:arrow-trending-lines-20-filled"; tone = "brand"; title = "Momentum is building";
+      sub = (P.installsTrend ? "Installs are up " + P.installsTrend.pct + "% this week" : "Your app is gaining installs") + " \u2014 keep it going with the steps below.";
+    } else {
+      ico = "fluent:shield-checkmark-20-filled"; tone = "success"; title = "Your app is in good shape";
+      sub = "No fires to fight right now \u2014 a good moment to invest in growth. Start with the steps below.";
+    }
+    return '<section class="dash-banner dash-banner--' + tone + '">' +
+      '<span class="dash-banner__ico"><iconify-icon icon="' + ico + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="dash-banner__body"><strong class="dash-banner__title">' + title + '</strong><span class="dash-banner__sub">' + sub + '</span></div></section>';
+  }
+  // Reviews come from CUSTOMERS — the developer can't "get" them directly. The one dev-actionable path
+  // to early installs (and, in turn, reviews) is sharing the listing. Copies the Store link.
+  function dashShare() {
+    if (typeof window.startShareListing === "function") { window.startShareListing(); return; }
+    var url = "https://apps.microsoft.com/detail/9N2KRDT2DD0S";
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url)["catch"](function () {}); } catch (e) {}
+    dashToast("Store link copied to clipboard");
+  }
+  function dashToast(msg) {
+    var t = document.createElement("div"); t.className = "dash-toast"; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 2600);
+  }
+  function dashAnomaly(P) {
+    if (!P.anomaly) return "";
+    return '<section class="dash-anomaly">' +
+      '<span class="dash-anomaly__ico"><iconify-icon icon="fluent:warning-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+      '<div class="dash-anomaly__body"><div class="dash-anomaly__head"><strong class="dash-anomaly__title">' + esc(P.anomaly.title) + '</strong><fluent-badge size="small" appearance="tint" color="danger">Needs attention</fluent-badge></div>' +
+      '<span class="dash-anomaly__sub">' + esc(P.anomaly.text) + '</span></div>' +
+      '<fluent-button appearance="primary" data-ana="' + P.anomaly.tab + '">Investigate</fluent-button></section>';
+  }
+  function dashMon(P) {
+    if (!P.addons || !P.revenue) return "";
+    return '<section class="dash-card dash-mon"><div class="dash-card__head"><h3 class="dash-card__title">Monetization</h3><a class="dash-card__link" href="#" data-live-action="addons">Manage add-ons</a></div>' +
+      '<div class="dash-mon__row">' +
+        '<div class="dash-mon__stat"><span class="dash-mon__ico"><iconify-icon icon="fluent:money-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon></span><div class="dash-mon__data"><span class="dash-mon__label">Revenue · last 30 days</span><strong class="dash-mon__value">$' + statFmt(P.revenue) + '</strong></div><fluent-badge size="small" appearance="tint" color="success" class="dash-trend">↑ 8%</fluent-badge></div>' +
+        '<div class="dash-mon__stat"><span class="dash-mon__ico"><iconify-icon icon="fluent:puzzle-piece-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon></span><div class="dash-mon__data"><span class="dash-mon__label">Active add-ons</span><strong class="dash-mon__value">' + P.addons + '</strong></div></div>' +
+      '</div></section>';
+  }
+  function dashActivity(P) {
+    var items = [];
+    items.push({ i: "fluent:checkmark-circle-20-filled", a: "success", t: "Version " + (P.version || "1.0.0") + " is live", s: "Passed certification and rolled out to the Store.", d: P.versionDaysAgo != null ? P.versionDaysAgo : (P.ageDays || 1) });
+    if (P.stage === "launch") {
+      items.push({ i: "fluent:globe-20-filled", a: "brand", t: "Discoverable in 240 markets", s: "Customers can now find and install your app.", d: P.ageDays });
+      items.push({ i: "fluent:arrow-download-20-filled", a: "info", t: "First installs are coming in", s: statFmt(P.installs) + " so far — it takes a few days to ramp.", d: 1 });
+    } else {
+      var msv = P.installs >= 1e6 ? "1M" : P.installs >= 5e5 ? "500K" : P.installs >= 1e5 ? "100K" : P.installs >= 1e4 ? "10K" : P.installs >= 5e3 ? "5K" : P.installs >= 1e3 ? "1K" : null;
+      if (msv) items.push({ i: "fluent:arrow-download-20-filled", a: "brand", t: "Installs passed " + msv, s: statFmt(P.installs) + " lifetime installs and counting.", d: 2 + dashHash(id + "in") % 4 });
+      if (P.rating != null) { var nr = (dashHash(id + "nr") % 9) + 2; items.push({ i: "fluent:star-20-filled", a: "warn", t: nr + " new ratings this week", s: "Your rating is at " + P.rating.toFixed(1) + "★.", d: 1 + dashHash(id + "nr2") % 3 }); }
+      var worse = P.crashTrend && P.crashTrend.up;
+      if (P.crashRate != null && !P.anomaly) {
+        var hot = P.crashRate >= 5;   // level AND trend both matter — an elevated rate is never "healthy"
+        var ci = hot ? ["fluent:warning-20-filled", "danger", "Crash rate needs attention", (worse ? "Climbed to " : "Still elevated at ") + P.crashRate.toFixed(2) + "%."]
+               : worse ? ["fluent:warning-20-filled", "warn", "Crash rate ticked up", "Up to " + P.crashRate.toFixed(2) + "%."]
+               : ["fluent:shield-checkmark-20-filled", "success", "Stability looks healthy", "Steady at " + P.crashRate.toFixed(2) + "%."];
+        items.push({ i: ci[0], a: ci[1], t: ci[2], s: ci[3], d: 3 + dashHash(id + "cr") % 5 });
+      }
+      if (P.stage === "established" && P.themes.length) items.push({ i: "fluent:comment-multiple-20-filled", a: "info", t: "Reviews mention " + P.themes[0], s: "A recurring theme in your recent reviews.", d: 2 });
+    }
+    items.sort(function (x, y) { return x.d - y.d; });
+    var rows = items.slice(0, 5).map(function (it) {
+      var time = it.d < 1 ? "Today" : it.d < 2 ? "Yesterday" : Math.round(it.d) + " days ago";
+      return '<li class="dash-act"><span class="dash-act__ico dash-act__ico--' + it.a + '"><iconify-icon icon="' + it.i + '" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="dash-act__body"><span class="dash-act__title">' + esc(it.t) + '</span><span class="dash-act__sub">' + esc(it.s) + '</span></div><span class="dash-act__time">' + esc(time) + '</span></li>';
+    }).join("");
+    return '<section class="dash-card"><div class="dash-card__head"><h3 class="dash-card__title">Recent activity</h3><a class="dash-card__link" href="#" data-live-action="history">See all</a></div><ul class="dash-act-list">' + rows + '</ul></section>';
+  }
+  function dashReviews(P) {
+    if (P.rating == null) {
+      return '<section class="dash-card dash-card--empty"><div class="dash-card__head"><h3 class="dash-card__title">Ratings &amp; reviews</h3></div>' +
+        '<div class="dash-rev-empty"><span class="dash-rev-empty__ico"><iconify-icon icon="fluent:star-emphasis-20-regular" width="24" height="24" aria-hidden="true"></iconify-icon></span>' +
+        '<strong>No ratings yet</strong><span>Ratings show up once customers review your app. Share your Store link to get your first ones.</span></div></section>';
+    }
+    var r = P.rating, total = P.ratingCount || 0;
+    var dist = r >= 4.5 ? [70, 20, 6, 2, 2] : r >= 4.0 ? [55, 27, 10, 5, 3] : r >= 3.5 ? [45, 25, 15, 8, 7] : r >= 3.0 ? [35, 25, 18, 12, 10] : [22, 20, 20, 18, 20];
+    var bars = dist.map(function (p, i) { return '<div class="dash-rev__row"><span class="dash-rev__k">' + (5 - i) + '★</span><span class="dash-rev__bar"><span class="dash-rev__fill" style="width:' + p + '%"></span></span><span class="dash-rev__pct">' + p + '%</span></div>'; }).join("");
+    var themes = (P.stage === "established" && P.themes.length) ? '<div class="dash-rev__themes"><span class="dash-rev__themes-h">Recent reviews mention</span><div class="dash-rev__themechips">' + P.themes.map(function (t) { return '<fluent-badge size="small" appearance="outline">' + esc(t) + '</fluent-badge>'; }).join("") + '</div></div>' : "";
+    return '<section class="dash-card dash-rev"><div class="dash-card__head"><h3 class="dash-card__title">Ratings &amp; reviews</h3><a class="dash-card__link" href="' + anaTab("ratings") + '">See reviews</a></div>' +
+      '<div class="dash-rev__top"><div class="dash-rev__score"><strong>' + r.toFixed(1) + '</strong>' + dashStars(r) + '<span class="dash-rev__count">' + statFmt(total) + ' ratings</span></div></div>' +
+      '<div class="dash-rev__bars">' + bars + '</div>' + themes + '</section>';
+  }
+  function dashActive(P) { return ""; }   // removed: current experiments/add-ons/visibility now surface in the banner + owning cards
+  // Compose the Overview for the resolved stage. Nav stays in the rail; this is all STATE + guidance.
+  function dashboardHTML() {
+    var P = stageProfile();
+    var grid = '<div class="dash-grid">' + dashActivity(P) + dashReviews(P) + '</div>';
+    if (P.stage === "launch") return dashBanner(P) + dashHealth(P) + dashRecs(P) + grid;
+    return dashBanner(P) + dashHealth(P) + dashRecs(P) + grid + dashMon(P);
+  }
+  function passHTML() { return dashboardHTML(); }
   // Re-render the live hub in place (after the availability toggle changes) without a full reload.
-  window.__renderLiveHub = function () { var res = $id("cert-result"), done = $id("state-done"); if (res && done && done.__result === "passed") { res.innerHTML = passHTML(); } };
+  window.__renderLiveHub = function () { var res = $id("cert-result"), done = $id("state-done"); if (res && done && done.__result === "passed") { res.innerHTML = passHTML(); syncHeadUpdatePrimary(); } };
 
   // ---- Certification result view state machine ----
   var certTimer = null;
@@ -440,14 +931,23 @@
   // The submission-notification banner is only relevant while a submission is pending;
   // hide it once the app is published. (Class selector beats [hidden], so toggle display.)
   function setNotify(show) { var n = document.querySelector("#state-done .notify-banner"); if (n) n.style.display = show ? "" : "none"; }
-  // App-header card's contextual action: Withdraw while in review, View in Store once published.
+  // App-header card's contextual action: once published the PRIMARY action is Update; View submissions is
+  // secondary and "View in Store" rides on the status pill (#app-storelink). Withdraw while in review; report/fix when failed.
   function setHeadActions(view) {
-    var w = $id("head-withdraw-btn"), v = $id("head-viewstore-btn"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), rv = $id("head-review-btn");
+    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), rv = $id("head-review-btn"), u = $id("head-update-btn");
     if (w) w.hidden = (view !== "progress");
     if (v) v.hidden = (view !== "passed");
     if (r) r.hidden = (view !== "failed");
     if (e) e.hidden = (view !== "failed");
     if (rv) rv.hidden = (view !== "passed");
+    if (u) u.hidden = (view !== "passed");   // Update is the primary action for a live app
+    syncHeadUpdatePrimary();
+  }
+  // When the dashboard shows a needs-attention banner (anomaly), its "Investigate" is the single
+  // primary action — demote the header Update to secondary so two primaries don't compete.
+  function syncHeadUpdatePrimary() {
+    var u = $id("head-update-btn"); if (!u || u.hidden) return;
+    u.setAttribute("appearance", document.querySelector("#cert-result .dash-banner [data-ana]") ? "secondary" : "primary");
   }
   function setMsStatus(status) {
     try { var ms = readJSON(MS_KEY, []); var i = (Array.isArray(ms) ? ms : []).map(function (a) { return a.id; }).indexOf(id); if (i >= 0) { ms[i].status = status; localStorage.setItem(MS_KEY, JSON.stringify(ms)); } } catch (e) {}
@@ -488,7 +988,7 @@
     var isUpdate = submissionIsUpdate;   // locked when the submission view opened; preview clicks don't flip it
     if (prog) { prog.hidden = false; setProgressScenario(prog, isUpdate); }
     if (res) {
-      if (isUpdate) { res.hidden = false; res.innerHTML = liveStatsHTML() + hubHTML({ updating: true }); }
+      if (isUpdate) { res.hidden = false; res.innerHTML = dashboardHTML(); }   // update in review: the cert card sits above; the full app dashboard stays below
       else if (window.__certLivePreviewHTML) { res.hidden = false; res.innerHTML = window.__certLivePreviewHTML(); }   // new app: preview what unlocks once live
       else { res.hidden = true; res.innerHTML = ""; }
     }
@@ -520,12 +1020,12 @@
     var prog = $id("cert-progress"), res = $id("cert-result"), act = $id("cert-actions");
     var isUpdate = submissionIsUpdate;   // locked when the submission view opened; preview clicks don't flip it
     if (prog) prog.hidden = true;
-    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (failHTML(true) + liveStatsHTML() + hubHTML()) : (failHTML(false) + (window.__certLivePreviewHTML ? window.__certLivePreviewHTML({ collapsed: true }) : "")); }
+    if (res) { res.hidden = false; res.innerHTML = isUpdate ? (failHTML(true) + dashboardHTML()) : (failHTML(false) + (window.__certLivePreviewHTML ? window.__certLivePreviewHTML({ collapsed: true }) : "")); }
     if (act) act.hidden = true;
     var bar = $id("submit-bar"); if (bar) bar.hidden = true;
     if (isUpdate) {
       setPill("Published", "published"); setMsStatus("published"); setPortalStore(true, "published");
-      setNotify(false); setHeadActions("passed");   // header still offers "View in Store" — the app is live
+      setNotify(false); setHeadActions("passed");   // still offers "View in Store" beside the pill — the app is live
     } else {
       setPill("Action needed", "rejected"); setMsStatus("rejected"); setPortalStore(false, "rejected");
       setNotify(true); setHeadActions("failed");
@@ -575,6 +1075,8 @@
     if (res && !res.__wired) {
       res.__wired = true;
       res.addEventListener("click", function (e) {
+        var stageBtn = e.target.closest("[data-demo-stage]");
+        if (stageBtn) { e.preventDefault(); window.__setDemoStage(stageBtn.getAttribute("data-demo-stage")); return; }
         var upd = e.target.closest('[data-live-action="update"]');
         if (upd) { e.preventDefault(); if (typeof window.startAppUpdate === "function") window.startAppUpdate(); return; }
         var experiments = e.target.closest('[data-live-action="experiments"]');
@@ -585,8 +1087,16 @@
         if (addons) { e.preventDefault(); if (typeof window.startAddons === "function") window.startAddons(); return; }
         var flights = e.target.closest('[data-live-action="flights"]');
         if (flights) { e.preventDefault(); if (typeof window.startFlights === "function") window.startFlights(); return; }
+        var names = e.target.closest('[data-live-action="names"]');
+        if (names) { e.preventDefault(); if (typeof window.startNames === "function") window.startNames(); return; }
         var identity = e.target.closest('[data-live-action="identity"]');
-        if (identity) { e.preventDefault(); if (typeof window.__openIdentityDialog === "function") window.__openIdentityDialog(); return; }
+        if (identity) { e.preventDefault(); if (typeof window.startIdentity === "function") window.startIdentity(); return; }
+        var history = e.target.closest('[data-live-action="history"]');
+        if (history) { e.preventDefault(); if (typeof window.startHistory === "function") window.startHistory(); return; }
+        var share = e.target.closest('[data-live-action="share"]');
+        if (share) { e.preventDefault(); dashShare(); return; }
+        var anaBtn = e.target.closest("[data-ana]");
+        if (anaBtn) { e.preventDefault(); location.href = anaTab(anaBtn.getAttribute("data-ana")); return; }
         var report = e.target.closest("[data-cert-report]");
         if (report) { e.preventDefault(); window.open("cert-report.html?id=" + encodeURIComponent(id), "_blank", "noopener"); return; }
         var edit = e.target.closest("[data-edit]");
@@ -628,10 +1138,19 @@
     var av = document.getElementById("avatar"),
         nm = document.getElementById("accountName"),
         stat = document.getElementById("accountStatus");
-    if (av) av.textContent = acct.initials || "—";
-    if (nm) nm.textContent = acct.name || "Your organization";
+    var name = acct.name || "Your organization", initials = acct.initials || "—", email = acct.email || "";
+    if (av) {
+      if (av.tagName && av.tagName.toLowerCase() === "fluent-avatar") { av.setAttribute("name", name); av.setAttribute("initials", initials); }
+      else av.textContent = initials;
+    }
+    if (nm) nm.textContent = name;
+    // Profile flyout fields (same header as the developer portal).
+    var pfa = document.getElementById("pfAvatar"); if (pfa) { pfa.setAttribute("name", name); pfa.setAttribute("initials", initials); }
+    var pfn = document.getElementById("pfName"); if (pfn) pfn.textContent = name;
+    var pfe = document.getElementById("pfEmail"); if (pfe) pfe.textContent = email;
+    var pfae = document.getElementById("pfAcctEmail"); if (pfae) pfae.textContent = email;
     if (PORTAL_FILE === "store-portal.html") {            // opened from the Store portal
-      // Header brand stays unified as "Windows Developer Portal" (set by wdp-header.js) — one portal.
+      // Header brand stays unified as "Windows Developer Center" (set by wdp-header.js) — one portal.
       document.querySelectorAll('a[href^="../portal.html"]').forEach(function (a) {
         a.setAttribute("href", a.getAttribute("href").replace("../portal.html", "../store-portal.html"));
       });

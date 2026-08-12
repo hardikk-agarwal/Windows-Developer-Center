@@ -16,9 +16,13 @@
 (function () {
   "use strict";
 
-  // STORE = the developer is on the Microsoft Store path (store-portal.html).
-  var STORE = (typeof window !== "undefined" && window.PORTAL_MODE === "store");
-  var KEY = STORE ? "tdp.portal.store.v1" : "tdp.portal.v5";
+  // UNIFIED = the single "Windows Developer Center" portal (developer-portal.html): a Store-based
+  // shell (Overview / Apps / Promo / Customer groups) with the WDP Certificates + Analytics
+  // experiences. STORE stays ON for unified (Store-style layout); UNIFIED then re-enables the WDP
+  // behaviour on the two tabs it owns (cert discovery + all-apps analytics) and uses one storage key.
+  var UNIFIED = (typeof window !== "undefined" && window.PORTAL_MODE === "unified");
+  var STORE = ((typeof window !== "undefined" && window.PORTAL_MODE === "store") || UNIFIED);
+  var KEY = UNIFIED ? "tdp.portal.unified.v1" : (STORE ? "tdp.portal.store.v1" : "tdp.portal.v5");
   var DEMO_MSA = { name: "Alex Taylor", email: "alex.taylor@outlook.com", initials: "AT" };
   var DEMO_MSA_NEW = { name: "Jordan Lee", email: "jordan.lee@outlook.com", initials: "JL" };
 
@@ -119,23 +123,89 @@
     toastTimer = setTimeout(function () { toastEl.className = "toast" + (info ? " toast--info" : ""); }, 3600);
   }
 
+  /* ---------------- Notifications ---------------- */
+  // Demo notification center. Items are derived from portal state where possible (published /
+  // in-review / draft app names) so the feed feels real; read state persists in localStorage.
+  var NOTIF_READ_KEY = "msstore.notifs.read";
+  function notifReadSet() { try { var a = JSON.parse(localStorage.getItem(NOTIF_READ_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function notifSaveRead(ids) { try { localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(ids)); } catch (e) {} }
+  function notifItems() {
+    var apps = state.apps || [];
+    var flow = function (a) { return "publishing/publish-v6.html?from=wdp&id=" + encodeURIComponent(a.id); };
+    var ana = function (a, tab) { return "?anaApp=" + encodeURIComponent(a.id) + "&anaTab=" + tab + "#analytics"; };
+    var nm = function (a) { return a.storeName || a.name || "Your app"; };
+    // Real feed: one entry per app based on its actual status + live analytics (crash rate, ratings).
+    var errs = [], warns = [], reviewing = [], published = [], reviews = [], signed = [];
+    apps.forEach(function (a) {
+      var k = appStatusKey(a);
+      if (k === "rejected") errs.push({ id: "certfail-" + a.id, type: "error", icon: "fluent:error-circle-20-filled", title: "Certification failed", text: nm(a) + " didn\u2019t pass certification. Review the failures and resubmit.", time: a.storeCreated || "", href: flow(a) });
+      else if (k === "in-review") reviewing.push({ id: "review-" + a.id, type: "info", icon: "fluent:clock-20-filled", title: "Submission in review", text: nm(a) + " is being certified \u2014 typically 24\u201348 hours.", time: a.storeCreated || "", href: flow(a) });
+      else if (k === "live") {
+        published.push({ id: "pub-" + a.id, type: "success", icon: "fluent:checkmark-circle-20-filled", title: "App published", text: nm(a) + " is live in the Microsoft Store.", time: a.storeCreated || "", href: ana(a, "acquisition") });
+        var cr = anaData(a).crashRate;
+        if (cr >= 5) warns.push({ id: "crash-" + a.id, type: "warning", icon: "fluent:arrow-trending-lines-20-filled", title: "Crash rate is elevated", text: nm(a) + " crash rate is " + cr.toFixed(2) + "% \u2014 worth a look.", time: "", href: ana(a, "crashes") });
+        var rd = ratingsData(a);
+        if (rd && rd.total > 0) reviews.push({ id: "rating-" + a.id, type: "info", icon: "fluent:star-20-filled", title: "Ratings & reviews", text: nm(a) + " is at " + rd.avg.toFixed(1) + "\u2605 from " + fmtComma(rd.total) + " ratings.", time: "", href: ana(a, "ratings") });
+      }
+      else if (a.discovered || a.certId) signed.push(a);
+    });
+    var out = errs.concat(warns, reviewing, published, reviews);
+    if (signed.length) out.push({ id: "signed-analytics", type: "info", icon: "fluent:pulse-20-filled", title: "Crash analytics ready", text: "Crash & hang analytics are ready for " + (signed.length === 1 ? nm(signed[0]) : signed.length + " apps you signed") + ".", time: "", href: ana(signed[0], "crashes") });
+    if (!out.length) out.push({ id: "allcaught", type: "info", icon: "fluent:checkmark-circle-20-filled", title: "You\u2019re all caught up", text: "Updates about your apps \u2014 publishing, certification, crashes and reviews \u2014 show up here.", time: "" });
+    return out;
+  }
+  function renderNotifs() {
+    var list = $("notifList"), badge = $("notifBadge"), read = notifReadSet(), items = notifItems(), unread = 0;
+    if (list) {
+      list.innerHTML = items.map(function (n) {
+        var isRead = read.indexOf(n.id) !== -1; if (!isRead) unread++;
+        return '<button type="button" class="nitem' + (isRead ? " is-read" : "") + '" data-notif-id="' + n.id + '" data-href="' + esc(n.href || "") + '">' +
+          '<span class="nitem__ico nitem__ico--' + n.type + '"><iconify-icon icon="' + n.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+          '<span class="nitem__body"><span class="nitem__title">' + esc(n.title) + '</span><span class="nitem__text">' + esc(n.text) + '</span>' + (n.time ? '<span class="nitem__time">' + esc(n.time) + '</span>' : "") + '</span>' +
+          (isRead ? "" : '<span class="nitem__dot" aria-hidden="true"></span>') +
+          '</button>';
+      }).join("");
+    } else { items.forEach(function (n) { if (read.indexOf(n.id) === -1) unread++; }); }
+    if (badge) { badge.textContent = unread > 9 ? "9+" : String(unread); badge.hidden = unread === 0; }
+    var nb = $("notifBtn"); if (nb) nb.setAttribute("aria-label", unread ? "Notifications (" + unread + " unread)" : "Notifications");
+  }
+  function markNotifRead(id) { var r = notifReadSet(); if (r.indexOf(id) === -1) { r.push(id); notifSaveRead(r); } renderNotifs(); }
+  function markAllNotifsRead() { var r = notifReadSet(); notifItems().forEach(function (n) { if (r.indexOf(n.id) === -1) r.push(n.id); }); notifSaveRead(r); renderNotifs(); }
+
   /* ---------------- Renderers ---------------- */
   function renderAll() {
-    renderAccount(); renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderSummary(); updateStoreNav();
+    renderAccount(); renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderSummary(); updateStoreNav(); renderPromo(); renderNotifs();
   }
+  // App-shell scrolls the .main pane, not the window — reset the pane on view/analytics changes.
+  function scrollTopMain() { var m = document.querySelector(".main"); if (m) m.scrollTop = 0; }
   // Store: an app is "live" once it's published to the Store.
   function hasLiveStoreApp() { return state.apps.some(function (a) { return a.store || a.storeStatus === "published"; }); }
-  // Promo codes is hidden from the left sidebar.
+  // Promo codes: always shown in the unified portal; in Store-only mode it appears once an app is live.
   function updateStoreNav() {
     if (!STORE) return;
-    var promo = $("navPromo"); if (promo) promo.hidden = true;   // Promo codes hidden from the sidebar
+    var promo = $("navPromo"); if (promo) promo.hidden = UNIFIED ? false : !hasLiveStoreApp();
+  }
+  // Promo codes need a live Store app to issue codes — show the demo orders once one exists, else the zero state.
+  function renderPromo() {
+    var empty = $("promoEmpty"), table = $("promoTable"), btn = $("promoNewBtn");
+    if (!empty || !table) return;
+    var show = hasLiveStoreApp();
+    table.hidden = !show; empty.hidden = show;
+    if (btn) btn.hidden = !show;
   }
 
   function renderAccount() {
     var a = state.account || { name: "Your organization", initials: "—" };
-    $("avatar").textContent = a.initials;
+    var av = $("avatar");
+    if (av) { av.setAttribute("name", a.name || ""); av.setAttribute("initials", a.initials || ""); }
+    var pfa = $("pfAvatar"); if (pfa) { pfa.setAttribute("name", a.name || ""); pfa.setAttribute("initials", a.initials || ""); }
+    var pfn = $("pfName"); if (pfn) pfn.textContent = a.name || "";
+    var pfe = $("pfEmail"); if (pfe) pfe.textContent = a.email || "";
+    var pfae = $("pfAcctEmail"); if (pfae) pfae.textContent = a.email || "";
     $("accountName").textContent = a.name;
-    $("accountStatus").innerHTML = STORE
+    $("accountStatus").innerHTML = UNIFIED
+      ? '<span class="verified-dot"></span>Windows developer'
+      : STORE
       ? '<span class="verified-dot"></span>Store developer'
       : !state.verified
         ? '<span class="verified-dot verified-dot--off"></span>No certificate'
@@ -437,7 +507,7 @@
         toast(msg);
         // WDP auto-discovers the cert's other apps here. In the Store portal those apps are already
         // surfaced (locked) by discoverStoreApps(); this upload just verifies ownership to unlock them.
-        if (!STORE && lastCert && lastCert.thumbKind === "cert") discoverApps(lastCert.thumb, lastCert.id);
+        if ((!STORE || UNIFIED) && lastCert && lastCert.thumbKind === "cert") discoverApps(lastCert.thumb, lastCert.id);
         return;
       }
       // Nothing accepted — surface the reasons in place (don't re-render the flow)
@@ -460,8 +530,10 @@
   function renderCerts() {
     var wrap = $("certsList");
     if (!wrap) return;
+    // The empty-state card carries its own "Add certificate" CTA — hide the redundant header button until a cert exists.
+    var addBtn = $("certAddBtn"); if (addBtn) addBtn.hidden = !state.certs.length;
     if (!state.certs.length) {
-      wrap.innerHTML = STORE
+      wrap.innerHTML = (STORE && !UNIFIED)
         ? '<div class="empty">' +
             '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>Not publishing to the Store?</strong>' +
@@ -473,7 +545,7 @@
             '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>No certificates yet</strong>' +
             '<p class="muted">Add a code signing certificate by submitting a signed binary to confirm your publisher ' +
-              'identity and unlock crash analytics for the apps you sign. Any app installed on this PC that uses it is then discovered automatically.</p>' +
+              'identity and unlock crash analytics for the apps you sign.</p>' +
             '<fluent-button appearance="primary" data-certmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>';
@@ -482,7 +554,7 @@
     wrap.innerHTML = '<div class="table-wrap"><table class="table">' +
       '<thead><tr><th>Certificate</th><th>Thumbprint</th><th>Apps</th><th>Added</th><th>Status</th><th></th></tr></thead>' +
       '<tbody>' + state.certs.map(certRowHTML).join("") + '</tbody></table></div>' +
-      (STORE ? "" : certFoundBannerHTML());
+      ((STORE && !UNIFIED) ? "" : certFoundBannerHTML());
   }
   // Discovery nudge under the cert table: certificates auto-populate the apps signed by them, so
   // point the developer at the crash analytics + apps that just appeared.
@@ -803,7 +875,7 @@
   // developer proves they OWN the signing certificate by signing our verification file. WDP verifies
   // ownership through the Add-certificate modal already, so this gate never applies there.
   function storeLocked(a) {
-    if (!STORE || !a.storeDiscovered) return false;
+    if (!STORE || UNIFIED || !a.storeDiscovered) return false;
     var c = a.certId ? certById(a.certId) : null;
     return !c || c.verified !== true;
   }
@@ -943,21 +1015,17 @@
   }
 
   function emptyAnalyticsHTML() {
-    if (STORE) {
+    if (STORE && !UNIFIED) {
       return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
         '<strong>No analytics yet</strong>' +
         '<p class="muted">Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings, and performance.</p></div>';
     }
     return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
-      '<strong>Unlock crash &amp; hang analytics</strong>' +
-      '<p class="muted">We don\u2019t see any apps for you yet. Analytics unlock when we can connect your apps \u2014 in one of two ways:</p>' +
-      '<ul class="empty__ways">' +
-        '<li><strong>Add your code signing certificate.</strong> We\u2019ll surface every app you\u2019ve signed and start showing crash &amp; hang analytics.</li>' +
-        '<li><strong>Onboard to the Microsoft Store.</strong> Publishing unlocks the full picture \u2014 crashes, acquisition, usage, and ratings &amp; reviews.</li>' +
-      '</ul>' +
+      '<strong>Unlock analytics for your apps</strong>' +
+      '<p class="muted">We don\u2019t see any apps for you yet. Add your code signing certificate to surface the apps you\u2019ve signed and see their crash &amp; hang analytics \u2014 or onboard to the Microsoft Store for the full picture: crashes, acquisition, usage, ratings &amp; reviews, and performance.</p>' +
       '<div class="empty__cta">' +
-        '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:rocket-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add app to Store</fluent-button>' +
-        '<fluent-button appearance="outline" data-certmodal><iconify-icon slot="start" icon="fluent:certificate-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
+        '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:rocket-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add app to Store</fluent-button>' +
+        '<fluent-button appearance="outline" data-certmodal><iconify-icon slot="start" icon="fluent:certificate-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
       '</div></div>';
   }
 
@@ -1498,16 +1566,17 @@
       '<div class="sumcard__row"><strong class="sumcard__big">' + val + '</strong>' + deltaPill(delta) + '</div>' +
       '<span class="sumcard__sub muted">' + sub + '</span>' + (series ? spark(series, color) : "") + '</div>';
   }
-  function anaFilterHTML() {
+  function anaUpdatedIconHTML() {
     var y = new Date(Date.now() - 864e5), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var refreshed = M[y.getMonth()] + " " + y.getDate() + ", " + y.getFullYear();
+    return '<span class="ca-updated" title="Data updated ' + refreshed + ' \u2014 crash data is aggregated from Windows with about 4 hours of delay by design, so the most recent hours may still be filling in. Real-time data is not available."><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>';
+  }
+  function anaFilterHTML() {
     var ranges = [["7d", "Last 7 days"], ["30d", "Last 30 days"], ["custom", "Custom range"]];
     var dateSel = '<fluent-dropdown id="anaRangeSel" appearance="outline" aria-label="Date range" placeholder="Date range"><fluent-listbox>' + ranges.map(function (r) { return '<fluent-option value="' + r[0] + '"' + (anaRange === r[0] ? " selected" : "") + '>' + r[1] + '</fluent-option>'; }).join("") + '</fluent-listbox></fluent-dropdown>';
     var custom = anaRange === "custom" ? '<span class="cacustom"><input type="date" class="cadate" id="caFrom"' + (anaCustom && anaCustom.from ? ' value="' + anaCustom.from + '"' : "") + '><span class="muted">to</span><input type="date" class="cadate" id="caTo"' + (anaCustom && anaCustom.to ? ' value="' + anaCustom.to + '"' : "") + '><fluent-button size="small" appearance="primary" data-ca-apply="1">Apply</fluent-button></span>' : "";
-    var updated = '<span class="ca-updated" title="Crash data is aggregated from Windows with about 4 hours of data delay by design, so the most recent hours may still be filling in. Real-time data is not available.">' +
-      '<iconify-icon icon="fluent:history-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Updated ' + refreshed + '</span>';
     var fc = filterCount(), savedOn = anaSaveFilters, filtersBtn = '<fluent-button id="anaFiltersBtn" class="ca-filtersbtn' + (savedOn ? ' is-saved' : '') + '" appearance="outline" data-ca-filters="1"' + (savedOn ? ' title="Filter settings saved for future sessions"' : '') + '><iconify-icon slot="start" icon="' + (savedOn ? 'fluent:filter-16-filled' : 'fluent:filter-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
-    return anaQuickFiltersHTML() + '<span class="anafb__end">' + updated + dateSel + custom + filtersBtn + '</span>';
+    return anaQuickFiltersHTML() + '<span class="anafb__end">' + dateSel + custom + filtersBtn + '</span>';
   }
   // Quick filters surfaced outside the drawer. Only cross-tab dimensions (version, market,
   // device) so the toolbar stays identical across every analytics tab; tab-specific filters
@@ -1563,7 +1632,7 @@
       ? '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:box-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Packaged app</span>' +
         '<h3>Stack traces resolve automatically</h3>' +
         '<p><strong>' + esc(app.name) + '</strong> ships as an MSIX package, so its symbols are already inside \u2014 nothing to upload. Every crash shows a fully resolved stack trace from the first report.</p></div>'
-      : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
+      : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:pin-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
         '<h3>Upload your symbols before the first crash</h3>' +
         '<p>Symbols turn raw crash data into readable stack traces with function names and line numbers \u2014 but only for crashes <strong>after</strong> you upload them. Add <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your first crash is actionable.</p>' +
         '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
@@ -2046,7 +2115,7 @@
   // WDP path: once at least one app is on the Store, nudge the developer to publish the
   // rest. Store path: every app's full analytics are already available, so no upsell.
   function analyticsUpsell() {
-    if (STORE) return "";
+    if (STORE && !UNIFIED) return "";
     var total = state.apps.length, live = state.apps.filter(function (a) { return a.store; }).length, rest = total - live;
     if (live < 1 || rest < 1) return "";
     return '<div class="ana-upsell">' +
@@ -2069,7 +2138,7 @@
       : anaTab === "usage" ? usageTab(app)
       : anaTab === "ratings" ? ratingsTab(app)
       : crashTab(app);
-    panelEl.innerHTML = analyticsUpsell() + anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
+    panelEl.innerHTML = anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
     // In the "new app / no data" crash zero state there's nothing to filter, so hide the version/date/Filters
     // toolbar (the app picker stays). The latency state keeps filters so the date range can still be changed.
     var _fb = $("anaFilterBar"); if (_fb) _fb.hidden = (anaTab === "crashes" && !anaFailure && anaDemoState === "newapp");
@@ -2087,8 +2156,10 @@
   function renderAnalytics() {
     var panelEl = $("analyticsPanel"), controls = $("anaControls");
     loadSavedFilters();
-    // Store portal: analytics only exist for apps live in the Store (or brought in via cert).
-    var liveApps = STORE ? state.apps.filter(function (a) { return a.store || a.discovered; }) : state.apps;
+    // Crash analytics only exist for apps with a live telemetry source: published in the Store, or
+    // signed & discovered via a code-signing certificate. Drafts / in-review submissions have neither,
+    // so they never appear here (all modes use the same rule).
+    var liveApps = state.apps.filter(function (a) { return a.store || a.discovered; });
     if (!liveApps.length) { if (controls) controls.hidden = true; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
     if (controls) controls.hidden = false;
     if (!analyticsAppId || !liveApps.some(function (a) { return a.id === analyticsAppId; })) analyticsAppId = liveApps[0].id;
@@ -2101,7 +2172,15 @@
     var el = $("anaFilterBar"); if (!el) return;
     el.innerHTML = anaFilterHTML();
     var rs = $("anaRangeSel");
-    if (rs) rs.addEventListener("change", function () { if (!rs.value) return; anaRange = rs.value; if (anaRange !== "custom") anaCustom = null; anaPage = 0; renderAnaFilter(); renderAnalyticsPanel(); });
+    if (rs) {
+      rs.addEventListener("change", function () { if (!rs.value) return; anaRange = rs.value; if (anaRange !== "custom") anaCustom = null; anaPage = 0; renderAnaFilter(); renderAnalyticsPanel(); });
+      // Tuck the "data updated" info icon INSIDE the date dropdown's control, after the label.
+      (function injectUpdated(tries) {
+        var btn = rs.querySelector('button[role="combobox"]');
+        if (btn) { if (!btn.querySelector(".ca-updated")) btn.insertAdjacentHTML("beforeend", anaUpdatedIconHTML()); return; }
+        if (tries < 20) setTimeout(function () { injectUpdated(tries + 1); }, 30);
+      })(0);
+    }
     Array.prototype.forEach.call(el.querySelectorAll(".anaqf"), function (dd) {
       dd.addEventListener("change", function () {
         var key = dd.getAttribute("data-qf"), val = dd.value;
@@ -2332,14 +2411,11 @@
   /* ---------------- Add-certificate modal (reuses the same flow) ---------------- */
   function openModal() {
     var body = $("modalFlowBody"); body.innerHTML = flowHTML(false); wireFlow(body);
-    $("certModal").hidden = false; document.addEventListener("keydown", escModal);
+    var m = $("certModal"); if (m && m.show) m.show();
   }
   function closeModal() {
-    var m = $("certModal"); if (!m) return;
-    m.hidden = true; var b = $("modalFlowBody"); if (b) b.innerHTML = "";
-    document.removeEventListener("keydown", escModal); pending = [];
+    var m = $("certModal"); if (m && m.hide) m.hide();
   }
-  function escModal(e) { if (e.key === "Escape") closeModal(); }
 
   /* ---------------- Download sources modal ---------------- */
   var currentSrc = null;
@@ -2404,7 +2480,6 @@
      re-opened later by clicking their row. On submit, tdp-bridge.js writes the result back
      so the table shows "In Store". */
   var publishId = null;
-  function escPub(e) { if (e.key === "Escape") closePublish(); }
   function openPublish(id) {
     var a = appById(id); if (!a) return;
     publishId = id;
@@ -2416,8 +2491,7 @@
     if ($("pubType")) setDropdownValue($("pubType"), a.type || "app");
     if ($("pubGameType")) setDropdownValue($("pubGameType"), "store");
     syncGameChoice();
-    $("publishModal").hidden = false;
-    document.addEventListener("keydown", escPub);
+    var m = $("publishModal"); if (m && m.show) m.show();
     checkPubName();
     setTimeout(function () { try { nm.focus(); nm.select(); } catch (e) {} }, 40);
   }
@@ -2431,12 +2505,11 @@
     if ($("pubType")) setDropdownValue($("pubType"), "app");
     if ($("pubGameType")) setDropdownValue($("pubGameType"), "store");
     syncGameChoice();
-    $("publishModal").hidden = false;
-    document.addEventListener("keydown", escPub);
+    var m = $("publishModal"); if (m && m.show) m.show();
     checkPubName();
     setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
   }
-  function closePublish() { $("publishModal").hidden = true; document.removeEventListener("keydown", escPub); publishId = null; resetPubSteps(); }
+  function closePublish() { var m = $("publishModal"); if (m && m.hide) m.hide(); }
   // Reveal the game-type cards when "Game" is picked, and the Partner Center off-ramp when "GDK" is picked.
   function syncGameChoice() {
     // v3 fluent-radio doesn't reflect its checked state to a styleable attribute — mirror it so the selected dot fills.
@@ -2492,6 +2565,9 @@
   function wirePublish() {
     $("publishModal").addEventListener("click", function (e) {
       if (e.target.closest("[data-pubclose]")) { closePublish(); return; }
+    });
+    $("publishModal").addEventListener("toggle", function (e) {
+      if (e.detail && e.detail.newState === "closed") { publishId = null; resetPubSteps(); }
     });
     if ($("pubType")) $("pubType").addEventListener("change", function () { setTimeout(syncGameChoice, 0); });
     if ($("pubGameType")) $("pubGameType").addEventListener("change", function () { setTimeout(syncGameChoice, 0); });
@@ -2556,6 +2632,15 @@
     } catch (e) {}
   }
 
+  // The Store demo apps (Pixel Paint published, Northwind in review, Mica draft) — shared by the
+  // Store demo seed and the unified portal's combined sign-in.
+  function storeDemoApps() {
+    return [
+      { id: "app-demo-store", name: "Pixel Paint Studio", icon: null, file: "PixelPaintStudio.exe", size: "", sources: [], created: true, store: true, storeStatus: "published", storeLang: "en-US", storeCreated: today(), added: today() },
+      { id: "app-demo-cert", name: "Northwind Invoicing", icon: null, file: "NorthwindInvoicing.exe", size: "", sources: [], created: true, store: false, storeStatus: "in-review", storeLang: "en-US", storeCreated: today(), added: today() },
+      { id: "app-demo-draft", name: "Mica Weather", icon: null, file: "MicaWeather.exe", size: "", sources: [], created: true, store: false, storeStatus: "in-progress", storeLang: "en-US", storeCreated: today(), added: today() }
+    ];
+  }
   // Demo: sign in as the Store developer — 1 published app — and open the Store portal.
   function seedStoreDemo() {
     try {
@@ -2614,6 +2699,14 @@
     // plain sign-in, no certificate flow. The second tile only exists on the WDP door.
     var t1 = $("msaTile");
     if (t1) t1.addEventListener("click", function () {
+      if (UNIFIED) {
+        // Unified: clean landing — signed in with no certificate and no apps; the developer adds their own.
+        state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
+        state.certs = []; state.apps = [];
+        save(); showApp();
+        toast("Signed in as " + DEMO_MSA.email, true);
+        return;
+      }
       if (STORE) {
         state.signedIn = true; state.account = DEMO_MSA; save(); showApp();
         toast("Signed in as " + DEMO_MSA.email, true);
@@ -2637,7 +2730,11 @@
     var other = $("msaOther");
     if (other) other.addEventListener("click", function () { toast("Demo build — use a listed account", true); });
 
-    $("certModal").addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
+    var certM = $("certModal");
+    if (certM) {
+      certM.addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
+      certM.addEventListener("toggle", function (e) { if (e.detail && e.detail.newState === "closed") { var b = $("modalFlowBody"); if (b) b.innerHTML = ""; pending = []; } });
+    }
     wireSources();
     wirePublish();
     wireDel();
@@ -2668,7 +2765,7 @@
       var sortk = e.target.closest && e.target.closest("[data-sort]");
       if (sortk) { e.preventDefault(); setAppsSort(sortk.getAttribute("data-sort")); return; }
       var fr = e.target.closest && e.target.closest("[data-failure]");
-      if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); anaStackAnchor = "latest"; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      if (fr) { e.preventDefault(); anaFailure = fr.getAttribute("data-failure"); anaStackAnchor = "latest"; scrollTopMain(); renderAnalyticsPanel(); return; }
       var kc = e.target.closest && e.target.closest("[data-cause]");
       if (kc) { e.preventDefault(); anaCause = kc.getAttribute("data-cause"); anaType = "all"; anaSearch = ""; anaPage = 0; renderAnalyticsPanel(); var _kfs = document.getElementById("ca-failsec"); if (_kfs) _kfs.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       var ss = e.target.closest && e.target.closest("[data-anasort]");
@@ -2733,7 +2830,7 @@
       var rcc = e.target.closest("[data-cause]");
       if (rcc) { anaCause = rcc.getAttribute("data-cause"); anaType = "all"; anaSearch = ""; anaPage = 0; renderAnalyticsPanel(); var _fs = document.getElementById("ca-failsec"); if (_fs) _fs.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       var frow = e.target.closest("[data-failure]");
-      if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaStackAnchor = "latest"; anaLogPage = 0; anaLogQuery = ""; window.scrollTo(0, 0); renderAnalyticsPanel(); return; }
+      if (frow && !e.target.closest("[data-sym-jump]")) { anaFailure = frow.getAttribute("data-failure"); anaStackAnchor = "latest"; anaLogPage = 0; anaLogQuery = ""; scrollTopMain(); renderAnalyticsPanel(); return; }
       var sj = e.target.closest("[data-sym-jump]");
       if (sj) { var sjsec = document.getElementById("ca-symsec"); var sjdet = sjsec && sjsec.querySelector("details.symacc"); if (sjdet) sjdet.open = true; if (sjsec) sjsec.scrollIntoView({ behavior: "smooth", block: "start" }); var sjrow = document.querySelector('#ca-symsec tr[data-ver="' + sj.getAttribute("data-sym-jump") + '"]'); if (sjrow) { sjrow.classList.remove("symhi"); void sjrow.offsetWidth; sjrow.classList.add("symhi"); } return; }
       var smg = e.target.closest("[data-sym-manage]");
@@ -2766,7 +2863,7 @@
       var ssrt = e.target.closest("[data-symsort]");
       if (ssrt) { var ssk = ssrt.getAttribute("data-symsort"); if (symSort.key === ssk) symSort.dir = symSort.dir === "asc" ? "desc" : "asc"; else { symSort.key = ssk; symSort.dir = "desc"; } renderSymTableHost(); return; }
       var dvf = e.target.closest("[data-ver-filter]");
-      if (dvf) { anaFilters.appver = [dvf.getAttribute("data-ver-filter")]; anaFailure = null; anaPage = 0; renderAnaFilter(); renderAnaChips(); renderAnalyticsPanel(); window.scrollTo(0, 0); return; }
+      if (dvf) { anaFilters.appver = [dvf.getAttribute("data-ver-filter")]; anaFailure = null; anaPage = 0; renderAnaFilter(); renderAnaChips(); renderAnalyticsPanel(); scrollTopMain(); return; }
       var dms = e.target.closest("[data-demostate]");
       if (dms) { anaDemoState = dms.getAttribute("data-demostate"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); return; }
       var crng = e.target.closest("[data-ca-range]");
@@ -2837,6 +2934,50 @@
       }
     });
 
+    // Profile flyout: the avatar button toggles the account menu; outside-click / Escape close it.
+    var pBtn = $("profileBtn"), pFly = $("profileFlyout");
+    if (pBtn && pFly) {
+      var THEME_KEY = "msstore.theme";
+      var themeMode = function () { var s; try { s = localStorage.getItem(THEME_KEY); } catch (e) {} return s === "light" ? "light" : s === "dark" ? "dark" : "system"; };
+      var syncThemeSeg = function () { var m = themeMode(); Array.prototype.forEach.call(pFly.querySelectorAll(".pfseg__opt"), function (o) { var on = o.getAttribute("data-theme-mode") === m; o.classList.toggle("is-active", on); o.setAttribute("aria-checked", on ? "true" : "false"); }); };
+      var setThemeMode = function (m) {
+        if (m === "system") { try { localStorage.removeItem(THEME_KEY); } catch (e) {} document.documentElement.setAttribute("data-theme", window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); }
+        else { try { localStorage.setItem(THEME_KEY, m); } catch (e) {} document.documentElement.setAttribute("data-theme", m); }
+        syncThemeSeg();
+      };
+      var closeFly = function () { pFly.hidden = true; pBtn.setAttribute("aria-expanded", "false"); };
+      pBtn.addEventListener("click", function (e) { e.stopPropagation(); var nf = $("notifFlyout"), nb = $("notifBtn"); if (nf) { nf.hidden = true; if (nb) nb.setAttribute("aria-expanded", "false"); } var willOpen = pFly.hidden; pFly.hidden = !willOpen; pBtn.setAttribute("aria-expanded", willOpen ? "true" : "false"); if (willOpen) syncThemeSeg(); });
+      document.addEventListener("click", function (e) { if (!pFly.hidden && !pFly.contains(e.target) && !pBtn.contains(e.target)) closeFly(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !pFly.hidden) { closeFly(); pBtn.focus(); } });
+      pFly.addEventListener("click", function (e) {
+        var seg = e.target.closest(".pfseg__opt"); if (seg) { setThemeMode(seg.getAttribute("data-theme-mode")); return; }
+        if (e.target.closest("[data-pf-profile]")) { e.preventDefault(); closeFly(); toast("Your profile lives in your Microsoft account settings", true); return; }
+        if (e.target.closest("[data-pf-settings]")) { e.preventDefault(); closeFly(); toast("Account settings \u2014 demo build", true); return; }
+      });
+      syncThemeSeg();
+    }
+
+    // Notification flyout: the bell toggles the notification center; outside-click / Escape close it.
+    var nBtn = $("notifBtn"), nFly = $("notifFlyout");
+    if (nBtn && nFly) {
+      var closeN = function () { nFly.hidden = true; nBtn.setAttribute("aria-expanded", "false"); };
+      nBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var willOpen = nFly.hidden;
+        var pf = $("profileFlyout"), pb = $("profileBtn"); if (pf) { pf.hidden = true; if (pb) pb.setAttribute("aria-expanded", "false"); }
+        nFly.hidden = !willOpen; nBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        if (willOpen) renderNotifs();
+      });
+      document.addEventListener("click", function (e) { if (!nFly.hidden && !nFly.contains(e.target) && !nBtn.contains(e.target)) closeN(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nFly.hidden) { closeN(); nBtn.focus(); } });
+      nFly.addEventListener("click", function (e) {
+        if (e.target.closest("[data-notif-markall]")) { e.preventDefault(); markAllNotifsRead(); return; }
+        var item = e.target.closest("[data-notif-id]");
+        if (item) { markNotifRead(item.getAttribute("data-notif-id")); var href = item.getAttribute("data-href"); closeN(); if (href) { if (href.charAt(0) === "#") { location.hash = href; } else { location.href = href; } } }
+      });
+      renderNotifs();
+    }
+
     wireNav();
   }
 
@@ -2847,12 +2988,12 @@
     : ["overview", "apps", "certificates", "analytics"];
   function showView(id) {
     if (VIEWS.indexOf(id) === -1) id = "overview";
-    if (id === "promo-codes" && STORE && !hasLiveStoreApp()) id = "overview";   // Promo codes is gated until an app is live
+    if (id === "promo-codes" && STORE && !UNIFIED && !hasLiveStoreApp()) id = "overview";   // Store-only: Promo codes is gated until an app is live
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
     document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === id); });
     if (id === "analytics") renderAnalytics();
     else { var dsh0 = document.getElementById("demoSwitchHost"); if (dsh0) dsh0.innerHTML = ""; }
-    window.scrollTo(0, 0);
+    scrollTopMain();
   }
   function goView(id) { if (history.replaceState) history.replaceState(null, "", "#" + id); showView(id); }
   function wireNav() {
@@ -2873,7 +3014,34 @@
   // signed apps with crash analytics — landing on a fully populated portal. The query is stripped
   // afterwards so a later refresh reuses the persisted session instead of re-seeding.
   var demoWdp = /[?&]demo=wdp\b/.exec(location.search);
-  if (!STORE && demoWdp) {
+  var uniSrc = UNIFIED ? /[?&]src=(store|wdp)\b/.exec(location.search) : null;
+  var uniCreate = UNIFIED && /[?&]create=/.test(location.search);
+  var uniSignin = uniSrc && /[?&]signin\b/.test(location.search);
+  // Unified: a signup "reserve name" deep-link → sign in (with the demo apps) so the shared create
+  // handler below runs and opens the publishing flow for the reserved app.
+  if (uniCreate && !(state.signedIn && state.account)) {
+    state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
+    state.certs = []; state.apps = storeDemoApps(); save(); seedWdpDemo();
+  }
+  // Marketing "Go to the Windows Developer Center" (&signin=1) is a PUBLIC/anonymous entry point, so it
+  // ALWAYS presents the MSA sign-in — even if a stale session is persisted (reset to signed-out first).
+  // Scoped to the flag, so plain ?src landings (signup/publish/redirects) still auto-resume.
+  if (uniSignin && !uniCreate) {
+    var uSignLand = uniSrc[1] === "wdp" ? "certificates" : "overview";
+    state.signedIn = false; state.account = null;
+    if (history.replaceState) history.replaceState(null, "", location.pathname + "#" + uSignLand);
+    save(); showSignin();
+  }
+  else if (uniSrc && !uniCreate && !(state.signedIn && state.account)) {
+    // Unified portal, arriving from a marketing page / signup: clean landing — signed in but with no
+    // certificate and no apps. Adding a certificate later discovers the signed apps.
+    var uLand = uniSrc[1] === "wdp" ? "certificates" : "overview";
+    state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
+    state.certs = []; state.apps = []; save();
+    if (history.replaceState) history.replaceState(null, "", location.pathname + "#" + uLand);
+    showApp();
+  }
+  else if (!STORE && demoWdp) {
     state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
     state.certs = []; state.apps = []; save();
     if (history.replaceState) history.replaceState(null, "", location.pathname + (location.hash || "#apps"));

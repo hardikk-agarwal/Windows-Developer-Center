@@ -1,4 +1,4 @@
-/* Windows Developer Portal — local backend.
+/* Windows Developer Center — local backend.
    Serves the static site AND a real signature-verification API that shells out
    to PowerShell's Get-AuthenticodeSignature. No external dependencies.
 

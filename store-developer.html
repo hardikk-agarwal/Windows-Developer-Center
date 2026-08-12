@@ -23,7 +23,7 @@
   <!-- ============ TOP NAV ============ -->
   <header class="topbar" id="topbar">
     <div class="topbar__inner">
-      <a class="brand" href="#" aria-label="Microsoft Windows Developer Portal">
+      <a class="brand" href="#" aria-label="Microsoft Windows Developer Center">
         <svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">
           <rect x="1" y="1" width="10" height="10" fill="#F25022" />
           <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
@@ -32,7 +32,7 @@
         </svg>
         <span class="brand__name">Microsoft</span>
         <span class="brand__divider" aria-hidden="true"></span>
-        <span class="brand__sub">Windows Developer Portal</span>
+        <span class="brand__sub">Windows Developer Center</span>
       </a>
 
       <div class="topbar__spacer"></div>
@@ -60,7 +60,7 @@
           </p>
           <div class="hero__cta">
             <fluent-button appearance="primary" size="large" data-action="create">Create a developer account</fluent-button>
-            <fluent-button appearance="outline" size="large" data-action="portal">Go to the Store developer portal &rsaquo;</fluent-button>
+            <fluent-button appearance="outline" size="large" data-action="portal">Go to the Windows Developer Center &rsaquo;</fluent-button>
           </div>
         </div>
         <div class="hero__art" aria-hidden="true">
@@ -316,7 +316,7 @@
           <a href="#why">Why the Store</a>
           <a href="#how">How it works</a>
           <a href="#benefits">Benefits</a>
-          <a href="#portal" data-action="portal">Developer portal</a>
+          <a href="#portal" data-action="portal">Windows Developer Center</a>
         </div>
         <div class="footer__col">
           <h4>Resources</h4>
@@ -336,7 +336,7 @@
         <div class="footer__col footer__col--cta">
           <h4>Get started</h4>
           <fluent-button appearance="primary" size="small" data-action="create">Create account</fluent-button>
-          <fluent-button appearance="outline" size="small" data-action="portal">Open portal</fluent-button>
+          <fluent-button appearance="outline" size="small" data-action="portal">Go to the Windows Developer Center</fluent-button>
         </div>
       </div>
       <div class="footer__legal">
@@ -359,7 +359,7 @@
     import { FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
     ButtonDefinition.define(FluentDesignSystem.registry);
   </script>
-  <script>window.MKT_ROUTES = { create: "store-signup.html", portal: "store-portal.html#signin" };</script>
+  <script>window.MKT_ROUTES = { create: "store-signup.html", portal: "developer-portal.html?src=store&signin=1#overview" };</script>
   <script type="module" src="theme-fluent.js?v=61"></script>
   <script src="app.js?v=61"></script>
 </body>

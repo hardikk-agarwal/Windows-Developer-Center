@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <script>
+    /* This portal has merged into the unified Windows Developer Center. Redirect immediately,
+       preserving any hash + query so deep-links keep working. Add ?stay to open this legacy page directly. */
+    (function () {
+      var q = location.search || '';
+      if (/[?&]stay\b/.test(q)) return;   // ?stay → view this legacy portal, no redirect
+      var s = q.replace(/^\?/, '');
+      location.replace('developer-portal.html?src=wdp' + (s ? '&' + s : '') + (location.hash || ''));
+    })();
+  </script>
   <title>Windows Developer Program | Microsoft</title>
   <script>
     // Set the theme before CSS/Fluent load to avoid a flash of the wrong theme.
