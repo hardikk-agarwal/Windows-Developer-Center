@@ -32,24 +32,6 @@ window.CERT_ISSUES = [
     section: "step-listing"
   },
   {
-    icon: "fluent:image-20-regular",
-    policy: "10.1.1", policyTitle: "Accurate representation",
-    title: "Screenshots don\u2019t reflect the actual app",
-    note: "Screenshots 2 and 4 don\u2019t look like captures from the running app \u2014 they appear to be stock imagery. Store screenshots must be real captures of your product.",
-    media: [{ type: "image", label: "Flagged screenshots" }],
-    area: "Store listing \u2014 screenshots",
-    section: "step-listing"
-  },
-  {
-    icon: "fluent:text-description-20-regular",
-    policy: "10.1.4", policyTitle: "Distinct function & value",
-    title: "Description is too short to be useful",
-    note: "The description is a single line and doesn\u2019t explain what the app does or its main features. Customers need enough detail to understand the app before installing.",
-    media: [],
-    area: "Store listing \u2014 description",
-    section: "step-listing"
-  },
-  {
     icon: "fluent:shield-keyhole-20-regular",
     policy: "10.5.1", policyTitle: "Personal information",
     title: "Privacy policy link doesn\u2019t show a privacy policy",

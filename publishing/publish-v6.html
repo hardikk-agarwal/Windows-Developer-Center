@@ -23,9 +23,9 @@
 <script src="ai-client.js"></script>
 <script src="tooltip.js" defer></script>
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
-<script src="cert-issues.js?v=2" defer></script>
+<script src="cert-issues.js?v=3" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=59" defer></script>
+<script src="tdp-bridge.js?v=66" defer></script>
 <link rel="stylesheet" href="styles.css">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -1877,7 +1877,10 @@
   .subhist__card:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
   .subhist__view { margin-top: 8px; display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--brand); }
   .subhist__top { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
-  .subhist__ver { font-weight: var(--font-weight-semibold); color: var(--fg-1); font-size: 14px; }
+  .subhist__ver { display: inline-flex; align-items: baseline; gap: 5px; font-weight: var(--font-weight-semibold); color: var(--fg-2); font-size: 14px; background: color-mix(in srgb, var(--brand) 12%, transparent); padding: 3px 10px; border-radius: var(--r-full); }
+  .subhist__ver b { font-weight: 700; color: var(--fg-1); }
+  .subhist__id { display: block; margin: 8px 0 0; font-size: 11.5px; color: var(--fg-3); }
+  .subhist__id b { font-weight: 600; color: var(--fg-2); }
   .subhist__type { font-size: 11px; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: .03em; }
   .subhist__badge { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--fg-2); }
   .subhist__sdot { width: 8px; height: 8px; border-radius: var(--r-full); background: var(--fg-3); }
@@ -1899,6 +1902,12 @@
 
   /* ===== Manage app names (reserve / per-language / free) ===== */
   #names-panel[hidden] { display: none; }
+  #promo-panel[hidden] { display: none; }
+  .promo-table .rname-name { font-weight: 600; }
+  .promo-form { display: flex; flex-direction: column; gap: 16px; margin: 2px 0; }
+  .promo-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--fg-2); }
+  .promo-field > fluent-text-input { width: 100%; }
+  .promo-hint { font-size: 12px; color: var(--fg-3); }
   .rname-tabletitle { margin: var(--sp-24) 0 var(--sp-6); font-size: 15px; font-weight: 600; color: var(--fg-1); }
   .rname-policy { margin: 0 0 var(--sp-12); font-size: 12.5px; line-height: 1.5; color: var(--fg-3); }
   .rname-tablewrap { border: 1px solid var(--stroke-2); border-radius: var(--r-12); overflow: hidden; background: var(--layer); margin-bottom: var(--sp-8); }
@@ -3597,6 +3606,12 @@
   .live-stat__delta--up { color: var(--status-success); }
   .live-stat__delta--down { color: var(--status-danger); }
   .dash-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--sp-16); margin-bottom: var(--sp-20); align-items: stretch; }
+  .dash-grid--single { grid-template-columns: 1fr; }
+  .dash-soonnote { display: flex; align-items: center; gap: var(--sp-10); margin-bottom: var(--sp-20); padding: var(--sp-12) var(--sp-16); background: var(--layer); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); color: var(--fg-2); font-size: 13px; line-height: 1.5; }
+  .dash-soonnote iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
+  .dash-rev__insight { display: flex; align-items: flex-start; gap: var(--sp-8); margin: var(--sp-6) 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); background: color-mix(in srgb, var(--status-warning) 10%, transparent); border: 1px solid color-mix(in srgb, var(--status-warning) 26%, transparent); border-radius: var(--r-8); font-size: 12.5px; line-height: 1.5; color: var(--fg-2); }
+  .dash-rev__insight iconify-icon { color: var(--status-warning); flex: 0 0 auto; margin-top: 1px; }
+  .dash-rev__insight b { color: var(--fg-1); font-weight: 600; }
   @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
   .dash-card { border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); background: var(--layer); padding: var(--sp-16) var(--sp-18); margin-bottom: var(--sp-20); }
   .dash-grid .dash-card { margin-bottom: 0; }
@@ -4181,9 +4196,9 @@
              View submissions is secondary (View in Store rides on the status pill). Withdraw while in
              review; report/fix when failed. -->
         <div class="wz-head-actions" id="wz-head-actions">
-          <fluent-button appearance="secondary" id="head-review-btn" hidden>
-            <iconify-icon slot="start" icon="fluent:history-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            View submissions
+          <fluent-button appearance="secondary" id="head-analytics-btn" hidden>
+            <iconify-icon slot="start" icon="fluent:data-histogram-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            View analytics
           </fluent-button>
           <fluent-button appearance="secondary" id="head-withdraw-btn" hidden>
             <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -4720,14 +4735,40 @@
           <span class="ez-step__num" id="num-rating">3</span>
           <div>
             <h2 class="ez-step__title">Set your content &amp; ratings</h2>
-            <p class="ez-step__sub">Tell us what’s inside your app, then set its age rating.</p>
+            <p class="ez-step__sub">Set your app’s age rating, then tell us what’s inside.</p>
             <p class="ez-step__summary" id="sum-rating"></p>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </div>
 
-        <!-- Disclosures come first: they describe what's in the app, which is also what the
-             age-rating questionnaire asks about. Package-type rows are toggled in JS. -->
+        <div class="ez-substep">
+          <h3 class="ez-substep__title">Age rating <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
+          <div class="ez-rating">
+            <div class="iarc-badge">
+              <span class="iarc-badge__head">IARC</span>
+              <span class="iarc-badge__age" id="rating-age">—</span>
+            </div>
+            <div class="ez-rating__text">
+              <strong id="rating-label">Content rating</strong>
+              <p id="rating-desc">Answer a few quick questions about your app's content.</p>
+            </div>
+            <fluent-button id="rating-territories-btn" appearance="secondary" hidden>
+              <iconify-icon slot="start" icon="fluent:globe-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Preview ratings
+            </fluent-button>
+            <fluent-button id="rating-review-btn" appearance="primary">
+              <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              Start questionnaire
+            </fluent-button>
+          </div>
+
+          <!-- Filled by renderRatingBadgeStrip() once a rating exists. -->
+          <div class="ez-rating-badges" id="rating-badges" hidden></div>
+
+          <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> to use it instead of the questionnaire.</p>
+        </div>
+
+        <!-- Disclosures follow the age rating; both cover what is inside the app. Package-type rows are toggled in JS. -->
         <div class="ez-substep">
           <h3 class="ez-substep__title">Disclosures <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
           <ul class="declarations__list">
@@ -4820,33 +4861,6 @@
               </span>
             </li>
           </ul>
-        </div>
-
-        <div class="ez-substep">
-          <h3 class="ez-substep__title">Age rating <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
-          <div class="ez-rating">
-            <div class="iarc-badge">
-              <span class="iarc-badge__head">IARC</span>
-              <span class="iarc-badge__age" id="rating-age">—</span>
-            </div>
-            <div class="ez-rating__text">
-              <strong id="rating-label">Content rating</strong>
-              <p id="rating-desc">Answer a few quick questions about your app's content.</p>
-            </div>
-            <fluent-button id="rating-territories-btn" appearance="secondary" hidden>
-              <iconify-icon slot="start" icon="fluent:globe-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              Preview ratings
-            </fluent-button>
-            <fluent-button id="rating-review-btn" appearance="primary">
-              <iconify-icon slot="start" icon="fluent:clipboard-text-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              Start questionnaire
-            </fluent-button>
-          </div>
-
-          <!-- Filled by renderRatingBadgeStrip() once a rating exists. -->
-          <div class="ez-rating-badges" id="rating-badges" hidden></div>
-
-          <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> to use it instead of the questionnaire.</p>
         </div>
 
       </section>
@@ -5108,6 +5122,17 @@
         <button type="button" class="cert-switch__opt" data-cert-view="failed">Needs attention</button>
       </div>
 
+      <!-- Notification audience (in review) — who gets the cert pass/fail email. Sits right under the
+           app header, above the certification status; setNotify() still toggles it. -->
+      <div class="notify-banner">
+        <iconify-icon class="notify-banner__icon" icon="fluent:alert-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+        <div class="notify-banner__text">
+          <strong>Submission notification audience</strong>
+          <span>Choose who gets emailed when this submission passes or fails certification.</span>
+        </div>
+        <fluent-button appearance="secondary" size="small" id="notify-audience-open">Manage</fluent-button>
+      </div>
+
       <!-- Gradual-rollout status + live % control (update flow, when gradual). Toggled by renderCertRollout(). -->
       <div class="cert-rollout" id="cert-rollout" hidden>
         <div class="cert-rollout__head">
@@ -5142,6 +5167,10 @@
             <p class="cert-card__sub">We're reviewing your app. You don't need to do anything — we'll email you when it's done.</p>
           </div>
           <div class="cert-card__headactions">
+            <fluent-button appearance="secondary" id="cert-review-btn">
+              <iconify-icon slot="start" icon="fluent:eye-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              View submission
+            </fluent-button>
             <fluent-button appearance="secondary" id="cert-withdraw-btn">
               <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
               Withdraw submission
@@ -5206,17 +5235,6 @@
       </div>
       </div><!-- /#cert-progress -->
 
-      <!-- Notification audience (in review) — who gets the cert pass/fail email. Sits BELOW the
-           certification status so the status card stays the hero; setNotify() still toggles it. -->
-      <div class="notify-banner">
-        <iconify-icon class="notify-banner__icon" icon="fluent:alert-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-        <div class="notify-banner__text">
-          <strong>Submission notification audience</strong>
-          <span>Choose who gets emailed when this submission passes or fails certification.</span>
-        </div>
-        <fluent-button appearance="secondary" size="small" id="notify-audience-open">Manage</fluent-button>
-      </div>
-
       <!-- Certification result (passed or failed) — rendered by tdp-bridge.js -->
       <div id="cert-result" hidden></div>
 
@@ -5230,6 +5248,9 @@
 
       <!-- Manage app names (reserve names, per-language names, free unused) — opened from the live hub. -->
       <div id="names-panel" hidden></div>
+
+      <!-- Promo codes (free download-code orders for this app): L3 page, opened from the live hub / sidebar. -->
+      <div id="promo-panel" hidden></div>
 
       <!-- Package identity (manifest names & IDs) — L3 page, opened from the live hub / sidebar. -->
       <div id="identity-panel" hidden></div>
@@ -5314,6 +5335,19 @@
     <div class="rname-langs" id="name-langs-list"></div>
     <fluent-button slot="action" appearance="secondary" data-namelangs-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="name-langs-apply">Apply</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<fluent-dialog id="promo-new-dialog" modal-type="modal" aria-labelledby="promo-new-title">
+  <fluent-dialog-body>
+    <span slot="title" id="promo-new-title"><iconify-icon icon="fluent:ticket-diagonal-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>New promo code order</span>
+    <fluent-button slot="title-action" appearance="subtle" data-promo-close aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon></fluent-button>
+    <div class="promo-form">
+      <label class="promo-field"><span>Order name</span><fluent-text-input id="promo-new-name" appearance="outline" maxlength="60" placeholder="Launch reviewers"></fluent-text-input></label>
+      <label class="promo-field"><span>Number of codes</span><fluent-text-input id="promo-new-count" appearance="outline" type="number" value="25"></fluent-text-input><span class="promo-hint">Up to 250 codes per app every 6 months.</span></label>
+    </div>
+    <fluent-button slot="action" appearance="secondary" data-promo-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="promo-new-create">Create order</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -8853,6 +8887,12 @@
   // Which disclosures apply depends on the selected app type (the "What are you publishing?"
   // chooser, or a locked package once one is added): MSIX → external commerce, Win32 →
   // driver/service dependency. Runs from updateGate, and setV4Type calls updateGate on change.
+  // Record & broadcast (Game DVR / clip broadcasting) is an Xbox capability — only relevant when a
+  // package targets the Xbox device family, never for desktop-only submissions.
+  window.__hasXbox = function () {
+    try { return (typeof packages !== 'undefined') && packages.some(function (p) { return p && !p._pending && p.devices && p.devices.indexOf('Xbox') >= 0; }); }
+    catch (e) { return false; }
+  };
   function syncDisclosureItems() {
     const isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending));
     const setHidden = (id, hide) => { const el = $(id); if (el) el.hidden = hide; };
@@ -8860,7 +8900,8 @@
     setHidden('decl-item-commerce', isWin32);
     setHidden('decl-item-alt-drives', isWin32);
     setHidden('decl-item-onedrive', isWin32);
-    setHidden('decl-item-broadcast', isWin32);
+    // Record & broadcast: Xbox-family packages only (not desktop-only).
+    setHidden('decl-item-broadcast', !window.__hasXbox());
     // Win32-only disclosure
     setHidden('decl-item-drivers', !isWin32);
     // accessibility, pen & ink and generative AI apply to both types (always shown)
@@ -8973,6 +9014,11 @@
       { id: 'gTerrorism',       text: 'Does the game advocate committing acts of terrorism?',                                                                     age: 18, parent: null, descriptor: 'Advocates terrorism' },
       { id: 'gCrimeTechniques', text: 'Does the game contain realistic descriptions of crimes (e.g. robbery, kidnapping), or techniques that could be used in criminal offenses?', age: 16, parent: null, descriptor: 'Criminal techniques' },
     ]},
+    // Asked last, and the one question that keeps a "No" default: it drives distribution / IARC
+    // handling rather than an age band, so it's informational and doesn't raise the rating.
+    { section: 'Existing ratings & physical media', appTypes: ['game'], items: [
+      { id: 'gBoardOrPhysical', text: 'Will this game use ratings obtained directly from a ratings board, and/or will it be distributed on physical media in any region?', age: 0, parent: null, descriptor: 'Board-rated or physical media', informational: true, def: false },
+    ]},
 
     // ===== SOCIAL OR COMMUNICATION =====
     // These aren't rated on content they ship — they're rated on what users can do to each
@@ -9044,8 +9090,12 @@
     { min: 18, age: '18+', label: 'Adults Only 18+' },
   ];
   const DEFAULT_ANSWERS = Object.freeze(IARC_QUESTIONS.reduce((acc, s) => {
-    // Yes/No questions start at No; a "choice" question starts on its default option.
-    s.items.forEach(q => { acc[q.id] = q.kind === 'choice' ? (q.default || (q.options[0] && q.options[0].value)) : false; });
+    // A "choice" question starts on its default option. Yes/No questions start UNANSWERED so the
+    // developer picks explicitly — unless a question opts into a starting value via `def`.
+    s.items.forEach(q => {
+      if (q.kind === 'choice') acc[q.id] = q.default || (q.options[0] && q.options[0].value);
+      else if (q.def !== undefined) acc[q.id] = q.def;
+    });
     return acc;
   }, {}));
   function computeAgeRating(answers) {
@@ -12832,26 +12882,13 @@
   let ratingDraft = null;
   let ratingAppTypeDraft = null;   // so Cancel restores the app type too, not just the answers
 
-  // Gate "Preview rating" until the developer scrolls through the whole questionnaire, so no
-  // content questions are answered blind. Sticky once the end is reached; reset on a fresh open.
-  let ratingReachedEnd = false;
-  function ratingScrollEl() {
-    const body = document.querySelector('#rating-dialog fluent-dialog-body');
-    return (body && body.shadowRoot) ? body.shadowRoot.querySelector('[part~="content"]') : null;
-  }
+  // "Preview rating" is always available — developers answer only the questions that apply and can
+  // preview whenever they like (any question left unanswered simply counts as "No" toward the rating).
   function updateRatingPreviewGate() {
     const pb = $('rating-preview-btn');
-    if (!pb || pb.hidden) return;   // only phase 1's action is gated (it's hidden in the preview phase)
-    const sc = ratingScrollEl();
-    if (!sc) ratingReachedEnd = true;   // can't find the scroller → don't block
-    else if (sc.clientHeight > 0 && sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) ratingReachedEnd = true;
-    pb.disabled = !ratingReachedEnd;
-    if (pb.disabled) pb.title = 'Scroll through all the questions to preview your rating.';
-    else pb.removeAttribute('title');
-  }
-  function wireRatingScrollGate() {
-    const sc = ratingScrollEl();
-    if (sc && !sc.__ratingGateWired) { sc.__ratingGateWired = true; sc.addEventListener('scroll', updateRatingPreviewGate, { passive: true }); }
+    if (!pb) return;
+    pb.disabled = false;
+    pb.removeAttribute('title');
   }
 
   function renderRatingQuestions(answers) {
@@ -12876,15 +12913,18 @@
         }
         const isFollowup = !!q.parent;
         const parentYes = !q.parent || !!answers[q.parent];
-        const checked = !!answers[q.id];
+        // Tri-state: true = Yes, false = No, undefined = not yet answered. Nothing is pre-selected —
+        // the developer must choose No or Yes explicitly (except questions that opt into a `def`).
+        const ans = answers[q.id];
+        const noActive = ans === false, yesActive = ans === true;
         if (isFollowup && !parentYes) return '';
         // Show IARC's exact question wording verbatim — readability comes from the section grouping /
         // cards / follow-up indentation, not from paraphrasing the question.
         return '<div class="rating-question' + (isFollowup ? ' rating-question--sub' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
           '<span class="rating-question__text">' + q.text + '</span>' +
           '<span class="seg rating-seg" role="radiogroup" aria-label="' + q.text + '" data-rating-q="' + q.id + '">' +
-            '<button type="button" class="seg__opt' + (!checked ? ' seg__opt--active' : '') + '" data-rating-val="no" aria-checked="' + (!checked ? 'true' : 'false') + '">No</button>' +
-            '<button type="button" class="seg__opt' + (checked ? ' seg__opt--active' : '') + '" data-rating-val="yes" aria-checked="' + (checked ? 'true' : 'false') + '">Yes</button>' +
+            '<button type="button" class="seg__opt' + (noActive ? ' seg__opt--active' : '') + '" data-rating-val="no" aria-checked="' + (noActive ? 'true' : 'false') + '">No</button>' +
+            '<button type="button" class="seg__opt' + (yesActive ? ' seg__opt--active' : '') + '" data-rating-val="yes" aria-checked="' + (yesActive ? 'true' : 'false') + '">Yes</button>' +
           '</span></div>';
       }).join('');
       return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4><div class="rating-qcard">' + itemsHtml + '</div></div>';
@@ -12977,11 +13017,8 @@
       ? 'These are your confirmed answers. Change anything to update the rating.'
       : "Answer these questions about your app's content. The rating updates as you change answers.";
     ratingPhase('questions');
-    ratingReachedEnd = false;
-    const pgb = $('rating-preview-btn'); if (pgb) { pgb.disabled = true; pgb.title = 'Scroll through all the questions to preview your rating.'; }
+    const pgb = $('rating-preview-btn'); if (pgb) { pgb.disabled = false; pgb.removeAttribute('title'); }
     try { ratingDialog.show(); } catch (e) {}
-    setTimeout(() => { wireRatingScrollGate(); updateRatingPreviewGate(); }, 60);
-    setTimeout(updateRatingPreviewGate, 320);   // safety re-check once the dialog has laid out
   }
   function closeRatingDialog(restore) {
     if (restore && ratingDraft) { contentAnswers = ratingDraft; ratingAppType = ratingAppTypeDraft; }
@@ -13014,11 +13051,6 @@
     const dl = $('submit-summary'); if (!dl) return;
     const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
-    // Architecture — de-duped across every real (non-pending) package.
-    const archOf = pkg => (pkg.arches && pkg.arches.length) ? pkg.arches.join(', ') : (pkg.win32 ? win32ArchOf(pkg) : '');
-    const arches = [];
-    (packages || []).filter(p => !p._pending).forEach(p => archOf(p).split(',').map(s => s.trim()).filter(Boolean).forEach(a => { if (arches.indexOf(a) < 0) arches.push(a); }));
-    const archVal = arches.length ? arches.join(', ') : '—';
     // Listing languages — the default locale plus any added ones.
     const locs = (adv.listing && adv.listing.locales) ? Object.keys(adv.listing.locales) : [];
     const defLoc = (adv.listing && adv.listing.defaultLocale) || 'en-US';
@@ -13032,21 +13064,21 @@
     const audienceVal = adv.audience.mode === 'public' ? 'Public'
       : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group');
     const rows = [
-      ['Architecture', archVal, 'fluent:developer-board-20-regular'],
       ['Languages', langVal, 'fluent:local-language-20-regular'],
       ['Price', priceVal, 'fluent:tag-20-regular'],
       ['Markets', marketsVal, 'fluent:globe-20-regular'],
       ['Audience', audienceVal, 'fluent:people-20-regular']
     ];
-    // Disclosures moved to the Disclosures & age rating step — echo them here so the developer
-    // still confirms what they declared at the moment they submit.
+    // Disclosures were set on the Disclosures & age rating step — echo a COUNT here (full list in
+    // the hover tooltip) so the developer confirms what they declared without a long inline string.
     const d = adv.declarations || {};
-    const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers', d.accessibility && 'Accessibility tested', d.penInk && 'Pen & ink input', d.altDrives && 'Alternate drives', d.oneDriveBackup && 'OneDrive backup', d.broadcast && 'Record & broadcast'].filter(Boolean);
-    if (declared.length) rows.push(['Disclosures', declared.join(' \u00b7 '), 'fluent:shield-20-regular']);
+    const showBroadcast = (typeof window.__hasXbox === 'function') && window.__hasXbox();   // Record & broadcast is Xbox-only
+    const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers', d.accessibility && 'Accessibility tested', d.penInk && 'Pen & ink input', d.altDrives && 'Alternate drives', d.oneDriveBackup && 'OneDrive backup', (showBroadcast && d.broadcast) && 'Record & broadcast'].filter(Boolean);
+    if (declared.length) rows.push(['Disclosures', declared.length + (declared.length === 1 ? ' disclosure' : ' disclosures'), 'fluent:shield-20-regular', 'Disclosures: ' + declared.join(', ')]);
     if (inUpdateFlow && adv.rollout && adv.rollout.gradual) rows.push(['Rollout', 'Gradual \u00b7 ' + (adv.rollout.percent || 10) + '%' + (adv.rollout.mandatory ? ' \u00b7 Mandatory' : ''), 'fluent:arrow-trending-lines-20-regular']);
     else if (inUpdateFlow && adv.rollout && adv.rollout.mandatory) rows.push(['Rollout', 'All at once \u00b7 Mandatory', 'fluent:arrow-trending-lines-20-regular']);
     dl.innerHTML = rows.map(x =>
-      '<span class="ez-sd__chip" title="' + x[0] + ': ' + esc(x[1]) + '">' +
+      '<span class="ez-sd__chip" title="' + esc(x[3] || (x[0] + ': ' + x[1])) + '">' +
         '<iconify-icon icon="' + x[2] + '" width="15" height="15" aria-hidden="true"></iconify-icon>' +
         '<span>' + esc(x[1]) + '</span>' +
       '</span>').join('');
@@ -13230,12 +13262,12 @@
   // Demo (?app=, no portal): mirror tdp-bridge's setHeadActions so the submitted header shows the
   // right buttons (View in Store + Review details when published).
   function demoHeadActions(view) {
-    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), rv = $('head-review-btn');
+    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), an = $('head-analytics-btn');
     if (w) w.hidden = (view !== 'progress');
     if (v) v.hidden = (view !== 'passed');
     if (r) r.hidden = (view !== 'failed');
     if (e) e.hidden = (view !== 'failed');
-    if (rv) rv.hidden = (view !== 'passed');
+    if (an) an.hidden = (view !== 'passed');
   }
   function demoCertView(view) {
     var isUpdate = false; try { isUpdate = !!inUpdateFlow || !!(app && app.submissionIsUpdate); } catch (e) {}
@@ -13265,7 +13297,7 @@
         var pStrip = prog.querySelector('.cert-strip--summary'); if (pStrip) pStrip.innerHTML = certStripHTML('progress', pwin32);
       }
       if (res) {
-        if (!isUpdate) { res.hidden = false; res.innerHTML = certLivePreviewHTML(); }   // new app: preview what unlocks once live
+        if (!isUpdate) { res.hidden = false; res.innerHTML = certLivePreviewHTML({ collapsed: true }); }   // new app: preview what unlocks once live (collapsed by default)
         else { res.hidden = true; res.innerHTML = ''; }
       }
       setCertProgressDensity(isUpdate);
@@ -13748,7 +13780,7 @@
     try { if (typeof renderPackages === 'function') renderPackages(); } catch (e) {}
     try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}
     try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
-    announce('Viewing your published app \u2014 read-only. Select a step to review it.');
+    announce((reviewFromInReview ? 'Viewing your submission' : 'Viewing your published app') + ' \u2014 read-only. Select a step to review it.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
   window.goReviewDetails = goReviewDetails;
@@ -13757,6 +13789,9 @@
     try { document.getElementById('flow-wrap').classList.remove('is-review-mode'); } catch (e) {}
     $('editor').hidden = true;
     $('submit-bar').hidden = true;
+    // Read-only view of an IN-REVIEW submission: don't assert 'passed' or render the live hub — just
+    // reveal #state-done; the observer cleared __result on hide, so it re-runs the in-progress timeline.
+    if (reviewFromInReview) { reviewFromInReview = false; $('state-done').hidden = false; window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' }); return; }
     // Same as exitUpdateToHub: re-assert the published result before #state-done is revealed.
     try { var d = $('state-done'); if (d) d.__result = 'passed'; } catch (e) {}
     $('state-done').hidden = false;
@@ -13793,13 +13828,14 @@
   //      it follow its href to the Apps list. The label tracks the level so it never lies. ----
   (function () {
     function panelOpen(id) { var p = document.getElementById(id); return !!(p && !p.hidden); }
-    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel') || panelOpen('flights-panel') || panelOpen('history-panel') || panelOpen('names-panel') || panelOpen('identity-panel') || panelOpen('availability-panel')); }
+    function inSubview() { return !!(window.__reviewMode || window.__inUpdateFlow || panelOpen('experiments-panel') || panelOpen('addons-panel') || panelOpen('flights-panel') || panelOpen('history-panel') || panelOpen('names-panel') || panelOpen('promo-panel') || panelOpen('identity-panel') || panelOpen('availability-panel')); }
     function subviewTitle() {
       if (panelOpen('experiments-panel')) return 'Product page experiments';
       if (panelOpen('addons-panel')) return 'Manage add-ons';
       if (panelOpen('flights-panel')) return 'Package flights';
       if (panelOpen('history-panel')) return 'View submissions';
       if (panelOpen('names-panel')) return 'Manage app names';
+      if (panelOpen('promo-panel')) return 'Promo codes';
       if (panelOpen('identity-panel')) return 'Package identity';
       if (panelOpen('availability-panel')) return 'Store availability';
       if (window.__inUpdateFlow) return 'Update your app';
@@ -13813,7 +13849,7 @@
       if (!inSubview()) { crumbs.push({ label: appCrumbName(), current: true }); return crumbs; }
       crumbs.push({ label: appCrumbName(), action: 'home' });
       if (window.__reviewMode) {
-        crumbs.push({ label: 'View submissions', action: 'exitReview' });
+        if (!reviewFromInReview) crumbs.push({ label: 'View submissions', action: 'exitReview' });
         crumbs.push({ label: reviewSubLabel || 'Submission details', current: true });
       } else {
         crumbs.push({ label: subviewTitle() || appCrumbName(), current: true });
@@ -13855,6 +13891,7 @@
       if (panelOpen('flights-panel') && typeof exitFlights === 'function') { e.preventDefault(); exitFlights(); return; }
       if (panelOpen('history-panel') && typeof exitHistory === 'function') { e.preventDefault(); exitHistory(); return; }
       if (panelOpen('names-panel') && typeof exitNames === 'function') { e.preventDefault(); exitNames(); return; }
+      if (panelOpen('promo-panel') && typeof exitPromo === 'function') { e.preventDefault(); exitPromo(); return; }
       if (panelOpen('identity-panel') && typeof window.exitIdentity === 'function') { e.preventDefault(); window.exitIdentity(); return; }
       if (panelOpen('availability-panel') && typeof window.exitAvailability === 'function') { e.preventDefault(); window.exitAvailability(); return; }
       if (window.__inUpdateFlow) { e.preventDefault(); exitUpdateToHub(); return; }
@@ -13869,6 +13906,7 @@
       else if (panelOpen('flights-panel') && typeof exitFlights === 'function') { exitFlights(); }
       else if (panelOpen('history-panel') && typeof exitHistory === 'function') { exitHistory(); }
       else if (panelOpen('names-panel') && typeof exitNames === 'function') { exitNames(); }
+      else if (panelOpen('promo-panel') && typeof exitPromo === 'function') { exitPromo(); }
       else if (panelOpen('identity-panel') && typeof window.exitIdentity === 'function') { window.exitIdentity(); }
       else if (panelOpen('availability-panel') && typeof window.exitAvailability === 'function') { window.exitAvailability(); }
       else if (window.__inUpdateFlow && typeof exitUpdateToHub === 'function') { exitUpdateToHub(); }
@@ -13879,7 +13917,7 @@
     try {
       var mo = new MutationObserver(onViewChange);
       var fw = document.getElementById('flow-wrap'); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ['class'] });
-      ['experiments-panel', 'addons-panel', 'flights-panel', 'history-panel', 'names-panel', 'identity-panel', 'availability-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
+      ['experiments-panel', 'addons-panel', 'flights-panel', 'history-panel', 'names-panel', 'promo-panel', 'identity-panel', 'availability-panel'].forEach(function (id) { var p = document.getElementById(id); if (p) mo.observe(p, { attributes: true, attributeFilter: ['hidden'] }); });
     } catch (e) {}
     onViewChange();
   })();
@@ -13976,6 +14014,97 @@
     return '<div class="exp">' + head + reserve + table + note + '</div>';
   }
   function renderNames() { var p = $('names-panel'); if (p) p.innerHTML = namesListHTML(); }
+
+  // ===== Promo codes (app-scoped L3) — free download-code orders for THIS app =================
+  var _promoHidden = [];
+  function promoKey() { return (app && app.id != null) ? 'tdp.promo.' + app.id : null; }
+  function promoDateFmt(d) { try { return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } }
+  function loadPromo() {
+    var d = null; try { d = JSON.parse(localStorage.getItem(promoKey()) || 'null'); } catch (e) { d = null; }
+    if (!d || !Array.isArray(d.orders)) {
+      // Seed a couple of believable orders so the page reads as a real feature in the demo.
+      d = { orders: [
+        { id: 'po1', name: 'Launch reviewers', used: 42, total: 100, created: 'Jun 12, 2026', expires: 'Sep 12, 2026', status: 'active' },
+        { id: 'po2', name: 'Press & influencers', used: 8, total: 25, created: 'Jun 28, 2026', expires: 'Dec 28, 2026', status: 'active' }
+      ] };
+      savePromo(d);
+    }
+    return d;
+  }
+  function savePromo(d) { try { var k = promoKey(); if (k) localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} }
+  function promoBadge(o) {
+    if (o.status === 'expired') return '<fluent-badge appearance="tint" color="subtle" size="small">Expired</fluent-badge>';
+    if ((o.used || 0) >= (o.total || 0)) return '<fluent-badge appearance="tint" color="warning" size="small">All used</fluent-badge>';
+    return '<fluent-badge appearance="tint" color="success" size="small">Active</fluent-badge>';
+  }
+  function promoRowHTML(o) {
+    return '<tr class="rname-row">' +
+      '<td><span class="rname-name">' + expEsc(o.name) + '</span></td>' +
+      '<td class="rname-cell-date">' + (o.used || 0) + ' <span class="rname-dash">/ ' + (o.total || 0) + '</span></td>' +
+      '<td class="rname-cell-date">' + expEsc(o.created) + '</td>' +
+      '<td class="rname-cell-date">' + expEsc(o.expires) + '</td>' +
+      '<td>' + promoBadge(o) + '</td></tr>';
+  }
+  function promoListHTML() {
+    var d = loadPromo(), orders = d.orders || [];
+    var newBtn = '<fluent-button appearance="primary" data-promo-new><iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New promo code order</fluent-button>';
+    var head = '<div class="exp__head"><div class="exp__htext"><h2 class="exp__title">Promo codes</h2>' +
+      '<p class="exp__sub">Give reviewers, testers, and fans free access to your paid app and add-ons — up to 250 codes per app every 6 months.</p></div>' + newBtn + '</div>';
+    var body;
+    if (!orders.length) {
+      body = '<div class="exp-empty"><strong>No promo code orders yet</strong><p>Create an order to give reviewers, testers, and fans free download codes for this app.</p>' + newBtn + '</div>';
+    } else {
+      body = '<div class="rname-tablewrap"><table class="rname-table promo-table"><thead><tr>' +
+        '<th scope="col">Order</th><th scope="col">Codes used</th><th scope="col">Created</th><th scope="col">Expires</th><th scope="col">Status</th>' +
+        '</tr></thead><tbody>' + orders.map(promoRowHTML).join('') + '</tbody></table></div>' +
+        '<div class="rname-note"><iconify-icon icon="fluent:info-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+        '<span>Codes are single-use and work for your paid app and its add-ons. Unused codes are released when an order expires.</span></div>';
+    }
+    return '<div class="exp">' + head + body + '</div>';
+  }
+  function renderPromoPanel() { var p = $('promo-panel'); if (p) p.innerHTML = promoListHTML(); }
+  window.startPromo = function () {
+    var panel = $('promo-panel'); if (!panel) return;
+    _promoHidden = [];
+    var sd = $('state-done');
+    if (sd) Array.prototype.forEach.call(sd.children, function (ch) { if (ch.id === 'promo-panel') return; _promoHidden.push([ch, ch.hidden]); ch.hidden = true; });
+    panel.hidden = false;
+    renderPromoPanel();
+    announce('Promo codes.');
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  };
+  function exitPromo() {
+    if ($('promo-panel')) $('promo-panel').hidden = true;
+    _promoHidden.forEach(function (pair) { try { pair[0].hidden = pair[1]; } catch (e) {} });
+    _promoHidden = [];
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+  }
+  window.exitPromo = exitPromo;
+  function promoInVal(el) { if (!el) return ''; try { var i = el.shadowRoot && el.shadowRoot.querySelector('input'); if (i) return i.value; } catch (e) {} return el.value || ''; }
+  function openPromoNew() {
+    var dlg = $('promo-new-dialog'); if (!dlg) return;
+    try { var n = $('promo-new-name'); if (n) n.value = ''; var c = $('promo-new-count'); if (c) c.value = '25'; } catch (e) {}
+    try { dlg.show(); } catch (e) {}
+    try { var nd = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (nd && !nd.open) nd.showModal(); } catch (e) {}
+  }
+  function closePromoNew() {
+    var dlg = $('promo-new-dialog'); if (!dlg) return;
+    try { dlg.hide(); } catch (e) {}
+    try { var nd = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (nd && nd.open) nd.close(); } catch (e) {}
+  }
+  function promoCreate() {
+    var name = promoInVal($('promo-new-name')).trim() || 'Promo order';
+    var n = parseInt(promoInVal($('promo-new-count')), 10); if (!(n > 0)) n = 25; if (n > 250) n = 250;
+    var d = loadPromo(), now = new Date(), exp = new Date(now.getTime()); exp.setMonth(exp.getMonth() + 6);
+    d.orders.unshift({ id: 'po' + Date.now(), name: name, used: 0, total: n, created: promoDateFmt(now), expires: promoDateFmt(exp), status: 'active' });
+    savePromo(d); renderPromoPanel(); closePromoNew();
+    announce('Promo code order created.');
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-promo-new]')) { e.preventDefault(); openPromoNew(); return; }
+    if (e.target.closest('[data-promo-close]')) { e.preventDefault(); closePromoNew(); return; }
+    if (e.target.closest('#promo-new-create')) { e.preventDefault(); promoCreate(); return; }
+  });
   function namesSetHint(cls, html, canReserve) {
     var h = $('rname-hint'); if (h) { h.className = 'rname-hint' + (cls ? ' rname-hint--' + cls : ''); h.innerHTML = html; }
     var b = $('rname-reserve'); if (b) { if (canReserve) b.removeAttribute('disabled'); else b.setAttribute('disabled', ''); }
@@ -14767,7 +14896,7 @@
   //      first). Lives in the Updates group; the hub row shows the count ("5 submissions"). Recorded
   //      on each submit; a live app opened with no record yet gets a believable baseline so the
   //      history is never empty and the count is consistent everywhere. ----
-  var _histHidden = [], reviewFromHistory = false, reviewSubLabel = '';
+  var _histHidden = [], reviewFromHistory = false, reviewFromInReview = false, reviewSubLabel = '';
   function subKey() { return (app && app.id != null) ? 'tdp.submissions.' + app.id : null; }
   function readSubs() { try { var a = JSON.parse(localStorage.getItem(subKey()) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
   function writeSubs(a) { try { var k = subKey(); if (k) localStorage.setItem(k, JSON.stringify(a)); } catch (e) {} }
@@ -14855,13 +14984,13 @@
       (subs.length ? '<span class="subhist__count">' + subs.length + ' submission' + (subs.length === 1 ? '' : 's') + '</span>' : '') +
       '</div>';
     var body = subs.length
-      ? '<div class="subhist">' + subs.map(function (s, i) { return historyRowHTML(s, i, latestStatus, liveIndex); }).join('') + '</div>'
+      ? '<div class="subhist">' + subs.map(function (s, i) { return historyRowHTML(s, i, latestStatus, liveIndex, subs.length); }).join('') + '</div>'
       : '<div class="exp-empty">' + spotArt('arrow-upload', 'exp-empty__art') +
         '<h3 class="exp-empty__title">No submissions yet</h3>' +
         '<p class="exp-empty__sub">When you submit a package for review, it\u2019ll show up here as a version in your history.</p></div>';
     return '<div class="exp">' + head + body + '</div>';
   }
-  function historyRowHTML(s, i, latestStatus, liveIndex) {
+  function historyRowHTML(s, i, latestStatus, liveIndex, total) {
     var isLatest = i === 0;
     // Live = the current store version (newest published); older published entries are superseded.
     var status = isLatest ? (latestStatus === 'published' ? 'live' : latestStatus)
@@ -14872,10 +15001,11 @@
       '<div class="subhist__rail"><span class="subhist__dot"></span><span class="subhist__line"></span></div>' +
       '<button type="button" class="subhist__card" data-sub-open="' + expEsc(s.id) + '">' +
         '<div class="subhist__top">' +
-          '<span class="subhist__ver">Version ' + expEsc(s.v) + '</span>' +
+          '<span class="subhist__ver">Version <b>' + expEsc(s.v) + '</b></span>' +
           '<span class="subhist__type">' + type + '</span>' +
           '<span class="subhist__badge subhist__badge--' + meta.cls + '"><span class="subhist__sdot"></span>' + meta.label + '</span>' +
         '</div>' +
+        '<span class="subhist__id">Submission <b>' + (total - i) + '</b></span>' +
         '<span class="subhist__meta">' +
           '<iconify-icon icon="fluent:calendar-ltr-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>' +
           'Submitted ' + fmtSubDate(s.date) +
@@ -15014,11 +15144,12 @@
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
   if ($('withdraw-btn')) $('withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('cert-withdraw-btn')) $('cert-withdraw-btn').addEventListener('click', withdrawSubmission);
+  if ($('cert-review-btn')) $('cert-review-btn').addEventListener('click', function () { reviewFromInReview = true; goReviewDetails(); });
   // Header actions (submitted view): Withdraw (in review) reuses the withdraw flow; View in Store
   // (published, now beside the status pill) is a demo stub.
   if ($('head-withdraw-btn')) $('head-withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('app-storelink')) $('app-storelink').addEventListener('click', () => announce('Opening your Store listing…'));
-  if ($('head-review-btn')) $('head-review-btn').addEventListener('click', function () { if (typeof window.startHistory === 'function') window.startHistory(); });
+  if ($('head-analytics-btn')) $('head-analytics-btn').addEventListener('click', function () { location.href = '../' + (window.__portalFile || 'developer-portal.html') + '?anaApp=' + encodeURIComponent(app.id) + '&anaTab=acquisition#analytics'; });
   if ($('head-update-btn')) $('head-update-btn').addEventListener('click', function () { if (typeof window.startAppUpdate === 'function') window.startAppUpdate(); });
   if ($('review-done-btn')) $('review-done-btn').addEventListener('click', exitReviewDetails);
   if ($('review-update-btn')) $('review-update-btn').addEventListener('click', updateFromReview);
@@ -15238,9 +15369,12 @@
   // ones that apply to their app.
   function applicableDeclKeys() {
     var isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(function (p) { return p.win32 && !p._pending; }));
-    return isWin32
+    var keys = isWin32
       ? ['genAi', 'accessibility', 'penInk', 'drivers']
-      : ['genAi', 'accessibility', 'penInk', 'externalCommerce', 'altDrives', 'oneDriveBackup', 'broadcast'];
+      : ['genAi', 'accessibility', 'penInk', 'externalCommerce', 'altDrives', 'oneDriveBackup'];
+    // Record & broadcast only applies to Xbox-family packages.
+    if (typeof window.__hasXbox === 'function' && window.__hasXbox()) keys.push('broadcast');
+    return keys;
   }
   function disclosuresAnswered() { return applicableDeclKeys().every(function (k) { return adv.declarations[k] != null; }); }
   // Amber "answer required" outline is gated on declFlagged (set on leaving Compliance blank) and

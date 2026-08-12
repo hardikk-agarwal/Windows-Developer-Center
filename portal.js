@@ -174,26 +174,12 @@
 
   /* ---------------- Renderers ---------------- */
   function renderAll() {
-    renderAccount(); renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderSummary(); updateStoreNav(); renderPromo(); renderNotifs();
+    renderAccount(); renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderSummary(); renderNotifs();
   }
   // App-shell scrolls the .main pane, not the window — reset the pane on view/analytics changes.
   function scrollTopMain() { var m = document.querySelector(".main"); if (m) m.scrollTop = 0; }
   // Store: an app is "live" once it's published to the Store.
   function hasLiveStoreApp() { return state.apps.some(function (a) { return a.store || a.storeStatus === "published"; }); }
-  // Promo codes: always shown in the unified portal; in Store-only mode it appears once an app is live.
-  function updateStoreNav() {
-    if (!STORE) return;
-    var promo = $("navPromo"); if (promo) promo.hidden = UNIFIED ? false : !hasLiveStoreApp();
-  }
-  // Promo codes need a live Store app to issue codes — show the demo orders once one exists, else the zero state.
-  function renderPromo() {
-    var empty = $("promoEmpty"), table = $("promoTable"), btn = $("promoNewBtn");
-    if (!empty || !table) return;
-    var show = hasLiveStoreApp();
-    table.hidden = !show; empty.hidden = show;
-    if (btn) btn.hidden = !show;
-  }
-
   function renderAccount() {
     var a = state.account || { name: "Your organization", initials: "—" };
     var av = $("avatar");
@@ -264,28 +250,34 @@
   // Store variant overview: no verification/certificates — a publish-focused welcome.
   function renderStoreStatus(el) {
     var inStore = state.apps.filter(function (x) { return x.store; }).length;
-    var inReview = state.apps.filter(function (x) { return x.storeStatus === "in-review"; }).length;
-    var inDraft = state.apps.filter(function (x) { return !x.store && x.storeStatus !== "in-review"; }).length;
-    // Metrics only make sense once there's an app — skip the 0/0/0 strip when empty.
-    var metricsStrip = state.apps.length
-      ? '<div class="status-card__metrics">' +
-          metric(state.apps.length, "Apps") + metric(inStore, "In Store") + metric(inReview, "In review") + metric(inDraft, "In draft") +
-        '</div>'
-      : '';
+    // With apps → a SLIM welcome bar; the big onboarding hero is only for the empty state.
+    if (state.apps.length) {
+      var firstName = (((state.account && state.account.name) || "").trim().split(/\s+/)[0]) || "";
+      var inReview = state.apps.filter(function (x) { return x.storeStatus === "in-review"; }).length;
+      var n = state.apps.length, bits = [n + " app" + (n === 1 ? "" : "s"), inStore + " in the Store"];
+      if (inReview) bits.push(inReview + " in review");
+      el.innerHTML =
+        '<div class="ovx-hero">' +
+          '<div class="ovx-hero__text"><h2>Welcome back' + (firstName ? ", " + esc(firstName) : "") + '</h2>' +
+            '<p>' + bits.join(" \u00b7 ") + '</p></div>' +
+          '<fluent-button appearance="primary" data-newapp>' +
+            '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
+        '</div>';
+      return;
+    }
     el.innerHTML =
       '<div class="status-card status-card--hero">' +
         '<div class="status-card__top">' +
           '<img class="status-card__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
           '<div class="status-card__body">' +
             '<h2>Add your app to the Microsoft Store</h2>' +
-            '<p class="muted">Reach more than a billion Windows devices. Track crashes, acquisition, usage, ratings &amp; reviews, and performance — all in one place.</p>' +
+            '<p class="muted">Reach more than a billion Windows devices. Track installs, usage, ratings, and crashes \u2014 all in one place.</p>' +
           '</div>' +
           '<div class="status-card__action">' +
             '<fluent-button appearance="primary" size="large" data-newapp>' +
-              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
+              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add your first app</fluent-button>' +
           '</div>' +
         '</div>' +
-        metricsStrip +
       '</div>';
   }
 
@@ -305,19 +297,42 @@
       '<div class="pkgs">' +
         '<div class="pkg pkg--rec"><span class="pkg__ico"><iconify-icon icon="fluent:cube-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
           '<div class="pkg__t"><span class="pkg__name">Packaged app · MSIX <span class="pkg__rec">Recommended</span></span>' +
-          '<p class="pkg__desc">Free hosting, code signing, and automatic updates: the richest way to ship.</p></div></div>' +
+          '<p class="pkg__desc">Free hosting, code signing, and automatic updates — the most complete way to ship.</p></div></div>' +
         '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:desktop-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
           '<div class="pkg__t"><span class="pkg__name">Desktop app · Win32</span>' +
           '<p class="pkg__desc">Publish your existing .exe or .msi as-is, or convert to MSIX.</p></div></div>' +
         '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:globe-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
           '<div class="pkg__t"><span class="pkg__name">Web app · PWA</span>' +
-          '<p class="pkg__desc">Turn your website into an installable app, nothing to rebuild.</p></div></div>' +
+          '<p class="pkg__desc">Turn your website into an installable app — nothing to rebuild.</p></div></div>' +
         '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:xbox-controller-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
           '<div class="pkg__t"><span class="pkg__name">Game · GDK</span>' +
           '<p class="pkg__desc">Reach players on Windows and Xbox with the Game Development Kit.</p></div></div>' +
       '</div>' +
-      '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
-        '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>';
+      '<div class="pkgs__foot">' +
+        '<fluent-button appearance="primary" size="large" data-newapp>' +
+          '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add your first app</fluent-button>' +
+        '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
+          '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
+      '</div>';
+  }
+
+  // Zero-state "Resources & support" — a row of card links (reuses the .pkg card) so onboarding ends
+  // with somewhere to go, not empty space.
+  function zeroResourcesHTML() {
+    function res(icon, name, desc, href) {
+      return '<a class="pkg" href="' + href + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="pkg__ico"><iconify-icon icon="' + icon + '" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+        '<div class="pkg__t"><span class="pkg__name">' + name + '</span>' +
+        '<p class="pkg__desc">' + desc + '</p></div></a>';
+    }
+    return '<div class="block__head block__head--sub"><div><h2>Resources &amp; support</h2>' +
+        '<p class="muted">Everything you need to build, publish, and grow.</p></div></div>' +
+      '<div class="pkgs">' +
+        res("fluent:book-open-20-regular", "Documentation", "Guides for building &amp; publishing to the Store.", "https://learn.microsoft.com/windows/apps/") +
+        res("fluent:shield-checkmark-20-regular", "Store Policies", "Know the requirements before you submit.", "https://learn.microsoft.com/windows/apps/publish/store-policies") +
+        res("fluent:people-community-20-regular", "Community &amp; forums", "Ask questions and share feedback.", "https://techcommunity.microsoft.com/") +
+        res("fluent:chat-help-20-regular", "Contact support", "Get help with your account or apps.", "https://support.microsoft.com/") +
+      '</div>';
   }
 
   // Store-only "Come prepared" Copilot on-ramp. Slim + subtle: it sits BELOW the Get started steps
@@ -331,6 +346,174 @@
         '<div class="prep__title">Come with a .zip — Copilot sets up the rest</div>' +
         '<p class="prep__sub">Bring your screenshots, icon, README and changelog in a single .zip — and your package if you already have it. Copilot drafts your whole submission for you to review.</p>' +
       '</div>' +
+    '</div>';
+  }
+
+  // ---- Overview dashboard (Store/unified portal, when the developer HAS apps): personalized widgets —
+  //      portfolio telemetry, their apps, cross-app activity, and account standing. The KPI cards reuse
+  //      the Analytics summary card (sumCard / .sumcard) verbatim — no bespoke chart styling. ----
+  // Actionable items derived from each app's state — the dashboard's "what should I do next".
+  function ovxAttnHTML() {
+    var apps = state.apps || [];
+    var flow = function (a) { return "publishing/publish-v6.html?from=wdp&id=" + encodeURIComponent(a.id); };
+    var ana = function (a, tab) { return "?anaApp=" + encodeURIComponent(a.id) + "&anaTab=" + tab + "#analytics"; };
+    var nm = function (a) { return a.storeName || a.name || "Your app"; };
+    var items = [];
+    apps.forEach(function (a) {
+      var k = appStatusKey(a);
+      if (k === "rejected") items.push({ type: "error", icon: "fluent:error-circle-20-filled", title: "Resolve certification", text: nm(a) + " didn\u2019t pass \u2014 review and resubmit.", href: flow(a) });
+      else if (k === "draft") items.push({ type: "info", icon: "fluent:document-edit-20-filled", title: "Finish your submission", text: nm(a) + " is still a draft.", href: flow(a) });
+      else if (k === "in-review") items.push({ type: "info", icon: "fluent:clock-20-filled", title: "Certification in progress", text: nm(a) + " \u2014 typically 24\u201348 hours.", href: flow(a) });
+      else if (k === "live") {
+        var cr = anaData(a).crashRate;
+        if (cr >= 5) items.push({ type: "warning", icon: "fluent:arrow-trending-lines-20-filled", title: "Crash rate needs a look", text: nm(a) + " is at " + cr.toFixed(2) + "%.", href: ana(a, "crashes") });
+        var rd = ratingsData(a);
+        if (rd && rd.total) items.push({ type: "info", icon: "fluent:comment-multiple-20-filled", title: "Respond to reviews", text: "Reply to recent reviews for " + nm(a) + ".", href: ana(a, "ratings") });
+      }
+    });
+    var rank = { error: 0, warning: 1, info: 2 };
+    items.sort(function (x, y) { return (rank[x.type] == null ? 3 : rank[x.type]) - (rank[y.type] == null ? 3 : rank[y.type]); });
+    var body = items.length
+      ? items.slice(0, 4).map(ovxActRow).join("")
+      : '<div class="ovx-empty"><iconify-icon icon="fluent:checkmark-circle-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+        '<div><strong>You\u2019re all caught up</strong><span>Nothing needs your attention right now.</span></div></div>';
+    return '<section class="ovx-card">' +
+      '<div class="ovx-card__head"><h3>Needs attention</h3></div>' +
+      '<div class="ovx-list">' + body + '</div>' +
+    '</section>';
+  }
+  function ovxAppRow(a) {
+    var k = appStatusKey(a);
+    var pc = k === "live" ? "pill--ok" : k === "rejected" ? "pill--warn" : k === "in-review" ? "pill--info" : "pill--ghost";
+    var pt = k === "live" ? "In the Store" : k === "rejected" ? "Needs attention" : k === "in-review" ? "In certification" : "Draft";
+    var rd = (k === "live") ? ratingsData(a) : null;
+    var m = (k === "live")
+      ? '<span class="ovx-app__stats">' +
+          '<span class="ovx-app__metric" title="Installs"><iconify-icon icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' + fmtCompact(acqData(a).instTotal) + '</span>' +
+          (rd && rd.total ? '<span class="ovx-app__metric ovx-app__metric--star" title="Average rating"><iconify-icon icon="fluent:star-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' + rd.avg.toFixed(1) + '</span>' : "") +
+        '</span>'
+      : "";
+    return '<button type="button" class="ovx-app" data-openapp="' + a.id + '">' +
+      appIcoImg(a) +
+      '<span class="ovx-app__t"><strong>' + esc(a.storeName || a.name) + '</strong>' +
+        '<span class="pill ' + pc + ' pill--sm">' + pt + '</span></span>' +
+      m +
+      '<iconify-icon class="ovx-app__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+    '</button>';
+  }
+  function ovxActRow(n) {
+    var open = n.href ? 'button type="button"' : "div", close = n.href ? "button" : "div";
+    return '<' + open + ' class="ovx-act"' + (n.href ? ' data-acthref="' + esc(n.href) + '"' : "") + '>' +
+      '<span class="ovx-act__ico ovx-act__ico--' + n.type + '"><iconify-icon icon="' + n.icon + '" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+      '<span class="ovx-act__t"><strong>' + esc(n.title) + '</strong><span>' + esc(n.text) + '</span></span>' +
+    '</' + close + '>';
+  }
+  // A hub row: icon + title (+sub), optional status pill, optional internal (data-jump) or external link.
+  // Reused by the Account / Policies / Resources cards so we don't hand-roll row styles per section.
+  function ovxHRow(o) {
+    var isLink = !!o.href, ext = !!o.external, tag = isLink ? "a" : "div";
+    var attrs = isLink ? ' href="' + esc(o.href) + '"' + (o.jump ? ' data-jump="' + esc(o.jump) + '"' : "") + (ext ? ' target="_blank" rel="noopener noreferrer"' : "") : "";
+    var pill = o.status ? '<span class="pill pill--' + (o.statusType || "ghost") + ' pill--sm">' + esc(o.status) + '</span>' : "";
+    var chev = isLink
+      ? '<iconify-icon class="ovx-hrow__chev" icon="' + (ext ? "fluent:open-16-regular" : "fluent:chevron-right-20-regular") + '" width="' + (ext ? 15 : 18) + '" height="' + (ext ? 15 : 18) + '" aria-hidden="true"></iconify-icon>'
+      : "";
+    return '<' + tag + ' class="ovx-hrow' + (isLink ? "" : " ovx-hrow--static") + '"' + attrs + '>' +
+      '<span class="ovx-hrow__ico"><iconify-icon icon="' + o.icon + '" width="17" height="17" aria-hidden="true"></iconify-icon></span>' +
+      '<span class="ovx-hrow__t"><strong>' + esc(o.title) + '</strong>' + (o.sub ? '<span>' + esc(o.sub) + '</span>' : "") + '</span>' +
+      pill + chev +
+    '</' + tag + '>';
+  }
+  function ovxAccountHTML() {
+    var acct = state.account || {};
+    var name = acct.name || "Your account";
+    var inits = acct.initials || (name.charAt(0) || "A").toUpperCase();
+    var email = acct.email || "";
+    var certN = (state.certs || []).length;
+    var pubId = "MS-" + (Math.abs(hashStr(name + "|pub")) % 900000 + 100000);
+    return '<section class="ovx-card">' +
+      '<div class="ovx-card__head"><h3>Account &amp; profile</h3></div>' +
+      '<div class="ovx-acctid"><span class="ovx-account__ava">' + esc(inits) + '</span>' +
+        '<div class="ovx-account__t"><strong>' + esc(name) + '</strong>' +
+          '<span class="ovx-account__status"><span class="verified-dot"></span>Windows Developer Program</span></div></div>' +
+      '<div class="ovx-list">' +
+        ovxHRow({ icon: "fluent:person-20-regular", title: "Account type", sub: "Individual developer" }) +
+        ovxHRow({ icon: "fluent:tag-20-regular", title: "Publisher ID", sub: pubId }) +
+        (email ? ovxHRow({ icon: "fluent:mail-20-regular", title: "Contact email", sub: email }) : "") +
+        ovxHRow({ icon: "fluent:certificate-20-regular", title: "Code signing certificates", status: certN ? (certN + " active") : "Set up", statusType: certN ? "ok" : "info", href: "#certificates", jump: "certificates" }) +
+        ovxHRow({ icon: "fluent:money-20-regular", title: "Payout & tax profile", status: "Complete", statusType: "ok" }) +
+      '</div>' +
+    '</section>';
+  }
+  function ovxPolicyHTML() {
+    var apps = state.apps || [];
+    var rejected = apps.filter(function (a) { return appStatusKey(a) === "rejected"; }).length;
+    var rated = apps.filter(function (a) { var k = appStatusKey(a); return k === "live" || k === "in-review"; }).length;
+    return '<section class="ovx-card">' +
+      '<div class="ovx-card__head"><h3>Policies &amp; agreements</h3></div>' +
+      '<div class="ovx-list">' +
+        ovxHRow({ icon: "fluent:document-checkmark-20-regular", title: "App Developer Agreement", sub: "Accepted \u00b7 current version", status: "Signed", statusType: "ok", href: "https://learn.microsoft.com/legal/windows/agreements/app-developer-agreement", external: true }) +
+        ovxHRow({ icon: "fluent:shield-checkmark-20-regular", title: "Microsoft Store Policies", sub: "Review the latest requirements", href: "https://learn.microsoft.com/windows/apps/publish/store-policies", external: true }) +
+        ovxHRow({ icon: "fluent:people-community-20-regular", title: "Age ratings (IARC)", sub: rated ? ("Assigned for " + rated + " app" + (rated === 1 ? "" : "s")) : "Complete these when you submit", href: "https://learn.microsoft.com/windows/apps/publish/publish-your-app/age-ratings", external: true }) +
+        ovxHRow({ icon: "fluent:clipboard-task-list-ltr-20-regular", title: "Content compliance", sub: rejected ? (rejected + " app need" + (rejected === 1 ? "s" : "") + " changes") : "No open policy issues", status: rejected ? "Action needed" : "Clear", statusType: rejected ? "warn" : "ok", href: "#apps", jump: "apps" }) +
+      '</div>' +
+    '</section>';
+  }
+  function ovxResourcesHTML() {
+    return '<section class="ovx-card">' +
+      '<div class="ovx-card__head"><h3>Resources &amp; support</h3></div>' +
+      '<div class="ovx-list">' +
+        ovxHRow({ icon: "fluent:book-open-20-regular", title: "Documentation", sub: "Guides for building & publishing", href: "https://learn.microsoft.com/windows/apps/", external: true }) +
+        ovxHRow({ icon: "fluent:news-20-regular", title: "Windows Developer Blog", sub: "Platform & policy updates", href: "https://blogs.windows.com/windowsdeveloper/", external: true }) +
+        ovxHRow({ icon: "fluent:people-community-20-regular", title: "Community & forums", sub: "Ask questions, share feedback", href: "https://techcommunity.microsoft.com/", external: true }) +
+        ovxHRow({ icon: "fluent:chat-help-20-regular", title: "Contact support", sub: "Help with your account or apps", href: "https://support.microsoft.com/", external: true }) +
+      '</div>' +
+    '</section>';
+  }
+  function unifiedDashHTML() {
+    var apps = (state.apps || []).slice().sort(function (a, b) {
+      return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (statusRank(a) - statusRank(b));
+    });
+    var live = apps.filter(function (a) { return a.store || a.storeStatus === "published"; });
+    var totalInstalls = 0, ratingSum = 0, ratingWt = 0, worstCrash = null, ratedCount = 0;
+    var instSeries = null, rateSeries = null, crashSeries = null;
+    live.forEach(function (a) {
+      var ac = acqData(a); totalInstalls += ac.instTotal || 0;
+      if (!instSeries) instSeries = ac.inst.slice(); else ac.inst.forEach(function (v, i) { instSeries[i] += v; });
+      var rd = ratingsData(a);
+      if (rd && rd.total > 0) {
+        ratingSum += rd.avg * rd.total; ratingWt += rd.total; ratedCount++;
+        if (!rateSeries) rateSeries = rd.avgSeries.slice(); else rd.avgSeries.forEach(function (v, i) { rateSeries[i] += v; });
+      }
+      var an = anaData(a), cr = an.crashRate;
+      if (cr != null && (worstCrash == null || cr > worstCrash)) worstCrash = cr;
+      var cs = an.hits && an.hits.series && an.hits.series[0] && an.hits.series[0].values;
+      if (cs) { if (!crashSeries) crashSeries = cs.slice(); else cs.forEach(function (v, i) { crashSeries[i] += v; }); }
+    });
+    if (rateSeries && ratedCount > 1) rateSeries = rateSeries.map(function (v) { return v / ratedCount; });
+    var avgRating = ratingWt ? ratingSum / ratingWt : null;
+
+    // KPI cards reuse the Analytics summary card (sumCard / .sumcard) verbatim — same card, same sparkline.
+    var tiles = "";
+    if (live.length) {
+      tiles += sumCard("Installs", fmtCompact(totalInstalls), live.length > 1 ? ("Across " + live.length + " live apps") : "Last 28 days", instSeries, "var(--brand)");
+      if (avgRating != null) tiles += sumCard("Avg rating", avgRating.toFixed(1), fmtCompact(ratingWt) + " ratings", rateSeries, "#f7b955");
+      if (worstCrash != null) tiles += sumCard(live.length > 1 ? "Worst crash rate" : "Crash rate", worstCrash.toFixed(2) + "%", worstCrash >= 5 ? "Needs a look" : "Healthy", crashSeries, worstCrash >= 5 ? "#e5484d" : "#4ad17a");
+      tiles = '<div class="ovx-metrics">' + tiles + '</div>';
+    }
+    var appsCard =
+      '<section class="ovx-card">' +
+        '<div class="ovx-card__head"><h3>Your apps</h3><a class="ovx-card__link" href="#apps" data-jump="apps">See all</a></div>' +
+        '<div class="ovx-list">' + apps.slice(0, 5).map(ovxAppRow).join("") + '</div>' +
+      '</section>';
+    var actsCard =
+      '<section class="ovx-card">' +
+        '<div class="ovx-card__head"><h3>Recent activity</h3></div>' +
+        '<div class="ovx-list">' + notifItems().slice(0, 5).map(ovxActRow).join("") + '</div>' +
+      '</section>';
+    // Two aligned rows of three cards (matching the 3-up KPI row): apps/actions/activity, then account/policy/resources.
+    return '<div class="ovx">' + tiles +
+      '<div class="ovx-grid3">' + appsCard + ovxAttnHTML() + actsCard + '</div>' +
+      '<div class="ovx-grid3">' + ovxAccountHTML() + ovxPolicyHTML() + ovxResourcesHTML() + '</div>' +
     '</div>';
   }
 
@@ -349,13 +532,7 @@
           storeOnrampsHTML();
         return;
       }
-      var sn = state.apps.length, sInStore = state.apps.filter(function (a) { return a.store; }).length;
-      el.innerHTML =
-        '<div class="block__head block__head--sub"><div><h2>Quick links</h2></div></div>' +
-        '<div class="ov-grid">' +
-          '<a class="ov-card" href="#apps" data-jump="apps"><strong>Apps</strong><span class="muted">' + sn + ' app' + (sn === 1 ? "" : "s") + ' · ' + sInStore + ' in the Store</span><span class="ov-card__cta">View →</span></a>' +
-          '<a class="ov-card" href="#analytics" data-jump="analytics"><strong>Analytics</strong><span class="muted">Crashes, installs, usage &amp; ratings</span><span class="ov-card__cta">Open →</span></a>' +
-        '</div>';
+      el.innerHTML = unifiedDashHTML();
       return;
     }
     if (!state.verified) {
@@ -641,7 +818,9 @@
       html += sbanner;
       if (below.length) {
         var dCert = certById(below[0].certId), dVerified = dCert && dCert.verified === true;
-        var note = dVerified
+        // Unified adds certs by proving ownership (uploading a signed binary) and never locks these apps,
+        // so the "verify ownership" prompt doesn't apply — always show the verified note here.
+        var note = (dVerified || UNIFIED)
           ? '<div class="disc-note"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
               '<span>Found from the <strong>code signing certificate</strong> of the app you just published — <strong>ownership verified</strong>. Crash analytics and distribution are unlocked.</span></div>'
           : '<div class="disc-note disc-note--verify"><iconify-icon icon="fluent:lock-closed-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
@@ -2819,11 +2998,32 @@
       var rc = e.target.closest("[data-removecert]");
       if (rc) { var cid = rc.getAttribute("data-removecert");
         state.certs = state.certs.filter(function (c) { return c.id !== cid; });
-        state.apps.forEach(function (a) { if (a.certId === cid) a.certId = null; });
+        // A removed cert takes its discovered apps with it (they exist only via that cert);
+        // keep any that reached the Store pipeline — just unlink those from the cert.
+        var certAppsRemoved = 0;
+        state.apps = state.apps.filter(function (a) {
+          if (a.certId !== cid) return true;
+          if (a.store || a.storeStatus) { a.certId = null; a.discovered = false; return true; }
+          certAppsRemoved++; return false;
+        });
         if (!state.certs.length) state.verified = false;
-        save(); renderAll(); toast("Certificate removed", true); return; }
+        save(); renderAll();
+        toast(certAppsRemoved ? "Certificate removed \u00b7 " + certAppsRemoved + " signed app" + (certAppsRemoved > 1 ? "s" : "") + " removed" : "Certificate removed", true); return; }
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
+      var acthref = e.target.closest("[data-acthref]");
+      if (acthref) {
+        var ah = acthref.getAttribute("data-acthref") || "";
+        var mApp = /anaApp=([^&#]+)/.exec(ah);
+        if (mApp && ah.indexOf("#analytics") !== -1 && appById(decodeURIComponent(mApp[1]))) {
+          analyticsAppId = decodeURIComponent(mApp[1]);
+          var mTab = /anaTab=([^&#]+)/.exec(ah); anaTab = mTab ? decodeURIComponent(mTab[1]) : "crashes";
+          anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null;
+          goView("analytics"); renderAnalytics(); return;
+        }
+        if (ah) { if (ah.charAt(0) === "#") location.hash = ah; else location.href = ah; }
+        return;
+      }
       var atab = e.target.closest("[data-anatab]");
       if (atab) { anaTab = atab.getAttribute("data-anatab"); anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; renderAnaFilter(); renderAnalyticsPanel(); return; }
       if (e.target.closest("[data-ai-dismiss]")) { aiDismissed[analyticsAppId] = true; renderAnalyticsPanel(); return; }
@@ -2983,13 +3183,12 @@
   }
 
   /* ---------------- Sidebar view router ---------------- */
-  // Promo codes + Customer groups are Store-portal-only views.
+  // Customer groups is a Store-portal-only view.
   var VIEWS = STORE
-    ? ["overview", "apps", "certificates", "analytics", "promo-codes", "customer-groups"]
+    ? ["overview", "apps", "certificates", "analytics", "customer-groups"]
     : ["overview", "apps", "certificates", "analytics"];
   function showView(id) {
     if (VIEWS.indexOf(id) === -1) id = "overview";
-    if (id === "promo-codes" && STORE && !UNIFIED && !hasLiveStoreApp()) id = "overview";   // Store-only: Promo codes is gated until an app is live
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
     document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === id); });
     if (id === "analytics") renderAnalytics();

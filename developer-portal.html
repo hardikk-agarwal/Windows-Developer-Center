@@ -13,7 +13,7 @@
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
   <link rel="stylesheet" href="portal.css?v=107" />
-  <link rel="stylesheet" href="store-portal.css?v=73" />
+  <link rel="stylesheet" href="store-portal.css?v=83" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
@@ -102,7 +102,7 @@
         <div class="block__head">
           <div>
             <h1>Overview</h1>
-            <p class="muted">Create, publish, and manage your apps on the Microsoft Store — and bring your signed apps in for crash analytics.</p>
+            <p class="muted">Create, publish, and manage your apps on the Microsoft Store.</p>
           </div>
         </div>
         <div id="statusCard"><!-- rendered by portal.js --></div>
@@ -155,60 +155,6 @@
         </div>
         <div class="ana-chips" id="anaChips" hidden><!-- active filter chips --></div>
         <div id="analyticsPanel"><!-- rendered by portal.js --></div>
-      </section>
-
-      <!-- ---------- PROMO CODES ---------- -->
-      <section class="block" id="promo-codes">
-        <div class="block__head">
-          <div>
-            <h2>Promo codes</h2>
-            <p class="muted">Give reviewers, testers, and fans free access to your paid apps and add-ons — up to 250 codes per app every 6 months.</p>
-          </div>
-          <fluent-button id="promoNewBtn" appearance="primary" hidden>
-            <iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            New promo code order
-          </fluent-button>
-        </div>
-        <div class="table-wrap" id="promoTable" hidden>
-          <table class="table apptable">
-            <thead><tr><th>Order</th><th>App</th><th>Codes used</th><th>Created</th><th>Expires</th><th class="col-store">Status</th></tr></thead>
-            <tbody>
-              <tr>
-                <td><strong>Launch reviewers</strong></td>
-                <td class="muted">Contoso Notes</td>
-                <td>42 <span class="muted">/ 100</span></td>
-                <td class="muted">Jun 12, 2026</td>
-                <td class="muted">Sep 12, 2026</td>
-                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
-              </tr>
-              <tr>
-                <td><strong>Press &amp; influencers</strong></td>
-                <td class="muted">Contoso Notes</td>
-                <td>8 <span class="muted">/ 25</span></td>
-                <td class="muted">Jun 28, 2026</td>
-                <td class="muted">Dec 28, 2026</td>
-                <td class="col-store"><span class="pill pill--ok pill--sm">Active</span></td>
-              </tr>
-              <tr>
-                <td><strong>Beta testers · Q1</strong></td>
-                <td class="muted">Pixel Paint Studio</td>
-                <td>100 <span class="muted">/ 100</span></td>
-                <td class="muted">Feb 02, 2026</td>
-                <td class="muted">May 02, 2026</td>
-                <td class="col-store"><span class="pill pill--ghost pill--sm">Expired</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="empty" id="promoEmpty">
-          <img data-theme-image="tickets" src="assets/tickets.png" alt="" />
-          <strong>No promo codes yet</strong>
-          <p class="muted">You'll need a paid app in the Store first — publish one, then create promo code orders to give reviewers, testers, and fans free download codes.</p>
-          <fluent-button appearance="primary" data-newapp>
-            <iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-            Add app to Store
-          </fluent-button>
-        </div>
       </section>
 
       <!-- ---------- CUSTOMER GROUPS ---------- -->
@@ -333,7 +279,13 @@
       </div>
 
       <div class="field">
-        <label class="field__label" id="pubTypeLabel">Product type</label>
+        <div class="field__labelrow">
+          <label class="field__label" id="pubTypeLabel">Product type</label>
+          <span class="field__info" tabindex="0" aria-label="About product type" aria-describedby="pubTypeTip">
+            <iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+            <span class="field__tip" id="pubTypeTip" role="tooltip">This can’t be changed later. Once you create the app, you can’t switch it between App and Game.</span>
+          </span>
+        </div>
         <fluent-radio-group id="pubType" class="pubchoice" orientation="horizontal" aria-labelledby="pubTypeLabel" value="app">
           <fluent-field label-position="after">
             <label slot="label" for="pt-app">App</label>
@@ -463,6 +415,6 @@
        Certificates + Analytics experiences, one storage key, all apps in one table. -->
   <script>window.PORTAL_MODE = "unified";</script>
   <script type="module" src="theme-fluent.js?v=61"></script>
-  <script src="portal.js?v=117"></script>
+  <script src="portal.js?v=133"></script>
 </body>
 </html>

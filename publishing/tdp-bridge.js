@@ -101,6 +101,7 @@
       var ad = document.getElementById("addons-panel"); if (ad && !ad.hidden) return "addons";
       var fl = document.getElementById("flights-panel"); if (fl && !fl.hidden) return "flights";
       var nm = document.getElementById("names-panel"); if (nm && !nm.hidden) return "names";
+      var pm = document.getElementById("promo-panel"); if (pm && !pm.hidden) return "promo";
       var idn = document.getElementById("identity-panel"); if (idn && !idn.hidden) return "identity";
       var av = document.getElementById("availability-panel"); if (av && !av.hidden) return "availability";
       var hi = document.getElementById("history-panel"); if (hi && !hi.hidden) return "history";
@@ -216,6 +217,8 @@
       ? '<button type="button" class="app-rail__id app-rail__id--btn" data-app-switch aria-haspopup="listbox" aria-expanded="false" aria-label="' + esc(appName()) + ' — switch app">' + appNavIconHTML() + '<span class="app-rail__name">' + esc(appName()) + '</span><iconify-icon class="app-rail__chev" icon="fluent:chevron-down-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>'
       : '<div class="app-rail__id">' + appNavIconHTML() + '<span class="app-rail__name">' + esc(appName()) + '</span></div>';
     var overview = navItem("fluent:home-20-regular", "Overview", "overview");
+    // "View submissions" — the submission history, moved here from the app header. Live apps only.
+    var submissions = live ? navItem("fluent:history-20-regular", "View submissions", "history") : "";
     // Capability sections, grouped exactly like the hub (LIVE_GROUPS = single source of truth).
     var groups = "";
     if (live) {
@@ -232,7 +235,7 @@
         navItem("fluent:document-text-20-regular", "Package identity", "identity") +
         '</div>';
     }
-    host.innerHTML = back + idRow + '<div class="app-rail__sep"></div>' + overview + groups;
+    host.innerHTML = back + idRow + '<div class="app-rail__sep"></div>' + overview + submissions + groups;
     if (!multi) { closeAppSwitch(); }   // single app → no switcher; hide any stale menu. Multi builds lazily on open.
     if (!host.__wired) {
       host.__wired = true;
@@ -249,8 +252,9 @@
         // Every capability is an L3 page (panel) now: exit any open sub-view back to the hub FIRST so
         // panels don't nest, then open the target. (Store availability + Package identity became pages,
         // so the rail behaves identically for every item.)
-        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons", flights: "startFlights", names: "startNames", identity: "startIdentity", availability: "startAvailability" };
+        var subviews = { update: "startAppUpdate", experiments: "startExperiments", addons: "startAddons", flights: "startFlights", names: "startNames", identity: "startIdentity", availability: "startAvailability", promo: "startPromo", history: "startHistory" };
         if (k === "overview") { if (typeof window.__appHome === "function") window.__appHome(); }
+        else if (k === "share") { if (typeof window.startShareListing === "function") window.startShareListing(); }   // a dialog — opens over the current view
         else if (subviews[k]) {
           if (typeof window.__appHome === "function") window.__appHome();
           if (typeof window[subviews[k]] === "function") window[subviews[k]]();
@@ -261,7 +265,7 @@
       try {
         var mo = new MutationObserver(function () { setAppNavActive(appNavSection()); });
         var fw = document.getElementById("flow-wrap"); if (fw) mo.observe(fw, { attributes: true, attributeFilter: ["class"] });
-        ["experiments-panel", "addons-panel", "flights-panel", "names-panel", "identity-panel", "availability-panel", "history-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
+        ["experiments-panel", "addons-panel", "flights-panel", "names-panel", "identity-panel", "availability-panel", "history-panel", "promo-panel"].forEach(function (pid) { var p = document.getElementById(pid); if (p) mo.observe(p, { attributes: true, attributeFilter: ["hidden"] }); });
         // The heading (#app-name) is hydrated/renamed AFTER this first render, so mirror it live into
         // the rail identity — otherwise the rail can show a stale name (e.g. "Excel" vs "Excel Pro").
         var nameEl = document.getElementById("app-name");
@@ -289,7 +293,9 @@
       ["fluent:beaker-20-regular", "Product page experiments", "A/B test your Store listing.", "#", "experiments"]
     ] },
     { title: "Listing & monetization", accent: "mon", cards: [
+      ["fluent:share-20-regular", "Share your listing", "Get your Store link to share anywhere.", "#", "share"],
       ["fluent:puzzle-piece-20-regular", "Manage add-ons", "In-app products and subscriptions.", "#", "addons"],
+      ["fluent:ticket-diagonal-20-regular", "Promo codes", "Give reviewers & fans free download codes.", "#", "promo"],
       ["fluent:eye-20-regular", "Store availability", "Control who can find and get your app.", "#", "availability"]
     ] }
   ];
@@ -764,24 +770,24 @@
     if (P.stage === "launch") {
       recs.push(["fluent:share-20-regular", "brand", "Share your Store listing", "Drive your first installs from your own channels.", "share", null]);
       recs.push(["fluent:local-language-20-regular", "growth", "Add more languages", "Reach customers in their language.", "names", null]);
-      recs.push(["fluent:beaker-20-regular", "growth", "Run a listing experiment", "A/B test your screenshots to lift installs.", "experiments", null]);
       recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Set up add-ons or subscriptions to earn.", "addons", null]);
     } else if (P.stage === "established") {
-      // A mature app leads with health & growth, not "get your first installs" — so the relevant moves
-      // come first and Share trails (still discoverable, but no longer the headline).
+      // A mature app leads with health & growth — reviews, experiments, and growing its monetized base.
+      // Share is always one click away in the rail, so it isn't repeated as a rec here.
       if (P.ratingTrend && !P.ratingTrend.up) recs.push(["fluent:comment-20-regular", "brand", "Reply to recent reviews", "Responding helps win customers back.", null, anaTab("ratings")]);
       if (P.exps) recs.push(["fluent:beaker-20-regular", "growth", "Review your live experiment", "See which variant is winning.", "experiments", null]);
       else recs.push(["fluent:beaker-20-regular", "growth", "Experiment on your listing", "Test screenshots to lift conversion.", "experiments", null]);
       if (!P.addons) recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Monetize your install base with add-ons.", "addons", null]);
-      recs.push(["fluent:share-20-regular", "brand", "Share your Store listing", "Reach more customers from your own channels.", "share", null]);
+      else recs.push(["fluent:money-20-regular", "mon", "Grow your add-on revenue", "Review pricing and add new in-app products.", "addons", null]);
     } else {
-      recs.push(["fluent:share-20-regular", "brand", "Share your Store listing", "Drive installs from your own channels.", "share", null]);
-      if (!P.exps) recs.push(["fluent:beaker-20-regular", "growth", "A/B test your Store listing", "See which listing converts best.", "experiments", null]);
+      if (P.exps) recs.push(["fluent:beaker-20-regular", "growth", "Review your live experiment", "See which variant is winning.", "experiments", null]);
+      else recs.push(["fluent:beaker-20-regular", "growth", "A/B test your Store listing", "See which listing converts best.", "experiments", null]);
+      recs.push(["fluent:star-20-regular", "brand", "Ask for ratings & reviews", "Share your Store link so happy customers can rate you.", "share", null]);
       if (!P.addons) recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Offer add-ons or subscriptions.", "addons", null]);
     }
-    recs = recs.slice(0, P.stage === "launch" ? 4 : 3);
+    recs = recs.slice(0, 3);   // 3 across, one row — same layout as growing/established
     if (!recs.length) return "";
-    var meta = P.stage === "launch" ? '<span class="live-recs__meta">Set your app up to grow</span>' : "";
+    var meta = "";
     var cards = recs.map(function (r) {
       var attrs = r[5] ? 'href="' + r[5] + '"' : 'href="#" data-live-action="' + r[4] + '"';
       return '<a class="live-rec live-rec--' + r[1] + '" ' + attrs + '><span class="live-rec__ico"><iconify-icon icon="' + r[0] + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
@@ -819,7 +825,7 @@
     var ico, tone, title, sub;
     if (P.stage === "launch") {
       ico = "fluent:rocket-20-filled"; tone = "brand"; title = "You\u2019re live in the Microsoft Store";
-      sub = "<strong>" + esc(appName()) + "</strong> is published and discoverable. Installs and ratings take a day or two to show \u2014 here\u2019s how to build early momentum.";
+      sub = "<strong>" + esc(appName()) + "</strong> is published and discoverable \u2014 here\u2019s how to build early momentum.";
     } else if (P.stage === "growing") {
       ico = "fluent:arrow-trending-lines-20-filled"; tone = "brand"; title = "Momentum is building";
       sub = (P.installsTrend ? "Installs are up " + P.installsTrend.pct + "% this week" : "Your app is gaining installs") + " \u2014 keep it going with the steps below.";
@@ -900,14 +906,21 @@
     var themes = (P.stage === "established" && P.themes.length) ? '<div class="dash-rev__themes"><span class="dash-rev__themes-h">Recent reviews mention</span><div class="dash-rev__themechips">' + P.themes.map(function (t) { return '<fluent-badge size="small" appearance="outline">' + esc(t) + '</fluent-badge>'; }).join("") + '</div></div>' : "";
     return '<section class="dash-card dash-rev"><div class="dash-card__head"><h3 class="dash-card__title">Ratings &amp; reviews</h3><a class="dash-card__link" href="' + anaTab("ratings") + '">See reviews</a></div>' +
       '<div class="dash-rev__top"><div class="dash-rev__score"><strong>' + r.toFixed(1) + '</strong>' + dashStars(r) + '<span class="dash-rev__count">' + statFmt(total) + ' ratings</span></div></div>' +
+      ((P.stage === "established" && P.anomaly && P.ratingTrend && !P.ratingTrend.up)
+        ? '<div class="dash-rev__insight"><iconify-icon icon="fluent:lightbulb-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>Your rating is slipping as reviews flag <b>' + esc(P.themes[0] || "recent issues") + '</b> \u2014 likely tied to the crash spike above. Fixing it should help it recover.</span></div>'
+        : "") +
       '<div class="dash-rev__bars">' + bars + '</div>' + themes + '</section>';
   }
   function dashActive(P) { return ""; }   // removed: current experiments/add-ons/visibility now surface in the banner + owning cards
   // Compose the Overview for the resolved stage. Nav stays in the rail; this is all STATE + guidance.
   function dashboardHTML() {
     var P = stageProfile();
+    // Launch: no metrics band and no rating yet — skip the tiles + the Ratings & reviews card (both would
+    // be empty placeholders) and let Recent activity span full width. "First installs" still shows installs.
+    if (P.stage === "launch") return dashBanner(P) +
+      '<div class="dash-soonnote"><iconify-icon icon="fluent:clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon><span>Installs, crash health, and ratings will appear here as customers start using your app \u2014 usually within 2\u20133 days.</span></div>' +
+      dashRecs(P) + '<div class="dash-grid dash-grid--single">' + dashActivity(P) + '</div>';
     var grid = '<div class="dash-grid">' + dashActivity(P) + dashReviews(P) + '</div>';
-    if (P.stage === "launch") return dashBanner(P) + dashHealth(P) + dashRecs(P) + grid;
     return dashBanner(P) + dashHealth(P) + dashRecs(P) + grid + dashMon(P);
   }
   function passHTML() { return dashboardHTML(); }
@@ -934,12 +947,12 @@
   // App-header card's contextual action: once published the PRIMARY action is Update; View submissions is
   // secondary and "View in Store" rides on the status pill (#app-storelink). Withdraw while in review; report/fix when failed.
   function setHeadActions(view) {
-    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), rv = $id("head-review-btn"), u = $id("head-update-btn");
+    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), an = $id("head-analytics-btn"), u = $id("head-update-btn");
     if (w) w.hidden = (view !== "progress");
     if (v) v.hidden = (view !== "passed");
     if (r) r.hidden = (view !== "failed");
     if (e) e.hidden = (view !== "failed");
-    if (rv) rv.hidden = (view !== "passed");
+    if (an) an.hidden = (view !== "passed");
     if (u) u.hidden = (view !== "passed");   // Update is the primary action for a live app
     syncHeadUpdatePrimary();
   }
@@ -989,7 +1002,7 @@
     if (prog) { prog.hidden = false; setProgressScenario(prog, isUpdate); }
     if (res) {
       if (isUpdate) { res.hidden = false; res.innerHTML = dashboardHTML(); }   // update in review: the cert card sits above; the full app dashboard stays below
-      else if (window.__certLivePreviewHTML) { res.hidden = false; res.innerHTML = window.__certLivePreviewHTML(); }   // new app: preview what unlocks once live
+      else if (window.__certLivePreviewHTML) { res.hidden = false; res.innerHTML = window.__certLivePreviewHTML({ collapsed: true }); }   // new app: preview what unlocks once live (collapsed by default)
       else { res.hidden = true; res.innerHTML = ""; }
     }
     if (act) act.hidden = isUpdate;
@@ -1089,6 +1102,8 @@
         if (flights) { e.preventDefault(); if (typeof window.startFlights === "function") window.startFlights(); return; }
         var names = e.target.closest('[data-live-action="names"]');
         if (names) { e.preventDefault(); if (typeof window.startNames === "function") window.startNames(); return; }
+        var promo = e.target.closest('[data-live-action="promo"]');
+        if (promo) { e.preventDefault(); if (typeof window.startPromo === "function") window.startPromo(); return; }
         var identity = e.target.closest('[data-live-action="identity"]');
         if (identity) { e.preventDefault(); if (typeof window.startIdentity === "function") window.startIdentity(); return; }
         var history = e.target.closest('[data-live-action="history"]');

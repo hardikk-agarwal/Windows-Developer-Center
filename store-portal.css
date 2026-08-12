@@ -39,12 +39,11 @@
    deliberately UNLIKE the "How publishing works" stepper above (a connected, numbered SEQUENCE).
    Vertical separators (parallel columns) vs the stepper's horizontal connectors (a flow) is the
    tell. All four share one treatment; MSIX is marked only by its "Recommended" pill (same bg). */
-.pkgs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 6px 0 16px; }
-.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 0 22px; }
-.pkg:first-child { padding-left: 0; }
-.pkg + .pkg { border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.pkgs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 6px 0 18px; }
+.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 15px 16px 17px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); text-align: left; color: inherit; text-decoration: none; transition: border-color .15s ease, transform .15s ease, background .15s ease; }
+a.pkg:hover { border-color: var(--border-2); transform: translateY(-2px); background: var(--surface-2); }
 .pkg__ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px;
-  background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-2); }
+  background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand-soft); }
 .pkg__t { min-width: 0; }
 .pkg__name { font-size: 14px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pkg__rec { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
@@ -53,12 +52,12 @@
 .pkgs__more { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 2px; padding: 2px 0;
   font-size: 12.5px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
 .pkgs__more:hover { text-decoration: underline; }
+.pkgs__foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 24px; }
+.pkgs__foot .pkgs__more { margin: 0; }
 /* Wrap to 2-up, then 1-up as the column narrows; drop the vertical hairlines when wrapped
    (they only read right in a single row) and fall back to plain spacing. */
 @media (max-width: 900px) {
-  .pkgs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 26px; }
-  .pkg { padding: 0; }
-  .pkg + .pkg { border-left: 0; }
+  .pkgs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 }
 @media (max-width: 520px) { .pkgs { grid-template-columns: 1fr; gap: 16px; } }
 
@@ -103,3 +102,69 @@
 .pill--info { background: rgba(40,153,245,.16); color: var(--brand-soft); }
 
 @media (max-width: 760px) { .gsteps { grid-template-columns: 1fr; } }
+
+/* ===== Overview dashboard (personalized widgets shown once the developer has apps) ===== */
+.ovx-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 15px 22px; border-radius: var(--r-lg); background: linear-gradient(135deg, #123a6b 0%, #0e1a30 72%); border: 1px solid var(--brand-strong); box-shadow: var(--sh-card); }
+.ovx-hero__text { min-width: 0; }
+.ovx-hero__text h2 { font-size: 19px; font-weight: 600; margin: 0 0 3px; color: #fff; }
+.ovx-hero__text p { font-size: 12.5px; margin: 0; color: rgba(255,255,255,.72); }
+[data-theme="light"] .ovx-hero { background: linear-gradient(135deg, #dbeafe 0%, #eef3fb 72%); border-color: color-mix(in srgb, var(--brand) 28%, transparent); }
+[data-theme="light"] .ovx-hero__text h2 { color: var(--text); }
+[data-theme="light"] .ovx-hero__text p { color: var(--text-2); }
+.ovx { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+.ovx-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ovx-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ovx-empty { display: flex; align-items: center; gap: 12px; padding: 14px 2px 6px; }
+.ovx-empty > iconify-icon { color: var(--ok, #2ea043); flex: 0 0 auto; }
+.ovx-empty strong { display: block; font-size: 13px; color: var(--text); }
+.ovx-empty span { font-size: 12px; color: var(--text-3); }
+.ovx-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 16px; align-items: start; }
+.ovx-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); padding: 16px 18px; }
+.ovx-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.ovx-card__head h3 { font-size: 15px; font-weight: 600; margin: 0; color: var(--text); }
+.ovx-card__link { font-size: 12.5px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
+.ovx-card__link:hover { text-decoration: underline; }
+.ovx-list { display: flex; flex-direction: column; }
+.ovx-app, .ovx-act { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 0; border: 0; border-top: 1px solid var(--border); background: none; color: inherit; font: inherit; }
+.ovx-list > :first-child { border-top: 0; }
+.ovx-app { cursor: pointer; }
+.ovx-app .app-ico { width: 34px; height: 34px; border-radius: var(--r-sm); flex: 0 0 auto; font-size: 13px; }
+.ovx-app__t { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; flex-wrap: wrap; }
+.ovx-app__t strong { font-size: 13.5px; color: var(--text); }
+.ovx-app__metric { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--text-2); flex: 0 0 auto; }
+.ovx-app__metric iconify-icon { color: var(--text-3); }
+.ovx-app__stats { display: inline-flex; align-items: center; gap: 14px; flex: 0 0 auto; }
+.ovx-app__metric--star iconify-icon { color: #f5a623; }
+.ovx-app__chev, .ovx-account__chev { color: var(--text-3); flex: 0 0 auto; }
+.ovx-app:hover strong, .ovx-app:hover .ovx-app__chev { color: var(--brand-soft); }
+.ovx-act { cursor: default; }
+.ovx-act[data-acthref] { cursor: pointer; }
+.ovx-act[data-acthref]:hover strong { color: var(--brand-soft); }
+.ovx-act__ico { width: 30px; height: 30px; border-radius: var(--r-sm); flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+.ovx-act__ico--success { color: var(--ok, #2ea043); background: color-mix(in srgb, var(--ok, #2ea043) 15%, transparent); }
+.ovx-act__ico--warning { color: #d9820b; background: color-mix(in srgb, #d9820b 15%, transparent); }
+.ovx-act__ico--error { color: #e5484d; background: color-mix(in srgb, #e5484d 15%, transparent); }
+.ovx-act__ico--info { color: var(--brand-soft); background: color-mix(in srgb, var(--brand) 15%, transparent); }
+.ovx-act__t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ovx-act__t strong { font-size: 13px; color: var(--text); }
+.ovx-act__t span { font-size: 12px; color: var(--text-3); line-height: 1.4; }
+.ovx-account { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ovx-account__id { display: flex; align-items: center; gap: 12px; }
+.ovx-account__ava { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--brand); color: #fff; font-weight: 700; font-size: 15px; }
+.ovx-account__t { display: flex; flex-direction: column; gap: 2px; }
+.ovx-account__t strong { font-size: 14px; color: var(--text); }
+.ovx-account__status { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); }
+.ovx-account__link { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-md); text-decoration: none; color: var(--text); font-size: 13px; transition: border-color .15s ease, color .15s ease; }
+.ovx-account__link:hover { border-color: var(--border-2); color: var(--brand-soft); }
+.ovx-account__link > iconify-icon:first-child { color: var(--brand-soft); }
+.ovx-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.ovx-acctid { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
+.ovx-hrow { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 0; border: 0; border-top: 1px solid var(--border); background: none; color: inherit; font: inherit; text-decoration: none; }
+.ovx-hrow:not(.ovx-hrow--static) { cursor: pointer; }
+.ovx-hrow__ico { width: 30px; height: 30px; border-radius: var(--r-sm); flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand-soft); }
+.ovx-hrow__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.ovx-hrow__t strong { font-size: 13px; color: var(--text); font-weight: 600; }
+.ovx-hrow__t span { font-size: 12px; color: var(--text-3); line-height: 1.35; }
+.ovx-hrow__chev { color: var(--text-3); flex: 0 0 auto; }
+a.ovx-hrow:hover strong, a.ovx-hrow:hover .ovx-hrow__chev { color: var(--brand-soft); }
+@media (max-width: 900px) { .ovx-metrics { grid-template-columns: 1fr; } .ovx-grid, .ovx-grid3 { grid-template-columns: 1fr; } }

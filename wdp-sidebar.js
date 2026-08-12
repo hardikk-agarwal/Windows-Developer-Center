@@ -6,7 +6,7 @@
      • data-wdp-base   — href prefix. "" on the portal (SPA hash: "#apps"); "../developer-portal.html"
                           in the app hub so items link back to the portal.
      • data-wdp-active — key to mark is-active initially (each page's own JS keeps it in sync after).
-     • data-wdp-mode   — "spa"  (portal: emits data-nav so portal.js routes it, + #navPromo), or
+     • data-wdp-mode   — "spa"  (portal: emits data-nav so portal.js routes it), or
                           "app"  (hub: plain links, and "Apps" becomes the expandable #nav-apps-group
                                   whose nested #app-nav is filled by tdp-bridge renderAppNav()). */
 (function () {
@@ -17,7 +17,6 @@
     { key: "apps",            label: "Apps",            icon: "fluent:apps-20-regular" },
     { key: "analytics",       label: "Analytics",       icon: "fluent:data-histogram-20-regular" },
     { key: "customer-groups", label: "Customer groups", icon: "fluent:people-team-20-regular" },
-    { key: "promo-codes",     label: "Promo codes",     icon: "fluent:ticket-diagonal-20-regular" },
     { key: "certificates",    label: "Certificates",    icon: "fluent:certificate-20-regular" }
   ];
 
@@ -45,7 +44,6 @@
       }
       var attrs = ' data-tip="' + n.label + '"' +
         (spa ? " data-nav" : "") +
-        (spa && n.key === "promo-codes" ? ' id="navPromo"' : "") +
         (on ? ' class="is-active"' : "");
       return '<a href="' + href + '"' + attrs + ">" + ico(n) + n.label + "</a>";
     }).join("");
