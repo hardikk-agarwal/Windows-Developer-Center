@@ -835,6 +835,13 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 #ca-symsec tr.symhi td { animation: symhiflash 1.8s ease-out; }
 @keyframes symhiflash { from { background: color-mix(in srgb, var(--brand) 22%, transparent); } to { background: transparent; } }
 #symDialogBody .table-wrap, #histDialogBody .table-wrap { overflow-x: auto; }
+#histDialogBody { min-width: 0; max-width: 100%; overflow: hidden; }
+.histnote { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 14px; padding: 10px 12px;
+  width: 100%; max-width: 100%; box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--border)); border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--brand) 7%, var(--surface)); color: var(--text-2); }
+.histnote iconify-icon { flex: none; margin-top: 1px; color: var(--brand); }
+.histnote p { margin: 0; font-size: 12.5px; line-height: 1.45; }
 /* History has a 5-column table (filenames + emails); widen its dialog so nothing clips. */
 #histDialog::part(dialog) { width: min(780px, 94vw); max-width: min(780px, 94vw); }
 #occDialog::part(dialog) { width: min(820px, 94vw); max-width: min(820px, 94vw); }
