@@ -34,26 +34,36 @@
   .gstep:not(:last-child)::after { display: none; }
 }
 
-/* Overview — "What you can publish": four on-ramps as a SET of parallel options — columns divided
-   by slim vertical hairlines, NO fill/border/shadow — a plainly non-clickable "menu of choices",
-   deliberately UNLIKE the "How publishing works" stepper above (a connected, numbered SEQUENCE).
-   Vertical separators (parallel columns) vs the stepper's horizontal connectors (a flow) is the
-   tell. All four share one treatment; MSIX is marked only by its "Recommended" pill (same bg). */
-.pkgs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 6px 0 18px; }
-.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 15px 16px 17px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); text-align: left; color: inherit; text-decoration: none; transition: border-color .15s ease, transform .15s ease, background .15s ease; }
+/* Overview — "What you can publish": format cards for the toggled type (Apps or Games). Each is a
+   surface tile (icon + name + one-line desc); the recommended format wears a top-right "Recommended" pill. */
+.pkgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
+.pkg { display: flex; flex-direction: column; gap: 10px; min-width: 0; position: relative; padding: 15px 16px 17px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); text-align: left; color: inherit; text-decoration: none; transition: border-color .15s ease, transform .15s ease, background .15s ease; }
 a.pkg:hover { border-color: var(--border-2); transform: translateY(-2px); background: var(--surface-2); }
 .pkg__ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px;
-  background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand-soft); }
+  background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
 .pkg__t { min-width: 0; }
-.pkg__name { font-size: 14px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.pkg__rec { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+.pkg__name { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pkg__rec { position: absolute; top: 14px; right: 14px; font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   padding: 1px 6px; border-radius: 999px; background: rgba(40,153,245,.16); color: var(--brand-soft); }
-.pkg__desc { margin: 3px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-3); }
+.pkg__desc { margin: 3px 0 0; font-size: 12px; line-height: 16px; color: var(--text-3); }
+.pkg__for { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 12px; line-height: 16px; color: var(--text-2); }
+.pkg__for-lbl { font-weight: 600; color: var(--text); }
+.pkg__benefits { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.pkg__benefits li { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: var(--text-2); }
+.pkg__benefits iconify-icon { flex: none; color: var(--brand-soft); }
 .pkgs__more { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 2px; padding: 2px 0;
   font-size: 12px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
 .pkgs__more:hover { text-decoration: underline; }
 .pkgs__foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 24px; }
 .pkgs__foot .pkgs__more { margin: 0; }
+
+/* "What you can publish": real Fluent Tablist (fluent-tablist/fluent-tab) switches the visible card set.
+   activeid reflects to the host attribute, so the swap stays CSS-only via :has(). */
+.pubtabs { display: inline-flex; margin: 2px 0 16px; }
+.pkgs--games { display: none; }
+.pubswitch:has(fluent-tablist[activeid="pt-games"]) .pkgs--apps { display: none; }
+.pubswitch:has(fluent-tablist[activeid="pt-games"]) .pkgs--games { display: grid; }
 /* Wrap to 2-up, then 1-up as the column narrows; drop the vertical hairlines when wrapped
    (they only read right in a single row) and fall back to plain spacing. */
 @media (max-width: 900px) {

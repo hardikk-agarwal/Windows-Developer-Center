@@ -22,7 +22,7 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=81" />
+  <link rel="stylesheet" href="portal.css?v=82" />
   <link rel="stylesheet" href="store-portal.css?v=90" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -288,7 +288,7 @@
             <fluent-radio id="gt-store" slot="input" value="store" checked></fluent-radio>
           </fluent-field>
           <fluent-field label-position="after">
-            <label slot="label" for="gt-gdk">GDK game <span class="pub-badge">Xbox</span></label>
+            <label slot="label" for="gt-gdk">GDK game</label>
             <fluent-radio id="gt-gdk" slot="input" value="gdk"></fluent-radio>
           </fluent-field>
         </fluent-radio-group>
@@ -310,11 +310,11 @@
       <div class="field" id="pubLangField">
         <div class="field__labelrow">
           <label class="field__label" for="pubLang">Default language</label>
-          <button type="button" class="field__info" aria-label="About the default language" aria-describedby="pubLangTip">
+          <button type="button" class="field__info" id="pubLangInfo" aria-label="About the default language">
             <iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-            <span class="field__tip" id="pubLangTip" role="tooltip">The language you’ll write your Store listing in. Customers whose language you haven’t added yet will see this one. You can add more languages any time.</span>
           </button>
         </div>
+        <fluent-tooltip anchor="pubLangInfo" positioning="after">The language you’ll write your Store listing in. Customers whose language you haven’t added yet will see this one. You can add more languages any time.</fluent-tooltip>
         <fluent-dropdown id="pubLang" appearance="outline" aria-label="Default language" style="width:100%">
           <fluent-listbox>
             <fluent-option value="en-US" selected>English (United States)</fluent-option>
@@ -383,23 +383,11 @@
     </div>
   </div>
 
-  <!-- Fluent 2 web components (real components + dark theme tokens) -->
-  <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition, RadioGroupDefinition, RadioDefinition, FieldDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
-    ButtonDefinition.define(FluentDesignSystem.registry);
-    TextInputDefinition.define(FluentDesignSystem.registry);
-    DialogDefinition.define(FluentDesignSystem.registry);
-    DialogBodyDefinition.define(FluentDesignSystem.registry);
-    DropdownDefinition.define(FluentDesignSystem.registry);
-    ListboxDefinition.define(FluentDesignSystem.registry);
-    DropdownOptionDefinition.define(FluentDesignSystem.registry);
-    RadioGroupDefinition.define(FluentDesignSystem.registry);
-    RadioDefinition.define(FluentDesignSystem.registry);
-    FieldDefinition.define(FluentDesignSystem.registry);
-  </script>
+  <!-- Fluent 2 web components (stable 3.1.0): all-in-one bundle auto-registers every element used. -->
+  <script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-rc.27/dist/web-components.min.js"></script>
   <!-- One engine, two doors: the Store portal is portal.js personalised for the Store path. -->
   <script>window.PORTAL_MODE = "store";</script>
-  <script type="module" src="theme-fluent.js?v=61"></script>
+  <script type="module" src="theme-fluent.js?v=64"></script>
   <script src="portal.js?v=115"></script>
 </body>
 </html>

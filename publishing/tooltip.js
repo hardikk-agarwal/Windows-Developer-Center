@@ -1,76 +1,49 @@
-// Fluent-style tooltip — auto-shows on hover/focus of any [data-tooltip] element.
-// Positions to the right of the source (or flips to the left at viewport edge).
+// Real Fluent tooltip — attaches a <fluent-tooltip> (from the Fluent web-components bundle) to every
+// [data-tooltip] element, so the whole flow uses the proper Fluent v9 component. Keeps the existing
+// data-tooltip / data-tooltip-placement authoring API; anchors each tooltip to a generated id.
 (function () {
-  const tooltip = document.createElement('div');
-  tooltip.className = 'tooltip';
-  tooltip.setAttribute('role', 'tooltip');
-  document.body.appendChild(tooltip);
-
-  let showTimer = null;
-  const SHOW_DELAY = 300;
-  const GAP = 10;
-
-  function position(el) {
-    const r = el.getBoundingClientRect();
-    const tt = tooltip.getBoundingClientRect();
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const placement = el.getAttribute('data-tooltip-placement');
-
-    // Opt-in vertical placement (data-tooltip-placement="top" | "bottom"): centered above/below the
-    // element, flipping to the other side if there's no room. Better for icons inside horizontal
-    // controls, where a right-side tooltip would overlap neighbouring items.
-    if (placement === 'top' || placement === 'bottom') {
-      let left = r.left + r.width / 2 - tt.width / 2;
-      left = Math.max(8, Math.min(left, vw - tt.width - 8));
-      let top = placement === 'bottom' ? r.bottom + GAP : r.top - tt.height - GAP;
-      if (placement === 'bottom' && top + tt.height > vh - 8) top = r.top - tt.height - GAP;
-      if (placement === 'top' && top < 8) top = r.bottom + GAP;
-      tooltip.style.left = left + 'px';
-      tooltip.style.top  = Math.max(8, top) + 'px';
-      return;
-    }
-
-    // Default: prefer right of element; flip to left if it would overflow
-    let left = r.right + GAP;
-    if (left + tt.width > vw - 8) left = r.left - tt.width - GAP;
-    const top = r.top + r.height / 2 - tt.height / 2;
-
-    tooltip.style.left = Math.max(8, left) + 'px';
-    tooltip.style.top  = Math.max(8, top) + 'px';
-  }
-
-  function show(el) {
-    const text = el.getAttribute('data-tooltip');
-    if (!text) return;
-    tooltip.textContent = text;
-    tooltip.classList.add('tooltip--visible');
-    position(el);
-  }
-  function hide() { tooltip.classList.remove('tooltip--visible'); }
+  var seq = 0;
+  // data-tooltip-placement -> Fluent positioning (default: after = to the right of the source).
+  var PLACE = { top: 'above', bottom: 'below', left: 'before', right: 'after' };
 
   function bind(el) {
-    el.addEventListener('mouseenter', () => {
-      clearTimeout(showTimer);
-      showTimer = setTimeout(() => show(el), SHOW_DELAY);
-    });
-    el.addEventListener('mouseleave', () => { clearTimeout(showTimer); hide(); });
-    el.addEventListener('focus', () => show(el));
-    el.addEventListener('blur', hide);
+    if (!el || el.__fttBound) return;
+    var text = el.getAttribute('data-tooltip');
+    if (!text) return;
+    el.__fttBound = true;
+    if (!el.id) el.id = 'ftt-' + (++seq);
+    var tip = document.createElement('fluent-tooltip');
+    tip.setAttribute('anchor', el.id);
+    tip.setAttribute('positioning', PLACE[el.getAttribute('data-tooltip-placement')] || 'after');
+    tip.setAttribute('delay', '300');
+    tip.textContent = text;
+    document.body.appendChild(tip);
+    el.__fttTip = tip;
   }
 
-  // Initial bind for elements present on load
-  document.querySelectorAll('[data-tooltip]').forEach(bind);
+  function unbind(el) {
+    if (el && el.__fttTip) { el.__fttTip.remove(); el.__fttTip = null; el.__fttBound = false; }
+  }
 
-  // Watch for newly-added [data-tooltip] elements (e.g. dynamically rendered table rows)
-  new MutationObserver(records => {
-    records.forEach(r => r.addedNodes.forEach(n => {
-      if (n.nodeType !== 1) return;
-      if (n.matches?.('[data-tooltip]')) bind(n);
-      n.querySelectorAll?.('[data-tooltip]').forEach(bind);
-    }));
+  function bindAll(root) { (root || document).querySelectorAll('[data-tooltip]').forEach(bind); }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { bindAll(); });
+  else bindAll();
+
+  // Bind newly-added anchors; drop tooltips whose anchor was removed (tables/wizard re-render) so
+  // detached <fluent-tooltip> elements don't accumulate on <body>.
+  new MutationObserver(function (records) {
+    records.forEach(function (rec) {
+      rec.addedNodes.forEach(function (n) {
+        if (n.nodeType !== 1) return;
+        if (n.matches && n.matches('[data-tooltip]')) bind(n);
+        if (n.querySelectorAll) n.querySelectorAll('[data-tooltip]').forEach(bind);
+      });
+      rec.removedNodes.forEach(function (n) {
+        if (n.nodeType !== 1) return;
+        if (n.__fttTip) unbind(n);
+        if (n.querySelectorAll) n.querySelectorAll('[data-tooltip]').forEach(unbind);
+      });
+    });
   }).observe(document.body, { childList: true, subtree: true });
-
-  // Hide on scroll/resize so position doesn't get stale
-  window.addEventListener('scroll', hide, true);
-  window.addEventListener('resize', hide);
 })();

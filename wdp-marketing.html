@@ -289,13 +289,10 @@
     </div>
   </footer>
 
-  <!-- Fluent 2 web components (real components + dark theme tokens) -->
-  <script type="module">
-    import { FluentDesignSystem, ButtonDefinition } from 'https://esm.sh/@fluentui/web-components@beta';
-    ButtonDefinition.define(FluentDesignSystem.registry);
-  </script>
+  <!-- Fluent 2 web components (stable 3.1.0): all-in-one bundle auto-registers every element used. -->
+  <script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-rc.27/dist/web-components.min.js"></script>
   <script>window.MKT_ROUTES = { create: "signup.html?from=wdp", portal: "developer-portal.html?src=wdp&signin=1#certificates" };</script>
-  <script type="module" src="theme-fluent.js?v=61"></script>
+  <script type="module" src="theme-fluent.js?v=64"></script>
   <script src="app.js?v=61"></script>
 </body>
 </html>

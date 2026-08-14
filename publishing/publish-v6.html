@@ -17,8 +17,8 @@
 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 <!-- JSZip: crack open uploaded MSIX/AppX (a ZIP) to read the real AppxManifest.xml. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-beta.133/dist/web-components.min.js"></script>
-<script type="module" src="fluent-bootstrap.js"></script>
+<script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-rc.27/dist/web-components.min.js"></script>
+<script type="module" src="fluent-bootstrap.js?v=1"></script>
 <script src="ai-config.js"></script>
 <script src="ai-proxy-config.js"></script>
 <script src="ai-client.js"></script>
@@ -395,13 +395,13 @@
   .v4-type__q { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
   .v4-type .seg { display: flex; width: 100%; max-width: 520px; }
   .v4-type .seg__opt { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-6); text-align: center; }
-  .v4-type .seg__info { flex: 0 0 auto; color: currentColor; opacity: .5; cursor: help; transition: opacity var(--dur-2) var(--ease-out); }
+  .v4-type .seg__info { flex: 0 0 auto; margin-inline-start: var(--sp-4); color: currentColor; opacity: .5; cursor: help; transition: opacity var(--dur-2) var(--ease-out); }
   .v4-type .seg__info:hover, .v4-type .seg__opt--active .seg__info { opacity: .9; }
   .v4-type__lock { display: none; align-items: center; gap: var(--sp-4); font-size: var(--font-size-base-200); color: var(--fg-3); margin: var(--sp-8) 0 0; }
   .v4-type__lock iconify-icon { color: var(--fg-3); }
   .v4-type.is-locked .v4-type__lock { display: flex; }
   .v4-type.is-locked .seg__opt { opacity: .55; cursor: default; }
-  #flow-wrap.is-game .v4-type .seg__opt[data-v4type="win32"] { display: none !important; }
+  #flow-wrap.is-game .v4-type fluent-tab[data-v4type="win32"] { display: none !important; }
   @keyframes v4Pulse { 0% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 42%, transparent); } 100% { box-shadow: 0 0 0 3px transparent; } }
   .v4-pulse { animation: v4Pulse 1s var(--ease-out) 1; }
   @media (prefers-reduced-motion: reduce) { .v4-pulse { animation: none; } }
@@ -445,17 +445,15 @@
   .price-win32-trial__learn { font-size: var(--font-size-base-200); }
   .price-win32-trial__more[hidden] { display: none; }
   .price-advanced { margin-top: var(--sp-16); }
-  .price-adv__label { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-8); }
-  /* Advanced pricing tools as a clean settings-card: icon tile + title + one-line description + chevron. */
-  .price-toolcard { max-width: 520px; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); overflow: hidden; }
-  .price-toolcard > *:not(:first-child) { border-top: 1px solid var(--stroke-2); }
-  .price-tool { display: flex; align-items: center; gap: var(--sp-12); width: 100%; padding: var(--sp-10) var(--sp-12); background: none; border: 0; font: inherit; text-align: left; cursor: pointer; transition: background var(--dur-2) var(--ease-out); }
-  .price-tool:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
-  .price-tool:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-  .price-tool__ic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--r-6); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  /* Advanced pricing tools: plain full-width rows (no container), hairline divider between each. */
+  .price-tool { display: flex; width: 100%; max-width: none; padding: 0; height: auto; min-height: 0; border-radius: 0; justify-content: flex-start; }
+  #price-advanced .price-tool { border-top: 1px solid var(--stroke-2); }
+  #price-advanced > .price-tool:first-child { border-top: 0; }
+  .price-tool::part(content) { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-12); width: 100%; padding: var(--sp-10) 0; white-space: normal; text-align: left; }
+  .price-tool__ic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: var(--fg-2); }
   .price-tool__txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .price-tool__title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
-  .price-tool__desc { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
+  .price-tool__desc { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; white-space: normal; }
   .price-tool__chev { flex: 0 0 auto; color: var(--fg-3); }
   .price-tool:hover .price-tool__chev { color: var(--fg-1); }
   .price-sale-wrap { display: block; }
@@ -468,22 +466,17 @@
   .price-trial-row__duration { display: inline-flex; align-items: center; gap: var(--sp-8); }
   /* Advanced-pricing reveal (ported from V5): collapses per-market prices, scheduling, sales and
      free trial behind one toggle so the default paid view stays simple (base price + inline link). */
-  .v5-reveal { display: flex; align-items: center; gap: var(--sp-10); width: 100%; text-align: left; padding: var(--sp-10) var(--sp-12); margin: var(--sp-16) 0 var(--sp-4); border: 1px dashed var(--stroke-3); border-radius: var(--r-10); background: transparent; color: var(--fg-1); cursor: pointer; transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
-  .v5-reveal[hidden] { display: none; }
-  .v5-reveal:hover { background: var(--subtle); border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); }
-  .v5-reveal__ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-6); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); flex: 0 0 auto; }
-  .v5-reveal__text { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
-  .v5-reveal__title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
-  .v5-reveal__sub { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
-  .v5-reveal__state { font-size: var(--font-size-base-200); color: var(--fg-3); font-weight: var(--font-weight-semibold); flex: 0 0 auto; }
-  .v5-reveal__chev { color: var(--fg-3); flex: 0 0 auto; transition: transform var(--dur-2) var(--ease-out); }
-  .v5-reveal.is-open { border: 0; border-top: 1px solid var(--stroke-2); border-radius: 0; background: transparent; padding: var(--sp-14) 0 var(--sp-2); margin: var(--sp-20) 0 var(--sp-6); }
-  .v5-reveal.is-open:hover { background: transparent; }
-  .v5-reveal.is-open .v5-reveal__ico { width: 18px; height: 18px; background: transparent; border-radius: 0; }
-  .v5-reveal.is-open .v5-reveal__sub { display: none; }
-  .v5-reveal.is-open .v5-reveal__state { font-weight: 400; }
-  .v5-reveal.is-open .v5-reveal__chev { transform: rotate(180deg); }
-  @media (prefers-reduced-motion: reduce) { .v5-reveal, .v5-reveal__chev { transition: none; } }
+  /* Advanced pricing & free trial — fluent-accordion (replaces the old v5-reveal button). */
+  .price-adv-accordion { display: block; width: 100%; margin: var(--sp-16) 0 var(--sp-4); }
+  .price-adv-accordion[hidden] { display: none; }
+  #price-adv-item { display: block; width: 100%; max-width: none; }
+  #price-adv-item::part(button) { padding-inline: 0; }
+  #price-adv-item::part(content) { width: 100%; box-sizing: border-box; padding-inline: 0; margin-inline: 0; }
+  #price-advanced { width: 100%; padding: 0; }
+  .price-adv__head { display: flex; align-items: center; gap: var(--sp-10); }
+  .price-adv__head-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .price-adv__head-title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .price-adv__head-sub { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
   /* Inline "See & customize" link inside the auto-converted price hint — opens the per-market dialog. */
   .price-hint-link { display: inline; background: none; border: 0; padding: 0; font: inherit; color: var(--brand); font-weight: var(--font-weight-semibold); cursor: pointer; }
   .price-hint-link:hover { text-decoration: underline; }
@@ -501,7 +494,13 @@
      a deliberate "No" rather than an unanswered question. */
   .declarations__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border: 1px solid var(--stroke-3); border-radius: var(--r-12); background: var(--canvas-tint); overflow: hidden; }
   .declarations__answer .decl-seg { flex: 0 0 auto; }
-  .declarations__answer .decl-seg .seg__opt { padding: var(--sp-4) var(--sp-14); font-size: 12px; }
+  .declarations__group + .declarations__group { margin-top: var(--sp-16); }
+  .declarations__group[hidden] { display: none; }
+  .declarations__grouphead { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-8); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-2); margin: 0 0 var(--sp-8); }
+  .declarations__grouphint { font-weight: 400; color: var(--fg-3); }
+  /* This build doesn't flip :state(checked) on .checked, so the [checked] attr (mirrored in JS) fills the dot. */
+  fluent-radio[checked] { border-color: var(--brand); }
+  fluent-radio[checked]::part(checked-indicator) { background: var(--brand); width: 8px; height: 8px; margin: auto; }
   /* The "answer required" outline shows only after the step has been seen and left with a blank
      answer (list gets .is-flagged) — an untouched required field shouldn't look like an error. */
   .declarations__list.is-flagged .declarations__item.is-unanswered .decl-seg { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--status-warning) 55%, transparent); }
@@ -679,7 +678,8 @@
   #listing-extras-card .ez-kw-easy { display: none; }
   #listing-extras-card .ez-kw-adv { display: block; }
   /* Privacy policy: Link/Text mode toggle */
-  .privacy-mode-toggle { align-self: flex-start; margin-bottom: var(--sp-10); }
+  .privacy-mode-toggle { align-self: flex-start; margin-bottom: var(--sp-10); display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); }
+  #flight-ring { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); align-self: flex-start; }
   .privacy-field__input[hidden] { display: none; }
   /* Privacy editor dialog: full-width inputs (controls moved here keep their original classes). */
   #privacy-edit-dialog .privacy-field__input,
@@ -2165,15 +2165,17 @@
   /* Optional submission settings live in their own "Options" section (its own heading). Each is one
      consistent row: title on the LEFT, current-state value + chevron on the RIGHT — same left-to-right
      reading as the Disclosures rows (label left, control right). */
+  #submit-dialog .ez-sd__subs { display: block; width: 100%; }
+  /* fluent-accordion-item :host defaults to max-width:fit-content, which caps
+     the item to its heading text width. Override so items fill the accordion. */
+  #submit-dialog .ez-sd__sub { display: block; width: 100%; max-width: none; }
   #submit-dialog .ez-sd__sub[hidden] { display: none; }
-  #submit-dialog .ez-sd__sub + .ez-sd__sub { border-top: 1px solid var(--stroke-3); }
-  #submit-dialog .ez-sd__sub-head { display: flex; align-items: center; gap: var(--sp-8); cursor: pointer; list-style: none; padding: var(--sp-8) 0; user-select: none; }
-  #submit-dialog .ez-sd__sub-head::-webkit-details-marker { display: none; }
+  #submit-dialog .ez-sd__sub::part(button) { padding-inline: 0; width: 100%; }
+  #submit-dialog .ez-sd__sub-head { display: flex; align-items: center; gap: var(--sp-8); width: 100%; }
   #submit-dialog .ez-sd__sub-title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   #submit-dialog .ez-sd__sub-val { margin-left: auto; font-size: 12px; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
-  #submit-dialog .ez-sd__sub-chev { flex: 0 0 auto; margin-left: var(--sp-8); color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
-  #submit-dialog .ez-sd__sub[open] .ez-sd__sub-chev { transform: rotate(90deg); }
-  #submit-dialog .ez-sd__sub-body { margin: var(--sp-2) 0 var(--sp-10) var(--sp-24); }
+  #submit-dialog .ez-sd__sub-body { margin: var(--sp-2) 0 var(--sp-10) 0; }
+  #submit-dialog .ez-sd__radios { display: flex; flex-direction: column; gap: var(--sp-6); margin-top: var(--sp-4); }
   /* Two labelled sub-fields inside the Release row (Go live / Stop offering). */
   #submit-dialog .ez-sd__field + .ez-sd__field { margin-top: var(--sp-12); }
   #submit-dialog .ez-sd__field-label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-2); margin: 0 0 var(--sp-2); }
@@ -2217,17 +2219,19 @@
   #submit-dialog fluent-textarea { display: block; width: 100%; }
   #submit-dialog fluent-textarea::part(root), #submit-dialog fluent-textarea::part(control) { width: 100%; }
   /* ---- Gradual rollout: simplified % control (submit dialog) + post-submit status card ---- */
-  #submit-dialog .ez-sd__check { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); cursor: pointer; }
-  #submit-dialog .ez-sd__check input { flex: 0 0 auto; margin-top: 2px; width: 16px; height: 16px; accent-color: var(--brand); }
-  #submit-dialog .ez-sd__check-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  /* Gradual-rollout opt-ins: fluent-checkbox is label-less (only a checked-indicator slot), so the
+     rich label rides in a fluent-field label slot (label-position:after) — same pattern as the radios.
+     align-items:flex-start keeps the box at the top of a wrapping label. */
+  #submit-dialog .ez-sd__check { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); }
+  #submit-dialog .ez-sd__check::part(label) { margin: 0; }
+  /* flex:1 keeps the checkbox pinned to the right regardless of label length (matches the
+     Disclosures rows: text left, control right). */
+  #submit-dialog .ez-sd__check-text { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; cursor: pointer; }
   #submit-dialog .ez-sd__check-text strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   #submit-dialog .ez-sd__check-note { font-size: 12px; line-height: 15px; color: var(--fg-3); }
   #submit-dialog .ez-rollout-pct { margin: var(--sp-10) 0 0 var(--sp-24); }
-  .ez-rollout-presets { display: inline-flex; margin-top: var(--sp-4); border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; }
-  .ez-rollout-preset { padding: var(--sp-6) var(--sp-12); background: var(--layer); border: 0; border-right: 1px solid var(--stroke-2); color: var(--fg-2); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .ez-rollout-preset:last-child { border-right: 0; }
-  .ez-rollout-preset:hover { background: color-mix(in srgb, var(--fg-1) 6%, var(--layer)); color: var(--fg-1); }
-  .ez-rollout-preset.is-active { background: var(--brand); color: #fff; }
+  /* Rollout % is a horizontal fluent-radio-group (single-select). */
+  .ez-rollout-presets { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4) var(--sp-16); margin-top: var(--sp-4); }
   .cert-rollout { margin-bottom: var(--sp-16); padding: var(--sp-16); border: 1px solid color-mix(in srgb, var(--brand) 26%, transparent); border-radius: var(--r-12); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
   .cert-rollout[hidden] { display: none; }
   .cert-rollout__head { display: flex; align-items: flex-start; gap: var(--sp-12); }
@@ -2869,7 +2873,7 @@
   #price-schedule-dialog .price-schedule-grid .field,
   #price-sale-dialog .price-schedule-grid .field { margin-bottom: 0; }
   #price-sale-dialog .price-sale-fields > .field { margin-bottom: var(--sp-12); }
-  #price-sale-dialog #price-sale-type { display: inline-flex; }
+  #price-sale-dialog #price-sale-type, #price-sale-dialog #price-sale-markets-mode { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); }
   #price-sale-dialog .price-sale-amount-row { display: flex; align-items: center; gap: var(--sp-8); }
   #price-sale-dialog .price-sale-amount-row fluent-dropdown { width: auto; flex: 0 0 auto; min-width: 92px; }
   #price-sale-dialog .price-sale-amount-row fluent-text-input { flex: 1 1 auto; }
@@ -4327,11 +4331,11 @@
              without needing the file. A real package locks the choice (chooser hides). -->
         <div class="v4-type" id="v4-type">
           <p class="v4-type__q">What are you publishing?</p>
-          <div class="seg" role="radiogroup" aria-label="What are you publishing?" id="v4-type-seg">
-            <button class="seg__opt seg__opt--active" data-v4type="msix" role="radio" aria-checked="true" type="button">MSIX app<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX app: Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall." data-tooltip="Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall."></iconify-icon></button>
-            <button class="seg__opt" data-v4type="win32" role="radio" aria-checked="false" type="button">Desktop installer<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Desktop installer: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates."></iconify-icon></button>
-            <button class="seg__opt" data-v4type="pwa" role="radio" aria-checked="false" type="button">Web app<iconify-icon class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Web app: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip="Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build."></iconify-icon></button>
-          </div>
+          <fluent-tablist class="v4-type__tabs" aria-label="What are you publishing?" id="v4-type-seg" activeid="v4tab-msix">
+            <fluent-tab id="v4tab-msix" data-v4type="msix">MSIX app<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX app: Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall." data-tooltip="Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-win32" data-v4type="win32">Desktop installer<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Desktop installer: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-pwa" data-v4type="pwa">Web app<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Web app: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip="Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build."></iconify-icon></fluent-tab>
+          </fluent-tablist>
           <p class="v4-type__lock" id="v4-type-lock"><iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>Set by your package.</span></p>
         </div>
         <p class="manifest-identity-prompt adv-only" id="ez-pkg-identity-banner">
@@ -4748,17 +4752,16 @@
 
         <!-- Disclosures follow the age rating; both cover what is inside the app. Package-type rows are toggled in JS. -->
         <div class="ez-substep">
-          <h3 class="ez-substep__title">Disclosures <span class="field-mark field-mark--req" aria-label="required">*</span></h3>
-          <ul class="declarations__list">
+          <h3 class="ez-substep__title">Disclosures</h3>
+          <div class="declarations__group">
+            <p class="declarations__grouphead">About your app <span class="declarations__grouphint">Check anything that applies — you don’t need to select all of these.</span></p>
+            <ul class="declarations__list">
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-commerce">
               <span class="declarations__ico"><iconify-icon icon="fluent:cart-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-ext-commerce" class="declarations__label">This product allows users to make purchases, but does not use the Microsoft Store commerce system</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="This product allows users to make purchases, but does not use the Microsoft Store commerce system" data-declaration="externalCommerce">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="externalCommerce" aria-label="This product allows users to make purchases, but does not use the Microsoft Store commerce system"></fluent-checkbox>
               </span>
             </li>
             <!-- Win32 only -->
@@ -4766,10 +4769,7 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:plug-connected-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-drivers" class="declarations__label">This product depends on non-Microsoft drivers or NT services</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="This product depends on non-Microsoft drivers or NT services" data-declaration="drivers">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="drivers" aria-label="This product depends on non-Microsoft drivers or NT services"></fluent-checkbox>
               </span>
             </li>
             <!-- Both types -->
@@ -4777,10 +4777,7 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:accessibility-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-accessibility" class="declarations__label">This product has been tested to meet accessibility guidelines</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="This product has been tested to meet accessibility guidelines" data-declaration="accessibility">
-                  <button type="button" class="seg__opt" data-decl-val="no" id="decl-answer-first">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" id="decl-answer-first" data-declaration="accessibility" aria-label="This product has been tested to meet accessibility guidelines"></fluent-checkbox>
               </span>
             </li>
             <!-- Both types -->
@@ -4788,10 +4785,7 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:inking-tool-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-pen-ink" class="declarations__label">This product supports pen and ink input</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="This product supports pen and ink input" data-declaration="penInk">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="penInk" aria-label="This product supports pen and ink input"></fluent-checkbox>
               </span>
             </li>
             <!-- Both types -->
@@ -4799,22 +4793,20 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:sparkle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-gen-ai" class="declarations__label">My app uses generative AI features</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="My app uses generative AI features" data-declaration="genAi">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="genAi" aria-label="My app uses generative AI features"></fluent-checkbox>
               </span>
             </li>
-            <!-- Platform capabilities that default to Yes — grouped at the end so the "No" answers read together first. -->
+            </ul>
+          </div>
+          <div class="declarations__group" id="decl-group-capabilities">
+            <p class="declarations__grouphead">Windows capabilities <span class="declarations__grouphint">On by default — turn off any you’d like to restrict.</span></p>
+            <ul class="declarations__list">
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-alt-drives" hidden>
               <span class="declarations__ico"><iconify-icon icon="fluent:hard-drive-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-alt-drives" class="declarations__label">Customers can install this product to alternate drives or removable storage</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="Customers can install this product to alternate drives or removable storage" data-declaration="altDrives">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="altDrives" aria-label="Customers can install this product to alternate drives or removable storage"></fluent-checkbox>
               </span>
             </li>
             <!-- MSIX only -->
@@ -4822,10 +4814,7 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:cloud-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-onedrive" class="declarations__label">Windows can include this product's data in automatic backups to OneDrive</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="Windows can include this product's data in automatic backups to OneDrive" data-declaration="oneDriveBackup">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="oneDriveBackup" aria-label="Windows can include this product's data in automatic backups to OneDrive"></fluent-checkbox>
               </span>
             </li>
             <!-- MSIX only -->
@@ -4833,13 +4822,11 @@
               <span class="declarations__ico"><iconify-icon icon="fluent:record-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
               <label for="decl-broadcast" class="declarations__label">Customers can use Windows 10/11 features to record and broadcast clips of this product</label>
               <span class="declarations__answer">
-                <span class="seg decl-seg" role="radiogroup" aria-label="Customers can use Windows 10/11 features to record and broadcast clips of this product" data-declaration="broadcast">
-                  <button type="button" class="seg__opt" data-decl-val="no">No</button>
-                  <button type="button" class="seg__opt" data-decl-val="yes">Yes</button>
-                </span>
+                <fluent-checkbox class="decl-seg" data-declaration="broadcast" aria-label="Customers can use Windows 10/11 features to record and broadcast clips of this product"></fluent-checkbox>
               </span>
             </li>
-          </ul>
+            </ul>
+          </div>
         </div>
 
       </section>
@@ -4861,10 +4848,13 @@
               <iconify-icon icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
               <strong>Markets <span class="field-mark field-mark--req" aria-label="required">*</span></strong>
             </div>
-            <div class="seg" role="radiogroup" aria-label="Markets" data-choice="markets">
-              <button class="seg__opt seg__opt--active" data-value="all" type="button">All 240</button>
-              <button class="seg__opt" data-value="choose" type="button">Choose markets</button>
-            </div>
+            <fluent-radio-group class="reach-seg" orientation="horizontal" aria-label="Markets" data-choice="markets">
+              <fluent-field label-position="after"><label slot="label" for="mk-all">All</label>
+                <fluent-radio id="mk-all" slot="input" value="all"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="mk-choose">Choose markets</label>
+                <fluent-radio id="mk-choose" slot="input" value="choose"></fluent-radio></fluent-field>
+            </fluent-radio-group>
+            <p class="reach-row__hint" id="markets-hint">Your app will also be available in new markets as they’re added to the Store.</p>
             <div class="markets-choose-row" id="markets-choose-row" hidden>
               <span id="markets-chips-container" style="display:contents;"></span>
               <fluent-button appearance="secondary" size="small" id="markets-pick-btn">
@@ -4872,10 +4862,6 @@
                 Pick markets
               </fluent-button>
             </div>
-            <label class="reach-newmkt" id="markets-newregions-row" hidden>
-              <fluent-checkbox id="markets-new-regions"></fluent-checkbox>
-              <span class="reach-newmkt__text">Distribute my application to new regions as they become available.</span>
-            </label>
           </div>
 
           <!-- Audience -->
@@ -4884,11 +4870,14 @@
               <iconify-icon icon="fluent:people-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
               <strong>Audience <span class="field-mark field-mark--req" aria-label="required">*</span></strong>
             </div>
-            <div class="seg" role="radiogroup" aria-label="Audience" data-choice="audience">
-              <button class="seg__opt seg__opt--active" data-value="public" type="button">Public</button>
-              <button class="seg__opt" data-value="link" type="button">Direct link</button>
-              <button class="seg__opt" data-value="private" type="button">Private</button>
-            </div>
+            <fluent-radio-group class="reach-seg" orientation="horizontal" aria-label="Audience" data-choice="audience">
+              <fluent-field label-position="after"><label slot="label" for="aud-public">Public</label>
+                <fluent-radio id="aud-public" slot="input" value="public"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="aud-link">Direct link</label>
+                <fluent-radio id="aud-link" slot="input" value="link"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="aud-private">Private</label>
+                <fluent-radio id="aud-private" slot="input" value="private"></fluent-radio></fluent-field>
+            </fluent-radio-group>
             <p class="reach-row__hint" id="audience-hint">Anyone can find and install your app from the Microsoft Store.</p>
             <div class="markets-choose-row" id="audience-private-row" hidden>
               <span id="groups-chips-container" style="display:contents;"></span>
@@ -4915,10 +4904,12 @@
               <iconify-icon icon="fluent:tag-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
               <strong>Price <span class="field-mark field-mark--req" aria-label="required">*</span></strong>
             </div>
-            <div class="seg" role="radiogroup" aria-label="Price" data-choice="price">
-              <button class="seg__opt seg__opt--active" data-value="free" type="button">Free</button>
-              <button class="seg__opt" data-value="paid" type="button">Paid</button>
-            </div>
+            <fluent-radio-group class="reach-seg" orientation="horizontal" aria-label="Price" data-choice="price">
+              <fluent-field label-position="after"><label slot="label" for="pr-free">Free</label>
+                <fluent-radio id="pr-free" slot="input" value="free"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="pr-paid">Paid</label>
+                <fluent-radio id="pr-paid" slot="input" value="paid"></fluent-radio></fluent-field>
+            </fluent-radio-group>
             <!-- Win32 paid apps are sold through the developer's own commerce, not the Store. -->
             <div class="price-win32-note" id="price-win32-note" hidden>
               <iconify-icon icon="fluent:info-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
@@ -4934,10 +4925,12 @@
               </div>
               <p class="reach-row__hint">Select whether you’d like to offer customers a free trial.</p>
               <p class="reach-row__hint price-win32-trial__more" id="price-win32-trial-more" hidden>The Store shows the trial on your listing, but <strong>you run and enforce it through your own installer and commerce</strong> — the Store doesn’t manage it.</p>
-              <div class="seg" role="radiogroup" aria-label="Free trial" data-choice="win32trial">
-                <button class="seg__opt seg__opt--active" data-value="none" type="button">No free trial</button>
-                <button class="seg__opt" data-value="trial" type="button">Free trial</button>
-              </div>
+              <fluent-radio-group class="reach-seg" orientation="horizontal" aria-label="Free trial" data-choice="win32trial">
+                <fluent-field label-position="after"><label slot="label" for="w32t-none">No free trial</label>
+                  <fluent-radio id="w32t-none" slot="input" value="none"></fluent-radio></fluent-field>
+                <fluent-field label-position="after"><label slot="label" for="w32t-trial">Free trial</label>
+                  <fluent-radio id="w32t-trial" slot="input" value="trial"></fluent-radio></fluent-field>
+              </fluent-radio-group>
             </div>
             <div class="price-paid-row" id="price-paid-row" hidden>
               <div class="price-field">
@@ -4972,62 +4965,58 @@
                 <span class="reach-row__hint" id="price-paid-hint">Auto-converted to local currencies in ~240 markets. <button type="button" class="price-hint-link" id="price-hint-customize">See &amp; customize</button></span>
               </div>
             </div>
-            <!-- Advanced pricing & free trial collapse behind this reveal (ported from V5) so the
-                 default paid view is just base price + the inline "See & customize" link. -->
-            <button type="button" class="v5-reveal" id="price-adv-reveal" aria-expanded="false" aria-controls="price-advanced price-trial-row" hidden>
-              <span class="v5-reveal__ico"><iconify-icon icon="fluent:money-settings-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-              <span class="v5-reveal__text">
-                <span class="v5-reveal__title">Advanced pricing &amp; free trial</span>
-                <span class="v5-reveal__sub">Per-market prices &middot; Scheduled changes &middot; Limited-time sales &middot; Free trial</span>
-              </span>
-              <span class="v5-reveal__state">Show</span>
-              <iconify-icon class="v5-reveal__chev" icon="fluent:chevron-down-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-            </button>
-            <!-- Advanced pricing (paid MSIX/PWA): per-market overrides, scheduled changes, and sales —
-                 a clean, optional settings card. Each row opens its dialog; sale chips render below.
-                 Sales stay hidden for Win32. Button ids + label spans preserved for the price JS. -->
-            <div class="price-advanced" id="price-advanced" hidden>
-              <p class="price-adv__label">Advanced pricing</p>
-              <div class="price-toolcard">
-                <button type="button" class="price-tool" id="price-overrides-btn">
+            <!-- Advanced pricing & free trial live behind a fluent-accordion (paid + Store-handled
+                 only). Shown via applyPrice(); expand/collapse is native. -->
+            <fluent-accordion class="price-adv-accordion" id="price-adv-accordion" hidden>
+              <fluent-accordion-item id="price-adv-item">
+                <span slot="heading" class="price-adv__head">
+                  <span class="price-adv__head-txt">
+                    <span class="price-adv__head-title">Advanced pricing &amp; free trial</span>
+                    <span class="price-adv__head-sub">Per-market prices &middot; Scheduled changes &middot; Limited-time sales &middot; Free trial</span>
+                  </span>
+                </span>
+            <div class="price-advanced" id="price-advanced">
+                <fluent-button appearance="subtle" class="price-tool" id="price-overrides-btn">
                   <span class="price-tool__ic"><iconify-icon icon="fluent:globe-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
                   <span class="price-tool__txt">
                     <span class="price-tool__title" id="price-overrides-label">See &amp; customize local prices</span>
                     <span class="price-tool__desc">Override the auto-converted price in specific markets.</span>
                   </span>
                   <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-                </button>
-                <button type="button" class="price-tool" id="price-schedule-btn">
+                </fluent-button>
+                <fluent-button appearance="subtle" class="price-tool" id="price-schedule-btn">
                   <span class="price-tool__ic"><iconify-icon icon="fluent:calendar-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
                   <span class="price-tool__txt">
                     <span class="price-tool__title" id="price-schedule-label">Schedule a price change</span>
                     <span class="price-tool__desc">Change your base price on a future date.</span>
                   </span>
                   <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-                </button>
+                </fluent-button>
                 <div class="price-sale-wrap" id="price-sale-wrap">
-                  <button type="button" class="price-tool" id="price-sale-btn">
+                  <fluent-button appearance="subtle" class="price-tool" id="price-sale-btn">
                     <span class="price-tool__ic"><iconify-icon icon="fluent:tag-multiple-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
                     <span class="price-tool__txt">
                       <span class="price-tool__title">Add a sale price</span>
                       <span class="price-tool__desc">Run a limited-time discount with a start and end date.</span>
                     </span>
                     <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-                  </button>
+                  </fluent-button>
                 </div>
-              </div>
               <div class="price-sales" id="price-sales"></div>
             </div>
-            <div class="price-trial-row" id="price-trial-row" hidden>
+            <div class="price-trial-row" id="price-trial-row">
               <div class="price-trial-row__head">
                 <iconify-icon icon="fluent:gift-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
                 <strong>Free trial</strong>
               </div>
-              <div class="seg" role="radiogroup" aria-label="Free trial" data-choice="trial">
-                <button class="seg__opt seg__opt--active" data-value="none" type="button">None</button>
-                <button class="seg__opt" data-value="time" type="button">Time-limited</button>
-                <button class="seg__opt" data-value="unlimited" type="button">Unlimited</button>
-              </div>
+              <fluent-radio-group class="reach-seg" orientation="horizontal" aria-label="Free trial" data-choice="trial">
+                <fluent-field label-position="after"><label slot="label" for="tr-none">None</label>
+                  <fluent-radio id="tr-none" slot="input" value="none"></fluent-radio></fluent-field>
+                <fluent-field label-position="after"><label slot="label" for="tr-time">Time-limited</label>
+                  <fluent-radio id="tr-time" slot="input" value="time"></fluent-radio></fluent-field>
+                <fluent-field label-position="after"><label slot="label" for="tr-unlimited">Unlimited</label>
+                  <fluent-radio id="tr-unlimited" slot="input" value="unlimited"></fluent-radio></fluent-field>
+              </fluent-radio-group>
               <div class="price-trial-row__duration" id="price-trial-duration-wrap" hidden>
                 <fluent-dropdown id="price-trial-duration">
                   <fluent-listbox>
@@ -5041,6 +5030,8 @@
               </div>
               <p class="reach-row__hint" id="price-trial-hint">No trial. Customers buy the full app.</p>
             </div>
+              </fluent-accordion-item>
+            </fluent-accordion>
             <p class="reach-row__hint" id="price-default-hint">Free apps install at no cost in every market.</p>
           </div>
         </div>
@@ -5050,7 +5041,7 @@
       <div class="ez-defaults-card easy-only">
         <div class="ez-defaults-line">
           <iconify-icon icon="fluent:checkmark-circle-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
-          <p class="ez-defaults-line__text">Defaults set for you: <strong>Free</strong> · <strong>All 240 markets</strong> · <strong>Publishes on approval</strong>. To change pricing, scheduling, audience, or markets, switch to Advanced mode.</p>
+          <p class="ez-defaults-line__text">Defaults set for you: <strong>Free</strong> · <strong>All markets</strong> · <strong>Publishes on approval</strong>. To change pricing, scheduling, audience, or markets, switch to Advanced mode.</p>
         </div>
       </div>
 
@@ -5123,14 +5114,14 @@
           <span class="cert-rollout__badge" id="cert-rollout-badge">10%</span>
         </div>
         <div class="cert-rollout__ctl">
-          <span class="ez-sd__field-label">Roll out to</span>
-          <div class="ez-rollout-presets" id="cert-rollout-presets" role="group" aria-label="Rollout percentage">
-            <button type="button" class="ez-rollout-preset" data-pct="5">5%</button>
-            <button type="button" class="ez-rollout-preset" data-pct="10">10%</button>
-            <button type="button" class="ez-rollout-preset" data-pct="25">25%</button>
-            <button type="button" class="ez-rollout-preset" data-pct="50">50%</button>
-            <button type="button" class="ez-rollout-preset" data-pct="100">Everyone</button>
-          </div>
+          <span class="ez-sd__field-label" id="cert-rollout-label">Roll out to</span>
+          <fluent-radio-group class="ez-rollout-presets" id="cert-rollout-presets" orientation="horizontal" aria-labelledby="cert-rollout-label">
+            <fluent-field label-position="after"><label slot="label" for="crop-5">5%</label><fluent-radio id="crop-5" slot="input" value="5"></fluent-radio></fluent-field>
+            <fluent-field label-position="after"><label slot="label" for="crop-10">10%</label><fluent-radio id="crop-10" slot="input" value="10"></fluent-radio></fluent-field>
+            <fluent-field label-position="after"><label slot="label" for="crop-25">25%</label><fluent-radio id="crop-25" slot="input" value="25"></fluent-radio></fluent-field>
+            <fluent-field label-position="after"><label slot="label" for="crop-50">50%</label><fluent-radio id="crop-50" slot="input" value="50"></fluent-radio></fluent-field>
+            <fluent-field label-position="after"><label slot="label" for="crop-100">Everyone</label><fluent-radio id="crop-100" slot="input" value="100"></fluent-radio></fluent-field>
+          </fluent-radio-group>
         </div>
       </div>
 
@@ -5432,10 +5423,10 @@
       </div>
       <div class="field">
         <label class="field__lbl">Ring</label>
-        <div class="addon-seg" id="flight-ring">
-          <button type="button" class="addon-seg__opt is-active" data-flight-ring="alpha" aria-pressed="true">Alpha</button>
-          <button type="button" class="addon-seg__opt" data-flight-ring="beta" aria-pressed="false">Beta</button>
-        </div>
+        <fluent-radio-group id="flight-ring" orientation="horizontal" aria-label="Ring">
+          <fluent-field label-position="after"><label slot="label" for="fr-alpha">Alpha</label><fluent-radio id="fr-alpha" slot="input" value="alpha" checked></fluent-radio></fluent-field>
+          <fluent-field label-position="after"><label slot="label" for="fr-beta">Beta</label><fluent-radio id="fr-beta" slot="input" value="beta"></fluent-radio></fluent-field>
+        </fluent-radio-group>
         <p class="addon-note">Alpha reaches your earliest testers; Beta is a wider pre-release ring.</p>
       </div>
     </div>
@@ -5686,18 +5677,20 @@
     </label>
     <input type="file" id="cpx-file" accept=".zip" hidden />
     <p class="ez-ai-disclaimer"><iconify-icon icon="fluent:info-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span>AI drafts every field from your files and can make mistakes. Review the whole submission before you publish.</span></p>
-    <details class="cpx-guide">
-      <summary><iconify-icon class="cpx-guide__chev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> How to name things in your .zip</summary>
-      <ul class="cpx-guide__list">
-        <li><b>Package</b> — your <code>.msix</code> / <code>.appx</code> (or <code>.exe</code> / <code>.msi</code>)</li>
-        <li><b>Icon</b> — name it <code>logo</code> or <code>icon</code></li>
-        <li><b>Cover image</b> — name it <code>hero</code> or <code>cover</code></li>
-        <li><b>Screenshots</b> — any other images (e.g. <code>screenshot-1.png</code>)</li>
-        <li><b>Description</b> — a <code>README.md</code></li>
-        <li><b>What’s new</b> — a <code>CHANGELOG.md</code></li>
-      </ul>
-      <p class="cpx-guide__note">Folders are fine — AI looks everywhere inside the .zip.</p>
-    </details>
+    <fluent-accordion class="cpx-guide-acc">
+      <fluent-accordion-item class="cpx-guide">
+        <span slot="heading">How to name things in your .zip</span>
+        <ul class="cpx-guide__list">
+          <li><b>Package</b> — your <code>.msix</code> / <code>.appx</code> (or <code>.exe</code> / <code>.msi</code>)</li>
+          <li><b>Icon</b> — name it <code>logo</code> or <code>icon</code></li>
+          <li><b>Cover image</b> — name it <code>hero</code> or <code>cover</code></li>
+          <li><b>Screenshots</b> — any other images (e.g. <code>screenshot-1.png</code>)</li>
+          <li><b>Description</b> — a <code>README.md</code></li>
+          <li><b>What’s new</b> — a <code>CHANGELOG.md</code></li>
+        </ul>
+        <p class="cpx-guide__note">Folders are fine — AI looks everywhere inside the .zip.</p>
+      </fluent-accordion-item>
+    </fluent-accordion>
     <p class="cpx-note"><iconify-icon icon="fluent:shield-checkmark-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>Nothing is submitted until you review and approve everything.</span></p>
     <fluent-button slot="action" appearance="secondary" data-cpx-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="cpx-go" disabled>
@@ -6071,10 +6064,10 @@
     <div class="price-sale-step" id="price-sale-step-markets">
       <div class="field">
         <label class="field__label">Markets</label>
-        <div class="seg" role="radiogroup" aria-label="Where the sale applies" id="price-sale-markets-mode">
-          <button type="button" class="seg__opt seg__opt--active" data-sale-markets="all">All markets</button>
-          <button type="button" class="seg__opt" data-sale-markets="choose">Specific markets</button>
-        </div>
+        <fluent-radio-group orientation="horizontal" aria-label="Where the sale applies" id="price-sale-markets-mode">
+          <fluent-field label-position="after"><label slot="label" for="psm-all">All markets</label><fluent-radio id="psm-all" slot="input" value="all" checked></fluent-radio></fluent-field>
+          <fluent-field label-position="after"><label slot="label" for="psm-choose">Specific markets</label><fluent-radio id="psm-choose" slot="input" value="choose"></fluent-radio></fluent-field>
+        </fluent-radio-group>
         <div class="price-sale-markets" id="price-sale-markets-pick" hidden>
           <fluent-text-input id="price-sale-markets-search" class="markets-dialog__search" placeholder="Search markets…">
             <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
@@ -6101,10 +6094,10 @@
       <div class="price-sale-fields">
       <div class="field">
         <label class="field__label">Discount</label>
-        <div class="seg" role="radiogroup" aria-label="Discount type" id="price-sale-type">
-          <button type="button" class="seg__opt seg__opt--active" data-sale-type="price">Set a price</button>
-          <button type="button" class="seg__opt" data-sale-type="percent">Percent off</button>
-        </div>
+        <fluent-radio-group orientation="horizontal" aria-label="Discount type" id="price-sale-type">
+          <fluent-field label-position="after"><label slot="label" for="pst-price">Set a price</label><fluent-radio id="pst-price" slot="input" value="price" checked></fluent-radio></fluent-field>
+          <fluent-field label-position="after"><label slot="label" for="pst-percent">Percent off</label><fluent-radio id="pst-percent" slot="input" value="percent"></fluent-radio></fluent-field>
+        </fluent-radio-group>
       </div>
       <div class="field" id="price-sale-amount-field">
         <label for="price-sale-amount" class="field__label">Sale price</label>
@@ -6658,10 +6651,10 @@
     </fluent-button>
     <div class="privacy-dialog__content">
       <p class="ez-extra-field__hint" id="privacy-hint">A link to your privacy policy. Shown on your Store listing.</p>
-      <div class="seg privacy-mode-toggle" role="tablist" aria-label="Privacy policy format">
-        <button type="button" class="seg__opt seg__opt--active" data-privacy-mode="url" role="tab" aria-selected="true">Link</button>
-        <button type="button" class="seg__opt" data-privacy-mode="text" role="tab" aria-selected="false">Text</button>
-      </div>
+      <fluent-radio-group class="privacy-mode-toggle" id="privacy-mode-toggle" orientation="horizontal" aria-label="Privacy policy format">
+        <fluent-field label-position="after"><label slot="label" for="pvm-url">Link</label><fluent-radio id="pvm-url" slot="input" value="url" checked></fluent-radio></fluent-field>
+        <fluent-field label-position="after"><label slot="label" for="pvm-text">Text</label><fluent-radio id="pvm-text" slot="input" value="text"></fluent-radio></fluent-field>
+      </fluent-radio-group>
       <div class="privacy-field__input" data-privacy-input="url">
         <fluent-text-input id="listing-privacy-input" type="url" class="ez-extra-input" placeholder="https://yourapp.com/privacy">
           <iconify-icon slot="start" icon="fluent:shield-lock-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -6814,12 +6807,12 @@
     <section class="ez-sd__section">
       <h3 class="ez-sd__title">Review &amp; release</h3>
       <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
-      <details class="ez-sd__sub" id="submit-creds">
-        <summary class="ez-sd__sub-head">
+      <fluent-accordion class="ez-sd__subs">
+      <fluent-accordion-item class="ez-sd__sub" id="submit-creds">
+        <span slot="heading" class="ez-sd__sub-head">
           <span class="ez-sd__sub-title">Test sign-in &amp; notes for reviewers</span>
           <span class="ez-sd__sub-val" id="creds-summary">None</span>
-          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-        </summary>
+        </span>
         <div class="ez-sd__sub-body">
           <div class="ez-sd__creds-list" id="submit-creds-list"></div>
           <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
@@ -6827,52 +6820,63 @@
           </button>
           <fluent-textarea id="submit-notes" rows="2" class="ez-sd__cert-notes" placeholder="Notes for reviewers (optional)"></fluent-textarea>
         </div>
-      </details>
+      </fluent-accordion-item>
       <!-- Release: go-live (after cert) + when to stop offering. Collapsed; the summary shows the choice. -->
-      <details class="ez-sd__sub" id="submit-hold-opts">
-        <summary class="ez-sd__sub-head">
+      <fluent-accordion-item class="ez-sd__sub" id="submit-hold-opts">
+        <span slot="heading" class="ez-sd__sub-head">
           <span class="ez-sd__sub-title">Release</span>
           <span class="ez-sd__sub-val" id="hold-summary">Live when approved</span>
-          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-        </summary>
+        </span>
         <div class="ez-sd__sub-body">
           <div class="ez-sd__field">
             <span class="ez-sd__field-label">Go live</span>
-            <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="auto" checked /><span>As soon as it’s approved</span></label>
-            <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="manual" /><span>I’ll publish it manually</span></label>
-            <label class="ez-sd__radio"><input type="radio" name="publish-hold" value="date" /><span>On a date</span><fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
+            <fluent-radio-group class="ez-sd__radios" data-hold="publish-hold" orientation="vertical">
+              <fluent-field label-position="after"><label slot="label" for="ph-auto">As soon as it’s approved</label><fluent-radio id="ph-auto" slot="input" value="auto"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="ph-manual">I’ll publish it manually</label><fluent-radio id="ph-manual" slot="input" value="manual"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="ph-date">On a date</label><fluent-radio id="ph-date" slot="input" value="date"></fluent-radio></fluent-field>
+            </fluent-radio-group>
+            <fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input>
           </div>
           <div class="ez-sd__field">
             <span class="ez-sd__field-label">Stop offering to new customers</span>
-            <label class="ez-sd__radio"><input type="radio" name="release-end" value="never" checked /><span>Keep it available</span></label>
-            <label class="ez-sd__radio"><input type="radio" name="release-end" value="date" /><span>On a date</span><fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input></label>
+            <fluent-radio-group class="ez-sd__radios" data-hold="release-end" orientation="vertical">
+              <fluent-field label-position="after"><label slot="label" for="re-never">Keep it available</label><fluent-radio id="re-never" slot="input" value="never"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="re-date">On a date</label><fluent-radio id="re-date" slot="input" value="date"></fluent-radio></fluent-field>
+            </fluent-radio-group>
+            <fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input>
             <p class="ez-sd__field-note">Existing customers keep access after this date.</p>
           </div>
         </div>
-      </details>
+      </fluent-accordion-item>
       <!-- Gradual rollout — UPDATE flow only (shown via JS). Simplified from Partner Center:
            a plain-language gradual toggle + preset %, plus an optional "mandatory" flag. -->
-      <details class="ez-sd__sub" id="submit-rollout" hidden>
-        <summary class="ez-sd__sub-head">
+      <fluent-accordion-item class="ez-sd__sub" id="submit-rollout" hidden>
+        <span slot="heading" class="ez-sd__sub-head">
           <span class="ez-sd__sub-title">Rollout</span>
           <span class="ez-sd__sub-val" id="rollout-summary">All customers at once</span>
-          <iconify-icon class="ez-sd__sub-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-        </summary>
+        </span>
         <div class="ez-sd__sub-body">
-          <label class="ez-sd__check"><input type="checkbox" id="rollout-gradual" /><span class="ez-sd__check-text"><strong>Roll out gradually</strong><span class="ez-sd__check-note">Release to a share of your Windows&nbsp;10/11 customers first, then ramp up to everyone — so you can watch for issues before a full release.</span></span></label>
+          <fluent-field label-position="after" class="ez-sd__check">
+            <fluent-checkbox id="rollout-gradual" slot="input" aria-labelledby="rollout-gradual-lbl"></fluent-checkbox>
+            <label slot="label" id="rollout-gradual-lbl" for="rollout-gradual" class="ez-sd__check-text"><strong>Roll out gradually</strong><span class="ez-sd__check-note">Release to a share of your Windows&nbsp;10/11 customers first, then ramp up to everyone — so you can watch for issues before a full release.</span></label>
+          </fluent-field>
           <div class="ez-rollout-pct" id="rollout-pct-field" hidden>
-            <span class="ez-sd__field-label">Start with</span>
-            <div class="ez-rollout-presets" id="rollout-presets" role="group" aria-label="Initial rollout percentage">
-              <button type="button" class="ez-rollout-preset" data-pct="5">5%</button>
-              <button type="button" class="ez-rollout-preset is-active" data-pct="10">10%</button>
-              <button type="button" class="ez-rollout-preset" data-pct="25">25%</button>
-              <button type="button" class="ez-rollout-preset" data-pct="50">50%</button>
-            </div>
+            <span class="ez-sd__field-label" id="rollout-pct-label">Start with</span>
+            <fluent-radio-group class="ez-rollout-presets" id="rollout-presets" orientation="horizontal" aria-labelledby="rollout-pct-label">
+              <fluent-field label-position="after"><label slot="label" for="rop-5">5%</label><fluent-radio id="rop-5" slot="input" value="5"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="rop-10">10%</label><fluent-radio id="rop-10" slot="input" value="10"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="rop-25">25%</label><fluent-radio id="rop-25" slot="input" value="25"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="rop-50">50%</label><fluent-radio id="rop-50" slot="input" value="50"></fluent-radio></fluent-field>
+            </fluent-radio-group>
             <p class="ez-sd__field-note">You can raise this — or pause — anytime from the app overview.</p>
           </div>
-          <label class="ez-sd__check"><input type="checkbox" id="rollout-mandatory" /><span class="ez-sd__check-text"><strong>Make this update mandatory</strong><span class="ez-sd__check-note">Nudges customers to update sooner (UWP on Windows&nbsp;10/11).</span></span></label>
+          <fluent-field label-position="after" class="ez-sd__check">
+            <fluent-checkbox id="rollout-mandatory" slot="input" aria-labelledby="rollout-mandatory-lbl"></fluent-checkbox>
+            <label slot="label" id="rollout-mandatory-lbl" for="rollout-mandatory" class="ez-sd__check-text"><strong>Make this update mandatory</strong><span class="ez-sd__check-note">Nudges customers to update sooner (UWP on Windows&nbsp;10/11).</span></label>
+          </fluent-field>
         </div>
-      </details>
+      </fluent-accordion-item>
+      </fluent-accordion>
     </section>
 
     <fluent-button slot="action" appearance="secondary" data-submit-close>Cancel</fluent-button>
@@ -7871,7 +7875,7 @@
   function advSummary() {
     const price = adv.price.mode === 'paid' ? (adv.price.currency + ' ' + adv.price.amount) : 'Free';
     const markets = adv.markets.mode === 'all'
-      ? 'All 240 markets'
+      ? 'All markets'
       : (adv.markets.selected.length + ' market' + (adv.markets.selected.length === 1 ? '' : 's'));
     const aud = adv.audience.mode === 'link' ? 'direct link' : (adv.audience.mode === 'private' ? 'private' : null);
     return [price, markets].concat(aud ? [aud] : []).join(' · ');
@@ -8520,14 +8524,13 @@
     { section: 'step-listing', label: 'Cover image or trailer', required: false, done: () => !!adv.listing.hero || (adv.listing.trailers && adv.listing.trailers.length > 0), focus: '#ez-hero-add' },
     { section: 'step-listing', label: 'Feature highlights', required: false, done: () => (adv.listing.features || '').trim().length > 0, focus: '#ez-features-add' },
     { section: 'step-listing', label: 'Search terms', required: false, done: () => !!(adv.listing.keywords && adv.listing.keywords.length) },
-    // Compliance — two required parts: review the content disclosures, then set the age rating.
-    { section: 'step-rating', label: 'Content disclosures', required: true, done: () => disclosuresAnswered(), focus: '#decl-answer-first' },
+    // Compliance — disclosures are optional; the age rating is the one required part.
     { section: 'step-rating', label: 'Age rating confirmed', required: true, done: () => !!state.rating },
     // Reach & price — shown as live facets so the checklist reflects the actual settings.
     // Defaults are valid (all markets, public, free, no trial), so each reads "set" with its
     // current value; a Store-paid app must still set a base price (the one that can gate).
     { section: 'step-reach', label: 'Markets', required: true, done: () => true,
-      value: () => adv.markets.mode === 'all' ? 'All 240 markets' : ((adv.markets.selected ? adv.markets.selected.length : 0) + ' markets') },
+      value: () => adv.markets.mode === 'all' ? 'All markets' : ((adv.markets.selected ? adv.markets.selected.length : 0) + ' markets') },
     { section: 'step-reach', label: 'Audience', required: true, done: () => true,
       value: () => adv.audience.mode === 'public' ? 'Public' : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group') },
     { section: 'step-reach', label: 'Price', required: true, focus: '#price-amount',
@@ -8942,6 +8945,11 @@
     // Win32-only disclosure
     setHidden('decl-item-drivers', !isWin32);
     // accessibility, pen & ink and generative AI apply to both types (always shown)
+    // Hide the "Windows capabilities" group entirely when none of its items apply (e.g. Win32).
+    const capGroup = $('decl-group-capabilities');
+    if (capGroup) {
+      capGroup.hidden = !['decl-item-alt-drives', 'decl-item-onedrive', 'decl-item-broadcast'].some(function (id) { const el = $(id); return el && !el.hidden; });
+    }
   }
 
   function updateGate() {
@@ -9605,12 +9613,8 @@
     wrap.hidden = !!locked;   // a real package answers the question — hide the chooser
     const pkgSub = document.querySelector('#step-package .ez-step__sub');
     if (pkgSub) { if (pkgSub.dataset.orig == null) pkgSub.dataset.orig = pkgSub.textContent; pkgSub.textContent = locked ? 'Your package is added — add another below, or keep filling out any section.' : pkgSub.dataset.orig; }
-    seg.querySelectorAll('.seg__opt').forEach(o => {
-      const on = o.dataset.v4type === shown;
-      o.classList.toggle('seg__opt--active', on);
-      o.setAttribute('aria-checked', on ? 'true' : 'false');
-      o.disabled = !!locked;
-    });
+    if (seg.activeid !== 'v4tab-' + shown) seg.activeid = 'v4tab-' + shown;
+    seg.querySelectorAll('fluent-tab').forEach(t => { t.toggleAttribute('disabled', !!locked); });
     wrap.classList.toggle('is-locked', !!locked);
     const lock = document.getElementById('v4-type-lock');
     if (lock) { const s = lock.querySelector('span'); if (s) s.textContent = 'Set by your package — ' + (V4_TYPE_LABEL[shown] || shown) + '.'; }
@@ -9677,7 +9681,7 @@
   }
   (function wireV4TypeChooser() {
     const seg = document.getElementById('v4-type-seg');
-    if (seg) seg.addEventListener('click', (e) => { if (e.target.closest('.seg__info')) return; const b = e.target.closest('.seg__opt'); if (!b || !b.dataset.v4type) return; const t = b.dataset.v4type; requestTypeChange(t === 'win32', V4_TYPE_LABEL[t] || t, () => setV4Type(t)); });
+    if (seg) seg.addEventListener('change', () => { const active = document.getElementById(seg.activeid); const t = active && active.dataset.v4type; if (!t || t === v4Type) return; requestTypeChange(t === 'win32', V4_TYPE_LABEL[t] || t, () => setV4Type(t), () => { seg.activeid = 'v4tab-' + v4Type; }); });
     try { syncV4TypeChooser(); applyV4PkgUI(effectiveType()); } catch (e) {}
   })();
   function updateUploadConstraints() {
@@ -11550,7 +11554,7 @@
       { k: 'inspect', label: 'Reading the package manifest', detail: 'Notably 2.4.0.0 \u00b7 x64 \u00b7 Desktop \u00b7 no restricted capabilities' },
       { k: 'listing', label: 'Drafting your Store listing', detail: 'Name, description, category and highlights from README.md' },
       { k: 'media', label: 'Placing your screenshots and icon', detail: 'Icon + 5 screenshots, checked for resolution and aspect' },
-      { k: 'reach', label: 'Setting reach & price', detail: 'Free \u00b7 all 240 markets \u00b7 public \u2014 change anytime' },
+      { k: 'reach', label: 'Setting reach & price', detail: 'Free \u00b7 all markets \u00b7 public \u2014 change anytime' },
       { k: 'compliance', label: 'Checking Store policies', detail: 'No restricted capabilities \u00b7 no blockers found' },
       { k: 'rating', label: 'Age rating \u2014 over to you', detail: 'Opening the questionnaire for you to answer' }
     ];
@@ -13016,10 +13020,12 @@
         // cards / follow-up indentation, not from paraphrasing the question.
         return '<div class="rating-question' + (isFollowup ? ' rating-question--sub' : '') + '" data-question-id="' + q.id + '" data-followup="' + isFollowup + '">' +
           '<span class="rating-question__text">' + q.text + '</span>' +
-          '<span class="seg rating-seg" role="radiogroup" aria-label="' + q.text + '" data-rating-q="' + q.id + '">' +
-            '<button type="button" class="seg__opt' + (noActive ? ' seg__opt--active' : '') + '" data-rating-val="no" aria-checked="' + (noActive ? 'true' : 'false') + '">No</button>' +
-            '<button type="button" class="seg__opt' + (yesActive ? ' seg__opt--active' : '') + '" data-rating-val="yes" aria-checked="' + (yesActive ? 'true' : 'false') + '">Yes</button>' +
-          '</span></div>';
+          '<fluent-radio-group class="rating-seg" orientation="horizontal" aria-label="' + q.text + '" data-rating-q="' + q.id + '">' +
+            '<fluent-field label-position="after"><label slot="label" for="rq-' + q.id + '-no">No</label>' +
+              '<fluent-radio id="rq-' + q.id + '-no" slot="input" value="no"' + (noActive ? ' checked' : '') + '></fluent-radio></fluent-field>' +
+            '<fluent-field label-position="after"><label slot="label" for="rq-' + q.id + '-yes">Yes</label>' +
+              '<fluent-radio id="rq-' + q.id + '-yes" slot="input" value="yes"' + (yesActive ? ' checked' : '') + '></fluent-radio></fluent-field>' +
+          '</fluent-radio-group></div>';
       }).join('');
       if (!itemsHtml) return '';   // a section whose questions are all gated-hidden doesn't render at all
       return '<div class="rating-section"><h4 class="rating-section__title">' + section.section + '</h4><div class="rating-qcard">' + itemsHtml + '</div></div>';
@@ -13032,21 +13038,18 @@
       });
     });
     ratingMount.querySelectorAll('.rating-seg[data-rating-q]').forEach(seg => {
-      seg.addEventListener('click', (e) => {
+      seg.addEventListener('change', () => {
         if (suppressDialogChange) return;
-        const b = e.target.closest('.seg__opt'); if (!b) return;
         const id = seg.dataset.ratingQ;
-        const yes = b.dataset.ratingVal === 'yes';
+        let val = ''; seg.querySelectorAll('fluent-radio').forEach(r => { if (r.checked) val = r.getAttribute('value'); });
+        const yes = val === 'yes';
         contentAnswers[id] = yes;
+        seg.querySelectorAll('fluent-radio').forEach(r => r.toggleAttribute('checked', !!r.checked));   // mirror [checked] so the dot fills
         const isParent = IARC_QUESTIONS.some(s => s.items.some(q => q.parent === id || q.gate === id));
         if (isParent) {
+          suppressDialogChange = true;
           renderRatingQuestions(contentAnswers);
-        } else {
-          seg.querySelectorAll('.seg__opt').forEach(x => {
-            const on = (x.dataset.ratingVal === 'yes') === yes;
-            x.classList.toggle('seg__opt--active', on);
-            x.setAttribute('aria-checked', on ? 'true' : 'false');
-          });
+          setTimeout(() => { suppressDialogChange = false; }, 0);
         }
         updateRatingPreviewGate();   // re-gate after each answer
       });
@@ -13156,7 +13159,7 @@
     const priceVal = adv.price.mode === 'paid'
       ? (isWin32 ? 'Paid · your own commerce' : ('Paid · ' + adv.price.currency + ' ' + adv.price.amount))
       : 'Free';
-    const marketsVal = adv.markets.mode === 'all' ? 'All 240 markets' : (adv.markets.selected.length + ' markets');
+    const marketsVal = adv.markets.mode === 'all' ? 'All markets' : (adv.markets.selected.length + ' markets');
     const audienceVal = adv.audience.mode === 'public' ? 'Public'
       : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group');
     const rows = [
@@ -13185,15 +13188,33 @@
     if (!r.gradual) return r.mandatory ? 'All customers \u00b7 Mandatory' : 'All customers at once';
     return 'Gradual \u00b7 ' + (r.percent || 10) + '% first' + (r.mandatory ? ' \u00b7 Mandatory' : '');
   }
+  // fluent-checkbox: setting .checked programmatically doesn't flip the visual on rc.27, so
+  // drive it via a real .click() when out of sync (same trick used for Disclosures).
+  function setRolloutCheck(cb, want) { if (cb && !!cb.checked !== !!want) cb.click(); }
+  // fluent-radio single-select: set .checked + mirror the [checked] attr so the dot fills.
+  function setRolloutRadio(group, pct) {
+    if (!group) return;
+    group.querySelectorAll('fluent-radio').forEach(function (r) { var on = parseInt(r.getAttribute('value'), 10) === pct; r.checked = on; r.toggleAttribute('checked', on); });
+  }
+  function rolloutRadioPct(group) {
+    if (!group) return 0;
+    var rr = group.querySelectorAll('fluent-radio');
+    for (var i = 0; i < rr.length; i++) if (rr[i].checked) return parseInt(rr[i].getAttribute('value'), 10) || 0;
+    return 0;
+  }
+  var _syncingRollout = false;
   function syncRolloutDialog() {
-    var r = adv.rollout || (adv.rollout = { gradual: false, percent: 10, mandatory: false });
-    var wrap = $('submit-rollout'); if (wrap) wrap.hidden = !inUpdateFlow;
-    var g = $('rollout-gradual'); if (g) g.checked = !!r.gradual;
-    var m = $('rollout-mandatory'); if (m) m.checked = !!r.mandatory;
-    var pf = $('rollout-pct-field'); if (pf) pf.hidden = !r.gradual;
-    var presets = $('rollout-presets');
-    if (presets) presets.querySelectorAll('.ez-rollout-preset').forEach(function (b) { b.classList.toggle('is-active', parseInt(b.dataset.pct, 10) === r.percent); });
-    var s = $('rollout-summary'); if (s) s.textContent = rolloutSummaryText();
+    if (_syncingRollout) return; // setRolloutCheck's .click() re-enters via change; guard it
+    _syncingRollout = true;
+    try {
+      var r = adv.rollout || (adv.rollout = { gradual: false, percent: 10, mandatory: false });
+      var wrap = $('submit-rollout'); if (wrap) wrap.hidden = !inUpdateFlow;
+      setRolloutCheck($('rollout-gradual'), r.gradual);
+      setRolloutCheck($('rollout-mandatory'), r.mandatory);
+      var pf = $('rollout-pct-field'); if (pf) pf.hidden = !r.gradual;
+      setRolloutRadio($('rollout-presets'), r.percent);
+      var s = $('rollout-summary'); if (s) s.textContent = rolloutSummaryText();
+    } finally { _syncingRollout = false; }
   }
   function persistRollout() {
     try { var all = JSON.parse(localStorage.getItem('msstore.apps') || '[]'); var i = all.findIndex(function (a) { return a.id === app.id; }); if (i >= 0) { all[i].rollout = adv.rollout; localStorage.setItem('msstore.apps', JSON.stringify(all)); } } catch (e) {}
@@ -13207,8 +13228,7 @@
     var pct = r.percent || 10;
     var pctEl = $('cert-rollout-pct'); if (pctEl) pctEl.textContent = pct + '%';
     var badge = $('cert-rollout-badge'); if (badge) badge.textContent = pct + '%';
-    var presets = $('cert-rollout-presets');
-    if (presets) presets.querySelectorAll('.ez-rollout-preset').forEach(function (b) { b.classList.toggle('is-active', parseInt(b.dataset.pct, 10) === pct); });
+    setRolloutRadio($('cert-rollout-presets'), pct);
   }
   // In the update flow the post-submit "Withdraw submission" reads as "Cancel update" (the live version stays up).
   function relabelUpdateCancel() {
@@ -13222,9 +13242,9 @@
     var g = $('rollout-gradual'), m = $('rollout-mandatory'), presets = $('rollout-presets');
     if (g) g.addEventListener('change', function () { adv.rollout.gradual = g.checked; syncRolloutDialog(); buildSubmitSummary(); });
     if (m) m.addEventListener('change', function () { adv.rollout.mandatory = m.checked; syncRolloutDialog(); buildSubmitSummary(); });
-    if (presets) presets.addEventListener('click', function (e) { var b = e.target.closest('.ez-rollout-preset'); if (!b) return; adv.rollout.percent = parseInt(b.dataset.pct, 10) || 10; syncRolloutDialog(); buildSubmitSummary(); });
+    if (presets) presets.addEventListener('change', function () { var v = rolloutRadioPct(presets); if (v) { adv.rollout.percent = v; syncRolloutDialog(); buildSubmitSummary(); } });
     var cp = $('cert-rollout-presets');
-    if (cp) cp.addEventListener('click', function (e) { var b = e.target.closest('.ez-rollout-preset'); if (!b) return; var pct = parseInt(b.dataset.pct, 10) || 10; adv.rollout.percent = pct; if (pct >= 100) adv.rollout.gradual = false; persistRollout(); renderCertRollout(); if (typeof announce === 'function') announce(pct >= 100 ? 'Now rolling out to all customers.' : ('Rollout updated to ' + pct + '% of customers.')); });
+    if (cp) cp.addEventListener('change', function () { var pct = rolloutRadioPct(cp) || 10; adv.rollout.percent = pct; if (pct >= 100) adv.rollout.gradual = false; persistRollout(); renderCertRollout(); if (typeof announce === 'function') announce(pct >= 100 ? 'Now rolling out to all customers.' : ('Rollout updated to ' + pct + '% of customers.')); });
   })();
   // ---------------------------------------------------------------------------
   // Demo certification switcher. The portal path (?id=) is driven by tdp-bridge.js;
@@ -14959,9 +14979,10 @@
     return ((sh && sh.value) || el.value || (flightDraft && flightDraft.name) || '').trim();
   }
   function syncFlightRing() {
-    Array.prototype.forEach.call(document.querySelectorAll('#flight-ring [data-flight-ring]'), function (b) {
-      var on = !!flightDraft && b.getAttribute('data-flight-ring') === flightDraft.ring;
-      b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var ring = (flightDraft && flightDraft.ring) || 'alpha';
+    Array.prototype.forEach.call(document.querySelectorAll('#flight-ring fluent-radio'), function (r) {
+      var on = r.getAttribute('value') === ring;
+      r.checked = on; r.toggleAttribute('checked', on);
     });
   }
   function openFlightDialog() {
@@ -14993,9 +15014,9 @@
       dlg.addEventListener('click', function (e) {
         var t = e.target;
         if (t.closest('[data-flight-close]')) { closeFlightDialog(); return; }
-        var r = t.closest('[data-flight-ring]'); if (r) { if (flightDraft) { flightDraft.ring = r.getAttribute('data-flight-ring'); syncFlightRing(); } return; }
         if (t.closest('[data-flight-create]')) { createFlight(); return; }
       });
+      dlg.addEventListener('change', function (e) { if (flightDraft && e.target && e.target.closest('#flight-ring')) { var rr = document.querySelectorAll('#flight-ring fluent-radio'); for (var i = 0; i < rr.length; i++) if (rr[i].checked) { flightDraft.ring = rr[i].getAttribute('value'); break; } syncFlightRing(); } });
       dlg.addEventListener('input', function (e) { if (flightDraft && e.target && e.target.id === 'flight-name') flightDraft.name = e.target.value; });
       dlg.addEventListener('toggle', function (e) { if (e.detail && e.detail.newState === 'closed') flightDraft = null; });
     }
@@ -15152,7 +15173,7 @@
     renderTestCreds();
     // Open the cert-team area only if it already has content (otherwise it stays a tidy one-liner).
     const credsSub = $('submit-creds');
-    if (credsSub) credsSub.open = !!((Array.isArray(adv.testCredentials) && adv.testCredentials.length) || ($('submit-notes') && faVal($('submit-notes')).trim()));
+    if (credsSub) credsSub.expanded = !!((Array.isArray(adv.testCredentials) && adv.testCredentials.length) || ($('submit-notes') && faVal($('submit-notes')).trim()));
     try { submitDlg.show(); } catch (e) {}
   }
   $('submit').addEventListener('click', openSubmitFlow);
@@ -15176,39 +15197,54 @@
     const hasNotes = ($('submit-notes') && faVal($('submit-notes')).trim().length > 0);
     sum.textContent = n ? (n + ' credential' + (n > 1 ? 's' : '')) : (hasNotes ? 'Notes added' : 'None');
   }
+  // Read/write the submit-dialog fluent-radio-groups: .checked is current at change-time; mirror it
+  // to a [checked] attr so the dot fills (same pattern as the rest of the flow).
+  function sdRadioVal(group) {
+    const rr = group.querySelectorAll('fluent-radio');
+    for (let i = 0; i < rr.length; i++) if (rr[i].checked) return rr[i].getAttribute('value');
+    return '';
+  }
+  function setSdRadio(name, val) {
+    const g = document.querySelector('.ez-sd__radios[data-hold="' + name + '"]'); if (!g) return;
+    g.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === val; r.checked = on; r.toggleAttribute('checked', on); });
+  }
   function syncPublishHoldUI() {
     if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
     if (!adv.schedule) adv.schedule = { end: { mode: 'never', date: '' } };
     if (!adv.schedule.end) adv.schedule.end = { mode: 'never', date: '' };
     const ph = adv.publishHold, end = adv.schedule.end;
-    document.querySelectorAll('input[name="publish-hold"]').forEach(r => { r.checked = (r.value === ph.mode); });
+    setSdRadio('publish-hold', ph.mode);
     const dateEl = $('publish-hold-date');
     if (dateEl) { dateEl.value = ph.date || ''; dateEl.disabled = ph.mode !== 'date'; }
-    document.querySelectorAll('input[name="release-end"]').forEach(r => { r.checked = (r.value === end.mode); });
+    setSdRadio('release-end', end.mode);
     const endEl = $('release-end-date');
     if (endEl) { endEl.value = end.date || ''; endEl.disabled = end.mode !== 'date'; }
     updateHoldSummary();
   }
   (function wirePublishHold() {
-    document.querySelectorAll('input[name="publish-hold"]').forEach(r => r.addEventListener('change', () => {
-      if (!r.checked) return;
+    const phGroup = document.querySelector('.ez-sd__radios[data-hold="publish-hold"]');
+    if (phGroup) phGroup.addEventListener('change', () => {
+      const val = sdRadioVal(phGroup); if (!val) return;
       if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
-      adv.publishHold.mode = r.value;
-      const dateEl = $('publish-hold-date'); if (dateEl) dateEl.disabled = r.value !== 'date';
+      adv.publishHold.mode = val;
+      phGroup.querySelectorAll('fluent-radio').forEach(r => r.toggleAttribute('checked', !!r.checked));
+      const dateEl = $('publish-hold-date'); if (dateEl) dateEl.disabled = val !== 'date';
       updateHoldSummary();
       persistAdvanced();
-    }));
+    });
     const dateEl = $('publish-hold-date');
     if (dateEl) dateEl.addEventListener('input', () => { if (adv.publishHold) adv.publishHold.date = dateEl.value || ''; updateHoldSummary(); persistAdvanced(); });
-    document.querySelectorAll('input[name="release-end"]').forEach(r => r.addEventListener('change', () => {
-      if (!r.checked) return;
+    const reGroup = document.querySelector('.ez-sd__radios[data-hold="release-end"]');
+    if (reGroup) reGroup.addEventListener('change', () => {
+      const val = sdRadioVal(reGroup); if (!val) return;
       if (!adv.schedule) adv.schedule = { end: { mode: 'never', date: '' } };
       if (!adv.schedule.end) adv.schedule.end = { mode: 'never', date: '' };
-      adv.schedule.end.mode = r.value;
-      const endEl = $('release-end-date'); if (endEl) endEl.disabled = r.value !== 'date';
+      adv.schedule.end.mode = val;
+      reGroup.querySelectorAll('fluent-radio').forEach(r => r.toggleAttribute('checked', !!r.checked));
+      const endEl = $('release-end-date'); if (endEl) endEl.disabled = val !== 'date';
       updateHoldSummary();
       persistAdvanced();
-    }));
+    });
     const endEl = $('release-end-date');
     if (endEl) endEl.addEventListener('input', () => { if (adv.schedule && adv.schedule.end) adv.schedule.end.date = endEl.value || ''; updateHoldSummary(); persistAdvanced(); });
   })();
@@ -15316,11 +15352,18 @@
     const reach = $('step-reach');
     if (!reach) return;
 
+    // read the picked value from a fluent-radio-group (change commits .value late; .checked is current)
+    function reachRadioValue(group) {
+      const rr = group.querySelectorAll('fluent-radio');
+      for (let i = 0; i < rr.length; i++) { if (rr[i].checked) return rr[i].getAttribute('value'); }
+      return '';
+    }
     function setSeg(choice, value) {
-      reach.querySelectorAll('.seg[data-choice="' + choice + '"] .seg__opt').forEach(b => {
-        const on = b.dataset.value === value;
-        b.classList.toggle('seg__opt--active', on);
-        b.setAttribute('aria-checked', on ? 'true' : 'false');
+      const g = reach.querySelector('.reach-seg[data-choice="' + choice + '"]');
+      if (!g) return;
+      g.querySelectorAll('fluent-radio').forEach(r => {
+        const on = r.getAttribute('value') === value;
+        r.checked = on; r.toggleAttribute('checked', on);   // mirror [checked] so CSS fills the dot
       });
     }
     function chip(label) { return '<span class="market-chip">' + label + '</span>'; }
@@ -15336,11 +15379,7 @@
       setSeg('markets', adv.markets.mode);
       const choose = adv.markets.mode === 'choose';
       $('markets-choose-row').hidden = !choose;
-      $('markets-newregions-row').hidden = false;   // new-regions applies to All 240 and Choose alike
-      // Fluent checkbox renders its tick only once :state(checked) is set via a real toggle — the
-      // `checked` attribute/property alone won't show it — so drive the default with a click.
-      const nr = $('markets-new-regions');
-      if (nr && !!nr.checked !== (adv.markets.newRegions !== false)) nr.click();
+      const hint = $('markets-hint'); if (hint) hint.hidden = choose;   // future-markets note only when "All"
       renderMarketChips();
     }
 
@@ -15385,18 +15424,10 @@
       const w32trial = $('price-win32-trial');   // Win32 paid: disclosure-only free-trial flag
       if (w32trial) { w32trial.hidden = !(paid && win32); setSeg('win32trial', adv.price.win32Trial || 'none'); }
       $('price-paid-row').hidden = !storePaid;
-      // Advanced pricing (per-market, scheduling, sales) + free trial collapse behind the reveal
-      // (is-price-adv on flow-wrap) so the default paid view is just base price. Ported from V5.
-      const advOpen = !!document.getElementById('flow-wrap')?.classList.contains('is-price-adv');
-      $('price-advanced').hidden = !(storePaid && advOpen);
-      $('price-trial-row').hidden = !(storePaid && advOpen);
-      const advRevealBtn = $('price-adv-reveal');
-      if (advRevealBtn) {
-        advRevealBtn.hidden = !storePaid;
-        advRevealBtn.classList.toggle('is-open', advOpen);
-        advRevealBtn.setAttribute('aria-expanded', advOpen ? 'true' : 'false');
-        const stEl = advRevealBtn.querySelector('.v5-reveal__state'); if (stEl) stEl.textContent = advOpen ? 'Hide' : 'Show';
-      }
+      // Advanced pricing + free trial live in a fluent-accordion, shown only when the Store
+      // handles the money (paid, non-Win32). Expand/collapse is native to the accordion.
+      const advAccordion = $('price-adv-accordion');
+      if (advAccordion) advAccordion.hidden = !storePaid;
       $('price-default-hint').hidden = paid;
       const oc = Object.keys(adv.price.overrides || {}).length;
       const pol = $('price-overrides-label');
@@ -15407,18 +15438,16 @@
       try { ezRenderPreview(); } catch (e) {}   // reflect the paid price on the preview Buy CTA
     }
 
-    reach.querySelectorAll('.seg[data-choice]').forEach(seg => {
+    reach.querySelectorAll('.reach-seg[data-choice]').forEach(seg => {
       const choice = seg.dataset.choice;
-      seg.querySelectorAll('.seg__opt').forEach(opt => {
-        opt.addEventListener('click', () => {
-          const v = opt.dataset.value;
-          if (choice === 'markets') { adv.markets.mode = v; applyMarkets(); }
-          else if (choice === 'audience') { adv.audience.mode = v; applyAudience(); }
-          else if (choice === 'price') { adv.price.mode = v; applyPrice(); }
-          else if (choice === 'win32trial') { adv.price.win32Trial = v; applyPrice(); }
-          else if (choice === 'trial') { adv.trial.mode = v; applyTrial(); }
-          persistAdvanced(); updateGate();
-        });
+      seg.addEventListener('change', () => {
+        const v = reachRadioValue(seg);
+        if (choice === 'markets') { adv.markets.mode = v; applyMarkets(); }
+        else if (choice === 'audience') { adv.audience.mode = v; applyAudience(); }
+        else if (choice === 'price') { adv.price.mode = v; applyPrice(); }
+        else if (choice === 'win32trial') { adv.price.win32Trial = v; applyPrice(); }
+        else if (choice === 'trial') { adv.trial.mode = v; applyTrial(); }
+        persistAdvanced(); updateGate();
       });
     });
 
@@ -15443,19 +15472,11 @@
     });
 
     const mp = $('markets-pick-btn'); if (mp) mp.addEventListener('click', () => { if (typeof openMarketsDialog === 'function') openMarketsDialog(); });
-    const mnr = $('markets-new-regions');
-    if (mnr) mnr.addEventListener('change', () => { adv.markets.newRegions = !!mnr.checked; persistAdvanced(); });
     const gp = $('groups-pick-btn'); if (gp) gp.addEventListener('click', () => { if (typeof openGroupsDialog === 'function') openGroupsDialog(); });
     const po = $('price-overrides-btn'); if (po) po.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
     const ps = $('price-schedule-btn'); if (ps) ps.addEventListener('click', () => { if (typeof openPriceScheduleDialog === 'function') openPriceScheduleDialog(); });
     const psale = $('price-sale-btn'); if (psale) psale.addEventListener('click', () => { if (window.openPriceSaleDialog) window.openPriceSaleDialog(); });
-    // Advanced-pricing reveal toggle (is-price-adv on flow-wrap) + the inline "See & customize" link.
-    const advReveal = $('price-adv-reveal');
-    if (advReveal) advReveal.addEventListener('click', () => {
-      const wrap = document.getElementById('flow-wrap');
-      if (wrap) wrap.classList.toggle('is-price-adv', !wrap.classList.contains('is-price-adv'));
-      applyPrice();
-    });
+    // (Advanced pricing + free trial now live in a fluent-accordion — expand/collapse is native.)
     const phc = $('price-hint-customize');
     if (phc) phc.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
 
@@ -15464,11 +15485,9 @@
     if (durEl) durEl.value = adv.trial.duration;
 
     applyMarkets(); applyAudience(); applyPrice();
-    // Fluent checkbox upgrades async — the boot-time applyMarkets can run before #markets-new-regions
-    // is defined, so its default tick wouldn't render. Re-sync once it's ready (now that the
-    // new-regions checkbox is visible in the All 240 view too).
+    // fluent-radio-group upgrades async — re-apply once defined so the selected dots render.
     if (window.customElements && customElements.whenDefined) {
-      customElements.whenDefined('fluent-checkbox').then(() => { try { applyMarkets(); } catch (e) {} });
+      customElements.whenDefined('fluent-radio-group').then(() => { try { applyMarkets(); applyAudience(); applyPrice(); } catch (e) {} });
     }
 
     // Let the dialogs refresh the reach UI after saving selections.
@@ -15493,25 +15512,32 @@
     var list = document.querySelector('.declarations__list');
     if (list) list.classList.toggle('is-flagged', declFlagged && !disclosuresAnswered());
   }
-  function paintDeclSeg(seg) {
-    var key = seg.dataset.declaration, v = adv.declarations[key], row = seg.closest('.declarations__item');
-    seg.querySelectorAll('.seg__opt').forEach(function (b) {
-      var sel = (v === true && b.dataset.declVal === 'yes') || (v === false && b.dataset.declVal === 'no');
-      b.classList.toggle('seg__opt--active', sel);
-      b.setAttribute('aria-checked', sel ? 'true' : 'false');
-    });
-    if (row) { row.classList.toggle('is-on', v === true); row.classList.toggle('is-unanswered', v == null); }
+  // fluent-checkbox on this build won't flip :state(checked) from the property/attribute alone — a
+  // real toggle does — so drive the default/restored visual with .click() when out of sync (same as
+  // the markets "new regions" checkbox). User clicks set the state natively.
+  function paintDeclSeg(cb) {
+    var key = cb.dataset.declaration, v = adv.declarations[key], row = cb.closest('.declarations__item');
+    if (!!cb.checked !== (v === true)) cb.click();
+    if (row) row.classList.toggle('is-on', v === true);
   }
-  document.querySelectorAll('.decl-seg[data-declaration]').forEach(function (seg) {
-    paintDeclSeg(seg);
-    seg.addEventListener('click', function (e) {
-      var b = e.target.closest('.seg__opt'); if (!b) return;
-      adv.declarations[seg.dataset.declaration] = (b.dataset.declVal === 'yes');
-      paintDeclSeg(seg); persistAdvanced();
+  document.querySelectorAll('.decl-seg[data-declaration]').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      adv.declarations[cb.dataset.declaration] = !!cb.checked;
+      var row = cb.closest('.declarations__item');
+      if (row) row.classList.toggle('is-on', !!cb.checked);
+      persistAdvanced();
       syncDeclFlag();
       if (typeof updateGate === 'function') updateGate();
     });
   });
+  // fluent-checkbox upgrades async — sync each to its saved/default state once defined.
+  if (window.customElements && customElements.whenDefined) {
+    customElements.whenDefined('fluent-checkbox').then(function () {
+      document.querySelectorAll('.decl-seg[data-declaration]').forEach(paintDeclSeg);
+    });
+  } else {
+    document.querySelectorAll('.decl-seg[data-declaration]').forEach(paintDeclSeg);
+  }
   syncDeclFlag();
 
   // IARC ID (Advanced) — paste an existing certificate instead of the questionnaire.
@@ -16372,7 +16398,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   function setSaleMarketsMode(mode, sync) {
     saleMarketsMode = (mode === 'choose') ? 'choose' : 'all';
     const seg = $('price-sale-markets-mode');
-    if (seg) seg.querySelectorAll('[data-sale-markets]').forEach(b => b.classList.toggle('seg__opt--active', b.getAttribute('data-sale-markets') === saleMarketsMode));
+    if (seg) seg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === saleMarketsMode; r.checked = on; r.toggleAttribute('checked', on); });
     if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = saleMarketsMode !== 'choose';
     if (saleMarketsMode === 'choose') { renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); }
     if (sync) syncSaleSaveEnabled();
@@ -16417,7 +16443,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   function setSaleType(t, sync) {
     priceSaleType = (t === 'percent') ? 'percent' : 'price';
     const seg = $('price-sale-type');
-    if (seg) seg.querySelectorAll('[data-sale-type]').forEach(b => b.classList.toggle('seg__opt--active', b.getAttribute('data-sale-type') === priceSaleType));
+    if (seg) seg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === priceSaleType; r.checked = on; r.toggleAttribute('checked', on); });
     const af = $('price-sale-amount-field'), pf = $('price-sale-percent-field');
     if (af) af.hidden = priceSaleType !== 'price';
     if (pf) pf.hidden = priceSaleType !== 'percent';
@@ -16493,7 +16519,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (priceSaleSave)   priceSaleSave.hidden   = saleStep !== 2;
     if (priceSaleRemove) priceSaleRemove.hidden = !(saleStep === 2 && priceSaleEditIndex >= 0);
     syncSaleSaveEnabled();
-    setTimeout(() => { try { (saleStep === 2 ? priceSaleAmount : ($('price-sale-markets-mode') || {}).querySelector?.('.seg__opt--active'))?.focus?.(); } catch (e) {} }, 30);
+    setTimeout(() => { try { (saleStep === 2 ? priceSaleAmount : ($('price-sale-markets-mode') || {}).querySelector?.('fluent-radio[checked]'))?.focus?.(); } catch (e) {} }, 30);
   }
   let priceSaleEditIndex = -1; // -1 = adding a new sale; otherwise the index being edited
   function saleList() { return (adv && adv.price && Array.isArray(adv.price.sales)) ? adv.price.sales : []; }
@@ -16546,8 +16572,8 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     priceSaleDialog.removeAttribute('open');
     try { if (typeof priceSaleDialog.hide === 'function') priceSaleDialog.hide(); } catch (e) {}
   }
-  $('price-sale-type')?.querySelectorAll('[data-sale-type]').forEach(b => b.addEventListener('click', () => setSaleType(b.getAttribute('data-sale-type'), true)));
-  $('price-sale-markets-mode')?.querySelectorAll('[data-sale-markets]').forEach(b => b.addEventListener('click', () => setSaleMarketsMode(b.getAttribute('data-sale-markets'), true)));
+  $('price-sale-type')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'price'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setSaleType(v, true); });
+  $('price-sale-markets-mode')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'all'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setSaleMarketsMode(v, true); });
   priceSaleMarketsSearch?.addEventListener('input', e => renderSaleMarketsList(e.target.value));
   $('price-sale-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => saleMarketsSel.add(m.code)); renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); syncSaleSaveEnabled(); });
   $('price-sale-markets-clear')?.addEventListener('click', () => { saleMarketsSel.clear(); renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); syncSaleSaveEnabled(); });
@@ -16779,10 +16805,8 @@ function openPriceScheduleDialog() {
     function getPrivacyMode() { return (L.privacyMode === 'text') ? 'text' : 'url'; }
     function setPrivacyMode(mode, commit) {
       L.privacyMode = (mode === 'text') ? 'text' : 'url';
-      document.querySelectorAll('.privacy-mode-toggle .seg__opt').forEach(b => {
-        const on = b.dataset.privacyMode === L.privacyMode;
-        b.classList.toggle('seg__opt--active', on); b.setAttribute('aria-selected', String(on));
-      });
+      const pg = document.querySelector('.privacy-mode-toggle');
+      if (pg) pg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === L.privacyMode; r.checked = on; r.toggleAttribute('checked', on); });
       if (privacyUrlGroup)  privacyUrlGroup.hidden  = L.privacyMode !== 'url';
       if (privacyTextGroup) privacyTextGroup.hidden = L.privacyMode !== 'text';
       if (commit) { persistAdvanced(); updateGate(); }
@@ -16799,7 +16823,7 @@ function openPriceScheduleDialog() {
       privacyTextInline.addEventListener('input', commitPrivacyText);
       privacyTextInline.addEventListener('change', commitPrivacyText);
     }
-    document.querySelectorAll('.privacy-mode-toggle .seg__opt').forEach(b => b.addEventListener('click', () => { if (localeLocked()) return; setPrivacyMode(b.dataset.privacyMode, true); }));
+    document.querySelector('.privacy-mode-toggle')?.addEventListener('change', function () { if (localeLocked()) { setPrivacyMode(getPrivacyMode(), false); return; } const rr = this.querySelectorAll('fluent-radio'); let v = 'url'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setPrivacyMode(v, true); });
     setPrivacyMode(getPrivacyMode(), false);
     if (typeof updatePrivacyChrome === 'function') updatePrivacyChrome();
 

@@ -12,8 +12,8 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=114" />
-  <link rel="stylesheet" href="store-portal.css?v=90" />
+  <link rel="stylesheet" href="portal.css?v=119" />
+  <link rel="stylesheet" href="store-portal.css?v=99" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
@@ -269,11 +269,11 @@
       <div class="field">
         <div class="field__labelrow">
           <label class="field__label" for="pubName">App name</label>
-          <span class="field__info" tabindex="0" aria-label="About reserving an app name" aria-describedby="pubNameTip">
+          <span class="field__info" id="pubNameInfo" tabindex="0" aria-label="About reserving an app name">
             <iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-            <span class="field__tip" id="pubNameTip" role="tooltip">Make sure you have the rights to use any name you reserve. You must submit this app to the Microsoft Store within three months, or you’ll lose your name reservation. <a href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more</a></span>
           </span>
         </div>
+        <fluent-tooltip anchor="pubNameInfo" positioning="after">Make sure you have the rights to use any name you reserve. You must submit this app to the Microsoft Store within three months, or you’ll lose your name reservation.</fluent-tooltip>
         <fluent-text-input id="pubName" appearance="outline" aria-label="App name" placeholder="Your app name" style="width:100%"></fluent-text-input>
         <span class="field__hint" id="pubNameHint"></span>
       </div>
@@ -281,11 +281,11 @@
       <div class="field">
         <div class="field__labelrow">
           <label class="field__label" id="pubTypeLabel">Product type</label>
-          <span class="field__info" tabindex="0" aria-label="About product type" aria-describedby="pubTypeTip">
+          <span class="field__info" id="pubTypeInfo" tabindex="0" aria-label="About product type">
             <iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-            <span class="field__tip" id="pubTypeTip" role="tooltip">This can’t be changed later. Once you create the app, you can’t switch it between App and Game.</span>
           </span>
         </div>
+        <fluent-tooltip anchor="pubTypeInfo" positioning="after">This can’t be changed later. Once you create the app, you can’t switch it between App and Game.</fluent-tooltip>
         <fluent-radio-group id="pubType" class="pubchoice" orientation="horizontal" aria-labelledby="pubTypeLabel" value="app">
           <fluent-field label-position="after">
             <label slot="label" for="pt-app">App</label>
@@ -307,33 +307,34 @@
             <fluent-radio id="gt-store" slot="input" value="store" checked></fluent-radio>
           </fluent-field>
           <fluent-field label-position="after">
-            <label slot="label" for="gt-gdk">GDK game <span class="pub-badge">Xbox</span></label>
+            <label slot="label" for="gt-gdk">GDK game</label>
             <fluent-radio id="gt-gdk" slot="input" value="gdk"></fluent-radio>
           </fluent-field>
         </fluent-radio-group>
       </div>
 
-      <!-- Shown when GDK is chosen: this flow reserves MSIX/PWA only → send GDK to Partner Center. -->
-      <div class="pcnote" id="pubGdkNote" hidden>
-        <iconify-icon class="pcnote__ico" icon="fluent:info-16-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+      <!-- Shown when GDK is chosen: this flow reserves MSIX/PWA only → send GDK to Partner Center.
+           Real Fluent MessageBar (intent=info); id kept so syncGameChoice() can toggle [hidden]. -->
+      <fluent-message-bar class="pcnote" id="pubGdkNote" intent="info" layout="multiline" hidden>
+        <iconify-icon slot="icon" class="pcnote__ico" icon="fluent:info-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         <div class="pcnote__body">
           <strong>GDK games go through Partner Center</strong>
           <p>Reserve GDK (Game Development Kit) titles, dev kits, and ID@Xbox there. This portal publishes MSIX and PWA titles.</p>
-          <a class="pcnote__cta" href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" aria-label="Go to Partner Center (opens in a new tab)">
-            Go to Partner Center
-            <iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-          </a>
         </div>
-      </div>
+        <a slot="actions" class="pcnote__cta" href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" aria-label="Go to Partner Center (opens in a new tab)">
+          Go to Partner Center
+          <iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+        </a>
+      </fluent-message-bar>
 
       <div class="field" id="pubLangField">
         <div class="field__labelrow">
           <label class="field__label" for="pubLang">Default language</label>
-          <button type="button" class="field__info" aria-label="About the default language" aria-describedby="pubLangTip">
+          <button type="button" class="field__info" id="pubLangInfo" aria-label="About the default language">
             <iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-            <span class="field__tip" id="pubLangTip" role="tooltip">The language you’ll write your Store listing in. Customers whose language you haven’t added yet will see this one. You can add more languages any time.</span>
           </button>
         </div>
+        <fluent-tooltip anchor="pubLangInfo" positioning="after">The language you’ll write your Store listing in. Customers whose language you haven’t added yet will see this one. You can add more languages any time.</fluent-tooltip>
         <fluent-dropdown id="pubLang" appearance="outline" aria-label="Default language" style="width:100%">
           <fluent-listbox>
             <fluent-option value="en-US" selected>English (United States)</fluent-option>
@@ -400,21 +401,14 @@
     </div>
   </div>
 
-  <!-- Fluent 2 web components (real components + dark theme tokens) — the UNION of both portals:
-       Store modal needs Radio/Field; the WDP Certificates + Analytics tabs need Badge/Spinner/Drawer/Checkbox/Link. -->
-  <script type="module">
-    import { setTheme, FluentDesignSystem, AvatarDefinition, ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition,
-      DrawerDefinition, DrawerBodyDefinition, CheckboxDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition,
-      BadgeDefinition, CounterBadgeDefinition, SpinnerDefinition, LinkDefinition, RadioGroupDefinition, RadioDefinition, FieldDefinition, MessageBarDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
-    [AvatarDefinition, ButtonDefinition, TextInputDefinition, DialogDefinition, DialogBodyDefinition, DrawerDefinition, DrawerBodyDefinition,
-      CheckboxDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition, BadgeDefinition, CounterBadgeDefinition,
-      SpinnerDefinition, LinkDefinition, RadioGroupDefinition, RadioDefinition, FieldDefinition, MessageBarDefinition]
-      .forEach(function (d) { d.define(FluentDesignSystem.registry); });
-  </script>
+  <!-- Fluent 2 web components (rc.27): the all-in-one bundle auto-registers every element the app
+       uses (portal + store modal + WDP tabs). theme-fluent.js applies the theme tokens and adds a
+       small fluent-dialog/fluent-drawer show()/hide() fix (the built-in methods no-op in this build). -->
+  <script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-rc.27/dist/web-components.min.js"></script>
   <!-- Unified developer portal: portal.js runs in "unified" mode — Store-based shell with the WDP
        Certificates + Analytics experiences, one storage key, all apps in one table. -->
   <script>window.PORTAL_MODE = "unified";</script>
-  <script type="module" src="theme-fluent.js?v=61"></script>
-  <script src="portal.js?v=139"></script>
+  <script type="module" src="theme-fluent.js?v=64"></script>
+  <script src="portal.js?v=145"></script>
 </body>
 </html>

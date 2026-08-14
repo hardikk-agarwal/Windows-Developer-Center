@@ -295,29 +295,40 @@
       (cta || '') + '</div></div>';
   }
 
-  // Store-only "What you can publish" on-ramps — rendered inside the Overview zero state, below the
-  // 3-step sequence, as an always-visible reference for the package types you can bring (no accordion).
-  // Styles: store-portal.css (.pkgs / .pkg).
+  // Store-only "What you can publish": a Fluent Tablist (fluent-tablist/fluent-tab) swaps rich format
+  // cards; each card has a "Best for" cue + benefits so devs can self-select. CSS: .pubtabs/.pkg + :has().
   function storeOnrampsHTML() {
+    function pkg(o) {
+      var bens = o.benefits.map(function (b) {
+        return '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' + b + '</li>';
+      }).join('');
+      return '<div class="pkg' + (o.rec ? ' pkg--rec' : '') + '">' +
+        '<span class="pkg__ico"><iconify-icon icon="' + o.icon + '" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+        (o.rec ? '<span class="pkg__rec">Recommended</span>' : '') +
+        '<div class="pkg__t"><span class="pkg__name">' + o.name + '</span>' +
+        '<p class="pkg__desc">' + o.desc + '</p>' +
+        '<p class="pkg__for"><span class="pkg__for-lbl">Best for</span> ' + o.best + '</p>' +
+        '<ul class="pkg__benefits">' + bens + '</ul></div></div>';
+    }
     return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
-        '<p class="muted">Find the right fit for what you\u2019re building or already have.</p></div></div>' +
-      '<div class="pkgs">' +
-        '<div class="pkg pkg--rec"><span class="pkg__ico"><iconify-icon icon="fluent:cube-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkg__t"><span class="pkg__name">Packaged app · MSIX <span class="pkg__rec">Recommended</span></span>' +
-          '<p class="pkg__desc">Free hosting, code signing, and automatic updates — the most complete way to ship.</p></div></div>' +
-        '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:desktop-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkg__t"><span class="pkg__name">Desktop app · Win32</span>' +
-          '<p class="pkg__desc">Publish your existing .exe or .msi as-is, or convert to MSIX.</p></div></div>' +
-        '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:globe-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkg__t"><span class="pkg__name">Web app · PWA</span>' +
-          '<p class="pkg__desc">Turn your website into an installable app — nothing to rebuild.</p></div></div>' +
-        '<div class="pkg"><span class="pkg__ico"><iconify-icon icon="fluent:xbox-controller-20-regular" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-          '<div class="pkg__t"><span class="pkg__name">Game · GDK</span>' +
-          '<p class="pkg__desc">Reach players on Windows and Xbox with the Game Development Kit.</p></div></div>' +
+        '<p class="muted">Bring an app or a game \u2014 in the format you already have.</p></div></div>' +
+      '<div class="pubswitch">' +
+        '<fluent-tablist class="pubtabs" activeid="pt-apps" aria-label="Publish type">' +
+          '<fluent-tab id="pt-apps" aria-controls="pkgs-apps">Apps</fluent-tab>' +
+          '<fluent-tab id="pt-games" aria-controls="pkgs-games">Games</fluent-tab>' +
+        '</fluent-tablist>' +
+        '<div class="pkgs pkgs--apps" id="pkgs-apps" role="tabpanel" aria-labelledby="pt-apps">' +
+          pkg({ icon: 'fluent:box-20-regular', name: 'MSIX', rec: true, desc: 'The modern Windows app package (.msix).', best: 'New apps that want the full Store experience.', benefits: ['Automatic updates', 'Free hosting &amp; signing', 'Clean install / uninstall'] }) +
+          pkg({ icon: 'fluent:desktop-20-regular', name: 'Win32', desc: 'Your existing .exe or .msi desktop installer.', best: 'Desktop apps you want to list as-is.', benefits: ['Publish unchanged', 'Full desktop access', 'Keep your installer'] }) +
+          pkg({ icon: 'fluent:globe-20-regular', name: 'PWA', desc: 'Your website, packaged as an installable app.', best: 'Web apps that want a listing with no rebuild.', benefits: ['Reuse your web code', 'No native code', 'Quick to publish'] }) +
+        '</div>' +
+        '<div class="pkgs pkgs--games" id="pkgs-games" role="tabpanel" aria-labelledby="pt-games">' +
+          pkg({ icon: 'fluent:xbox-controller-20-regular', name: 'GDK', rec: true, desc: 'PC games built with the Game Development Kit.', best: 'New PC games, or existing Win32 games.', benefits: ['Xbox services &amp; achievements', 'Best game performance', 'Windows + Xbox reach'] }) +
+          pkg({ icon: 'fluent:box-20-regular', name: 'MSIX', desc: 'Existing UWP games, packaged as MSIX.', best: 'Games already built on UWP.', benefits: ['Reuse your UWP build', 'Free Store hosting', 'Automatic updates'] }) +
+          pkg({ icon: 'fluent:globe-20-regular', name: 'PWA', desc: 'Web-based games, packaged as an app.', best: 'Browser and HTML5 games.', benefits: ['Reuse your web code', 'No native build', 'Quick to publish'] }) +
+        '</div>' +
       '</div>' +
       '<div class="pkgs__foot">' +
-        '<fluent-button appearance="primary" size="large" data-newapp>' +
-          '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add your first app</fluent-button>' +
         '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
           '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
       '</div>';
@@ -535,15 +546,8 @@
     var el = $("overviewSummary");
     if (!el) return;
     if (STORE) {
-      if (!state.apps.length) {                          // fresh portal: guide to the first app, not links to empty views
-        el.innerHTML =
-          '<div class="block__head block__head--sub"><div><h2>How publishing works</h2></div></div>' +
-          '<div class="gsteps">' +
-            gstep(1, "Reserve your app name", "Pick a name and default language — it takes a minute.") +
-            gstep(2, "Add packages &amp; listing", "Upload your build, write your Store listing with screenshots, then set your age rating and price.") +
-            gstep(3, "Submit &amp; go live", "Pass certification and reach customers across Windows.") +
-          '</div>' +
-          storeOnrampsHTML();
+      if (!state.apps.length) {                          // fresh portal: one focused path — the hero's single CTA + what you can publish
+        el.innerHTML = storeOnrampsHTML();
         return;
       }
       el.innerHTML = unifiedDashHTML();
@@ -944,7 +948,7 @@
   function appTypeMeta(a) {
     if (a.type === "game" || a.productKind === "game") return { key: "game", label: "Game", icon: "fluent:xbox-controller-20-regular" };
     var pk = a.packageType || pkgFromFile(a.file);
-    if (pk === "msix") return { key: "msix", label: "MSIX app", icon: "fluent:cube-20-regular" };
+    if (pk === "msix") return { key: "msix", label: "MSIX app", icon: "fluent:box-20-regular" };
     if (pk === "pwa") return { key: "pwa", label: "Web app", icon: "fluent:globe-20-regular" };
     if (pk === "win32") return { key: "win32", label: "Desktop app", icon: "fluent:desktop-20-regular" };
     return { key: "", label: "", icon: "" };   // no package added yet → no type to show

@@ -87,3 +87,34 @@ else wireToggle();
 
 // Expose for any code that renders illustrations imperatively.
 window.syncThemeImages = () => syncThemeImages(document);
+
+// ── Fluent dialog/drawer open fix ────────────────────────────────────────────
+// On this build, <fluent-dialog>/<fluent-drawer> .show()/.hide() defer their work through FAST's
+// update queue (Updates.enqueue), which isn't flushed here — so the methods silently no-op and the
+// modal never opens. Drive the captured native <dialog> directly (showModal()/close()), which is
+// reliable and still gives the backdrop, Esc-to-close and focus trap. Re-dispatch a `toggle` event
+// (portal.js listens for newState:'closed' to reset dialog state).
+function patchNativeDialog(tag) {
+  const ctor = customElements.get(tag);
+  if (!ctor || ctor.prototype.__nativeOpenPatched) return !!ctor;
+  const proto = ctor.prototype;
+  proto.__nativeOpenPatched = true;
+  proto.show = function () {
+    const nd = this.dialog || (this.shadowRoot && this.shadowRoot.querySelector('dialog'));
+    if (!nd || nd.open) return;
+    try { nd.showModal(); } catch (_) { try { nd.show(); } catch (__) {} }
+    if (!this.__closeWired) {
+      this.__closeWired = true;
+      nd.addEventListener('close', () => this.dispatchEvent(new CustomEvent('toggle', { detail: { newState: 'closed' } })));
+    }
+    this.dispatchEvent(new CustomEvent('toggle', { detail: { newState: 'open' } }));
+  };
+  proto.hide = function () {
+    const nd = this.dialog || (this.shadowRoot && this.shadowRoot.querySelector('dialog'));
+    if (nd && nd.open) nd.close();
+  };
+  return true;
+}
+['fluent-dialog', 'fluent-drawer'].forEach((tag) => {
+  if (!patchNativeDialog(tag)) customElements.whenDefined(tag).then(() => patchNativeDialog(tag));
+});

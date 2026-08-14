@@ -2,8 +2,8 @@
 // Imports setTheme + Fluent 2 token presets via esm.sh (which bundles deps for the browser),
 // applies the theme based on <html data-theme="light|dark">, and wires the topbar
 // <fluent-switch id="theme-toggle"> to flip it.
-import { setTheme } from 'https://esm.sh/@fluentui/web-components@3.0.0-beta.133';
-import { webLightTheme, webDarkTheme } from 'https://esm.sh/@fluentui/tokens@1.0.0-alpha.23';
+import { setTheme } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
+import { webLightTheme, webDarkTheme } from 'https://esm.sh/@fluentui/tokens';
 
 // Log which Fluent custom elements actually got registered so we can see in
 // DevTools whether the bundle wired up fluent-dialog + fluent-dialog-body.
@@ -16,11 +16,11 @@ window.addEventListener('DOMContentLoaded', () => {
 // import their define modules at runtime (guarded so duplicate-define doesn't throw).
 (async () => {
   if (!customElements.get('fluent-dialog')) {
-    try { await import('https://esm.sh/@fluentui/web-components@3.0.0-beta.133/dist/esm/dialog/define.js'); }
+    try { await import('https://esm.sh/@fluentui/web-components@3.0.0-rc.27/dist/esm/dialog/define.js'); }
     catch (e) { console.error('[fluent] dialog import failed', e); }
   }
   if (!customElements.get('fluent-dialog-body')) {
-    try { await import('https://esm.sh/@fluentui/web-components@3.0.0-beta.133/dist/esm/dialog-body/define.js'); }
+    try { await import('https://esm.sh/@fluentui/web-components@3.0.0-rc.27/dist/esm/dialog-body/define.js'); }
     catch (e) { console.error('[fluent] dialog-body import failed', e); }
   }
 })();
@@ -85,3 +85,33 @@ if (document.readyState === 'loading') {
 } else {
   wireToggle();
 }
+
+// ── Fluent dialog/drawer open fix ────────────────────────────────────────────
+// On this build, <fluent-dialog>/<fluent-drawer> .show()/.hide() defer their work through FAST's
+// update queue (Updates.enqueue), which isn't flushed here — so the methods silently no-op and the
+// modal never opens. Drive the captured native <dialog> directly (showModal()/close()), which is
+// reliable and still gives the backdrop, Esc-to-close and focus trap.
+function patchNativeDialog(tag) {
+  const ctor = customElements.get(tag);
+  if (!ctor || ctor.prototype.__nativeOpenPatched) return !!ctor;
+  const proto = ctor.prototype;
+  proto.__nativeOpenPatched = true;
+  proto.show = function () {
+    const nd = this.dialog || (this.shadowRoot && this.shadowRoot.querySelector('dialog'));
+    if (!nd || nd.open) return;
+    try { nd.showModal(); } catch (_) { try { nd.show(); } catch (__) {} }
+    if (!this.__closeWired) {
+      this.__closeWired = true;
+      nd.addEventListener('close', () => this.dispatchEvent(new CustomEvent('toggle', { detail: { newState: 'closed' } })));
+    }
+    this.dispatchEvent(new CustomEvent('toggle', { detail: { newState: 'open' } }));
+  };
+  proto.hide = function () {
+    const nd = this.dialog || (this.shadowRoot && this.shadowRoot.querySelector('dialog'));
+    if (nd && nd.open) nd.close();
+  };
+  return true;
+}
+['fluent-dialog', 'fluent-drawer'].forEach((tag) => {
+  if (!patchNativeDialog(tag)) customElements.whenDefined(tag).then(() => patchNativeDialog(tag));
+});

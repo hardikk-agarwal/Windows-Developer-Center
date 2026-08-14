@@ -12,7 +12,7 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=73" />
+  <link rel="stylesheet" href="portal.css?v=74" />
   <link rel="stylesheet" href="signup.css?v=62" />
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
@@ -148,16 +148,9 @@
     </div>
   </div>
 
-  <!-- Fluent 2 web components (real components + dark theme tokens) -->
-  <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
-    ButtonDefinition.define(FluentDesignSystem.registry);
-    TextInputDefinition.define(FluentDesignSystem.registry);
-    DropdownDefinition.define(FluentDesignSystem.registry);
-    ListboxDefinition.define(FluentDesignSystem.registry);
-    DropdownOptionDefinition.define(FluentDesignSystem.registry);
-  </script>
-  <script type="module" src="theme-fluent.js?v=61"></script>
+  <!-- Fluent 2 web components (stable 3.1.0): all-in-one bundle auto-registers every element used. -->
+  <script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-rc.27/dist/web-components.min.js"></script>
+  <script type="module" src="theme-fluent.js?v=64"></script>
   <script src="signup.js?v=62"></script>
 </body>
 </html>
