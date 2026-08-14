@@ -55,6 +55,13 @@
     return name.replace(/\.[^.]+$/, "").split(/[\s_\-.]+/).filter(Boolean).slice(0, 2)
       .map(function (w) { return w[0].toUpperCase(); }).join("") || "AP";
   }
+  // Fluent Avatar "colorful" palette — a soft Background2 fill + readable Foreground2 initials, both
+  // theme-aware tokens (auto light/dark). Pick one deterministically by hashing the name.
+  var AVATAR_COLORS = ["DarkRed", "Cranberry", "Red", "Pumpkin", "Peach", "Marigold", "Gold", "Brass", "Brown", "Forest", "Seafoam", "DarkGreen", "LightGreen", "Green", "Teal", "Steel", "Blue", "RoyalBlue", "Cornflower", "Navy", "Lavender", "Purple", "Grape", "Lilac", "Pink", "Magenta", "Plum", "Beige", "Mink", "Platinum", "Anchor"];
+  function avatarColorName(seed) { return AVATAR_COLORS[Math.abs(hashStr(seed)) % AVATAR_COLORS.length]; }
+  function avatarTint(seed) { var n = avatarColorName(seed); return { bg: "var(--colorPalette" + n + "Background2)", fg: "var(--colorPalette" + n + "Foreground2)" }; }
+  // Vivid single hue for the generated tile handed to the publishing flow (its themedAppLogo re-tints
+  // by reading the gradient stop-color, so this stays a gradient with a concrete hex).
   var PALETTE = ["#0F6CBD", "#8661C5", "#107C41", "#C239B3", "#D83B01", "#0B6A0B"];
   function colorFor(seed) { return PALETTE[Math.abs(hashStr(seed)) % PALETTE.length]; }
   // A data-URL copy of the portal's app tile (gradient + initials) so the publishing header + live
@@ -383,21 +390,22 @@
     '</section>';
   }
   function ovxAppRow(a) {
-    var k = appStatusKey(a);
-    var pc = k === "live" ? "pill--ok" : k === "rejected" ? "pill--warn" : k === "in-review" ? "pill--info" : "pill--ghost";
-    var pt = k === "live" ? "In the Store" : k === "rejected" ? "Needs attention" : k === "in-review" ? "In certification" : "Draft";
-    var rd = (k === "live") ? ratingsData(a) : null;
-    var m = (k === "live")
+    var k = appStatusKey(a), live = k === "live";
+    var pc = k === "rejected" ? "pill--warn" : k === "in-review" ? "pill--info" : "pill--ghost";
+    var pt = k === "rejected" ? "Needs attention" : k === "in-review" ? "In certification" : "Draft";
+    var rd = live ? ratingsData(a) : null, an = live ? anaData(a) : null;
+    // Live apps read as a scorecard (installs / rating / crash, red when elevated); pre-live apps show a status pill.
+    var right = live
       ? '<span class="ovx-app__stats">' +
           '<span class="ovx-app__metric" title="Installs"><iconify-icon icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' + fmtCompact(acqData(a).instTotal) + '</span>' +
           (rd && rd.total ? '<span class="ovx-app__metric ovx-app__metric--star" title="Average rating"><iconify-icon icon="fluent:star-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' + rd.avg.toFixed(1) + '</span>' : "") +
+          (an && an.crashRate != null ? '<span class="ovx-app__metric' + (an.crashRate >= 5 ? ' ovx-app__metric--warn' : '') + '" title="Crash rate"><iconify-icon icon="fluent:pulse-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' + an.crashRate.toFixed(2) + '%</span>' : "") +
         '</span>'
-      : "";
+      : '<span class="pill ' + pc + ' pill--sm">' + pt + '</span>';
     return '<button type="button" class="ovx-app" data-openapp="' + a.id + '">' +
       appIcoImg(a) +
-      '<span class="ovx-app__t"><strong>' + esc(a.storeName || a.name) + '</strong>' +
-        '<span class="pill ' + pc + ' pill--sm">' + pt + '</span></span>' +
-      m +
+      '<span class="ovx-app__t"><strong>' + esc(a.storeName || a.name) + '</strong></span>' +
+      right +
       '<iconify-icon class="ovx-app__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
     '</button>';
   }
@@ -474,7 +482,7 @@
       return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (statusRank(a) - statusRank(b));
     });
     var live = apps.filter(function (a) { return a.store || a.storeStatus === "published"; });
-    var totalInstalls = 0, ratingSum = 0, ratingWt = 0, worstCrash = null, ratedCount = 0;
+    var totalInstalls = 0, ratingSum = 0, ratingWt = 0, worstCrash = null, worstCrashApp = null, ratedCount = 0;
     var instSeries = null, rateSeries = null, crashSeries = null;
     live.forEach(function (a) {
       var ac = acqData(a); totalInstalls += ac.instTotal || 0;
@@ -485,7 +493,7 @@
         if (!rateSeries) rateSeries = rd.avgSeries.slice(); else rd.avgSeries.forEach(function (v, i) { rateSeries[i] += v; });
       }
       var an = anaData(a), cr = an.crashRate;
-      if (cr != null && (worstCrash == null || cr > worstCrash)) worstCrash = cr;
+      if (cr != null && (worstCrash == null || cr > worstCrash)) { worstCrash = cr; worstCrashApp = a; }
       var cs = an.hits && an.hits.series && an.hits.series[0] && an.hits.series[0].values;
       if (cs) { if (!crashSeries) crashSeries = cs.slice(); else cs.forEach(function (v, i) { crashSeries[i] += v; }); }
     });
@@ -495,9 +503,15 @@
     // KPI cards reuse the Analytics summary card (sumCard / .sumcard) verbatim — same card, same sparkline.
     var tiles = "";
     if (live.length) {
-      tiles += sumCard("Installs", fmtCompact(totalInstalls), live.length > 1 ? ("Across " + live.length + " live apps") : "Last 28 days", instSeries, "var(--brand)");
-      if (avgRating != null) tiles += sumCard("Avg rating", avgRating.toFixed(1), fmtCompact(ratingWt) + " ratings", rateSeries, "#f7b955");
-      if (worstCrash != null) tiles += sumCard(live.length > 1 ? "Worst crash rate" : "Crash rate", worstCrash.toFixed(2) + "%", worstCrash >= 5 ? "Needs a look" : "Healthy", crashSeries, worstCrash >= 5 ? "#e5484d" : "#4ad17a");
+      var multi = live.length > 1;
+      tiles += sumCard("Installs", fmtCompact(totalInstalls), multi ? ("Across " + live.length + " live apps") : "Last 28 days", instSeries, "var(--brand)");
+      if (avgRating != null) tiles += sumCard("Avg rating", avgRating.toFixed(1), fmtCompact(ratingWt) + " ratings" + (multi ? " \u00b7 across " + ratedCount + " apps" : ""), rateSeries, "var(--gold)");
+      if (worstCrash != null) {
+        // Name the app driving the highest crash so it reads as a per-app max, not a blended number.
+        var crashName = worstCrashApp ? (worstCrashApp.storeName || worstCrashApp.name) : "";
+        var crashSub = multi ? ((crashName ? crashName + " \u00b7 " : "") + (worstCrash >= 5 ? "needs a look" : "healthy")) : (worstCrash >= 5 ? "Needs a look" : "Healthy");
+        tiles += sumCard(multi ? "Highest crash rate" : "Crash rate", worstCrash.toFixed(2) + "%", crashSub, crashSeries, worstCrash >= 5 ? "var(--danger)" : "var(--ok)");
+      }
       tiles = '<div class="ovx-metrics">' + tiles + '</div>';
     }
     var appsCard =
@@ -572,7 +586,7 @@
         '<div class="dropzone__bar js-bar" hidden></div></div>';
     var list = '<ul class="filelist js-filelist"></ul>';
 
-    var err = '<div class="msgbar msgbar--error js-error" role="alert" hidden></div>';
+    var err = '<fluent-message-bar class="js-error" intent="error" layout="multiline" role="alert" hidden></fluent-message-bar>';
 
     if (inline) {
       return '<div class="hsteps">' +
@@ -689,13 +703,13 @@
       }
       // Nothing accepted — surface the reasons in place (don't re-render the flow)
       if (rejected.length && err) {
-        var icon = '<iconify-icon class="msgbar__icon" icon="fluent:error-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
+        var icon = '<iconify-icon slot="icon" class="msgbar__icon" icon="fluent:error-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
         var body = rejected.length === 1
           ? '<strong>We couldn’t verify ' + esc(rejected[0].name) + '</strong><p>' + esc(rejected[0].reason) + '</p>'
           : '<strong>We couldn’t verify ' + rejected.length + ' files</strong><ul>' +
             rejected.map(function (r) { return '<li><strong>' + esc(r.name) + '</strong> — ' + esc(r.reason) + '</li>'; }).join("") + '</ul>';
         err.innerHTML = icon + '<div class="msgbar__content">' + body + '</div>' +
-          '<button type="button" class="msgbar__dismiss js-error-dismiss" aria-label="Dismiss">✕</button>';
+          '<button type="button" slot="dismiss" class="msgbar__dismiss js-error-dismiss" aria-label="Dismiss">✕</button>';
         err.hidden = false;
       } else {
         toast("Nothing added", true);
@@ -1041,14 +1055,15 @@
       var src = /^(data:|https?:|\/)/i.test(a.icon) ? a.icon : ('data:image/png;base64,' + a.icon);
       return '<span class="app-ico app-ico--img"><img src="' + src + '" alt="" /></span>';
     }
-    return '<span class="app-ico" style="background:linear-gradient(135deg,' + colorFor(a.name) + ',#0b2a4a)">' + esc(initials(a.name)) + '</span>';
+    var t = avatarTint(a.name);
+    return '<span class="app-ico" style="background:' + t.bg + ';color:' + t.fg + '">' + esc(initials(a.name)) + '</span>';
   }
   // Merge a logo saved during publishing (msstore.apps) into the portal's apps, matched by id.
   function mergePublishIcons() {
     var ms; try { ms = JSON.parse(localStorage.getItem("msstore.apps")) || []; } catch (e) { return; }
     if (!Array.isArray(ms)) return;
     var byId = {}; ms.forEach(function (x) { if (x && x.id) byId[x.id] = x; });
-    state.apps.forEach(function (a) { var m = byId[a.id]; if (m) { if (m.icon) a.icon = m.icon; if (m.packageType) a.packageType = m.packageType; } });
+    state.apps.forEach(function (a) { var m = byId[a.id]; if (m) { if (m.icon) a.icon = m.icon; if (m.packageType != null) a.packageType = m.packageType; } });
   }
   // Store portal only: cert-discovered apps stay locked (no crash analytics / distribution) until the
   // developer proves they OWN the signing certificate by signing our verification file. WDP verifies
@@ -2724,7 +2739,7 @@
     var a = publishId ? appById(publishId) : null;
     if (!a) {                                            // new app — added to the table right now
       var cert = state.certs.filter(function (c) { return c.trust === "Valid"; })[0] || state.certs[0] || null;
-      a = { id: uid(), name: name, file: name.replace(/\s+/g, "") + ".exe", size: "", icon: null,
+      a = { id: uid(), name: name, file: "", size: "", icon: null,   // no package yet -> no "Type" until one is added
         signerThumb: cert ? cert.thumb : null, signerSubject: null, trust: "Valid",
         certId: cert ? cert.id : null, sources: [], store: false, added: today(), created: true };
       state.apps.push(a);
@@ -2818,7 +2833,7 @@
     return [
       { id: "app-demo-store", name: "Pixel Paint Studio", icon: null, file: "PixelPaintStudio.exe", size: "", sources: [], created: true, store: true, storeStatus: "published", storeLang: "en-US", storeCreated: today(), added: today() },
       { id: "app-demo-cert", name: "Northwind Invoicing", icon: null, file: "NorthwindInvoicing.exe", size: "", sources: [], created: true, store: false, storeStatus: "in-review", storeLang: "en-US", storeCreated: today(), added: today() },
-      { id: "app-demo-draft", name: "Mica Weather", icon: null, file: "MicaWeather.exe", size: "", sources: [], created: true, store: false, storeStatus: "in-progress", storeLang: "en-US", storeCreated: today(), added: today() }
+      { id: "app-demo-draft", name: "Mica Weather", icon: null, file: "", size: "", sources: [], created: true, store: false, storeStatus: "in-progress", storeLang: "en-US", storeCreated: today(), added: today() }
     ];
   }
   // Demo: sign in as the Store developer — 1 published app — and open the Store portal.
@@ -2838,7 +2853,7 @@
           storeCreated: today(), added: today()
         }, {
           id: "app-demo-draft", name: "Mica Weather", icon: null,
-          file: "MicaWeather.exe", size: "", sources: [], created: true,
+          file: "", size: "", sources: [], created: true,
           store: false, storeStatus: "in-progress", storeLang: "en-US",
           storeCreated: today(), added: today()
         }]

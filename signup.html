@@ -12,8 +12,8 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=69" />
-  <link rel="stylesheet" href="signup.css?v=61" />
+  <link rel="stylesheet" href="portal.css?v=73" />
+  <link rel="stylesheet" href="signup.css?v=62" />
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
 <body>
@@ -125,18 +125,20 @@
 
       <div class="field">
         <label class="field__label" for="pubLang">Default language</label>
-        <select id="pubLang" class="select" aria-label="Default language" style="width:100%">
-          <option value="en-US">English (United States)</option>
-          <option value="en-GB">English (United Kingdom)</option>
-          <option value="es-ES">Spanish (Spain)</option>
-          <option value="fr-FR">French (France)</option>
-          <option value="de-DE">German (Germany)</option>
-          <option value="pt-BR">Portuguese (Brazil)</option>
-          <option value="it-IT">Italian (Italy)</option>
-          <option value="ja-JP">Japanese</option>
-          <option value="zh-CN">Chinese (Simplified)</option>
-          <option value="hi-IN">Hindi (India)</option>
-        </select>
+        <fluent-dropdown id="pubLang" appearance="outline" aria-label="Default language" style="width:100%">
+          <fluent-listbox>
+            <fluent-option value="en-US" selected>English (United States)</fluent-option>
+            <fluent-option value="en-GB">English (United Kingdom)</fluent-option>
+            <fluent-option value="es-ES">Spanish (Spain)</fluent-option>
+            <fluent-option value="fr-FR">French (France)</fluent-option>
+            <fluent-option value="de-DE">German (Germany)</fluent-option>
+            <fluent-option value="pt-BR">Portuguese (Brazil)</fluent-option>
+            <fluent-option value="it-IT">Italian (Italy)</fluent-option>
+            <fluent-option value="ja-JP">Japanese</fluent-option>
+            <fluent-option value="zh-CN">Chinese (Simplified)</fluent-option>
+            <fluent-option value="hi-IN">Hindi (India)</fluent-option>
+          </fluent-listbox>
+        </fluent-dropdown>
       </div>
 
       <div class="modal__foot">
@@ -148,11 +150,14 @@
 
   <!-- Fluent 2 web components (real components + dark theme tokens) -->
   <script type="module">
-    import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
+    import { setTheme, FluentDesignSystem, ButtonDefinition, TextInputDefinition, DropdownDefinition, ListboxDefinition, DropdownOptionDefinition } from 'https://esm.sh/@fluentui/web-components@3.0.0-rc.27';
     ButtonDefinition.define(FluentDesignSystem.registry);
     TextInputDefinition.define(FluentDesignSystem.registry);
+    DropdownDefinition.define(FluentDesignSystem.registry);
+    ListboxDefinition.define(FluentDesignSystem.registry);
+    DropdownOptionDefinition.define(FluentDesignSystem.registry);
   </script>
   <script type="module" src="theme-fluent.js?v=61"></script>
-  <script src="signup.js?v=61"></script>
+  <script src="signup.js?v=62"></script>
 </body>
 </html>

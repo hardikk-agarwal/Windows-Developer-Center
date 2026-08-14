@@ -1,0 +1,12 @@
+{
+  "name": "udx-ai-proxy",
+  "version": "1.0.0",
+  "description": "Server-side proxy for Azure AI Foundry — keeps the key off the browser. Deploy as an Azure Functions app (GitHub Pages frontend) or as the api/ of an Azure Static Web App.",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0"
+  }
+}

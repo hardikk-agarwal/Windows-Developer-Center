@@ -31,6 +31,13 @@ const AI_CONFIG = Object.freeze({
   imageEnabled:  !!(window.AI_CONFIG?.enabled && window.AI_CONFIG?.imageEndpoint && window.AI_CONFIG?.imageModel && window.AI_CONFIG?.apiKey),
 });
 
+// Base URL for the AI proxy, overridable for STATIC hosts (e.g. GitHub Pages)
+// that have no same-origin server. ai-proxy-config.js sets window.AI_PROXY_BASE
+// to a deployed serverless proxy origin that holds the key server-side. This is
+// a PUBLIC URL, never a secret. Empty = same-origin (node server.js / SWA api).
+const AI_PROXY_BASE = String(window.AI_PROXY_BASE || '').replace(/\/+$/, '');
+function aiProxyUrl(path) { return AI_PROXY_BASE + path; }
+
 if (!AI_CONFIG.enabled) {
   console.info('[ai-client] No embedded AI key — will check the server /api/ai proxy; falls back to keyword heuristics if neither is configured.');
 }
@@ -71,7 +78,7 @@ async function callResponses({ system, user, schema, maxOutputTokens = 4000, rea
     };
   }
 
-  const res = await fetch(AI_CONFIG.enabled ? AI_CONFIG.endpoint : '/api/ai/responses', {
+  const res = await fetch(AI_CONFIG.enabled ? AI_CONFIG.endpoint : aiProxyUrl('/api/ai/responses'), {
     method: 'POST',
     headers: AI_CONFIG.enabled
       ? { 'Content-Type': 'application/json', 'api-key': AI_CONFIG.apiKey }
@@ -259,7 +266,7 @@ async function aiGenerateImage({ prompt, size = '1024x1024' }) {
     size,
     n: 1,
   });
-  const res = await fetch(direct ? AI_CONFIG.imageEndpoint : '/api/ai/images', {
+  const res = await fetch(direct ? AI_CONFIG.imageEndpoint : aiProxyUrl('/api/ai/images'), {
     method: 'POST',
     headers: direct
       ? { 'api-key': AI_CONFIG.apiKey, 'Content-Type': 'application/json' }
@@ -381,7 +388,7 @@ window.AI = {
 (function probeServerAI() {
   if (AI_CONFIG.enabled && AI_CONFIG.imageEnabled) return; // already fully enabled by a local key
   try {
-    fetch('/api/ai/status', { headers: { Accept: 'application/json' } })
+    fetch(aiProxyUrl('/api/ai/status'), { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (s) {
         if (!s) return;

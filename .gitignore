@@ -1,6 +1,8 @@
 # Local-only AI config — holds a private Azure key. Never commit it.
 # Copy publishing/ai-config.template.js -> publishing/ai-config.js and add your key.
 publishing/ai-config.js
+# Azure Functions AI proxy — local secrets (copy api/local.settings.json.example -> api/local.settings.json).
+api/local.settings.json
 
 # OS / editor cruft
 .DS_Store

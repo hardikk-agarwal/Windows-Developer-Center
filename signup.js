@@ -466,9 +466,26 @@
   }
 
   /* ---------- reserve-name dialog (Store path; same dialog as the Store portal) ---------- */
+  // Read/write a dropdown value whether it's a native <select> or a Fluent <fluent-dropdown>.
+  function ddGet(el) {
+    if (!el) return null;
+    if (el.value) return el.value;
+    var o = el.querySelector('fluent-option[aria-selected="true"], fluent-option[selected]');
+    return o ? o.getAttribute("value") : null;
+  }
+  function ddSet(el, val) {
+    if (!el) return;
+    if (el.tagName === "SELECT") { el.value = val; return; }
+    try { el.value = val; } catch (e) {}
+    var opts = el.querySelectorAll("fluent-option");
+    for (var i = 0; i < opts.length; i++) {
+      if (opts[i].getAttribute("value") === val) opts[i].setAttribute("selected", "");
+      else opts[i].removeAttribute("selected");
+    }
+  }
   function openReserve() {
     if ($("pubName")) $("pubName").value = "";
-    if ($("pubLang")) $("pubLang").value = "en-US";
+    ddSet($("pubLang"), "en-US");
     if ($("publishModal")) $("publishModal").hidden = false;
     document.addEventListener("keydown", escReserve);
     checkPubName();
@@ -492,7 +509,7 @@
   // opens the publishing flow.
   function createApp() {
     var n = $("pubName"); var name = ((n && n.value) || "").trim(); if (name.length < 2) return;
-    var lang = ($("pubLang") && $("pubLang").value) || "en-US";
+    var lang = ddGet($("pubLang")) || "en-US";
     seedStorePortal();
     location.href = "store-portal.html?create=" + encodeURIComponent(name) + "&lang=" + encodeURIComponent(lang) + "#apps";
   }

@@ -231,11 +231,8 @@ iconify-icon {
 /* ---------- Top bar ---------- */
 .topbar {
   grid-area: topbar;
-  /* Mica-style chrome: a whisper of brand over translucent canvas, a brand-tinted seam,
-     and a soft shadow so the bar reads as elevated product chrome (theme-aware via color-mix). */
-  background:
-    linear-gradient(color-mix(in srgb, var(--brand) 4%, transparent), transparent),
-    color-mix(in srgb, var(--canvas) 84%, transparent);
+  /* Mica-style chrome: translucent canvas + blur so the bar reads as elevated product chrome. */
+  background: color-mix(in srgb, var(--canvas) 84%, transparent);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   color: var(--fg-1);
@@ -258,7 +255,7 @@ iconify-icon {
   transition: background .15s, color .15s;
 }
 .topbar__hamburger:hover { background: var(--subtle); color: var(--fg-1); }
-.topbar__brand { display: flex; align-items: center; gap: var(--sp-12); font-size: 15px; }
+.topbar__brand { display: flex; align-items: center; gap: var(--sp-12); font-size: 16px; }
 .topbar__brand-name { font-weight: 600; color: var(--fg-1); }
 .topbar__brand-divider { width: 1px; height: 22px; background: var(--stroke-1); }
 .topbar__brand-sub { color: var(--fg-3); font-weight: 400; }
@@ -302,7 +299,7 @@ iconify-icon {
   height: 20px; padding: 0 var(--sp-6);
   margin-right: var(--sp-6);
   border: 1px solid var(--stroke-1); border-radius: var(--r-4);
-  font-size: 11px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   color: var(--fg-4); background: color-mix(in srgb, var(--canvas) 40%, transparent);
 }
 .topbar__search-clear {
@@ -356,17 +353,14 @@ iconify-icon {
 /* ---------- Left rail ---------- */
 .rail {
   grid-area: rail;
-  /* Brand-tinted gradient — saturated at the top, fades into the neutral canvas
-     so the rail carries the Microsoft accent while the main content stays neutral. */
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand) 18%, transparent) 0%, color-mix(in srgb, var(--brand) 4%, transparent) 50%, transparent 100%),
-    var(--canvas);
+  /* Flat subtle brand-tinted rail so the Microsoft accent reads without a gradient. */
+  background: color-mix(in srgb, var(--brand) 7%, var(--canvas));
   padding: var(--sp-16) var(--sp-12);
   display: flex; flex-direction: column;
   gap: 2px; overflow-y: auto;
 }
 .rail__group-label {
-  font-size: 11px; line-height: 16px;
+  font-size: 12px; line-height: 16px;
   color: var(--fg-4);
   padding: var(--sp-16) var(--sp-12) var(--sp-6);
   font-weight: 600; letter-spacing: .6px;
@@ -527,7 +521,7 @@ iconify-icon {
   border-left: 3px solid var(--brand);
   border-radius: var(--r-8);
   padding: var(--sp-12) var(--sp-16);
-  font-size: 13px; line-height: 18px;
+  font-size: 14px; line-height: 18px;
   color: var(--fg-2);
   margin-top: var(--sp-16);
   backdrop-filter: blur(8px);
@@ -623,7 +617,7 @@ iconify-icon {
 .btn--ghost:hover { background: var(--subtle); }
 
 .btn--sm { height: 32px; padding: 0 var(--sp-12); }
-.btn--lg { height: 44px; padding: 0 var(--sp-24); font-size: 15px; }
+.btn--lg { height: 44px; padding: 0 var(--sp-24); font-size: 16px; }
 
 /* Circle chevron CTA */
 .cta-chevron {
@@ -679,11 +673,7 @@ iconify-icon {
    ============================================================ */
 .hero-wrap { padding: var(--sp-48) 0 var(--sp-120); }
 .hero {
-  /* Brand-tinted diagonal — blue → neutral → purple. Adapts to both themes via color-mix. */
-  background:
-    radial-gradient(60% 90% at 0% 0%, color-mix(in srgb, var(--brand) 14%, transparent) 0%, transparent 60%),
-    radial-gradient(50% 80% at 100% 100%, color-mix(in srgb, var(--accent-purple) 12%, transparent) 0%, transparent 65%),
-    linear-gradient(160deg, var(--layer) 0%, var(--canvas-tint) 100%);
+  background: var(--layer);
   border: 1px solid var(--stroke-2);
   border-radius: var(--r-16);
   overflow: hidden;
@@ -714,7 +704,7 @@ iconify-icon {
 }
 .hero__eyebrow::before {
   content: ""; width: 28px; height: 2px;
-  background: linear-gradient(90deg, var(--brand) 0%, var(--accent-purple) 100%);
+  background: var(--brand);
   border-radius: 2px;
 }
 .hero__title {
@@ -730,9 +720,7 @@ iconify-icon {
 }
 .hero__title em {
   font-style: normal;
-  background: linear-gradient(120deg, var(--brand) 0%, var(--accent-purple) 100%);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
+  color: var(--brand-hover);
 }
 .hero__desc {
   /* Fluent 2 Subtitle 1 — 20/28 */
@@ -747,7 +735,7 @@ iconify-icon {
 .hero__meta {
   margin-top: var(--sp-32);
   display: flex; gap: var(--sp-20);
-  font-size: 13px; color: var(--fg-3);
+  font-size: 14px; color: var(--fg-3);
   flex-wrap: nowrap;
 }
 .hero__meta-item {
@@ -848,7 +836,7 @@ iconify-icon {
 }
 .section-eyebrow::before {
   content: ""; width: 24px; height: 2px;
-  background: linear-gradient(90deg, var(--brand) 0%, var(--accent-purple) 100%);
+  background: var(--brand);
   border-radius: 2px;
 }
 .section-title {
@@ -907,9 +895,7 @@ iconify-icon {
 }
 .card:active { transform: translateY(-1px); transition-duration: var(--dur-1); }
 .card:hover .card__media--illust {
-  background:
-    radial-gradient(60% 60% at 50% 35%, color-mix(in srgb, var(--brand) 28%, transparent) 0%, transparent 70%),
-    radial-gradient(80% 80% at 50% 40%, var(--layer) 0%, var(--canvas-tint) 100%);
+  background: color-mix(in srgb, var(--brand) 14%, var(--layer));
 }
 .card__media {
   height: 180px;
@@ -921,10 +907,7 @@ iconify-icon {
 /* Card media variant for full Fluent spot illustrations (PNG) */
 .card__media--illust {
   height: 220px;
-  /* Brand-tinted backdrop — radial glow centered on the illustration */
-  background:
-    radial-gradient(60% 60% at 50% 35%, color-mix(in srgb, var(--brand) 18%, transparent) 0%, transparent 70%),
-    radial-gradient(80% 80% at 50% 40%, var(--layer) 0%, var(--canvas-tint) 100%);
+  background: color-mix(in srgb, var(--brand) 8%, var(--layer));
   padding: var(--sp-16);
   overflow: hidden;
   transition: background .3s ease;
@@ -1005,7 +988,7 @@ iconify-icon {
   display: inline-flex; align-items: center;
   background: var(--brand-tint-60);
   color: var(--brand-hover);
-  font-size: 11px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   padding: 2px 8px;
   border-radius: var(--r-full);
   letter-spacing: .4px;
@@ -1018,12 +1001,12 @@ iconify-icon {
 /* ============================================================
    Card media variants
    ============================================================ */
-.media--msix     { background: linear-gradient(135deg, #0B2A4A 0%, #0F4577 100%); }
-.media--win32    { background: linear-gradient(135deg, #1F2A38 0%, #2D3D55 100%); }
-.media--msixgame { background: linear-gradient(135deg, #2D1D52 0%, #4A2978 100%); }
-.media--gdk      { background: linear-gradient(135deg, #0F3F12 0%, #1F6E1F 100%); }
-.media--step2    { background: linear-gradient(135deg, #0B2A4A 0%, #0F4577 100%); }
-.media--step3    { background: linear-gradient(135deg, #0F3F12 0%, #1F6E1F 100%); }
+.media--msix     { background: #0F4577; }
+.media--win32    { background: #2D3D55; }
+.media--msixgame { background: #4A2978; }
+.media--gdk      { background: #1F6E1F; }
+.media--step2    { background: #0F4577; }
+.media--step3    { background: #1F6E1F; }
 
 /* ============================================================
    Stat strip
@@ -1043,12 +1026,10 @@ iconify-icon {
 }
 .stat__num em {
   font-style: normal;
-  background: linear-gradient(120deg, var(--brand), var(--accent-purple));
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
+  color: var(--brand-hover);
 }
 .stat__label {
-  font-size: 13px; color: var(--fg-3);
+  font-size: 14px; color: var(--fg-3);
   margin-top: var(--sp-6);
   font-weight: 500;
 }
@@ -1216,8 +1197,8 @@ iconify-icon {
   animation: subReveal .3s ease-out;
 }
 .form-section--sub .form-section__head { margin-bottom: var(--sp-12); }
-.form-section--sub .form-section__title { font-size: 15px; line-height: 20px; }
-.form-section--sub .form-section__sub { font-size: 13px; margin-top: var(--sp-4); }
+.form-section--sub .form-section__title { font-size: 16px; line-height: 20px; }
+.form-section--sub .form-section__sub { font-size: 14px; margin-top: var(--sp-4); }
 .form-section--sub .radio-card { padding: var(--sp-12) var(--sp-16); gap: var(--sp-6); }
 .form-section--sub .radio-card__desc { font-size: 12px; line-height: 16px; }
 @keyframes subReveal {
@@ -1264,7 +1245,7 @@ iconify-icon {
   padding-right: var(--sp-24);
 }
 .radio-card__title {
-  font-size: 15px; font-weight: 600;
+  font-size: 16px; font-weight: 600;
   color: var(--fg-1);
   display: flex; align-items: center; gap: var(--sp-8);
 }
@@ -1276,7 +1257,7 @@ iconify-icon {
   pointer-events: none; /* the entire .radio-card label handles clicks */
 }
 .radio-card__desc {
-  font-size: 13px; line-height: 18px;
+  font-size: 14px; line-height: 18px;
   color: var(--fg-3);
   margin: 0;
 }
@@ -1310,18 +1291,18 @@ iconify-icon {
 .type-card.radio-card--checked .type-card__icon { background: var(--brand); color: var(--fg-on-brand); }
 .type-card__title {
   display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-6);
-  font-size: 15px; font-weight: 600; line-height: 1.2; color: var(--fg-1);
+  font-size: 16px; font-weight: 600; line-height: 1.2; color: var(--fg-1);
 }
 .type-card__tag {
   font-family: var(--font-monospace);
-  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  font-size: 12px; font-weight: 600; letter-spacing: .02em;
   color: var(--fg-3);
   background: var(--subtle);
   border: 1px solid var(--stroke-2);
   border-radius: var(--r-4);
   padding: 0 var(--sp-4);
 }
-.type-card__desc { font-size: 12.5px; line-height: 17px; color: var(--fg-3); }
+.type-card__desc { font-size: 12px; line-height: 17px; color: var(--fg-3); }
 
 /* ---- Subtle, full-width "help me choose" trigger ---- */
 .type-help {
@@ -1333,7 +1314,7 @@ iconify-icon {
   border: 1px solid var(--stroke-3);          /* faint = subtle */
   border-radius: var(--r-8);
   color: var(--fg-3);
-  font: inherit; font-size: 13px;
+  font: inherit; font-size: 14px;
   cursor: pointer; text-align: center;
   transition:
     border-color var(--dur-2) var(--ease-out),
@@ -1348,7 +1329,7 @@ iconify-icon {
 /* ---- Guided "help me choose" dialog body ---- */
 .helper-body { min-width: 320px; }
 @media (max-width: 480px) { .helper-body { min-width: 0; } }
-.picker-step__q { font-size: 13px; font-weight: 600; color: var(--fg-1); margin: var(--sp-8) 0 var(--sp-10); }
+.picker-step__q { font-size: 14px; font-weight: 600; color: var(--fg-1); margin: var(--sp-8) 0 var(--sp-10); }
 .picker-options { display: flex; flex-direction: column; gap: var(--sp-6); }
 .picker-option {
   display: flex; align-items: center; gap: var(--sp-10);
@@ -1366,7 +1347,7 @@ iconify-icon {
 .picker-option:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .picker-option iconify-icon { color: var(--brand); flex: 0 0 auto; }
 .picker-option__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.picker-option__label { font-size: 13px; font-weight: 600; color: var(--fg-1); }
+.picker-option__label { font-size: 14px; font-weight: 600; color: var(--fg-1); }
 .picker-option__desc { font-size: 12px; line-height: 1.3; color: var(--fg-3); }
 .picker-back, .picker-reset {
   background: none; border: 0; color: var(--brand); cursor: pointer;
@@ -1385,8 +1366,8 @@ iconify-icon {
 }
 .picker-result__icon { color: var(--status-success); flex: 0 0 auto; margin-top: 1px; }
 .picker-result__text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.picker-result__text strong { font-size: 13px; color: var(--fg-1); }
-.picker-result__text span { font-size: 12.5px; line-height: 17px; color: var(--fg-2); }
+.picker-result__text strong { font-size: 14px; color: var(--fg-1); }
+.picker-result__text span { font-size: 12px; line-height: 17px; color: var(--fg-2); }
 .picker-reset { flex: 0 0 auto; }
 @media (max-width: 1180px) { .radio-cards--types { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 720px)  { .radio-cards--types { grid-template-columns: 1fr; } }
@@ -1408,7 +1389,7 @@ iconify-icon {
 .partner-redirect__head iconify-icon { color: var(--brand); }
 .partner-redirect__title {
   font-family: var(--font-display);
-  font-size: 17px; line-height: 22px;
+  font-size: 16px; line-height: 22px;
   font-weight: 600;
   color: var(--fg-1);
   margin: 0;
@@ -1434,7 +1415,7 @@ iconify-icon {
 }
 .form-actions__hint {
   flex: 1;
-  font-size: 13px; color: var(--fg-3);
+  font-size: 14px; color: var(--fg-3);
 }
 
 /* ============================================================
@@ -1475,7 +1456,7 @@ iconify-icon {
 }
 .data-table thead th {
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .5px;
   text-transform: uppercase;
@@ -1539,7 +1520,7 @@ iconify-icon {
   height: 22px;
   padding: 0 var(--sp-10);
   border-radius: var(--r-full);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .3px;
   white-space: nowrap;
@@ -1640,7 +1621,7 @@ iconify-icon {
 .profile-menu__avatar {
   width: 48px; height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5BA4E6, #0F6CBD);
+  background: var(--brand-bg);
   color: #fff;
   font-weight: 600; font-size: 16px;
   display: inline-flex; align-items: center; justify-content: center;
@@ -1684,7 +1665,7 @@ iconify-icon {
   align-items: stretch;
 }
 .profile-menu__alt {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--brand);
   font-weight: 600;
   background: transparent; border: 0; padding: 0;
@@ -1736,7 +1717,7 @@ iconify-icon {
 }
 .modal__title {
   font-family: var(--font-display);
-  font-size: 18px; line-height: 24px;
+  font-size: 16px; line-height: 24px;
   font-weight: 600;
   color: var(--fg-1);
   margin: 0;
@@ -1760,7 +1741,7 @@ iconify-icon {
 }
 .modal__body p { margin: 0 0 var(--sp-8); }
 .modal__body p:last-child { margin-bottom: 0; }
-.modal__body-meta { font-size: 13px; color: var(--fg-4); }
+.modal__body-meta { font-size: 14px; color: var(--fg-4); }
 .modal__actions {
   display: flex; gap: var(--sp-8);
   justify-content: flex-end;
@@ -1838,7 +1819,7 @@ iconify-icon {
   .hero { grid-template-columns: 1fr; }
   .hero__art { order: -1; min-height: 280px; padding: var(--sp-24); }
   .hero__copy { padding: var(--sp-40) var(--sp-32); }
-  .hero__title { font-size: 36px; line-height: 44px; }
+  .hero__title { font-size: 32px; line-height: 44px; }
   .grid-2, .grid-3, .stat-row { grid-template-columns: 1fr 1fr; }
   .band { padding: var(--sp-64) 0; }
   .section-title { font-size: 28px; line-height: 36px; }
@@ -1849,9 +1830,9 @@ iconify-icon {
   .topbar__search { display: none; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .stat-row { grid-template-columns: 1fr 1fr; gap: var(--sp-16); }
-  .hero__title { font-size: 30px; line-height: 38px; }
+  .hero__title { font-size: 28px; line-height: 38px; }
   .hero__desc { font-size: 16px; line-height: 24px; }
-  .page-title { font-size: 26px; line-height: 32px; }
+  .page-title { font-size: 24px; line-height: 32px; }
 }
 
 /* ============================================================
@@ -1881,7 +1862,7 @@ iconify-icon {
   display: flex; align-items: center; gap: var(--sp-10);
   padding: var(--sp-16) var(--sp-20);
   border-bottom: 1px solid var(--stroke-2);
-  background: linear-gradient(135deg, rgba(71,158,245,.06) 0%, rgba(195,155,255,.04) 100%);
+  background: color-mix(in srgb, var(--brand) 6%, var(--layer));
   flex: 0 0 auto;
 }
 .copilot-panel__logo {
@@ -1899,7 +1880,7 @@ iconify-icon {
 }
 .copilot-panel__title {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--fg-1);
   flex: 1;
@@ -1964,7 +1945,7 @@ iconify-icon {
   display: block;
 }
 .copilot-msg--user .copilot-msg__avatar {
-  background: linear-gradient(135deg, #5BA4E6, #0F6CBD);
+  background: var(--brand-bg);
   color: #fff;
   order: 1;
 }
@@ -1973,7 +1954,7 @@ iconify-icon {
   max-width: 85%;
   padding: var(--sp-10) var(--sp-16);
   border-radius: var(--r-12);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 20px;
 }
 .copilot-msg--bot .copilot-msg__bubble {
@@ -2063,7 +2044,7 @@ iconify-icon {
   background: transparent;
   padding: 0 var(--sp-12);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--fg-1);
   outline: none;
 }
