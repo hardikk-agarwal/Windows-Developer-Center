@@ -1362,8 +1362,32 @@
 
   /* ---- inline SVG charts (Fluent-token styled) ---- */
   function niceMax(max) { var step = Math.pow(10, Math.floor(Math.log10(max || 1))); return Math.ceil((max || 1) / step) * step; }
-  function chartLine(o) {
-    var W = 840, H = o.h || 260, pl = 46, pr = o.right ? 48 : 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
+  // Responsive charts: register a spec + host at build time, then draw at the host's real pixel
+  // width after mount (viewBox width == px width => scale 1:1 => identical text size, line weight,
+  // and a fixed height in every panel, whether full- or half-width). Re-drawn on resize.
+  var anaCharts = [], anaChartRO = null;
+  function registerChart(type, o) {
+    var id = anaCharts.length; anaCharts.push({ t: type, o: o });
+    return '<div class="chart-host" data-chart="' + id + '" style="min-height:' + (o.h || 260) + 'px"></div>';
+  }
+  function drawChart(spec, w) { return spec.t === "bars" ? drawBars(spec.o, w) : spec.t === "stack" ? drawStack(spec.o, w) : drawLine(spec.o, w); }
+  function sizeCharts(root) {
+    if (!root) return; var hosts = root.querySelectorAll(".chart-host");
+    for (var i = 0; i < hosts.length; i++) {
+      var host = hosts[i], spec = anaCharts[+host.getAttribute("data-chart")]; if (!spec) continue;
+      host.innerHTML = drawChart(spec, Math.max(320, Math.round(host.clientWidth || 840)));
+    }
+  }
+  function observeCharts(root) {
+    if (!root || typeof ResizeObserver === "undefined") return;
+    if (anaChartRO) anaChartRO.disconnect();
+    var raf = 0;
+    anaChartRO = new ResizeObserver(function () { if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(function () { sizeCharts(root); }); });
+    anaChartRO.observe(root);
+  }
+  function chartLine(o) { return registerChart("line", o); }
+  function drawLine(o, W) {
+    W = W || 840; var H = o.h || 260, pl = 46, pr = o.right ? 48 : 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
     var mn = o.yMin || 0, mx = o.yMax;
     if (mx == null) { mx = 1; o.series.forEach(function (s) { s.values.forEach(function (v) { if (v > mx) mx = v; }); }); mx = niceMax(mx); }
     var span = (mx - mn) || 1, fmt = o.fmt || fmtCompact;
@@ -1395,10 +1419,11 @@
     }
     return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img"><defs><linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--brand)" stop-opacity=".26"/><stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/></linearGradient></defs>' + grid + ylab + rlab + paths + xlab + '</svg>';
   }
-  function chartBars(o) {
-    var W = 840, H = o.h || 280, pl = 46, pr = 16, pt = 16, pb = 40, iw = W - pl - pr, ih = H - pt - pb;
+  function chartBars(o) { return registerChart("bars", o); }
+  function drawBars(o, W) {
+    W = W || 840; var H = o.h || 260, pl = 46, pr = 16, pt = 16, pb = 40, iw = W - pl - pr, ih = H - pt - pb;
     var mx = 1; o.bars.forEach(function (b) { if (b.value > mx) mx = b.value; }); mx = niceMax(mx);
-    var n = o.bars.length, gap = iw / n, bw = gap * 0.56;
+    var n = o.bars.length, gap = iw / n, bw = Math.min(gap * 0.56, 96);
     var grid = "", ylab = "";
     for (var g = 0; g <= 4; g++) { var gy = pt + ih * g / 4;
       grid += '<line x1="' + pl + '" y1="' + gy.toFixed(1) + '" x2="' + (W - pr) + '" y2="' + gy.toFixed(1) + '" class="chart-grid"/>';
@@ -1455,8 +1480,9 @@
     }).join("") + '</div>';
   }
   // 100%-stacked area (app version adoption). series: [{name,color,values(0-100)}].
-  function chartStack(o) {
-    var W = 840, H = o.h || 260, pl = 46, pr = 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
+  function chartStack(o) { return registerChart("stack", o); }
+  function drawStack(o, W) {
+    W = W || 840; var H = o.h || 260, pl = 46, pr = 16, pt = 14, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
     var n = o.series[0].values.length;
     function X(i) { return pl + (n <= 1 ? 0 : iw * i / (n - 1)); }
     function Y(v) { return pt + ih - ih * (v / 100); }
@@ -1533,7 +1559,7 @@
     var table = '<div class="table-wrap"><table class="atable"><thead><tr><th>Campaign name</th><th class="num">Installs</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     var COL = ["var(--brand)", "#C239B3", "#f7b955"];
     var series = d.campaigns.slice(0, 3).map(function (c, i) { return { name: c.name, color: COL[i], values: c.trend }; });
-    return '<div class="campgrid"><div>' + table + '</div><div>' + chartLine({ series: series, labels: d.labels, h: 230 }) + chartLegend(series) + '</div></div>';
+    return '<div class="campgrid"><div>' + table + '</div><div>' + chartLine({ series: series, labels: d.labels }) + chartLegend(series) + '</div></div>';
   }
   function geoBody(d) {
     var rows = d.geo.map(function (g) {
@@ -2331,6 +2357,7 @@
     // Health is always available. Store tabs lock until the app is on the Store, then show
     // the full detailed dashboard. Full re-render each time so the tab lock icons track the app.
     var tab = ANA_TABS.filter(function (t) { return t.key === anaTab; })[0] || ANA_TABS[0];
+    anaCharts = [];
     var body = tabLocked(tab, app) ? lockedAnalyticsHTML(app, tab)
       : anaTab === "crashes" ? crashTab(app)
       : anaTab === "acquisition" ? acquisitionTab(app)
@@ -2338,6 +2365,7 @@
       : anaTab === "ratings" ? ratingsTab(app)
       : crashTab(app);
     panelEl.innerHTML = anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
+    sizeCharts(panelEl); observeCharts(panelEl);
     // In the "new app / no data" crash zero state there's nothing to filter, so hide the version/date/Filters
     // toolbar (the app picker stays). The latency state keeps filters so the date range can still be changed.
     var _fb = $("anaFilterBar"); if (_fb) _fb.hidden = (anaTab === "crashes" && !anaFailure && anaDemoState === "newapp");

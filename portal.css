@@ -612,6 +612,7 @@ fluent-message-bar[hidden] { display: none; }
 .apanel .table-wrap .atable th:last-child, .apanel .table-wrap .atable td:last-child { padding-right: 28px; }
 .apanel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: stretch; }
 
+.chart-host { width: 100%; }
 .chart { width: 100%; height: auto; display: block; overflow: visible; }
 .chart-grid { stroke: var(--border); stroke-width: 1; }
 .chart-axis { fill: var(--text-3); font: 12px var(--font); text-anchor: middle; }
