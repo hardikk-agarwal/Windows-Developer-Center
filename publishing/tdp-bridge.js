@@ -217,14 +217,27 @@
       ? '<button type="button" class="app-rail__id app-rail__id--btn" data-app-switch aria-haspopup="listbox" aria-expanded="false" aria-label="' + esc(appName()) + ' — switch app">' + appNavIconHTML() + '<span class="app-rail__name">' + esc(appName()) + '</span><iconify-icon class="app-rail__chev" icon="fluent:chevron-down-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>'
       : '<div class="app-rail__id">' + appNavIconHTML() + '<span class="app-rail__name">' + esc(appName()) + '</span></div>';
     var overview = navItem("fluent:home-20-regular", "Overview", "overview");
-    // "View submissions" — the submission history, moved here from the app header. Live apps only.
-    var submissions = live ? navItem("fluent:history-20-regular", "View submissions", "history") : "";
-    // Capability sections, grouped exactly like the hub (LIVE_GROUPS = single source of truth).
+    // Sidebar nav groups — a nav-specific order (independent of the hub cards). Share is a header action now.
     var groups = "";
     if (live) {
-      groups = LIVE_GROUPS.map(function (g) {
-        var rows = g.cards.map(function (c) { return navItem(c[0], c[1], c[4] || c[1].toLowerCase().replace(/[^a-z0-9]+/g, "-")); }).join("");
-        return '<div class="app-rail__group"><span class="app-rail__ghdr">' + esc(g.title) + '</span>' + rows + '</div>';
+      var RAIL_GROUPS = [
+        ["Updates", [
+          ["fluent:arrow-upload-20-regular", "Update your app", "update"],
+          ["fluent:airplane-take-off-20-regular", "Package flights", "flights"],
+          ["fluent:puzzle-piece-20-regular", "Manage add-ons", "addons"],
+          ["fluent:beaker-20-regular", "Product page experiments", "experiments"]
+        ]],
+        ["Manage", [
+          ["fluent:document-text-20-regular", "Package identity", "identity"],
+          ["fluent:history-20-regular", "View submissions", "history"],
+          ["fluent:tag-multiple-20-regular", "Manage app names", "names"],
+          ["fluent:ticket-diagonal-20-regular", "Promo codes", "promo"],
+          ["fluent:eye-20-regular", "Store availability", "availability"]
+        ]]
+      ];
+      groups = RAIL_GROUPS.map(function (g) {
+        var rows = g[1].map(function (it) { return navItem(it[0], it[1], it[2]); }).join("");
+        return '<div class="app-rail__group"><span class="app-rail__ghdr">' + esc(g[0]) + '</span>' + rows + '</div>';
       }).join("");
     } else {
       // First submission still in review/failed (not live yet): show only what's usable before you're
@@ -235,7 +248,7 @@
         navItem("fluent:document-text-20-regular", "Package identity", "identity") +
         '</div>';
     }
-    host.innerHTML = back + idRow + '<div class="app-rail__sep"></div>' + overview + submissions + groups;
+    host.innerHTML = back + idRow + '<div class="app-rail__sep"></div>' + overview + groups;
     if (!multi) { closeAppSwitch(); }   // single app → no switcher; hide any stale menu. Multi builds lazily on open.
     if (!host.__wired) {
       host.__wired = true;
@@ -821,14 +834,13 @@
         '<span class="dash-banner__sub">You\u2019re above the 5% healthy bar \u2014 worth investigating before it affects your rating.</span></div>' +
         '<fluent-button appearance="primary" data-ana="crashes">Investigate</fluent-button></section>';
     }
-    // Stage-appropriate orientation / encouragement — present in EVERY stage so the top slot is consistent.
+    // Growing stage no longer shows an encouragement banner; needs-attention banners above still apply.
+    if (P.stage === "growing") return "";
+    // Stage-appropriate orientation / encouragement for the remaining stages.
     var ico, tone, title, sub;
     if (P.stage === "launch") {
       ico = "fluent:rocket-20-filled"; tone = "brand"; title = "You\u2019re live in the Microsoft Store";
       sub = "<strong>" + esc(appName()) + "</strong> is published and discoverable \u2014 here\u2019s how to build early momentum.";
-    } else if (P.stage === "growing") {
-      ico = "fluent:arrow-trending-lines-20-filled"; tone = "brand"; title = "Momentum is building";
-      sub = (P.installsTrend ? "Installs are up " + P.installsTrend.pct + "% this week" : "Your app is gaining installs") + " \u2014 keep it going with the steps below.";
     } else {
       ico = "fluent:shield-checkmark-20-filled"; tone = "success"; title = "Your app is in good shape";
       sub = "No fires to fight right now \u2014 a good moment to invest in growth. Start with the steps below.";
@@ -918,7 +930,6 @@
     // Launch: no metrics band and no rating yet — skip the tiles + the Ratings & reviews card (both would
     // be empty placeholders) and let Recent activity span full width. "First installs" still shows installs.
     if (P.stage === "launch") return dashBanner(P) +
-      '<div class="dash-soonnote"><iconify-icon icon="fluent:clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon><span>Installs, crash health, and ratings will appear here as customers start using your app \u2014 usually within 2\u20133 days.</span></div>' +
       dashRecs(P) + '<div class="dash-grid dash-grid--single">' + dashActivity(P) + '</div>';
     var grid = '<div class="dash-grid">' + dashActivity(P) + dashReviews(P) + '</div>';
     return dashBanner(P) + dashHealth(P) + dashRecs(P) + grid + dashMon(P);
@@ -947,13 +958,14 @@
   // App-header card's contextual action: once published the PRIMARY action is Update; View submissions is
   // secondary and "View in Store" rides on the status pill (#app-storelink). Withdraw while in review; report/fix when failed.
   function setHeadActions(view) {
-    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), an = $id("head-analytics-btn"), u = $id("head-update-btn");
+    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), an = $id("head-analytics-btn"), u = $id("head-update-btn"), s = $id("head-share-btn");
     if (w) w.hidden = (view !== "progress");
     if (v) v.hidden = (view !== "passed");
     if (r) r.hidden = (view !== "failed");
     if (e) e.hidden = (view !== "failed");
     if (an) an.hidden = (view !== "passed");
     if (u) u.hidden = (view !== "passed");   // Update is the primary action for a live app
+    if (s) s.hidden = (view !== "passed");   // Share the Store listing (moved from the sidebar)
     syncHeadUpdatePrimary();
   }
   // When the dashboard shows a needs-attention banner (anomaly), its "Investigate" is the single

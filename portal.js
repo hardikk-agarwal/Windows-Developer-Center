@@ -295,38 +295,30 @@
       (cta || '') + '</div></div>';
   }
 
-  // Store-only "What you can publish": a Fluent Tablist (fluent-tablist/fluent-tab) swaps rich format
-  // cards; each card has a "Best for" cue + benefits so devs can self-select. CSS: .pubtabs/.pkg + :has().
+  // Store-only "What you can publish": four format cards (MSIX / Win32 / PWA / GDK) with App/Game tags,
+  // a one-liner, and key benefits; MSIX carries the single Recommended cue. CSS: .fmtgrid / .fmtcard.
   function storeOnrampsHTML() {
-    function pkg(o) {
+    function card(o) {
       var bens = o.benefits.map(function (b) {
         return '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' + b + '</li>';
       }).join('');
-      return '<div class="pkg' + (o.rec ? ' pkg--rec' : '') + '">' +
-        '<span class="pkg__ico"><iconify-icon icon="' + o.icon + '" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-        (o.rec ? '<span class="pkg__rec">Recommended</span>' : '') +
-        '<div class="pkg__t"><span class="pkg__name">' + o.name + '</span>' +
-        '<p class="pkg__desc">' + o.desc + '</p>' +
-        '<p class="pkg__for"><span class="pkg__for-lbl">Best for</span> ' + o.best + '</p>' +
-        '<ul class="pkg__benefits">' + bens + '</ul></div></div>';
+      var tags = o.tags.map(function (t) { return '<span class="fmtcard__tag">' + t + '</span>'; }).join('');
+      return '<div class="fmtcard' + (o.rec ? ' fmtcard--rec' : '') + '">' +
+        '<span class="fmtcard__ico"><iconify-icon icon="' + o.icon + '" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
+        (o.rec ? '<span class="fmtcard__rec">Recommended</span>' : '') +
+        '<span class="fmtcard__name">' + o.name + '</span>' +
+        '<span class="fmtcard__tags">' + tags + '</span>' +
+        '<p class="fmtcard__desc">' + o.desc + '</p>' +
+        '<ul class="fmtcard__benefits">' + bens + '</ul>' +
+      '</div>';
     }
     return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
-        '<p class="muted">Bring an app or a game \u2014 in the format you already have.</p></div></div>' +
-      '<div class="pubswitch">' +
-        '<fluent-tablist class="pubtabs" activeid="pt-apps" aria-label="Publish type">' +
-          '<fluent-tab id="pt-apps" aria-controls="pkgs-apps">Apps</fluent-tab>' +
-          '<fluent-tab id="pt-games" aria-controls="pkgs-games">Games</fluent-tab>' +
-        '</fluent-tablist>' +
-        '<div class="pkgs pkgs--apps" id="pkgs-apps" role="tabpanel" aria-labelledby="pt-apps">' +
-          pkg({ icon: 'fluent:box-20-regular', name: 'MSIX', rec: true, desc: 'The modern Windows app package (.msix).', best: 'New apps that want the full Store experience.', benefits: ['Automatic updates', 'Free hosting &amp; signing', 'Clean install / uninstall'] }) +
-          pkg({ icon: 'fluent:desktop-20-regular', name: 'Win32', desc: 'Your existing .exe or .msi desktop installer.', best: 'Desktop apps you want to list as-is.', benefits: ['Publish unchanged', 'Full desktop access', 'Keep your installer'] }) +
-          pkg({ icon: 'fluent:globe-20-regular', name: 'PWA', desc: 'Your website, packaged as an installable app.', best: 'Web apps that want a listing with no rebuild.', benefits: ['Reuse your web code', 'No native code', 'Quick to publish'] }) +
-        '</div>' +
-        '<div class="pkgs pkgs--games" id="pkgs-games" role="tabpanel" aria-labelledby="pt-games">' +
-          pkg({ icon: 'fluent:xbox-controller-20-regular', name: 'GDK', rec: true, desc: 'PC games built with the Game Development Kit.', best: 'New PC games, or existing Win32 games.', benefits: ['Xbox services &amp; achievements', 'Best game performance', 'Windows + Xbox reach'] }) +
-          pkg({ icon: 'fluent:box-20-regular', name: 'MSIX', desc: 'Existing UWP games, packaged as MSIX.', best: 'Games already built on UWP.', benefits: ['Reuse your UWP build', 'Free Store hosting', 'Automatic updates'] }) +
-          pkg({ icon: 'fluent:globe-20-regular', name: 'PWA', desc: 'Web-based games, packaged as an app.', best: 'Browser and HTML5 games.', benefits: ['Reuse your web code', 'No native build', 'Quick to publish'] }) +
-        '</div>' +
+        '<p class="muted">Four formats to bring an app or game to the Store \u2014 most new apps use MSIX.</p></div></div>' +
+      '<div class="fmtgrid">' +
+        card({ icon: 'fluent:box-20-regular', name: 'MSIX', rec: true, tags: ['App', 'Game'], desc: 'The modern Windows app package (.msix) \u2014 the default for new apps.', benefits: ['Automatic updates', 'Free hosting &amp; signing', 'Clean install / uninstall'] }) +
+        card({ icon: 'fluent:desktop-20-regular', name: 'Win32', tags: ['App'], desc: 'Your existing .exe or .msi desktop installer, published as-is.', benefits: ['Nothing to repackage', 'Full desktop access', 'Keep your installer'] }) +
+        card({ icon: 'fluent:globe-20-regular', name: 'PWA', tags: ['App', 'Game'], desc: 'Your website or web game, wrapped as an installable app.', benefits: ['Reuse your web code', 'No native build', 'Quick to publish'] }) +
+        card({ icon: 'fluent:xbox-controller-20-regular', name: 'GDK', tags: ['Game'], desc: 'PC games built with the Game Development Kit.', benefits: ['Xbox services &amp; achievements', 'Best performance', 'Windows + Xbox reach'] }) +
       '</div>' +
       '<div class="pkgs__foot">' +
         '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
@@ -442,51 +434,48 @@
       pill + chev +
     '</' + tag + '>';
   }
-  function ovxAccountHTML() {
+  // Consolidated account / policy / resources strip — one slim card (three labelled groups)
+  // replaces three dense cards so the Overview stays glanceable.
+  function ovxHubHTML() {
     var acct = state.account || {};
     var name = acct.name || "Your account";
     var inits = acct.initials || (name.charAt(0) || "A").toUpperCase();
-    var email = acct.email || "";
     var certN = (state.certs || []).length;
     var pubId = "MS-" + (Math.abs(hashStr(name + "|pub")) % 900000 + 100000);
-    return '<section class="ovx-card">' +
-      '<div class="ovx-card__head"><h3>Account &amp; profile</h3></div>' +
-      '<div class="ovx-acctid"><span class="ovx-account__ava">' + esc(inits) + '</span>' +
-        '<div class="ovx-account__t"><strong>' + esc(name) + '</strong>' +
-          '<span class="ovx-account__status"><span class="verified-dot"></span>Windows Developer Program</span></div></div>' +
-      '<div class="ovx-list">' +
-        ovxHRow({ icon: "fluent:person-20-regular", title: "Account type", sub: "Individual developer" }) +
-        ovxHRow({ icon: "fluent:tag-20-regular", title: "Publisher ID", sub: pubId }) +
-        (email ? ovxHRow({ icon: "fluent:mail-20-regular", title: "Contact email", sub: email }) : "") +
-        ovxHRow({ icon: "fluent:certificate-20-regular", title: "Code signing certificates", status: certN ? (certN + " active") : "Set up", statusType: certN ? "ok" : "info", href: "#certificates", jump: "certificates" }) +
-        ovxHRow({ icon: "fluent:money-20-regular", title: "Payout & tax profile", status: "Complete", statusType: "ok" }) +
-      '</div>' +
-    '</section>';
-  }
-  function ovxPolicyHTML() {
-    var apps = state.apps || [];
-    var rejected = apps.filter(function (a) { return appStatusKey(a) === "rejected"; }).length;
-    var rated = apps.filter(function (a) { var k = appStatusKey(a); return k === "live" || k === "in-review"; }).length;
-    return '<section class="ovx-card">' +
-      '<div class="ovx-card__head"><h3>Policies &amp; agreements</h3></div>' +
-      '<div class="ovx-list">' +
-        ovxHRow({ icon: "fluent:document-checkmark-20-regular", title: "App Developer Agreement", sub: "Accepted \u00b7 current version", status: "Signed", statusType: "ok", href: "https://learn.microsoft.com/legal/windows/agreements/app-developer-agreement", external: true }) +
-        ovxHRow({ icon: "fluent:shield-checkmark-20-regular", title: "Microsoft Store Policies", sub: "Review the latest requirements", href: "https://learn.microsoft.com/windows/apps/publish/store-policies", external: true }) +
-        ovxHRow({ icon: "fluent:people-community-20-regular", title: "Age ratings (IARC)", sub: rated ? ("Assigned for " + rated + " app" + (rated === 1 ? "" : "s")) : "Complete these when you submit", href: "https://learn.microsoft.com/windows/apps/publish/publish-your-app/age-ratings", external: true }) +
-        ovxHRow({ icon: "fluent:clipboard-task-list-ltr-20-regular", title: "Content compliance", sub: rejected ? (rejected + " app need" + (rejected === 1 ? "s" : "") + " changes") : "No open policy issues", status: rejected ? "Action needed" : "Clear", statusType: rejected ? "warn" : "ok", href: "#apps", jump: "apps" }) +
-      '</div>' +
-    '</section>';
-  }
-  function ovxResourcesHTML() {
-    return '<section class="ovx-card">' +
-      '<div class="ovx-card__head"><h3>Resources &amp; support</h3></div>' +
-      '<div class="ovx-list">' +
-        ovxHRow({ icon: "fluent:book-open-20-regular", title: "Documentation", sub: "Guides for building & publishing", href: "https://learn.microsoft.com/windows/apps/", external: true }) +
-        ovxHRow({ icon: "fluent:news-20-regular", title: "Windows Developer Blog", sub: "Platform & policy updates", href: "https://blogs.windows.com/windowsdeveloper/", external: true }) +
-        ovxHRow({ icon: "fluent:people-community-20-regular", title: "Community & forums", sub: "Ask questions, share feedback", href: "https://techcommunity.microsoft.com/", external: true }) +
-        ovxHRow({ icon: "fluent:chat-help-20-regular", title: "Contact support", sub: "Help with your account or apps", href: "https://support.microsoft.com/", external: true }) +
-      '</div>' +
-    '</section>';
+    var rejected = (state.apps || []).filter(function (a) { return appStatusKey(a) === "rejected"; }).length;
+    var row = function (o) {
+      var tag = o.href ? "a" : "div";
+      var attr = o.href ? ' href="' + esc(o.href) + '"' + (o.jump ? ' data-jump="' + o.jump + '"' : "") + (o.ext ? ' target="_blank" rel="noopener noreferrer"' : "") : "";
+      var trail = o.status
+        ? '<span class="pill pill--' + (o.type || "ghost") + ' pill--sm">' + esc(o.status) + '</span>'
+        : (o.href ? '<iconify-icon class="ovx-hub__rowchev" icon="' + (o.ext ? "fluent:open-16-regular" : "fluent:chevron-right-16-regular") + '" width="' + (o.ext ? 13 : 15) + '" height="' + (o.ext ? 13 : 15) + '" aria-hidden="true"></iconify-icon>' : "");
+      return '<' + tag + ' class="ovx-hub__row"' + attr + '>' +
+        '<iconify-icon class="ovx-hub__rowico" icon="' + o.icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        '<span class="ovx-hub__rowt">' + esc(o.label) + '</span>' + trail + '</' + tag + '>';
+    };
+    return '<section class="ovx-card ovx-hub"><div class="ovx-hub__grid">' +
+      '<div class="ovx-hub__grp"><span class="ovx-hub__label">Account &amp; profile</span>' +
+        '<div class="ovx-hub__id"><span class="ovx-account__ava ovx-account__ava--sm">' + esc(inits) + '</span>' +
+          '<span class="ovx-hub__idt"><strong>' + esc(name) + '</strong><span class="muted">Individual \u00b7 ' + pubId + '</span></span></div>' +
+        '<div class="ovx-hub__rows">' +
+          row({ icon: "fluent:certificate-20-regular", label: "Certificates", status: certN ? (certN + " active") : "Set up", type: certN ? "ok" : "info", href: "#certificates", jump: "certificates" }) +
+          row({ icon: "fluent:money-20-regular", label: "Payout & tax", status: "Complete", type: "ok" }) +
+        '</div></div>' +
+      '<div class="ovx-hub__grp"><span class="ovx-hub__label">Policies &amp; agreements</span>' +
+        '<div class="ovx-hub__rows">' +
+          row({ icon: "fluent:document-checkmark-20-regular", label: "Developer Agreement", status: "Signed", type: "ok", href: "https://learn.microsoft.com/legal/windows/agreements/app-developer-agreement", ext: true }) +
+          row({ icon: "fluent:clipboard-task-list-ltr-20-regular", label: "Content compliance", status: rejected ? "Action needed" : "Clear", type: rejected ? "warn" : "ok", href: "#apps", jump: "apps" }) +
+          row({ icon: "fluent:shield-checkmark-20-regular", label: "Store policies", href: "https://learn.microsoft.com/windows/apps/publish/store-policies", ext: true }) +
+          row({ icon: "fluent:tag-20-regular", label: "Age ratings", href: "https://learn.microsoft.com/windows/apps/publish/publish-your-app/age-ratings", ext: true }) +
+        '</div></div>' +
+      '<div class="ovx-hub__grp"><span class="ovx-hub__label">Resources &amp; support</span>' +
+        '<div class="ovx-hub__rows">' +
+          row({ icon: "fluent:book-open-20-regular", label: "Documentation", href: "https://learn.microsoft.com/windows/apps/", ext: true }) +
+          row({ icon: "fluent:news-20-regular", label: "Developer blog", href: "https://blogs.windows.com/windowsdeveloper/", ext: true }) +
+          row({ icon: "fluent:people-community-20-regular", label: "Community & forums", href: "https://techcommunity.microsoft.com/", ext: true }) +
+          row({ icon: "fluent:chat-help-20-regular", label: "Contact support", href: "https://support.microsoft.com/", ext: true }) +
+        '</div></div>' +
+    '</div></section>';
   }
   function unifiedDashHTML() {
     var apps = (state.apps || []).slice().sort(function (a, b) {
@@ -535,10 +524,10 @@
         '<div class="ovx-card__head"><h3>Recent activity</h3></div>' +
         '<div class="ovx-list">' + notifItems().slice(0, 5).map(ovxActRow).join("") + '</div>' +
       '</section>';
-    // Two aligned rows of three cards (matching the 3-up KPI row): apps/actions/activity, then account/policy/resources.
+    // Actionable dashboard row (apps / attention / activity) + one slim consolidated hub strip below.
     return '<div class="ovx">' + tiles +
       '<div class="ovx-grid3">' + appsCard + ovxAttnHTML() + actsCard + '</div>' +
-      '<div class="ovx-grid3">' + ovxAccountHTML() + ovxPolicyHTML() + ovxResourcesHTML() + '</div>' +
+      ovxHubHTML() +
     '</div>';
   }
 
@@ -1204,7 +1193,7 @@
   ];
   // Store-only analytics are LOCKED for apps not yet on the Microsoft Store (e.g. apps brought
   // in via a certificate). Crash Health is always available; the rest unlock on publish.
-  function tabLocked(tab, app) { return !!tab.store && !(app && app.store); }
+  function tabLocked(tab, app) { return !!tab.store && !(app && (app.store || app.id === "__all__")); }
   function lockedAnalyticsHTML(app, tab) {
     return '<div class="ana-locked"><iconify-icon class="ana-locked__ico" icon="fluent:lock-closed-24-regular" width="34" height="34" aria-hidden="true"></iconify-icon>' +
       '<strong>' + esc(tab.label) + ' unlocks on the Microsoft Store</strong>' +
@@ -1217,6 +1206,14 @@
       return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
         '<strong>No analytics yet</strong>' +
         '<p class="muted">Analytics appear once an app is live in the Store. Publish an app to start tracking crashes, acquisition, usage, ratings, and performance.</p></div>';
+    }
+    if (UNIFIED) {
+      return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
+        '<strong>Unlock analytics for your apps</strong>' +
+        '<p class="muted">Publish your first app to the Microsoft Store to start tracking installs, usage, ratings, and crash health \u2014 all in one place. Data appears within a couple of days of going live.</p>' +
+        '<div class="empty__cta">' +
+          '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:rocket-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add app to Store</fluent-button>' +
+        '</div></div>';
     }
     return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
       '<strong>Unlock analytics for your apps</strong>' +
@@ -1506,6 +1503,7 @@
   /* ---- Acquisition: full dashboard, modelled on Partner Center → Insights → Acquisitions ---- */
   var acqCache = {};
   function acqData(app) {
+    if (app.id === "__all__") return acqDataAll();
     if (acqCache[app.id]) return acqCache[app.id];
     var rnd = anaRng(Math.abs(hashStr(app.id + "|acq|" + app.name)) || 1), days = 28, labels = [], i;
     for (i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
@@ -1568,6 +1566,7 @@
     return '<div class="table-wrap"><table class="atable"><thead><tr><th>Country/region</th><th class="num">Installs</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   function acquisitionTab(app) {
+    if (app.id === "__all__") return acqTabAll();
     var d = acqData(app), L = d.labels, blue = "var(--brand)";
     function legendOne(name, color, values) { return chartLegend([{ name: name, color: color, values: values }]); }
     var cards = '<div class="sumrow sumrow--4">' +
@@ -1592,6 +1591,7 @@
   /* ---- Usage: full dashboard, modelled on Partner Center → Insights → Usage ---- */
   var usgCache = {};
   function usageData(app) {
+    if (app.id === "__all__") return usageDataAll();
     if (usgCache[app.id]) return usgCache[app.id];
     var rnd = anaRng(Math.abs(hashStr(app.id + "|usage")) || 1), days = 28, labels = [], i;
     for (i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
@@ -1641,6 +1641,7 @@
       }).join("") + '</tbody></table></div>';
   }
   function usageTab(app) {
+    if (app.id === "__all__") return usageTabAll();
     var d = usageData(app), L = d.labels, blue = "var(--brand)", pink = "#e3008c";
     var cards = '<div class="sumrow sumrow--4">' +
       sumCard("Monthly active devices (Avg)", fmtCompact(d.madAvg), "Last 30 days", d.mad, blue) +
@@ -1683,6 +1684,7 @@
   ];
   var ratCache = {};
   function ratingsData(app) {
+    if (app.id === "__all__") return ratingsDataAll();
     if (ratCache[app.id]) return ratCache[app.id];
     var rnd = anaRng(Math.abs(hashStr(app.id + "|rat")) || 1), days = 28, labels = [], i;
     for (i = 0; i < days; i++) { var dm = 18 + i; labels.push(dm > 31 ? dm - 31 : dm); }
@@ -1713,6 +1715,7 @@
     }).join("") + '</div>';
   }
   function ratingsTab(app) {
+    if (app.id === "__all__") return ratingsTabAll();
     var d = ratingsData(app), L = d.labels, blue = "var(--brand)", pink = "#e3008c";
     var breakdown = '<div class="ratbreak"><div class="ratbreak__sum">' +
       '<span class="muted">Average</span><strong class="ratbreak__avg">' + d.avg.toFixed(2) + '</strong>' + starRowHTML(d.avg) +
@@ -1800,12 +1803,14 @@
     var dateSel = '<fluent-dropdown id="anaRangeSel" appearance="outline" aria-label="Date range" placeholder="Date range"><fluent-listbox>' + ranges.map(function (r) { return '<fluent-option value="' + r[0] + '"' + (anaRange === r[0] ? " selected" : "") + '>' + r[1] + '</fluent-option>'; }).join("") + '</fluent-listbox></fluent-dropdown>';
     var custom = anaRange === "custom" ? '<span class="cacustom"><input type="date" class="cadate" id="caFrom"' + (anaCustom && anaCustom.from ? ' value="' + anaCustom.from + '"' : "") + '><span class="muted">to</span><input type="date" class="cadate" id="caTo"' + (anaCustom && anaCustom.to ? ' value="' + anaCustom.to + '"' : "") + '><fluent-button size="small" appearance="primary" data-ca-apply="1">Apply</fluent-button></span>' : "";
     var fc = filterCount(), savedOn = anaSaveFilters, filtersBtn = '<fluent-button id="anaFiltersBtn" class="ca-filtersbtn' + (savedOn ? ' is-saved' : '') + '" appearance="outline" data-ca-filters="1"' + (savedOn ? ' title="Filter settings saved for future sessions"' : '') + '><iconify-icon slot="start" icon="' + (savedOn ? 'fluent:filter-16-filled' : 'fluent:filter-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
+    if (analyticsAppId === "__all__") filtersBtn = "";
     return anaQuickFiltersHTML() + '<span class="anafb__end">' + dateSel + custom + filtersBtn + '</span>';
   }
   // Quick filters surfaced outside the drawer. Only cross-tab dimensions (version, market,
   // device) so the toolbar stays identical across every analytics tab; tab-specific filters
   // (OS version, OS release, architecture) stay in the drawer. Single-select convenience.
   function anaQuickFiltersHTML() {
+    if (analyticsAppId === "__all__") return "";
     var app = appById(analyticsAppId) || state.apps[0]; if (!app) return "";
     var appvers = anaData(app).versions.map(function (v) { return v.ver; });
     // The one surfaced quick filter is contextual — the dimension that leads THIS tab.
@@ -1877,6 +1882,7 @@
       states.map(function (s) { return '<button class="demoswitch__b' + (anaDemoState === s[0] ? " is-on" : "") + '" data-demostate="' + s[0] + '">' + s[1] + '</button>'; }).join("") + '</div>';
   }
   function crashTab(app) {
+    if (app.id === "__all__") return crashTabAll();
     var d = anaData(app);
     if (anaFailure) return failureView(app, d);
     if (anaDemoState === "newapp") return zeroStateHTML(app);
@@ -2350,9 +2356,189 @@
       '<a class="ana-upsell__cta" href="#apps" data-jump="apps">Bring apps to the Store →</a>' +
     '</div>';
   }
+  /* ---- "All apps" aggregate: combine per-app analytics across the portfolio (same 28-day
+     axis + shared category lists per app, so series sum and rates weight cleanly) ---- */
+  function anaLiveApps() { return (state.apps || []).filter(function (a) { return a.store || a.discovered; }); }
+  function anaZeros(n) { var a = [], i; for (i = 0; i < n; i++) a.push(0); return a; }
+  function anaAddInto(dst, src) { for (var i = 0; i < src.length; i++) dst[i] += (src[i] || 0); return dst; }
+  function anaAllBannerHTML() {
+    var apps = anaLiveApps(), names = apps.map(function (a) { return esc(a.name); }).join(", ");
+    return '<div class="ana-allbar"><iconify-icon icon="fluent:apps-list-24-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+      '<span><strong>All apps</strong> \u00b7 combined analytics across ' + apps.length + ' apps <span class="muted">(' + names + ')</span></span></div>';
+  }
+  function acqDataAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return acqData(apps[0] || state.apps[0]);
+    var ds = apps.map(acqData), base = ds[0], days = base.labels.length, i;
+    function sumS(k) { var out = anaZeros(days); ds.forEach(function (d) { anaAddInto(out, d[k]); }); return out; }
+    function sumT(k) { return ds.reduce(function (m, d) { return m + d[k]; }, 0); }
+    var pv = sumS("pv"), inst = sumS("inst"), failCnt = sumS("failCnt");
+    var succRate = [], abortRate = [], convRate = [];
+    for (i = 0; i < days; i++) {
+      var ws = 0, wa = 0, wt = 0;
+      ds.forEach(function (d) { var w = d.inst[i] || 1; ws += d.succRate[i] * w; wa += d.abortRate[i] * w; wt += w; });
+      succRate.push(+(ws / wt).toFixed(2)); abortRate.push(+(wa / wt).toFixed(2));
+      convRate.push(+(inst[i] / Math.max(1, pv[i]) * 100).toFixed(2));
+    }
+    var pvTotal = sumT("pvTotal"), instTotal = sumT("instTotal");
+    var funnel = base.funnel.map(function (f, idx) { return { label: f.label, value: ds.reduce(function (m, d) { return m + d.funnel[idx].value; }, 0) }; });
+    var gm = {}, gorder = [];
+    ds.forEach(function (d) { d.geo.forEach(function (g) { if (gm[g.country] == null) { gm[g.country] = 0; gorder.push(g.country); } gm[g.country] += g.installs; }); });
+    var gsum = 0; gorder.forEach(function (c) { gsum += gm[c]; });
+    var geo = gorder.map(function (c) { return { country: c, installs: gm[c], pct: +(gm[c] / (gsum || 1) * 100).toFixed(2) }; }).sort(function (a, b) { return b.installs - a.installs; });
+    var cm = {}, corder = [];
+    ds.forEach(function (d) { d.campaigns.forEach(function (c) { if (!cm[c.name]) { cm[c.name] = { name: c.name, installs: 0, trend: anaZeros(days) }; corder.push(c.name); } cm[c.name].installs += c.installs; anaAddInto(cm[c.name].trend, c.trend); }); });
+    var campaigns = corder.map(function (k) { return cm[k]; }).sort(function (a, b) { return b.installs - a.installs; });
+    return { labels: base.labels, pv: pv, inst: inst, succRate: succRate, abortRate: abortRate, failCnt: failCnt, convRate: convRate,
+      pvTotal: pvTotal, instTotal: instTotal, conv: +(instTotal / (pvTotal || 1) * 100).toFixed(2), succ: +(succRate.reduce(function (m, v) { return m + v; }, 0) / days).toFixed(2),
+      funnel: funnel, campaigns: campaigns, geo: geo };
+  }
+  function usageDataAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return usageData(apps[0] || state.apps[0]);
+    var ds = apps.map(usageData), base = ds[0], days = base.labels.length, i, j;
+    function sumS(k) { var out = anaZeros(days); ds.forEach(function (d) { anaAddInto(out, d[k]); }); return out; }
+    function sumT(k) { return ds.reduce(function (m, d) { return m + d[k]; }, 0); }
+    function avgA(a) { return a.reduce(function (m, v) { return m + v; }, 0) / a.length; }
+    var mad = sumS("mad"), newMonthly = sumS("newMonthly"), dad = sumS("dad"), newDaily = sumS("newDaily"), sessions = sumS("sessions"), totHours = sumS("totHours"), uninstalls = sumS("uninstalls");
+    var avgMin = [], stickiness = [];
+    for (i = 0; i < days; i++) {
+      var we = 0, wsk = 0, wt = 0;
+      ds.forEach(function (d) { var w = d.mad[i] || 1; we += d.avgMin[i] * w; wsk += d.stickiness[i] * w; wt += w; });
+      avgMin.push(+(we / wt).toFixed(2)); stickiness.push(+(wsk / wt).toFixed(2));
+    }
+    var adopt = base.adopt.map(function (s) { return { name: s.name, color: s.color, values: anaZeros(days) }; });
+    for (i = 0; i < days; i++) {
+      var wt2 = 0; ds.forEach(function (d) { wt2 += d.mad[i] || 1; });
+      for (j = 0; j < adopt.length; j++) {
+        var acc = 0; ds.forEach(function (d) { acc += (d.adopt[j] ? d.adopt[j].values[i] : 0) * (d.mad[i] || 1); });
+        adopt[j].values[i] = +(acc / (wt2 || 1)).toFixed(3);
+      }
+    }
+    function sumRows(k, lk) {
+      var out = base[k].map(function (r) { var o = { devices: 0, sessions: 0 }; o[lk] = r[lk]; return o; });
+      ds.forEach(function (d) { d[k].forEach(function (r, idx) { out[idx].devices += r.devices; out[idx].sessions += r.sessions; }); });
+      var dS = 0, sS = 0; out.forEach(function (r) { dS += r.devices; sS += r.sessions; });
+      out.forEach(function (r) { r.dPct = +(r.devices / (dS || 1) * 100).toFixed(2); r.sPct = +(r.sessions / (sS || 1) * 100).toFixed(2); });
+      return out;
+    }
+    return { labels: base.labels, mad: mad, newMonthly: newMonthly, dad: dad, newDaily: newDaily, sessions: sessions,
+      avgMin: avgMin, totHours: totHours, stickiness: stickiness, uninstalls: uninstalls,
+      madAvg: Math.round(avgA(mad)), newMonthlyAvg: Math.round(avgA(newMonthly)), dadAvg: Math.round(avgA(dad)), newDailyAvg: Math.round(avgA(newDaily)),
+      sessTotal: sumT("sessTotal"), avgEng: +avgA(avgMin).toFixed(2), totEngHours: sumT("totEngHours"), dadMad: +avgA(stickiness).toFixed(2), uninstallTotal: sumT("uninstallTotal"),
+      verRows: sumRows("verRows", "ver"), adopt: adopt, coRows: sumRows("coRows", "country") };
+  }
+  function ratingsDataAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return ratingsData(apps[0] || state.apps[0]);
+    var ds = apps.map(ratingsData), base = ds[0], days = base.labels.length, i;
+    var total = ds.reduce(function (m, d) { return m + d.total; }, 0);
+    var orig = ds.reduce(function (m, d) { return m + d.orig; }, 0), rev = total - orig;
+    var stars = base.stars.map(function (s) { return { star: s.star, count: 0, orig: 0, rev: 0 }; });
+    ds.forEach(function (d) { d.stars.forEach(function (s, idx) { stars[idx].count += s.count; stars[idx].orig += s.orig; stars[idx].rev += s.rev; }); });
+    stars.forEach(function (s) { s.pct = +(s.count / (total || 1) * 100).toFixed(2); });
+    var avg = +((5 * stars[0].count + 4 * stars[1].count + 3 * stars[2].count + 2 * stars[3].count + 1 * stars[4].count) / (total || 1)).toFixed(2);
+    var totSeries = anaZeros(days); ds.forEach(function (d) { anaAddInto(totSeries, d.totSeries); });
+    var avgSeries = [];
+    for (i = 0; i < days; i++) {
+      var wsum = 0, wt = 0; ds.forEach(function (d) { var w = d.totSeries[i] || 1; wsum += d.avgSeries[i] * w; wt += w; });
+      avgSeries.push(+(wsum / wt).toFixed(2));
+    }
+    var gm = {}, gorder = [];
+    ds.forEach(function (d) { d.geo.forEach(function (g) { if (!gm[g.country]) { gm[g.country] = { country: g.country, ratings: 0, reviews: 0, wsum: 0 }; gorder.push(g.country); } var e = gm[g.country]; e.ratings += g.ratings; e.reviews += g.reviews; e.wsum += g.avg * g.ratings; }); });
+    var geo = gorder.map(function (c) { var e = gm[c]; return { country: c, avg: +(e.wsum / (e.ratings || 1)).toFixed(1), ratings: e.ratings, reviews: e.reviews }; }).sort(function (a, b) { return b.ratings - a.ratings; });
+    return { labels: base.labels, total: total, stars: stars, avg: avg, orig: orig, rev: rev, avgSeries: avgSeries, totSeries: totSeries, reviews: REVIEW_POOL, geo: geo };
+  }
+  // Per-app comparison for "All apps": one colored series per app on each chart (so trends compare
+  // side by side) + a per-app summary table whose rows open that app's own analytics.
+  var ANA_APP_COLORS = ["#4aa3ff", "#e3008c", "#f7b955", "#4ad17a", "#a371f7", "#5ad1cd", "#ff8c42", "#c239b3"];
+  function anaAppColor(i) { return ANA_APP_COLORS[i % ANA_APP_COLORS.length]; }
+  function anaAppSeries(ds, key) { return ds.map(function (x, i) { return { name: x.app.name, color: anaAppColor(i), values: x.d[key] }; }); }
+  function anaAppTable(title, sub, heads, rows) {
+    var thead = '<tr><th>App</th>' + heads.map(function (h) { return '<th class="num">' + esc(h) + '</th>'; }).join("") + '<th></th></tr>';
+    var tbody = rows.map(function (r) {
+      return '<tr data-analytics="' + esc(r.app.id) + '" title="Open ' + esc(r.app.name) + ' analytics">' +
+        '<td><span class="ana-appcell">' + appIcoImg(r.app) + '<span>' + esc(r.app.name) + '</span></span></td>' +
+        r.cells.map(function (c) { return '<td class="num">' + c + '</td>'; }).join("") +
+        '<td class="num"><iconify-icon icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></td></tr>';
+    }).join("");
+    return '<section class="apanel"><header class="apanel__head"><h3>' + esc(title) + '</h3></header>' +
+      (sub ? '<p class="apanel__sub muted">' + esc(sub) + '</p>' : "") +
+      '<div class="table-wrap"><table class="atable ana-apptable"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div></section>';
+  }
+  function crashTabAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return crashTab(apps[0] || state.apps[0]);
+    var views = apps.map(function (a) { return { app: a, v: caView(a), rate: anaData(a).crashRate }; });
+    var labels = views[0].v.labels, n = labels.length;
+    function sumSeries(idx) { var out = anaZeros(n); views.forEach(function (x) { anaAddInto(out, x.v.series[idx].values); }); return out; }
+    var cs = sumSeries(0), hs = sumSeries(1), ms = sumSeries(2), totalS = cs.map(function (v, i) { return v + hs[i] + ms[i]; });
+    function sumF(f) { return views.reduce(function (m, x) { return m + x.v[f]; }, 0); }
+    var crashes = sumF("crashes"), hangs = sumF("hangs"), mem = sumF("mem"), total = crashes + hangs + mem;
+    function aggDelta(field, dfield) { var c = 0, p = 0; views.forEach(function (x) { var cur = x.v[field], d = x.v[dfield] || 0; c += cur; p += cur / (1 + d / 100); }); return p ? +(((c - p) / p) * 100).toFixed(1) : 0; }
+    var sub = anaRange === "7d" ? "Last 7 days" : anaRange === "custom" ? "Custom range" : "Last 30 days";
+    var cards = '<div class="sumrow sumrow--4">' +
+      countCard("Total failures", fmtCompact(total), sub, totalS, "var(--brand)", aggDelta("total", "dTotal")) +
+      countCard("Crashes", fmtCompact(crashes), sub, cs, "var(--brand)", aggDelta("crashes", "dCrash")) +
+      countCard("Hangs", fmtCompact(hangs), sub, hs, "var(--magenta)", aggDelta("hangs", "dHang")) +
+      countCard("Memory failures", fmtCompact(mem), sub, ms, "var(--purple)", aggDelta("mem", "dMem")) + '</div>';
+    var series = views.map(function (x, i) { var s = x.v.series; return { name: x.app.name, color: anaAppColor(i), values: s[0].values.map(function (c, k) { return c + s[1].values[k] + s[2].values[k]; }) }; });
+    var rows = views.map(function (x) { return { app: x.app, total: x.v.total, rate: x.rate, cells: [fmtCompact(x.v.total), fmtCompact(x.v.crashes), fmtCompact(x.v.hangs), '<span class="' + (x.rate >= 5 ? 'ca-rate--warn' : '') + '">' + x.rate.toFixed(2) + '%</span>'] }; }).sort(function (a, b) { return b.total - a.total; });
+    var worst = rows.slice().sort(function (a, b) { return b.rate - a.rate; })[0];
+    var insight = worst ? ('<div class="ai-insight"><span class="ai-insight__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>AI insight</span>' +
+      '<p class="ai-insight__text"><strong>' + esc(worst.app.name) + '</strong> has the highest crash rate across your portfolio at <strong>' + worst.rate.toFixed(2) + '%</strong>' + (worst.rate >= 5 ? ' \u2014 above the 5% healthy bar. Start here.' : ' \u2014 within a healthy range.') + '</p>' +
+      '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-analytics="' + esc(worst.app.id) + '"><iconify-icon slot="start" icon="fluent:arrow-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Open ' + esc(worst.app.name) + '</fluent-button></div>') : "";
+    return insight + cards +
+      apanel("Failures over time by app", chartLine({ series: series, labels: labels }) + chartLegend(series), "Total failures per app \u2014 compare which apps are trending up") +
+      anaAppTable("Crash health by app", "Failure totals and crash rate per app for the selected range. Select an app to open its full crash analytics.", ["Total failures", "Crashes", "Hangs", "Crash rate"], rows);
+  }
+  function acqTabAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return acquisitionTab(apps[0] || state.apps[0]);
+    var agg = acqDataAll(), L = agg.labels, ds = apps.map(function (a) { return { app: a, d: acqData(a) }; });
+    var cards = '<div class="sumrow sumrow--4">' +
+      sumCard("Page views", fmtCompact(agg.pvTotal), "Last 28 days", agg.pv, "var(--brand)") +
+      sumCard("Installs", fmtCompact(agg.instTotal), "Last 28 days", agg.inst, "#4ad17a") +
+      sumCard("Conversion", agg.conv.toFixed(2) + "%", "Installs by page views", agg.convRate, "#f7b955") +
+      sumCard("Install success rate", agg.succ.toFixed(2) + "%", "Last 28 days", agg.succRate, "#5ad1cd") + '</div>';
+    var instS = anaAppSeries(ds, "inst"), pvS = anaAppSeries(ds, "pv");
+    var rows = ds.map(function (x) { return { app: x.app, inst: x.d.instTotal, cells: [fmtCompact(x.d.pvTotal), fmtCompact(x.d.instTotal), x.d.conv.toFixed(2) + "%"] }; }).sort(function (a, b) { return b.inst - a.inst; });
+    return cards +
+      apanel("Installs by app", chartLine({ series: instS, labels: L }) + chartLegend(instS), "Installs per app over the last 28 days") +
+      apanel("Page views by app", chartLine({ series: pvS, labels: L }) + chartLegend(pvS), "Page views per app over the last 28 days") +
+      anaAppTable("Acquisition by app", "Select an app to open its full acquisition analytics.", ["Page views", "Installs", "Conversion"], rows);
+  }
+  function usageTabAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return usageTab(apps[0] || state.apps[0]);
+    var agg = usageDataAll(), L = agg.labels, ds = apps.map(function (a) { return { app: a, d: usageData(a) }; });
+    var cards = '<div class="sumrow sumrow--4">' +
+      sumCard("Monthly active devices (Avg)", fmtCompact(agg.madAvg), "Last 30 days", agg.mad, "var(--brand)") +
+      sumCard("Sessions (Total)", fmtCompact(agg.sessTotal), "Last 30 days", agg.sessions, "var(--brand)") +
+      sumCard("Avg engagement duration", agg.avgEng + " min", "Last 30 days", agg.avgMin, "#5ad1cd") +
+      sumCard("DAD/MAD", agg.dadMad + "%", "Last 30 days", agg.stickiness, "#f7b955") + '</div>';
+    var madS = anaAppSeries(ds, "mad"), sessS = anaAppSeries(ds, "sessions");
+    var rows = ds.map(function (x) { return { app: x.app, mad: x.d.madAvg, cells: [fmtCompact(x.d.madAvg), fmtCompact(x.d.sessTotal), x.d.dadMad + "%"] }; }).sort(function (a, b) { return b.mad - a.mad; });
+    return cards +
+      apanel("Active devices by app", chartLine({ series: madS, labels: L }) + chartLegend(madS), "Monthly active devices per app") +
+      apanel("Sessions by app", chartLine({ series: sessS, labels: L }) + chartLegend(sessS), "Device sessions per app") +
+      anaAppTable("Usage by app", "Select an app to open its full usage analytics.", ["Active devices (Avg)", "Sessions", "DAD/MAD"], rows);
+  }
+  function ratingsTabAll() {
+    var apps = anaLiveApps(); if (apps.length < 2) return ratingsTab(apps[0] || state.apps[0]);
+    var agg = ratingsDataAll(), L = agg.labels, ds = apps.map(function (a) { return { app: a, d: ratingsData(a) }; });
+    var breakdown = '<div class="ratbreak"><div class="ratbreak__sum">' +
+      '<span class="muted">Average</span><strong class="ratbreak__avg">' + agg.avg.toFixed(2) + '</strong>' + starRowHTML(agg.avg) +
+      '<span class="muted ratbreak__lbl">Total Ratings</span><strong class="ratbreak__tot">' + fmtComma(agg.total) + '</strong>' +
+      '<div class="ratbreak__split"><div><span class="muted">Original rating</span><strong>' + fmtCompact(agg.orig) + '</strong></div>' +
+        '<div><span class="muted">Revised rating</span><strong>' + fmtComma(agg.rev) + '</strong></div></div></div>' +
+      '<div class="ratbreak__bars">' + ratingBars(agg.stars) + '</div></div>';
+    var avgS = ds.map(function (x, i) { return { name: x.app.name, color: anaAppColor(i), values: x.d.avgSeries }; });
+    var volS = anaAppSeries(ds, "totSeries");
+    var rows = ds.map(function (x) { return { app: x.app, total: x.d.total, cells: [x.d.avg.toFixed(2), fmtComma(x.d.total)] }; }).sort(function (a, b) { return b.total - a.total; });
+    return '<div class="apanel-grid">' + apanel("Ratings breakdown", breakdown) +
+      apanel("Average rating by app", chartLine({ series: avgS, labels: L, yMin: 0, yMax: 5, fmt: function (v) { return v.toFixed(1); } }) + legendDots(avgS.map(function (s) { return { name: s.name, color: s.color }; }))) + '</div>' +
+      apanel("Ratings volume by app", chartLine({ series: volS, labels: L }) + chartLegend(volS), "New ratings per app over time") +
+      anaAppTable("Ratings by app", "Select an app to open its full ratings analytics.", ["Avg rating", "Total ratings"], rows);
+  }
   function renderAnalyticsPanel() {
     var panelEl = $("analyticsPanel");
-    var app = appById(analyticsAppId) || state.apps[0];
+    var allMode = analyticsAppId === "__all__";
+    var app = allMode ? { id: "__all__", name: "All apps", store: true } : (appById(analyticsAppId) || state.apps[0]);
     if (!app) { panelEl.innerHTML = emptyAnalyticsHTML(); return; }
     // Health is always available. Store tabs lock until the app is on the Store, then show
     // the full detailed dashboard. Full re-render each time so the tab lock icons track the app.
@@ -2364,7 +2550,7 @@
       : anaTab === "usage" ? usageTab(app)
       : anaTab === "ratings" ? ratingsTab(app)
       : crashTab(app);
-    panelEl.innerHTML = anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
+    panelEl.innerHTML = anaTabsHTML(app) + '<div class="anabody">' + (allMode ? anaAllBannerHTML() : "") + body + '</div>';
     sizeCharts(panelEl); observeCharts(panelEl);
     // In the "new app / no data" crash zero state there's nothing to filter, so hide the version/date/Filters
     // toolbar (the app picker stays). The latency state keeps filters so the date range can still be changed.
@@ -2389,7 +2575,8 @@
     var liveApps = state.apps.filter(function (a) { return a.store || a.discovered; });
     if (!liveApps.length) { if (controls) controls.hidden = true; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
     if (controls) controls.hidden = false;
-    if (!analyticsAppId || !liveApps.some(function (a) { return a.id === analyticsAppId; })) analyticsAppId = liveApps[0].id;
+    if (analyticsAppId === "__all__") { if (liveApps.length < 2) analyticsAppId = liveApps[0].id; }
+    else if (!analyticsAppId || !liveApps.some(function (a) { return a.id === analyticsAppId; })) analyticsAppId = liveApps[0].id;
     renderAppSelect(liveApps);
     renderAnaFilter();
     renderAnaChips();
@@ -2421,18 +2608,21 @@
   }
   function renderAppSelect(apps) {
     var el = $("anaAppSel"); if (!el) return;
-    var cur = appById(analyticsAppId) || apps[0];
-    el.innerHTML = '<fluent-dropdown id="anaAppDd" appearance="outline" aria-label="Select app" placeholder="Select app"><fluent-listbox>' + apps.map(function (a) {
-      return '<fluent-option value="' + a.id + '"' + (a.id === cur.id ? " selected" : "") + '>' + appIcoImg(a) + '<span class="opt-name">' + esc(a.name) + '</span></fluent-option>';
+    var allSel = analyticsAppId === "__all__" && apps.length > 1;
+    var cur = allSel ? null : (appById(analyticsAppId) || apps[0]);
+    var allIco = '<iconify-icon class="opt-allico" icon="fluent:apps-list-24-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
+    var allOpt = apps.length > 1 ? '<fluent-option value="__all__"' + (allSel ? " selected" : "") + '>' + allIco + '<span class="opt-name">All apps</span></fluent-option>' : "";
+    el.innerHTML = '<fluent-dropdown id="anaAppDd" appearance="outline" aria-label="Select app" placeholder="Select app"><fluent-listbox>' + allOpt + apps.map(function (a) {
+      return '<fluent-option value="' + a.id + '"' + (!allSel && cur && a.id === cur.id ? " selected" : "") + '>' + appIcoImg(a) + '<span class="opt-name">' + esc(a.name) + '</span></fluent-option>';
     }).join("") + '</fluent-listbox></fluent-dropdown>';
     var dd = $("anaAppDd");
     if (dd) {
-      dd.addEventListener("change", function () { var v = dd.value; if (!v || v === analyticsAppId) return; analyticsAppId = v; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; renderAnalytics(); });
-      // Fluent dropdown builds a text-only combobox trigger; inject the current app's logo into it.
+      dd.addEventListener("change", function () { var v = dd.value; if (!v || v === analyticsAppId) return; analyticsAppId = v; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; anaFilters = {}; renderAnalytics(); });
+      // Fluent dropdown builds a text-only combobox trigger; inject the current selection's logo into it.
       var tries = 0;
       (function injectAppLogo() {
         var btn = dd.querySelector('button[role="combobox"]');
-        if (btn) { if (!btn.querySelector(".app-ico")) btn.insertAdjacentHTML("afterbegin", appIcoImg(cur)); return; }
+        if (btn) { if (!btn.querySelector(".app-ico") && !btn.querySelector(".opt-allico")) btn.insertAdjacentHTML("afterbegin", allSel ? allIco : appIcoImg(cur)); return; }
         if (tries++ < 20) setTimeout(injectAppLogo, 30);
       })();
     }
@@ -3307,7 +3497,7 @@
       var _anaTabM = /[?&]anaTab=([^&#]+)/.exec(location.search);
       var _anaTab = _anaTabM ? decodeURIComponent(_anaTabM[1]) : "crashes";
       if (ANA_TABS.some(function (t) { return t.key === _anaTab; })) anaTab = _anaTab;
-      if (appById(_anaId)) analyticsAppId = _anaId;
+      if (_anaId === "__all__" || appById(_anaId)) analyticsAppId = _anaId;
       if (history.replaceState) history.replaceState(null, "", location.pathname + "#analytics");
       goView("analytics"); renderAnalytics();
     }

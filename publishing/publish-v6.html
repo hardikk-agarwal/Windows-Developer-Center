@@ -26,7 +26,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=3" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=66" defer></script>
+<script src="tdp-bridge.js?v=69" defer></script>
 <link rel="stylesheet" href="styles.css?v=2">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -181,15 +181,6 @@
   /* Responsible AI: appears wherever AI drafts content; sets expectations + prompts review. */
   .ez-ai-disclaimer { display: flex; align-items: flex-start; gap: var(--sp-6); margin: var(--sp-12) 0 0; font-size: 12px; line-height: 16px; color: var(--fg-3); }
   .ez-ai-disclaimer iconify-icon { flex: 0 0 auto; margin-top: 1px; color: var(--fg-3); }
-  /* Adaptive "Enhance with AI" menu (opens from a field chip; positioned in JS). */
-  .ai-menu { position: fixed; z-index: 1000; min-width: 224px; padding: var(--sp-6); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: 0 10px 28px -8px rgba(0,0,0,.55); animation: aiHintIn var(--dur-3) var(--ease-out) both; }
-  .ai-menu[hidden] { display: none; }
-  .ai-menu__head { font-size: 12px; font-weight: 600; color: var(--fg-2); margin: var(--sp-4) var(--sp-8) var(--sp-6); }
-  .ai-menu__label { font-size: 10px; color: var(--fg-4); margin: var(--sp-6) var(--sp-8) var(--sp-2); text-transform: uppercase; letter-spacing: .05em; }
-  .ai-menu__item { display: flex; align-items: center; gap: var(--sp-8); width: 100%; padding: 6px var(--sp-8); border: 0; background: none; font: inherit; font-size: 14px; color: var(--fg-1); text-align: left; border-radius: var(--r-4); cursor: pointer; }
-  .ai-menu__item iconify-icon { color: var(--brand); flex: 0 0 auto; }
-  .ai-menu__item:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
-  .ai-menu__sep { height: 1px; background: var(--stroke-3); margin: var(--sp-4) var(--sp-4); }
   /* Fluent 2 TeachingPopover-style coachmark / FRE: solid brand surface, white text, a beak,
      and a footer action. Shared by the Autofill-with-AI hint and the Advanced-options hint. */
   .fre-coach { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: 300px; padding: var(--sp-16); border-radius: var(--r-8); background: var(--brand-bg); color: #fff; box-shadow: 0 8px 16px rgba(0,0,0,.3), 0 0 2px rgba(0,0,0,.3); animation: aiHintIn var(--dur-5) var(--ease-out) both; }
@@ -450,6 +441,10 @@
   .price-tool { display: flex; width: 100%; max-width: none; padding: 0; height: auto; min-height: 0; border-radius: 0; justify-content: flex-start; }
   #price-advanced .price-tool { border-top: 1px solid var(--stroke-2); }
   #price-advanced > .price-tool:first-child { border-top: 0; }
+  /* Per-market prices are reachable from the inline "See & customize" link under the base price,
+     so this advanced-pricing entry is hidden to avoid duplicating it (Schedule becomes the top row). */
+  #price-overrides-btn { display: none; }
+  #price-overrides-btn + .price-tool { border-top: 0; }
   .price-tool::part(content) { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-12); width: 100%; padding: var(--sp-10) 0; white-space: normal; text-align: left; }
   .price-tool__ic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: var(--fg-2); }
   .price-tool__txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -1321,6 +1316,12 @@
   #lang-dialog .lang-row__st--translating { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
   #lang-dialog .lang-row__st--ok { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 12%, transparent); }
   #lang-dialog .lang-row__st--warn { color: var(--status-warning, #e0a23a); background: color-mix(in srgb, var(--status-warning, #e0a23a) 14%, transparent); }
+  /* At-a-glance per-language progress trailing each item in the editing-language dropdown. */
+  #lang-menu-list .lang-menu__st { display: inline-flex; align-items: center; gap: 4px; margin-left: var(--sp-12); font-size: 11px; font-weight: var(--font-weight-semibold); white-space: nowrap; }
+  #lang-menu-list .lang-menu__st iconify-icon, #lang-menu-list .lang-menu__st fluent-spinner { flex: 0 0 auto; }
+  #lang-menu-list .lang-menu__st--ok { color: var(--status-success); }
+  #lang-menu-list .lang-menu__st--warn { color: var(--status-warning, #e0a23a); }
+  #lang-menu-list .lang-menu__st--tr { color: var(--brand); }
   /* Small muted "in your package" icon next to the name (no text pill). */
   #lang-dialog .lang-row__pkg { color: var(--fg-4); flex: 0 0 auto; }
   /* Default control (col 3): a clear filled "Default" pill marks the current default; other added
@@ -1709,6 +1710,21 @@
   .ez-whatsnew-note { display: flex; align-items: flex-start; gap: var(--sp-8); margin: 0 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--fg-1); font-size: 14px; line-height: 18px; }
   .ez-whatsnew-note[hidden] { display: none; }
   .ez-whatsnew-note iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
+  /* Per-language release notes: a "same for all" switch, then compact per-language textareas. */
+  .whatsnew-sameall { display: flex; align-items: flex-start; gap: var(--sp-12); cursor: pointer; margin: 0 0 var(--sp-16); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); }
+  .whatsnew-sameall[hidden] { display: none; }
+  .whatsnew-sameall fluent-switch { flex: 0 0 auto; margin-top: 1px; }
+  .whatsnew-sameall__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .whatsnew-sameall__title { font-size: 14px; color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .whatsnew-sameall__hint { font-size: 12px; color: var(--fg-3); line-height: 1.45; }
+  #whatsnew-single[hidden], #whatsnew-perlang[hidden] { display: none; }
+  .whatsnew-lang { margin: 0 0 var(--sp-16); }
+  .whatsnew-lang__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8); margin: 0 0 var(--sp-6); }
+  .whatsnew-lang__name { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); min-width: 0; }
+  .whatsnew-lang__ta { width: 100%; }
+  #whatsnew-dialog .whatsnew-lang__ta::part(root) { min-height: 68px; }
+  #whatsnew-dialog .whatsnew-lang__ta::part(control) { min-height: 56px; }
+  .whatsnew-perlang__foot { display: flex; justify-content: flex-start; margin-top: var(--sp-4); }
 
   /* ---- "What's changed in this update" — a SLIM banner (mirrors .cert-banner) that opens the
        #upd-changes-dialog; the detail list lives in the dialog so the editor never reflows. ---- */
@@ -1733,6 +1749,13 @@
   .upd-changes__txt strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   .upd-changes__txt span { font-size: 12px; color: var(--fg-3); }
   .upd-changes__go { flex: 0 0 auto; color: var(--fg-4); }
+  /* Recommended action (e.g. add release notes for a new package) — shown ABOVE the changed-section
+     list as a distinct brand-tinted callout, so it isn't counted among "sections changed". */
+  #upd-changes-note { margin: 0 0 var(--sp-12); }
+  #upd-changes-note:empty { display: none; margin: 0; }
+  .upd-changes-note-cta { display: flex; align-items: center; gap: var(--sp-12); width: 100%; text-align: left; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--layer)); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); cursor: pointer; font: inherit; color: var(--fg-1); transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .upd-changes-note-cta:hover { background: color-mix(in srgb, var(--brand) 12%, var(--layer)); border-color: color-mix(in srgb, var(--brand) 45%, transparent); }
+  .upd-changes-note-cta .upd-changes__ic { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
   /* Read-only "Review published details": reopens the editor with its content non-interactive.
      The review bar (Update / Done) + the left-rail step nav stay live so you can look through each step. */
   #review-bar { display: none; align-items: center; gap: var(--sp-12); margin: 0 0 var(--sp-20); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
@@ -2155,11 +2178,13 @@
   #submit-dialog .ez-sd__section + .ez-sd__section { margin-top: var(--sp-20); }
   #submit-dialog .ez-sd__title { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 var(--sp-8); }
   #submit-dialog .ez-sd__hint { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-10); line-height: 1.45; }
-  /* Compact recap: a wrapping row of icon + value chips (the full label is in each chip's tooltip). */
-  #submit-dialog .ez-sd__summary { display: flex; flex-wrap: wrap; gap: var(--sp-6) var(--sp-8); margin: 0; }
-  #submit-dialog .ez-sd__chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--subtle); color: var(--fg-1); font-size: 12px; font-weight: 500; white-space: nowrap; max-width: 100%; }
-  #submit-dialog .ez-sd__chip iconify-icon { flex: 0 0 auto; color: var(--fg-3); }
-  #submit-dialog .ez-sd__chip span { overflow: hidden; text-overflow: ellipsis; }
+  /* Submission recap: a scannable grid of labeled cells (icon + label + value) so each fact reads on its own. */
+  #submit-dialog .ez-sd__summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-8); margin: 0; }
+  #submit-dialog .ez-sd__stat { display: flex; align-items: flex-start; gap: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); }
+  #submit-dialog .ez-sd__stat-ic { flex: 0 0 auto; color: var(--fg-2); margin-top: 1px; }
+  #submit-dialog .ez-sd__stat-text { display: flex; flex-direction: column; min-width: 0; }
+  #submit-dialog .ez-sd__stat-k { font-size: 11px; font-weight: 500; color: var(--fg-3); }
+  #submit-dialog .ez-sd__stat-v { font-size: 13px; font-weight: 600; color: var(--fg-1); line-height: 1.35; overflow-wrap: anywhere; }
   #submit-dialog .ez-sd__hold { display: flex; align-items: flex-start; gap: var(--sp-12); }
   #submit-dialog .ez-sd__hold fluent-switch { flex: 0 0 auto; margin-top: 2px; }
   #submit-dialog .ez-sd__hold strong { display: block; font-size: 14px; color: var(--fg-1); }
@@ -2336,7 +2361,9 @@
   .apptype__opt { display: flex; align-items: flex-start; gap: var(--sp-10); width: 100%; padding: var(--sp-8); border: 0; border-radius: var(--r-8); background: none; font: inherit; text-align: left; cursor: pointer; transition: background var(--dur-2) var(--ease-out); }
   .apptype__opt:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
   .apptype__opt:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-  /* Locked options: the app type is fixed at name reservation (a game can only be "Game"; an app can't be a game). */
+  /* The app type is fixed at name reservation (a game can only be "Game"; an app can't be a game), so
+     options that don't match the App/Game choice are hidden. [hidden] must beat .apptype__opt display:flex. */
+  .apptype__opt[hidden] { display: none; }
   .apptype__opt:disabled { opacity: .4; cursor: not-allowed; }
   .apptype__opt:disabled:hover { background: none; }
   .apptype__dot { position: relative; flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; border: 1px solid var(--fg-3); border-radius: 50%; }
@@ -2847,6 +2874,7 @@
 
   /* Inputs inside the price schedule + sale dialogs fill their column */
   #price-schedule-dialog fluent-text-input,
+  #price-schedule-dialog fluent-dropdown,
   #price-sale-dialog fluent-text-input,
   #price-sale-dialog fluent-dropdown {
     display: block;
@@ -2878,6 +2906,7 @@
   #price-sale-dialog .price-schedule-grid .field { margin-bottom: 0; }
   #price-sale-dialog .price-sale-fields > .field { margin-bottom: var(--sp-12); }
   #price-sale-dialog #price-sale-type, #price-sale-dialog #price-sale-markets-mode { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); }
+  #price-schedule-dialog #price-schedule-tz { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4) var(--sp-16); min-height: 32px; }
   #price-sale-dialog .price-sale-amount-row { display: flex; align-items: center; gap: var(--sp-8); }
   #price-sale-dialog .price-sale-amount-row fluent-dropdown { width: auto; flex: 0 0 auto; min-width: 92px; }
   #price-sale-dialog .price-sale-amount-row fluent-text-input { flex: 1 1 auto; }
@@ -2898,6 +2927,35 @@
   /* 2-step sale flow: step 1 picks markets (taller list for the dedicated step), step 2 sets the
      discount. The scope chip on step 2 shows the chosen markets and jumps back to step 1 on click. */
   #price-sale-dialog #price-sale-step-markets .markets-dialog__list { max-height: 260px; }
+  /* ===== Market group dialog (#price-group-dialog) — reuses the sale dialog's market-picker ===== */
+  #price-group-dialog fluent-text-input, #price-group-dialog fluent-dropdown { width: 100%; }
+  #price-group-dialog fluent-text-input::part(root), #price-group-dialog fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
+  #price-group-dialog fluent-button[slot="title-action"] { min-width: 0; }
+  #price-group-markets-pick { margin-top: var(--sp-10); }
+  #price-group-dialog .markets-dialog__search { margin: 0 0 var(--sp-8); display: block; width: 100%; box-sizing: border-box; }
+  #price-group-dialog .markets-dialog__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: 0 0 var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-3); }
+  #price-group-dialog .markets-dialog__toolbar-actions { display: flex; gap: var(--sp-12); }
+  #price-group-dialog .markets-dialog__toolbar-actions button { background: transparent; border: 0; padding: 0; color: var(--brand); cursor: pointer; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); }
+  #price-group-dialog .markets-dialog__toolbar-actions button:hover { text-decoration: underline; }
+  #price-group-dialog .markets-dialog__list { max-height: 240px; overflow-y: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-2); padding: var(--sp-4) 0; }
+  #price-group-dialog .markets-dialog__row { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-6) var(--sp-12); cursor: pointer; user-select: none; }
+  #price-group-dialog .markets-dialog__row:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
+  #price-group-dialog .markets-dialog__row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
+  #price-group-dialog .markets-dialog__row-name { flex: 1 1 auto; font-size: var(--font-size-base-300); color: var(--fg-1); }
+  #price-group-dialog .markets-dialog__empty { padding: var(--sp-16); text-align: center; color: var(--fg-3); font-size: var(--font-size-base-200); }
+  #price-group-dialog .price-sale-amount-row { display: flex; align-items: center; gap: var(--sp-8); }
+  #price-group-dialog .price-sale-amount-row fluent-dropdown { width: auto; flex: 0 0 auto; min-width: 92px; }
+  #price-group-dialog .price-sale-amount-row fluent-text-input { flex: 1 1 auto; }
+  #price-group-dialog .field { margin-bottom: var(--sp-16); }
+  #price-group-dialog .field:last-of-type { margin-bottom: 0; }
+  #price-group-dialog .price-group-pricefield { border-top: 1px solid var(--stroke-3); padding-top: var(--sp-16); }
+  .price-group-price-toggle { display: flex; align-items: flex-start; gap: var(--sp-12); cursor: pointer; margin: 0; }
+  .price-group-price-toggle fluent-switch { flex: 0 0 auto; margin-top: 1px; }
+  .price-group-price-toggle > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .price-group-price-toggle__title { font-size: var(--font-size-base-300); color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  .price-group-price-toggle__hint { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
+  .price-groups { display: flex; flex-direction: column; gap: var(--sp-6); }
+  .price-groups:not(:empty) { margin-top: var(--sp-10); }
   .price-sale-scope { display: flex; align-items: center; gap: var(--sp-10); width: 100%; margin: 0 0 var(--sp-16); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); color: var(--fg-2); font: inherit; font-size: var(--font-size-base-200); text-align: left; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
   .price-sale-scope:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 6%, var(--subtle)); }
   .price-sale-scope__ico { flex: 0 0 auto; color: var(--brand); }
@@ -3034,6 +3092,11 @@
   /* No permanent dashed outline — the card carries the edge, so nothing competes with it. The drop
      target announces itself on hover/drag instead. */
   .ez-pkg-add--split .ez-pkg-drop:hover, .ez-pkg-add--split .ez-pkg-drop.is-drag { background: color-mix(in srgb, var(--brand) 6%, transparent); outline: 1.5px dashed var(--brand); outline-offset: -8px; }
+  /* Upload-only (no URL method, e.g. MSIX): drop the container edge and give the drop zone a
+     persistent dashed border, so it reads as a drag-and-drop target. */
+  .ez-pkg-add--split:has(#pkg-url-part[hidden]) { border: 0; background: none; overflow: visible; }
+  .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop { border: 1.5px dashed var(--stroke-1); border-radius: var(--r-12); background: var(--canvas-tint); }
+  .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop:hover, .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop.is-drag { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--canvas-tint)); outline: none; }
   .ez-pkg-add--split .ez-pkg-url__row { width: 100%; }
   .ez-pkg-method__ic { color: var(--brand); }
   .ez-pkg-method__title { font-size: 14px; font-weight: 600; color: var(--fg-1); }
@@ -3600,8 +3663,6 @@
   .live-stat__delta--down { color: var(--status-danger); }
   .dash-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--sp-16); margin-bottom: var(--sp-20); align-items: stretch; }
   .dash-grid--single { grid-template-columns: 1fr; }
-  .dash-soonnote { display: flex; align-items: center; gap: var(--sp-10); margin-bottom: var(--sp-20); padding: var(--sp-12) var(--sp-16); background: var(--layer); border: 1px solid color-mix(in srgb, var(--fg-1) 8%, transparent); border-radius: var(--r-12); color: var(--fg-2); font-size: 14px; line-height: 1.5; }
-  .dash-soonnote iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
   .dash-rev__insight { display: flex; align-items: flex-start; gap: var(--sp-8); margin: var(--sp-6) 0 var(--sp-12); padding: var(--sp-10) var(--sp-12); background: color-mix(in srgb, var(--status-warning) 10%, transparent); border: 1px solid color-mix(in srgb, var(--status-warning) 26%, transparent); border-radius: var(--r-8); font-size: 12px; line-height: 1.5; color: var(--fg-2); }
   .dash-rev__insight iconify-icon { color: var(--status-warning); flex: 0 0 auto; margin-top: 1px; }
   .dash-rev__insight b { color: var(--fg-1); font-weight: 600; }
@@ -4185,6 +4246,10 @@
              View submissions is secondary (View in Store rides on the status pill). Withdraw while in
              review; report/fix when failed. -->
         <div class="wz-head-actions" id="wz-head-actions">
+          <fluent-button appearance="secondary" id="head-share-btn" hidden title="Share your Store listing">
+            <iconify-icon slot="start" icon="fluent:share-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Share
+          </fluent-button>
           <fluent-button appearance="secondary" id="head-analytics-btn" hidden>
             <iconify-icon slot="start" icon="fluent:data-histogram-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             View analytics
@@ -4387,7 +4452,7 @@
           <span class="sysreq__ico"><iconify-icon icon="fluent:developer-board-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
           <span class="sysreq__head">
             <span class="sysreq__title">System requirements</span>
-            <span class="sysreq__sub" id="sysreq-summary">Set the minimum specs to run &mdash; and, optionally, recommended ones. Customers below the minimum can still install; the Store flags it and skips their review, so it won&rsquo;t hurt your score.</span>
+            <span class="sysreq__sub" id="sysreq-summary">Set the minimum specs to run &mdash; recommended ones are optional. Below-minimum installs won&rsquo;t hurt your score.</span>
           </span>
           <iconify-icon class="sysreq__chev" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </summary>
@@ -4690,7 +4755,7 @@
             <!-- Advanced view: full editor. Reading order: input, then what you've Added
                  (AI-added ones carry a sparkle), then AI Suggestions you can tap to add. -->
             <div class="ez-kw-adv" id="kw-adv">
-              <p class="ez-extra-field__hint">Words people might search to find your app in the Store.</p>
+              <p class="ez-extra-field__hint">Words people might search to find your app in the Store. You can set different keywords for each language.</p>
               <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword">
                 <iconify-icon slot="start" icon="fluent:search-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
               </fluent-text-input>
@@ -4977,6 +5042,15 @@
                   </span>
                   <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
                 </fluent-button>
+                <fluent-button appearance="subtle" class="price-tool" id="price-group-btn">
+                  <span class="price-tool__ic"><iconify-icon icon="fluent:group-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
+                  <span class="price-tool__txt">
+                    <span class="price-tool__title" id="price-group-label">Create a market group</span>
+                    <span class="price-tool__desc">Group markets to price them together &mdash; and reuse when scheduling.</span>
+                  </span>
+                  <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+                </fluent-button>
+                <div class="price-groups" id="price-groups"></div>
                 <fluent-button appearance="subtle" class="price-tool" id="price-schedule-btn">
                   <span class="price-tool__ic"><iconify-icon icon="fluent:calendar-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
                   <span class="price-tool__txt">
@@ -5276,6 +5350,7 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
     <div id="upd-changes-content">
+      <div id="upd-changes-note"></div>
       <p class="upd-changes-dialog__intro" id="upd-changes-sub">Edit any section to update your live listing.</p>
       <ul class="upd-changes__list" id="upd-changes-list"></ul>
     </div>
@@ -5584,20 +5659,6 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
-<!-- Adaptive AI assist menu: opens from a field's "Enhance with AI" chip (position set in JS). -->
-<div class="ai-menu" id="ai-assist-menu" role="menu" hidden>
-  <p class="ai-menu__head" id="ai-menu-head">Enhance with AI</p>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="improve"><iconify-icon icon="fluent:wand-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Improve writing</button>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="shorter"><iconify-icon icon="fluent:text-collapse-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Make it shorter</button>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="longer"><iconify-icon icon="fluent:text-expand-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Make it longer</button>
-  <div class="ai-menu__sep"></div>
-  <p class="ai-menu__label">Change tone</p>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="tone" data-tone="professional"><iconify-icon icon="fluent:briefcase-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Professional</button>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="tone" data-tone="friendly"><iconify-icon icon="fluent:emoji-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Friendly</button>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="tone" data-tone="concise"><iconify-icon icon="fluent:slide-text-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Concise</button>
-  <div class="ai-menu__sep"></div>
-  <button type="button" class="ai-menu__item" role="menuitem" data-ai-act="grammar"><iconify-icon icon="fluent:text-grammar-checkmark-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Fix spelling &amp; grammar</button>
-</div>
 
 <!-- Autofill-with-AI dialog: describe the app in a line, draft the full listing (description, short description, features, search keywords, category). -->
 <fluent-dialog id="ai-autofill-dialog" modal-type="modal" aria-labelledby="ai-autofill-title">
@@ -5639,12 +5700,25 @@
       <span>Your new package is added. Add a quick note about what changed in this version.</span>
     </div>
     <p class="ez-ai-dialog__intro">Tell customers what changed &mdash; new features, improvements, or fixes. This appears in your Store listing under <strong>&ldquo;What&rsquo;s new in this version.&rdquo;</strong> It&rsquo;s optional &mdash; you can also add or edit it later from your listing.</p>
-    <fluent-textarea id="whatsnew-input" class="ez-ai-dialog__input" rows="5" placeholder="e.g. Added dark mode, faster startup, and fixed a sync bug."></fluent-textarea>
-    <div class="ez-whatsnew-draftrow">
-      <button type="button" class="ez-ai-chip" id="whatsnew-draft">
-        <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Draft with AI</span>
-      </button>
+
+    <label class="whatsnew-sameall" id="whatsnew-sameall-row" hidden>
+      <fluent-switch id="whatsnew-sameall" checked></fluent-switch>
+      <span class="whatsnew-sameall__text">
+        <span class="whatsnew-sameall__title">Use the same notes for all languages</span>
+        <span class="whatsnew-sameall__hint">One set of release notes applies to every language on your listing. Turn off to write each language separately &mdash; right here.</span>
+      </span>
+    </label>
+
+    <div id="whatsnew-single">
+      <fluent-textarea id="whatsnew-input" class="ez-ai-dialog__input" rows="5" placeholder="e.g. Added dark mode, faster startup, and fixed a sync bug."></fluent-textarea>
+      <div class="ez-whatsnew-draftrow">
+        <button type="button" class="ez-ai-chip" id="whatsnew-draft">
+          <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Draft with AI</span>
+        </button>
+      </div>
     </div>
+
+    <div id="whatsnew-perlang" hidden></div>
     <p class="ez-ai-disclaimer"><iconify-icon icon="fluent:info-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span>If you draft with AI, review the text before saving. AI can make mistakes.</span></p>
 
     <fluent-button slot="action" appearance="secondary" data-whatsnew-close>Write later</fluent-button>
@@ -6012,7 +6086,7 @@
     </fluent-button>
 
     <p class="markets-dialog__intro" style="font-size:var(--font-size-base-200);color:var(--fg-3);margin:0 0 var(--sp-12);">
-      Set a future date and new base price. Local conversions and any overrides above apply automatically.
+      Set when the change takes effect and the new base price. Local conversions and any overrides above apply automatically.
     </p>
 
     <div class="price-schedule-grid">
@@ -6021,9 +6095,25 @@
         <fluent-text-input id="price-schedule-date" type="date"></fluent-text-input>
       </div>
       <div class="field">
+        <label for="price-schedule-time" class="field__label">Time</label>
+        <fluent-text-input id="price-schedule-time" type="time"></fluent-text-input>
+      </div>
+      <div class="field">
+        <label class="field__label">Time zone</label>
+        <fluent-radio-group orientation="horizontal" aria-label="Time zone" id="price-schedule-tz">
+          <fluent-field label-position="after"><label slot="label" for="ptz-local">Local<span id="ptz-local-zone"></span></label><fluent-radio id="ptz-local" slot="input" value="local" checked></fluent-radio></fluent-field>
+          <fluent-field label-position="after"><label slot="label" for="ptz-utc">UTC</label><fluent-radio id="ptz-utc" slot="input" value="utc"></fluent-radio></fluent-field>
+        </fluent-radio-group>
+      </div>
+      <div class="field">
         <label for="price-schedule-price" class="field__label">New base price (USD)</label>
         <fluent-text-input id="price-schedule-price" type="text" inputmode="decimal" placeholder="2.99"></fluent-text-input>
       </div>
+    </div>
+
+    <div class="field" id="price-schedule-scope-field" hidden style="margin-top: var(--sp-12);">
+      <label for="price-schedule-scope" class="field__label">Applies to</label>
+      <fluent-dropdown id="price-schedule-scope"><fluent-listbox></fluent-listbox></fluent-dropdown>
     </div>
 
     <p class="price-schedule-preview" id="price-schedule-preview">Pick a date and price to preview the change.</p>
@@ -6033,6 +6123,73 @@
     <fluent-button slot="action" appearance="primary" id="price-schedule-save" disabled>
       <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Save schedule
+    </fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- Market group dialog (Advanced · Paid) — name a set of markets to price together and reuse when
+     scheduling a price change. Optional custom currency + price for the whole group. -->
+<fluent-dialog id="price-group-dialog" modal-type="modal" aria-labelledby="price-group-title">
+  <fluent-dialog-body>
+    <span slot="title" id="price-group-title">
+      <iconify-icon icon="fluent:group-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
+      <span id="price-group-title-text">Create a market group</span>
+    </span>
+    <fluent-button slot="title-action" appearance="subtle" data-price-group-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+
+    <p class="markets-dialog__intro" style="font-size:var(--font-size-base-200);color:var(--fg-3);margin:0 0 var(--sp-12);">
+      Group markets so you can price them together &mdash; then reuse the group when you schedule a price change.
+    </p>
+
+    <div class="field">
+      <label for="price-group-name" class="field__label">Group name</label>
+      <fluent-text-input id="price-group-name" placeholder="e.g. Europe, Emerging markets"></fluent-text-input>
+    </div>
+
+    <div class="field">
+      <label class="field__label">Markets in this group</label>
+      <fluent-radio-group orientation="horizontal" aria-label="Markets in this group" id="price-group-markets-mode">
+        <fluent-field label-position="after"><label slot="label" for="pgm-all">All markets</label><fluent-radio id="pgm-all" slot="input" value="all"></fluent-radio></fluent-field>
+        <fluent-field label-position="after"><label slot="label" for="pgm-choose">Specific markets</label><fluent-radio id="pgm-choose" slot="input" value="choose" checked></fluent-radio></fluent-field>
+      </fluent-radio-group>
+      <div class="price-sale-markets" id="price-group-markets-pick">
+        <fluent-text-input id="price-group-markets-search" class="markets-dialog__search" placeholder="Search markets…">
+          <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+        </fluent-text-input>
+        <div class="markets-dialog__toolbar">
+          <span id="price-group-markets-count">0 selected</span>
+          <div class="markets-dialog__toolbar-actions">
+            <button type="button" id="price-group-markets-all">Select all</button>
+            <button type="button" id="price-group-markets-clear">Clear all</button>
+          </div>
+        </div>
+        <div class="markets-dialog__list" id="price-group-markets-list" role="listbox" aria-multiselectable="true"></div>
+      </div>
+    </div>
+
+    <div class="field price-group-pricefield">
+      <label class="price-group-price-toggle">
+        <fluent-switch id="price-group-custom-toggle"></fluent-switch>
+        <span>
+          <span class="price-group-price-toggle__title">Set a custom price for this group</span>
+          <span class="price-group-price-toggle__hint">Off &mdash; these markets keep your auto-converted local prices.</span>
+        </span>
+      </label>
+      <div class="price-sale-amount-row" id="price-group-price-row" hidden style="margin-top: var(--sp-10);">
+        <fluent-dropdown id="price-group-currency" class="price-currency-dropdown" aria-label="Group price currency">
+          <fluent-listbox></fluent-listbox>
+        </fluent-dropdown>
+        <fluent-text-input id="price-group-price" type="text" inputmode="decimal" placeholder="4.99"></fluent-text-input>
+      </div>
+    </div>
+
+    <fluent-button slot="action" id="price-group-cancel" appearance="secondary" data-price-group-close>Cancel</fluent-button>
+    <fluent-button slot="action" id="price-group-remove" appearance="subtle" hidden>Remove group</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="price-group-save" disabled>
+      <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+      <span id="price-group-save-label">Create group</span>
     </fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
@@ -6377,7 +6534,7 @@
 
     <p class="lang-dialog__note">
       <iconify-icon icon="fluent:info-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Customers see your listing in their own language when available, otherwise your default. Change it anytime with Set default.
+      Customers see your listing in their own language when available, otherwise your default. Adding a language copies your default listing&rsquo;s content as a starting point &mdash; translate and edit it anytime. Change your default with Set default.
     </p>
 
     <fluent-text-input id="lang-search" class="markets-dialog__search" placeholder="Search languages…">
@@ -6389,11 +6546,11 @@
     </div>
     <div class="lang-dialog__list" id="lang-list" role="list"></div>
 
-    <label class="lang-dialog__opt">
+    <label class="lang-dialog__opt vision-only">
       <fluent-switch id="lang-duplicate-toggle" checked></fluent-switch>
       <span>
-        <span class="lang-dialog__opt-title">Auto-translate default content for new languages</span>
-        <span class="lang-dialog__opt-hint">Description, short description, and features are translated from your default language as a starting point. You can edit anything after.</span>
+        <span class="lang-dialog__opt-title">Auto-translate content for new languages</span>
+        <span class="lang-dialog__opt-hint">The copied description, short description, and features are translated into each new language. You can edit anything after.</span>
       </span>
     </label>
 
@@ -6830,7 +6987,7 @@
             </fluent-radio-group>
             <fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input>
           </div>
-          <div class="ez-sd__field">
+          <div class="ez-sd__field" id="submit-release-end-field">
             <span class="ez-sd__field-label">Stop offering to new customers</span>
             <fluent-radio-group class="ez-sd__radios" data-hold="release-end" orientation="vertical">
               <fluent-field label-position="after"><label slot="label" for="re-never">Keep it available</label><fluent-radio id="re-never" slot="input" value="never"></fluent-radio></fluent-field>
@@ -7697,7 +7854,7 @@
   const ADV_DEFAULTS = () => ({
     markets: { mode: 'all', selected: [], newRegions: true },
     audience: { mode: 'public', groups: [] },
-    price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, schedule: null, sales: [], win32Trial: 'none' },
+    price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, groups: [], schedule: null, sales: [], win32Trial: 'none' },
     trial: { mode: 'none', duration: '7' },
     // Gradual rollout of an UPDATE (Windows 10/11): release to a % of customers first, then ramp.
     rollout: { gradual: false, percent: 10, mandatory: false },
@@ -7709,7 +7866,7 @@
     testCredentials: [],
     declarations: { genAi: false, externalCommerce: false, drivers: false, accessibility: false, penInk: false, altDrives: true, oneDriveBackup: true, broadcast: true },
     iarcId: '',
-    listing: { shortDesc: '', features: '', whatsNew: '', keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
+    listing: { shortDesc: '', features: '', whatsNew: '', whatsNewSameAll: true, whatsNewLocales: {}, keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
       // Support info (EU DSA contact details). mode 'account' = use account-level
       // details; 'custom' = per-app details below. Not localized (shared contact info).
       support: { mode: 'account', address1: '', address2: '', city: '', zip: '', state: '', country: 'US', website: '', phone: '', email: '' },
@@ -7735,6 +7892,8 @@
   let updateSnapshot = null;
   let updateChangedSet = new Set();
   let updateBaselineData = null; // structured per-field baseline so updChangeDesc can name what changed
+  let updateResumable = false;   // an update was started + edited, then paused to the hub — offer to continue it
+  let updateResumeStep = 0;      // the wizard step to reopen when continuing a paused update
   function updSectionSig(sec) {
     try {
       if (sec === 'step-package') return JSON.stringify((packages || []).filter(function (p) { return !p._pending; }).map(function (p) { return [p.id, p.version || '', (p.arches || []).join('/'), (p.devices || []).join('/'), !!p.win32]; }));
@@ -7747,8 +7906,8 @@
   function captureUpdateBaseline() {
     updateSnapshot = {}; WZ_STEPS.forEach(function (s) { updateSnapshot[s] = updSectionSig(s); });
     updateBaselineData = {
-      listing: { name: state.name || '', desc: state.desc || '', category: state.category || '', shots: (state.shots || []).length, icon: (userIconDataUrl || pkgIconDataUrl || '').length, whatsNew: (adv.listing.whatsNew || '').trim(), features: (adv.listing.features || '').trim(), hero: !!adv.listing.hero, trailers: (adv.listing.trailers || []).length },
-      reach: { priceMode: adv.price.mode, priceAmt: adv.price.amount, markets: JSON.stringify(adv.markets), audience: JSON.stringify(adv.audience), trial: adv.trial.mode, schedule: JSON.stringify(adv.schedule), hold: JSON.stringify(adv.publishHold) },
+      listing: { name: state.name || '', desc: state.desc || '', category: state.category || '', shots: (state.shots || []).length, icon: (userIconDataUrl || pkgIconDataUrl || '').length, whatsNew: (adv.listing.whatsNew || '').trim(), whatsNewLoc: JSON.stringify(adv.listing.whatsNewLocales || {}), whatsNewSame: adv.listing.whatsNewSameAll !== false, features: (adv.listing.features || '').trim(), hero: !!adv.listing.hero, trailers: (adv.listing.trailers || []).length },
+      reach: { priceMode: adv.price.mode, priceAmt: adv.price.amount, currency: adv.price.currency, priceSchedule: JSON.stringify(adv.price.schedule || null), groups: JSON.stringify(adv.price.groups || []), sales: JSON.stringify(adv.price.sales || []), overrides: JSON.stringify(adv.price.overrides || {}), win32Trial: adv.price.win32Trial || 'none', markets: JSON.stringify(adv.markets), audience: JSON.stringify(adv.audience), trial: adv.trial.mode, schedule: JSON.stringify(adv.schedule), hold: JSON.stringify(adv.publishHold) },
       rating: { rating: state.rating, decl: JSON.stringify(adv.declarations), iarc: adv.iarcId || '' }
     };
     updateChangedSet = new Set();
@@ -7769,7 +7928,7 @@
       if ((state.category || '') !== L.category) parts.push('Category');
       if ((state.shots || []).length !== L.shots) parts.push('Screenshots');
       if ((userIconDataUrl || pkgIconDataUrl || '').length !== L.icon) parts.push('Icon');
-      if ((adv.listing.whatsNew || '').trim() !== L.whatsNew) parts.push('Release notes');
+      if ((adv.listing.whatsNew || '').trim() !== L.whatsNew || JSON.stringify(adv.listing.whatsNewLocales || {}) !== (L.whatsNewLoc || '{}') || (adv.listing.whatsNewSameAll !== false) !== (L.whatsNewSame !== false)) parts.push('Release notes');
       if ((adv.listing.features || '').trim() !== L.features) parts.push('Features');
       if (!!adv.listing.hero !== L.hero || (adv.listing.trailers || []).length !== L.trailers) parts.push('Media');
       return parts.length ? parts.slice(0, 3).join(' · ') + (parts.length > 3 ? ' +' + (parts.length - 3) : '') : 'Store listing edited';
@@ -7781,13 +7940,18 @@
       return rp.length ? rp.join(' · ') : 'Content & ratings updated';
     }
     if (sec === 'step-reach') {
-      var Rc = b.reach || {}, rc = [];
-      if (adv.price.mode !== Rc.priceMode || adv.price.amount !== Rc.priceAmt) rc.push(adv.price.mode === 'paid' ? ('Now paid · ' + adv.price.currency + ' ' + adv.price.amount) : 'Price');
+      var Rc = b.reach || {}, rc = [], P = adv.price || {};
+      if (P.mode !== Rc.priceMode || P.amount !== Rc.priceAmt) rc.push(P.mode === 'paid' ? ('Now paid \u00b7 ' + P.currency + ' ' + P.amount) : (Rc.priceMode === 'paid' ? 'Now free' : 'Price'));
+      else if ((P.currency || '') !== (Rc.currency || '')) rc.push('Currency');
       if (JSON.stringify(adv.markets) !== Rc.markets) rc.push('Markets');
       if (JSON.stringify(adv.audience) !== Rc.audience) rc.push('Audience');
-      if (adv.trial.mode !== Rc.trial) rc.push('Free trial');
+      if (adv.trial.mode !== Rc.trial || (P.win32Trial || 'none') !== (Rc.win32Trial || 'none')) rc.push('Free trial');
+      if (JSON.stringify(P.schedule || null) !== (Rc.priceSchedule || 'null')) rc.push('Scheduled price change');
+      if (JSON.stringify(P.groups || []) !== (Rc.groups || '[]')) rc.push('Market groups');
+      if (JSON.stringify(P.sales || []) !== (Rc.sales || '[]')) rc.push('Sale');
+      if (JSON.stringify(P.overrides || {}) !== (Rc.overrides || '{}')) rc.push('Local prices');
       if (JSON.stringify(adv.schedule) !== Rc.schedule || JSON.stringify(adv.publishHold) !== Rc.hold) rc.push('Release timing');
-      return rc.length ? rc.slice(0, 3).join(' · ') + (rc.length > 3 ? ' +' + (rc.length - 3) : '') : 'Reach & price updated';
+      return rc.length ? rc.slice(0, 3).join(' \u00b7 ') + (rc.length > 3 ? ' +' + (rc.length - 3) : '') : 'Reach & price updated';
     }
     return 'Updated';
   }
@@ -7820,13 +7984,16 @@
     if (sub) sub.textContent = n
       ? ('You\u2019re changing ' + n + ' section' + (n === 1 ? '' : 's') + ' vs your live listing. Select one to jump to it.')
       : 'No changes yet \u2014 edit any section to update your live listing.';
+    var noteWrap = document.getElementById('upd-changes-note');
+    if (noteWrap) {
+      noteWrap.innerHTML = needsNotes ? '<button type="button" class="upd-changes-note-cta" id="upd-whatsnew-nudge">' +
+        '<span class="upd-changes__ic"><iconify-icon icon="fluent:notepad-edit-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="upd-changes__txt"><strong>Add what\u2019s new in this version</strong><span>Release notes for your new package \u2014 shown on your listing.</span></span>' +
+        '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' : '';
+    }
     var list = document.getElementById('upd-changes-list');
     if (list) {
-      var noteRow = needsNotes ? '<li class="upd-changes__item upd-changes__item--note"><button type="button" class="upd-changes__jump" id="upd-whatsnew-nudge">' +
-        '<span class="upd-changes__ic"><iconify-icon icon="fluent:notepad-edit-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
-        '<span class="upd-changes__txt"><strong>Add what’s new in this version</strong><span>Release notes for your new package — shown on your listing.</span></span>' +
-        '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button></li>' : '';
-      list.innerHTML = noteRow + changed.map(function (s) {
+      list.innerHTML = changed.map(function (s) {
         return '<li class="upd-changes__item"><button type="button" class="upd-changes__jump" data-wz-jump="' + s + '">' +
           '<span class="upd-changes__ic"><iconify-icon icon="' + (WZ_SECTION_ICON[s] || 'fluent:edit-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
           '<span class="upd-changes__txt"><strong>' + WZ_SECTION_NAMES[s] + '</strong><span>' + updChangeDesc(s) + '</span></span>' +
@@ -9052,11 +9219,6 @@
       { id: 'gTerrorism',       text: 'Does the game advocate committing acts of terrorism?',                                                                     age: 18, parent: null, descriptor: 'Advocates terrorism' },
       { id: 'gCrimeTechniques', text: 'Does the game contain realistic descriptions of crimes (e.g. robbery, kidnapping), or techniques that could be used in criminal offenses?', age: 16, parent: null, descriptor: 'Criminal techniques' },
     ]},
-    // Asked last, and the one question that keeps a "No" default: it drives distribution / IARC
-    // handling rather than an age band, so it's informational and doesn't raise the rating.
-    { section: 'Existing ratings & physical media', appTypes: ['game'], items: [
-      { id: 'gBoardOrPhysical', text: 'Will this game use ratings obtained directly from a ratings board, and/or will it be distributed on physical media in any region?', age: 0, parent: null, descriptor: 'Board-rated or physical media', informational: true, def: false },
-    ]},
 
     // ===== SOCIAL OR COMMUNICATION =====
     // These aren't rated on content they ship — they're rated on what users can do to each
@@ -9122,6 +9284,11 @@
       { id: 'aCashRewards',    text: 'Does the app include cash rewards, gift cards, play-to-earn features, convertible cryptocurrency rewards, or the issuance of transferable digital assets (e.g. NFTs)?', age: 0, parent: null, descriptor: 'Cash-convertible rewards', informational: true },
       { id: 'aBrowser',        text: 'Is the app a web browser or search engine?',                                           age: 12, parent: null, descriptor: 'Browser or search engine' },
       { id: 'aNewsEdu',        text: 'Is the app primarily a news or educational product?',                                  age: 0,  parent: null, descriptor: 'News or educational',     informational: true },
+    ]},
+    // Asked last for EVERY app type. Keeps a "No" default and is informational — it drives
+    // distribution / IARC handling rather than an age band, so it never raises the rating.
+    { section: 'Existing ratings & physical media', items: [
+      { id: 'boardOrPhysical', text: 'Will this product use ratings obtained directly from a ratings board, and/or will it be distributed on physical media in any region?', age: 0, parent: null, descriptor: 'Board-rated or physical media', informational: true, def: false },
     ]},
   ];
   // Said once, above the questions, instead of on every single one.
@@ -9573,12 +9740,13 @@
   // ---- Prototype fidelity: Vision (default) vs MVP -----------------------------------------
   // Vision shows the full experience we'd want to build; MVP hides what isn't shippable yet. The
   // header toggle persists the choice and adds .is-mvp to #flow-wrap; each behaviour reads isMvp().
-  let pubMode = 'vision';
-  try { if (localStorage.getItem('tdp.pubMode') === 'mvp') pubMode = 'mvp'; } catch (e) {}
+  let pubMode = 'mvp';
+  try { if (localStorage.getItem('tdp.pubMode') === 'vision') pubMode = 'vision'; } catch (e) {}
   function isMvp() { return pubMode === 'mvp'; }
   function applyPubMode() {
     const wrap = document.getElementById('flow-wrap');
     if (wrap) wrap.classList.toggle('is-mvp', isMvp());
+    document.querySelectorAll('.vision-only').forEach(function (el) { el.hidden = isMvp(); });   // Vision-only features hide in MVP
     document.querySelectorAll('[data-pubmode]').forEach(function (b) {
       const on = b.getAttribute('data-pubmode') === pubMode;
       b.classList.toggle('is-active', on);
@@ -11199,33 +11367,77 @@
   // Autofill-with-AI dialog: opened from the button on the Step 2 title row.
   const aiDialog = $('ai-autofill-dialog');
   let aiDescOnly = false;
+  let aiWriteField = null;    // null = whole-listing autofill (header button); 'desc' | 'features' = one field
+  let aiWriteMode = 'draft';  // 'draft' when the field is empty, 'improve' when it already has content
+  // fluent-text-input doesn't reflect host placeholder changes to its inner control, so set both.
+  function setPitchPh(text) {
+    const p = $('ai-pitch'); if (!p) return;
+    try { p.setAttribute('placeholder', text); } catch (e) {}
+    try { const inner = p.shadowRoot && p.shadowRoot.querySelector('input, textarea'); if (inner) inner.setAttribute('placeholder', text); } catch (e) {}
+  }
   function openAiDialog(mode) {
-    // The Description chip drafts ONLY the description; the header button drafts the whole
-    // listing (description, short description, feature highlights, search keywords, category).
-    aiDescOnly = (mode === 'desc');
+    // Field chips open this dialog for a single field (empty -> Draft, filled -> Improve). The header
+    // button passes a click Event (not a string) and drafts the whole listing.
+    const field = (mode === 'desc' || mode === 'features') ? mode : null;
+    aiWriteField = field;
+    aiDescOnly = (field === 'desc');
+    let filled = false;
+    try {
+      filled = field === 'features'
+        ? !!(window.__getFeatures && window.__getFeatures().trim())
+        : field === 'desc' ? !!(((fDesc && fDesc.value) || '').trim()) : false;
+    } catch (e) {}
+    aiWriteMode = filled ? 'improve' : 'draft';
+    const kindWord = field === 'features' ? 'feature highlights' : 'description';
     try {
       const titleEl = document.getElementById('ai-dialog-title-text');
       const introEl = document.getElementById('ai-dialog-intro');
       const labelEl = document.getElementById('ai-autofill-label');
-      if (titleEl) titleEl.textContent = aiDescOnly ? 'Draft description with AI' : 'Autofill with AI';
-      if (labelEl) labelEl.textContent = aiDescOnly ? 'Draft description' : 'Autofill';
-      if (introEl) introEl.textContent = aiDescOnly
-        ? 'Describe your app in a line and we\u2019ll draft your description. You can edit it after.'
-        : 'Describe your app in a line and we\u2019ll draft your description, short description, feature highlights, search keywords, and category. You can edit everything after.';
-    } catch (e) {}
-    // Seed the pitch from the packaged site's manifest so the draft starts from the real app.
-    try {
       const pitchEl = $('ai-pitch');
-      if (pitchEl && !(pitchEl.value || '').trim()) {
-        const pkg = packages.find(p => p.fromPwa && p.manifest);
-        const mf = pkg && pkg.manifest;
-        if (mf && (mf.description || mf.name)) pitchEl.value = mf.description || mf.name;
+      if (!field) {
+        if (titleEl) titleEl.textContent = 'Autofill with AI';
+        if (labelEl) labelEl.textContent = 'Autofill';
+        if (introEl) introEl.textContent = 'Describe your app in a line and we\u2019ll draft your description, short description, feature highlights, search keywords, and category. You can edit everything after.';
+        setPitchPh('e.g. A fast, private note-taking app');
+      } else if (aiWriteMode === 'improve') {
+        if (titleEl) titleEl.textContent = 'Improve ' + kindWord + ' with AI';
+        if (labelEl) labelEl.textContent = 'Improve';
+        if (introEl) introEl.textContent = 'Tell us what to change and we\u2019ll rewrite your ' + kindWord + '. Leave it blank to just polish what\u2019s there \u2014 you can edit everything after.';
+        if (pitchEl) pitchEl.value = '';
+        setPitchPh(field === 'features' ? 'e.g. Make them punchier and benefit-led' : 'e.g. Make it shorter and more professional');
+      } else {
+        if (titleEl) titleEl.textContent = 'Draft ' + kindWord + ' with AI';
+        if (labelEl) labelEl.textContent = 'Draft';
+        if (introEl) introEl.textContent = 'Describe your app in a line and we\u2019ll draft your ' + kindWord + '. You can edit it after.';
+        setPitchPh('e.g. A fast, private note-taking app');
       }
     } catch (e) {}
+    // Seed the pitch from the packaged site's manifest so a DRAFT starts from the real app.
+    if (aiWriteMode === 'draft') {
+      try {
+        const pitchEl = $('ai-pitch');
+        if (pitchEl && !(pitchEl.value || '').trim()) {
+          const pkg = packages.find(p => p.fromPwa && p.manifest);
+          const mf = pkg && pkg.manifest;
+          if (mf && (mf.description || mf.name)) pitchEl.value = mf.description || mf.name;
+        }
+      } catch (e) {}
+    }
     try { aiDialog.show(); } catch (e) {}
     setTimeout(() => { try { $('ai-pitch').focus(); } catch (e) {} }, 60);
   }
   function closeAiDialog() { try { aiDialog.hide(); } catch (e) {} }
+  // Route the dialog's primary button: single-field Improve (and Features Draft) use the field writer
+  // with the developer's instruction; Description Draft and whole-listing Autofill use runAutofill.
+  function submitAiDialog() {
+    if (aiWriteField && (aiWriteMode === 'improve' || aiWriteField === 'features')) {
+      const instruction = (($('ai-pitch') && $('ai-pitch').value) || '').trim();
+      closeAiDialog();
+      if (window.__aiFieldWrite) window.__aiFieldWrite(aiWriteField, aiWriteMode, instruction);
+      return;
+    }
+    runAutofill(false);
+  }
   $('ai-autofill-open').addEventListener('click', openAiDialog);
   aiDialog.querySelectorAll('[data-ai-close]').forEach((b) => b.addEventListener('click', closeAiDialog));
 
@@ -11300,9 +11512,6 @@
   (function () {
     const descChip = document.getElementById('desc-ai-chip');
     const featChip = document.getElementById('feat-ai-chip');
-    const menu = document.getElementById('ai-assist-menu');
-    const menuHead = document.getElementById('ai-menu-head');
-    let menuField = 'desc';
 
     function descText() { try { return ((fDesc && fDesc.value) || '').trim(); } catch (e) { return ''; } }  // fDesc holds the text; state.desc is just a boolean gate
     function featText() { try { return (window.__getFeatures ? window.__getFeatures() : '').trim(); } catch (e) { return ''; } }
@@ -11314,49 +11523,47 @@
     function labelChip(chip, filled) {
       if (!chip) return;
       const lbl = chip.querySelector('.ez-ai-chip__label');
-      if (lbl) lbl.textContent = filled ? 'Enhance with AI' : 'Draft with AI';
-      chip.title = filled ? 'Enhance this with AI' : 'Draft this with AI';
+      if (lbl) lbl.textContent = filled ? 'Improve with AI' : 'Draft with AI';
+      chip.title = filled ? 'Improve this with AI' : 'Draft this with AI';
     }
     window.__updateAiChips = function () { labelChip(descChip, !!descText()); labelChip(featChip, !!featText()); };
     window.__updateAiChips();
 
-    function openMenu(chip, field) {
-      if (!menu) return;
-      menuField = field;
-      if (menuHead) menuHead.textContent = 'Enhance ' + (field === 'features' ? 'features' : 'description') + ' with AI';
-      menu.hidden = false;
-      const r = chip.getBoundingClientRect();
-      const mw = menu.offsetWidth || 224;
-      menu.style.left = Math.round(Math.max(12, Math.min(r.left, window.innerWidth - mw - 12))) + 'px';
-      menu.style.top = Math.round(r.bottom + 6) + 'px';
-    }
-    function closeMenu() { if (menu) menu.hidden = true; }
-
-    function onChip(field, chip) {
+    // Both chips open the AI dialog: empty field -> Draft, filled field -> Improve. The dialog reads
+    // whatever the developer types and calls back here through __aiFieldWrite.
+    function onChip(field) {
       try { if (window.__dismissAiHint) window.__dismissAiHint(); } catch (e) {}
-      if (fieldText(field)) openMenu(chip, field);
-      else if (field === 'desc') { if (typeof openAiDialog === 'function') openAiDialog('desc'); }
-      else runAssist('features', 'draft', '');
+      if (typeof openAiDialog === 'function') openAiDialog(field);
     }
-    if (descChip) descChip.addEventListener('click', function (e) { e.stopPropagation(); onChip('desc', descChip); });
-    if (featChip) featChip.addEventListener('click', function (e) { e.stopPropagation(); onChip('features', featChip); });
-    if (menu) menu.addEventListener('click', function (e) {
-      const b = e.target.closest('[data-ai-act]'); if (!b) return;
-      closeMenu();
-      runAssist(menuField, b.getAttribute('data-ai-act'), b.getAttribute('data-tone') || '');
-    });
-    document.addEventListener('click', function (e) { if (menu && !menu.hidden && !e.target.closest('#ai-assist-menu') && !e.target.closest('.ez-ai-chip')) closeMenu(); });
-    window.addEventListener('resize', closeMenu);
-    window.addEventListener('scroll', closeMenu, true);
+    if (descChip) descChip.addEventListener('click', function (e) { e.stopPropagation(); onChip('desc'); });
+    if (featChip) featChip.addEventListener('click', function (e) { e.stopPropagation(); onChip('features'); });
+    // Map a free-text instruction to a transform. With AI on we always pass the raw instruction
+    // ('custom'); with AI off we recognise common asks so the demo still responds.
+    function mapInstruction(text) {
+      const t = (text || '').toLowerCase();
+      if (/short|shorter|trim|concise|brief|tighten/.test(t)) return { action: 'shorter', tone: '' };
+      if (/longer|expand|more detail|elaborate|flesh/.test(t)) return { action: 'longer', tone: '' };
+      if (/profession/.test(t)) return { action: 'tone', tone: 'professional' };
+      if (/friendly|casual|warm|fun/.test(t)) return { action: 'tone', tone: 'friendly' };
+      if (/grammar|spelling|typo|proofread/.test(t)) return { action: 'grammar', tone: '' };
+      return { action: 'custom', tone: '' };
+    }
+    window.__aiFieldWrite = function (field, mode, instruction) {
+      if (mode !== 'improve') { runAssist(field, 'draft', '', instruction || ''); return; }
+      const aiOn = !!(window.AI && window.AI.enabled && typeof window.AI.transformText === 'function');
+      if (aiOn) { runAssist(field, 'custom', '', instruction); return; }
+      const a = mapInstruction(instruction);
+      runAssist(field, a.action, a.tone, instruction);
+    };
 
-    async function runAssist(field, action, tone) {
+    async function runAssist(field, action, tone, instruction) {
       const chip = field === 'features' ? featChip : descChip;
       const cur = fieldText(field);
       if (action !== 'draft' && !cur) return;
       if (chip) chip.classList.add('is-busy');
       let out = '';
       if (window.AI && window.AI.enabled && typeof window.AI.transformText === 'function') {
-        try { out = await window.AI.transformText(buildPrompt(field, action, tone, cur)); } catch (e) {}
+        try { out = await window.AI.transformText(buildPrompt(field, action, tone, cur, instruction)); } catch (e) {}
       }
       if (!out) out = heuristic(field, action, tone, cur);
       if (out) { setField(field, out); announceAssist(field, action, tone); }
@@ -11366,12 +11573,13 @@
     function announceAssist(field, action, tone) {
       if (typeof announce !== 'function') return;
       const what = field === 'features' ? 'Features' : 'Description';
-      const how = action === 'draft' ? 'drafted' : action === 'tone' ? ('rewritten in a ' + tone + ' tone') : action === 'improve' ? 'improved' : action === 'shorter' ? 'shortened' : action === 'longer' ? 'expanded' : 'grammar-checked';
+      const how = action === 'draft' ? 'drafted' : action === 'custom' ? 'updated' : action === 'tone' ? ('rewritten in a ' + tone + ' tone') : action === 'improve' ? 'improved' : action === 'shorter' ? 'shortened' : action === 'longer' ? 'expanded' : 'grammar-checked';
       announce(what + ' ' + how + ' with AI.');
     }
-    function buildPrompt(field, action, tone, cur) {
+    function buildPrompt(field, action, tone, cur, instruction) {
       const kind = field === 'features' ? 'feature highlights (one short benefit per line, no bullet characters)' : 'Microsoft Store app description';
-      const instr = action === 'draft' ? ('Write ' + kind + ' for this app.')
+      const instr = action === 'draft' ? ('Write ' + kind + ' for this app.' + (instruction ? ' ' + instruction : ''))
+        : action === 'custom' ? (instruction || 'Improve the writing so it is clearer and benefit-led, without fluff. Keep the meaning.')
         : action === 'improve' ? 'Improve the writing so it is clearer and benefit-led, without fluff. Keep the meaning.'
         : action === 'shorter' ? 'Make it noticeably shorter while keeping the key points.'
         : action === 'longer' ? 'Expand it with a little more useful, specific detail (no filler).'
@@ -11380,7 +11588,7 @@
       const system = 'You edit Microsoft Store listing copy. Return only the revised ' + kind + ' as plain text, with no preamble or quotes.';
       let user = instr;
       if (cur) user += '\n\nCurrent text:\n' + cur;
-      else user += '\n\nApp name: ' + ((typeof app !== 'undefined' && app && app.name) || 'this app') + (descText() ? '\nApp description:\n' + descText() : '');
+      else user += '\n\nApp name: ' + ((typeof app !== 'undefined' && app && app.name) || 'this app') + (instruction ? '\nWhat it does: ' + instruction : '') + (descText() ? '\nApp description:\n' + descText() : '');
       return { system, user, maxTokens: 700 };
     }
     // ---- Heuristic fallbacks (AI off): visible, sensible transforms ----------
@@ -11421,35 +11629,128 @@
       }
       return cur;
     }
-    function heuristic(field, action, tone, cur) { return field === 'features' ? featHeuristic(action, tone, cur) : descHeuristic(action, tone, cur); }
+    function heuristic(field, action, tone, cur) { if (action === 'custom') action = 'improve'; return field === 'features' ? featHeuristic(action, tone, cur) : descHeuristic(action, tone, cur); }
   })();
 
   // ---- "What's new in this version": listing section + update-flow prompt dialog -------------
   // In the update flow the two jobs are (1) add a new package and (2) refresh the listing. After a
   // new package is added we surface this prompt so release notes get written while the change is
   // fresh; it also lives as an editable listing section (Advanced) so it can be done/edited later.
+  // Release notes can be the SAME for every language, or written PER language right here (so the
+  // developer needn't open each localized listing). State: adv.listing.whatsNew = default-locale
+  // notes; adv.listing.whatsNewLocales{code:text} = per-language notes; adv.listing.whatsNewSameAll
+  // toggles between them. whatsNewFor(code) resolves the effective text for a locale.
+  function wnEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]; }); }
+  function whatsNewDefLoc() { return (adv.listing.defaultLocale) || 'en-US'; }
+  function whatsNewLocaleList() {
+    var codes = [];
+    try { if (typeof window.__advAddedLocales === 'function') codes = window.__advAddedLocales() || []; } catch (e) {}
+    if (!codes.length) codes = [whatsNewDefLoc()];
+    var def = whatsNewDefLoc();
+    return [def].concat(codes.filter(function (c) { return c !== def; }));
+  }
+  function whatsNewNameOf(code) {
+    try { if (typeof window.__advLocaleName === 'function') return window.__advLocaleName(code); } catch (e) {}
+    return code;
+  }
+  function whatsNewFor(code) {
+    var def = whatsNewDefLoc();
+    if (!code || code === def || adv.listing.whatsNewSameAll !== false) return (adv.listing.whatsNew || '');
+    var m = adv.listing.whatsNewLocales || {};
+    return m[code] != null ? m[code] : '';
+  }
+  function setWhatsNewFor(code, text) {
+    if (code === whatsNewDefLoc()) { adv.listing.whatsNew = text; return; }
+    if (!adv.listing.whatsNewLocales) adv.listing.whatsNewLocales = {};
+    adv.listing.whatsNewLocales[code] = text;
+  }
   function renderWhatsNew() {
-    const txt = (adv.listing.whatsNew || '').trim();
+    const txt = (whatsNewFor(adv.listing.activeLocale || whatsNewDefLoc()) || '').trim();
     const p = $('ez-pv-whatsnew'), add = $('ez-whatsnew-add');
     if (!p || !add) return;
     if (txt) { p.textContent = txt; p.hidden = false; add.hidden = true; }
     else { p.textContent = ''; p.hidden = true; add.hidden = false; }
   }
+  // Build the dialog body for the current mode (single shared textarea, or one per language).
+  function whatsNewRenderMode() {
+    var codes = whatsNewLocaleList();
+    var multi = codes.length > 1;
+    var sameAll = adv.listing.whatsNewSameAll !== false;
+    var row = $('whatsnew-sameall-row'), sw = $('whatsnew-sameall');
+    if (row) row.hidden = !multi;
+    if (sw) { sw.checked = sameAll; sw.toggleAttribute('checked', sameAll); }
+    var perMode = multi && !sameAll;
+    var single = $('whatsnew-single'), per = $('whatsnew-perlang');
+    if (single) single.hidden = perMode;
+    if (per) per.hidden = !perMode;
+    if (single && !perMode) { var ta = $('whatsnew-input'); if (ta) ta.value = adv.listing.whatsNew || ''; }
+    if (per && perMode) {
+      var def = whatsNewDefLoc();
+      per.innerHTML = codes.map(function (c) {
+        var isDef = c === def;
+        var nm = whatsNewNameOf(c) + (isDef ? ' \u00b7 default' : '');
+        var ai = isDef ? '<button type="button" class="ez-ai-chip whatsnew-lang__ai" data-wn-draft="' + c + '"><iconify-icon icon="fluent:sparkle-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon><span>Draft with AI</span></button>' : '';
+        return '<div class="whatsnew-lang">' +
+          '<div class="whatsnew-lang__head"><span class="whatsnew-lang__name">' + wnEsc(nm) + '</span>' + ai + '</div>' +
+          '<fluent-textarea class="whatsnew-lang__ta" data-wn-lang="' + c + '" rows="3" placeholder="Release notes for ' + wnEsc(whatsNewNameOf(c)) + '"></fluent-textarea>' +
+        '</div>';
+      }).join('') +
+      '<div class="whatsnew-perlang__foot"><button type="button" class="ez-ai-chip" id="whatsnew-copyall"><iconify-icon icon="fluent:copy-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon><span>Copy ' + wnEsc(whatsNewNameOf(def)) + ' to all languages</span></button></div>';
+      var m = adv.listing.whatsNewLocales || {};
+      codes.forEach(function (c) {
+        var t = per.querySelector('fluent-textarea[data-wn-lang="' + c + '"]');
+        if (!t) return;
+        var val = (c === def) ? (adv.listing.whatsNew || '') : ((m[c] != null && m[c] !== '') ? m[c] : (adv.listing.whatsNew || ''));
+        try { t.value = val; } catch (e) {}
+      });
+    }
+  }
+  // Save whatever mode is currently visible back into state (used before flipping the switch).
+  function whatsNewCaptureDialog() {
+    var per = $('whatsnew-perlang');
+    if (per && !per.hidden) {
+      whatsNewLocaleList().forEach(function (c) { var t = per.querySelector('fluent-textarea[data-wn-lang="' + c + '"]'); if (t) setWhatsNewFor(c, faVal(t).trim()); });
+    } else {
+      var ta = $('whatsnew-input'); if (ta) adv.listing.whatsNew = faVal(ta).trim();
+    }
+  }
   function openWhatsNewDialog(fromUpdate) {
-    const ta = $('whatsnew-input');
-    if (ta) ta.value = adv.listing.whatsNew || '';
     const note = $('whatsnew-update-note');
     if (note) note.hidden = !fromUpdate;
+    whatsNewRenderMode();
     try { $('whatsnew-dialog').show(); } catch (e) {}
-    setTimeout(function () { try { if (ta) ta.focus(); } catch (e) {} }, 60);
+    setTimeout(function () {
+      try {
+        var per = $('whatsnew-perlang');
+        var f = (per && !per.hidden) ? per.querySelector('fluent-textarea') : $('whatsnew-input');
+        if (f && f.focus) f.focus();
+      } catch (e) {}
+    }, 60);
   }
   function saveWhatsNew() {
-    const ta = $('whatsnew-input');
-    adv.listing.whatsNew = ta ? faVal(ta).trim() : '';
+    var codes = whatsNewLocaleList();
+    var per = $('whatsnew-perlang');
+    var perMode = !!(per && !per.hidden);
+    if (perMode) {
+      var def = whatsNewDefLoc(), vals = {};
+      codes.forEach(function (c) { var t = per.querySelector('fluent-textarea[data-wn-lang="' + c + '"]'); vals[c] = t ? faVal(t).trim() : ''; });
+      var allSame = codes.every(function (c) { return vals[c] === vals[def]; });
+      if (allSame) { adv.listing.whatsNew = vals[def]; adv.listing.whatsNewSameAll = true; adv.listing.whatsNewLocales = {}; }
+      else {
+        adv.listing.whatsNew = vals[def]; adv.listing.whatsNewSameAll = false; adv.listing.whatsNewLocales = {};
+        codes.forEach(function (c) { if (c !== def) adv.listing.whatsNewLocales[c] = vals[c]; });
+      }
+    } else {
+      const ta = $('whatsnew-input');
+      adv.listing.whatsNew = ta ? faVal(ta).trim() : '';
+      adv.listing.whatsNewSameAll = true;
+      adv.listing.whatsNewLocales = {};
+    }
     renderWhatsNew();
     try { renderUpdateChanges(); } catch (e) {}
     try { $('whatsnew-dialog').hide(); } catch (e) {}
-    if (typeof announce === 'function') announce(adv.listing.whatsNew ? "What's new saved to your listing." : "You can add what's new later from your listing.");
+    var any = (adv.listing.whatsNew || '').trim() || Object.keys(adv.listing.whatsNewLocales || {}).some(function (k) { return (adv.listing.whatsNewLocales[k] || '').trim(); });
+    if (typeof announce === 'function') announce(any ? "What's new saved to your listing." : "You can add what's new later from your listing.");
   }
   // Generate release notes with AI when configured; otherwise a sensible local draft. Shared by the
   // dialog's "Draft with AI" and the listing section chip.
@@ -11480,6 +11781,22 @@
     if (chip) chip.classList.remove('is-busy');
     if (typeof announce === 'function') announce("What's new drafted with AI.");
   }
+  // Per-language dialog helpers: draft the default language's notes, or copy them to every language.
+  async function whatsNewPerLangDraft(code) {
+    var per = $('whatsnew-perlang'); if (!per) return;
+    var t = per.querySelector('fluent-textarea[data-wn-lang="' + code + '"]'); if (!t) return;
+    var chip = per.querySelector('[data-wn-draft="' + code + '"]'); if (chip) chip.classList.add('is-busy');
+    try { t.value = await genWhatsNew(faVal(t).trim()); } catch (e) {}
+    if (chip) chip.classList.remove('is-busy');
+    if (typeof announce === 'function') announce('Release notes drafted with AI.');
+  }
+  function whatsNewCopyAll() {
+    var per = $('whatsnew-perlang'); if (!per) return;
+    var dt = per.querySelector('fluent-textarea[data-wn-lang="' + whatsNewDefLoc() + '"]');
+    var text = dt ? faVal(dt).trim() : '';
+    per.querySelectorAll('fluent-textarea[data-wn-lang]').forEach(function (t) { try { t.value = text; } catch (e) {} });
+    if (typeof announce === 'function') announce('Copied to all languages.');
+  }
   // Fires from renderPackages() at the end of every render. Guards ensure it triggers exactly once,
   // only in the update flow, only for a genuinely NEW committed package (win32 still pending waits).
   function maybePromptWhatsNew() {
@@ -11497,6 +11814,14 @@
     if ($('ez-whatsnew-add')) $('ez-whatsnew-add').addEventListener('click', function () { openWhatsNewDialog(false); });
     if ($('ez-pv-whatsnew')) $('ez-pv-whatsnew').addEventListener('click', function () { openWhatsNewDialog(false); });
     if ($('whatsnew-ai-chip')) $('whatsnew-ai-chip').addEventListener('click', function (e) { e.stopPropagation(); whatsNewSectionDraft(); });
+    if ($('whatsnew-sameall')) $('whatsnew-sameall').addEventListener('change', function () { whatsNewCaptureDialog(); adv.listing.whatsNewSameAll = !!$('whatsnew-sameall').checked; whatsNewRenderMode(); });
+    var whatsNewPerWrap = $('whatsnew-perlang');
+    if (whatsNewPerWrap) whatsNewPerWrap.addEventListener('click', function (e) {
+      var d = e.target.closest && e.target.closest('[data-wn-draft]');
+      if (d) { e.preventDefault(); whatsNewPerLangDraft(d.getAttribute('data-wn-draft')); return; }
+      if (e.target.closest && e.target.closest('#whatsnew-copyall')) { e.preventDefault(); whatsNewCopyAll(); return; }
+    });
+    window.openWhatsNewDialog = openWhatsNewDialog;
     renderWhatsNew();
   })();
 
@@ -12111,7 +12436,7 @@
     announce(descOnly ? 'Description drafted with AI.'
       : 'Listing drafted with AI: description, short description, features, search keywords, and category.');
   }
-  $('ai-autofill').addEventListener('click', () => runAutofill(false));
+  $('ai-autofill').addEventListener('click', submitAiDialog);
 
   // ---- Auto-draft the listing from the packaged site (labeled + fully undoable) ----
   let draftUndoSnap = null;
@@ -12361,7 +12686,7 @@
     if (imageEditTitleText) imageEditTitleText.textContent = opts.title || 'Edit image';
     if (imageEditAiPrompt) imageEditAiPrompt.value = '';
     const aiDetails = $('image-edit-ai');
-    if (aiDetails) aiDetails.open = false;
+    if (aiDetails) { aiDetails.open = false; aiDetails.hidden = isMvp(); }   // "Improve with AI" is Vision-only
     try { imageEditDialog.show(); } catch (e) {}
     requestAnimationFrame(() => loadImageIntoEditor(opts.dataUrl));
   }
@@ -13055,17 +13380,17 @@
   const APP_TYPE_LABEL = { game: 'Game', social: 'Social or communication', other: 'All other app types' };
   // The app type is fixed by the App/Game choice made when the name was reserved (IS_GAME): a game
   // can only be "Game"; a non-game app can be "Social or communication" or "All other app types",
-  // never "Game". So we lock the disallowed options rather than let the two questions disagree.
+  // never "Game". So we HIDE the options that don't match rather than let the two questions disagree.
   const appTypeAllowed = (type) => IS_GAME ? (type === 'game') : (type !== 'game');
   function renderAppTypeChoice() {
     if (IS_GAME && ratingAppType !== 'game') ratingAppType = 'game';
     else if (!IS_GAME && ratingAppType === 'game') ratingAppType = 'other';
     document.querySelectorAll('#rating-apptype-list .apptype__opt').forEach(b => {
       const allowed = appTypeAllowed(b.dataset.apptype);
-      b.disabled = !allowed;
-      b.setAttribute('aria-disabled', allowed ? 'false' : 'true');
-      if (allowed) b.removeAttribute('title');
-      else b.title = IS_GAME ? 'Set to Game when you reserved the name.' : 'Not available — this app wasn’t reserved as a game.';
+      b.hidden = !allowed;
+      b.removeAttribute('title');
+      b.removeAttribute('aria-disabled');
+      b.disabled = false;
       b.setAttribute('aria-checked', b.dataset.apptype === ratingAppType ? 'true' : 'false');
     });
   }
@@ -13170,10 +13495,13 @@
     if (inUpdateFlow && adv.rollout && adv.rollout.gradual) rows.push(['Rollout', 'Gradual \u00b7 ' + (adv.rollout.percent || 10) + '%' + (adv.rollout.mandatory ? ' \u00b7 Mandatory' : ''), 'fluent:arrow-trending-lines-20-regular']);
     else if (inUpdateFlow && adv.rollout && adv.rollout.mandatory) rows.push(['Rollout', 'All at once \u00b7 Mandatory', 'fluent:arrow-trending-lines-20-regular']);
     dl.innerHTML = rows.map(x =>
-      '<span class="ez-sd__chip" title="' + esc(x[3] || (x[0] + ': ' + x[1])) + '">' +
-        '<iconify-icon icon="' + x[2] + '" width="15" height="15" aria-hidden="true"></iconify-icon>' +
-        '<span>' + esc(x[1]) + '</span>' +
-      '</span>').join('');
+      '<div class="ez-sd__stat"' + (x[3] ? ' title="' + esc(x[3]) + '"' : '') + '>' +
+        '<iconify-icon class="ez-sd__stat-ic" icon="' + x[2] + '" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+        '<div class="ez-sd__stat-text">' +
+          '<span class="ez-sd__stat-k">' + esc(x[0]) + '</span>' +
+          '<span class="ez-sd__stat-v">' + esc(x[1]) + '</span>' +
+        '</div>' +
+      '</div>').join('');
   }
   // ---- Gradual rollout (UPDATE flow): simplified % control + post-submit management ----
   function rolloutSummaryText() {
@@ -13371,12 +13699,13 @@
   // Demo (?app=, no portal): mirror tdp-bridge's setHeadActions so the submitted header shows the
   // right buttons (View in Store + Review details when published).
   function demoHeadActions(view) {
-    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), an = $('head-analytics-btn');
+    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), an = $('head-analytics-btn'), s = $('head-share-btn');
     if (w) w.hidden = (view !== 'progress');
     if (v) v.hidden = (view !== 'passed');
     if (r) r.hidden = (view !== 'failed');
     if (e) e.hidden = (view !== 'failed');
     if (an) an.hidden = (view !== 'passed');
+    if (s) s.hidden = (view !== 'passed');
   }
   function demoCertView(view) {
     var isUpdate = false; try { isUpdate = !!inUpdateFlow || !!(app && app.submissionIsUpdate); } catch (e) {}
@@ -13607,7 +13936,7 @@
       } catch (e) {}
       if (Array.isArray(d.shots)) state.shots = d.shots;
       if (Array.isArray(d.selectedGenres)) selectedGenres = d.selectedGenres;
-      if (d.contentAnswers) contentAnswers = d.contentAnswers;
+      if (d.contentAnswers) contentAnswers = { ...DEFAULT_ANSWERS, ...d.contentAnswers };
       if (typeof d.contentAnswersConfirmed === 'boolean') contentAnswersConfirmed = d.contentAnswersConfirmed;
       if (d.ratingAppType) ratingAppType = d.ratingAppType;
       if (d.userIcon) userIconDataUrl = d.userIcon;
@@ -13707,23 +14036,17 @@
       var r = sysreqState.rec || {}, hasRec = !!(r.ram || r.storage || r.dx || r.cpu || r.gpu || (r.caps && r.caps.length));
       summary.textContent = bits.length
         ? ('Minimum: ' + bits.join(' \u00b7 ') + (hasRec ? ' \u00b7 + Recommended set' : ''))
-        : 'Set the minimum specs to run \u2014 and, optionally, recommended ones. Customers below the minimum can still install; the Store flags it and skips their review, so it won\u2019t hurt your score.';
+        : 'Set the minimum specs to run \u2014 recommended ones are optional. Below-minimum installs won\u2019t hurt your score.';
     }
     function changed() { recap(); if (window.__renderSysreq) { try { window.__renderSysreq(); } catch (e) {} } if (window.__scheduleFlowSave) window.__scheduleFlowSave(); }
     // Read-only recap of what the listing auto-derives from the uploaded package (device family,
     // minimum OS, architecture) — the same facts the System requirements preview shows.
+    // Package-derived facts (Available on / OS / Architecture) show in the listing preview only,
+    // not in this editor card, so keep the card's auto-facts row hidden.
     function renderSysreqAuto() {
       var wrap = document.getElementById('sysreq-auto'), host = document.getElementById('sysreq-auto-facts');
-      if (!wrap || !host) return;
-      var f = (typeof window.__pkgSysreqFacts === 'function') ? window.__pkgSysreqFacts() : null;
-      var chips = [];
-      if (f && f.avail) chips.push(['Available on', f.avail]);
-      if (f && f.os) chips.push(['OS', f.os]);
-      if (f && f.arch) chips.push(['Architecture', f.arch]);
-      if (!chips.length) { wrap.hidden = true; host.innerHTML = ''; return; }
-      var e = function (s) { return String(s).replace(/[&<>"]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[m]; }); };
-      wrap.hidden = false;
-      host.innerHTML = chips.map(function (c) { return '<span class="sysreq-auto__chip">' + e(c[0]) + ': <strong>' + e(c[1]) + '</strong></span>'; }).join('');
+      if (wrap) wrap.hidden = true;
+      if (host) host.innerHTML = '';
     }
     window.__renderSysreqAuto = renderSysreqAuto;
     window.__syncSysreq = function () {
@@ -13838,6 +14161,7 @@
       // submissionIsUpdate flag (msstore.apps + the in-memory app), not inUpdateFlow.
       if (app) app.submissionIsUpdate = !!inUpdateFlow;
       inUpdateFlow = false; window.__inUpdateFlow = false;
+      updateResumable = false; try { syncUpdateBtnLabel(); } catch (e) {}   // update submitted — nothing left to continue
       try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
       const pill = $('app-status');
       if (pill) { pill.textContent = 'In review'; pill.className = 'status-pill status-pill--in-review'; }
@@ -13855,6 +14179,7 @@
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Draft'; pill.className = 'status-pill status-pill--draft'; }
     inUpdateFlow = false; window.__inUpdateFlow = false;   // leaving the update flow
+    updateResumable = false; try { syncUpdateBtnLabel(); } catch (e) {}
     try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
     $('state-done').hidden = true;
     $('editor').hidden = false;
@@ -13862,6 +14187,15 @@
     announce('Submission withdrawn. Back to draft.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
+  // The header Update button becomes "Continue update" once an update has been started, edited, and
+  // paused back to the hub — so the developer can pick their in-progress draft back up.
+  function syncUpdateBtnLabel() {
+    var u = $('head-update-btn'); if (!u) return;
+    var resuming = updateResumable;
+    u.innerHTML = '<iconify-icon slot="start" icon="' + (resuming ? 'fluent:arrow-sync-20-regular' : 'fluent:arrow-upload-20-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>' + (resuming ? 'Continue update' : 'Update');
+    u.setAttribute('title', resuming ? 'Continue your in-progress update' : 'Update your app');
+  }
+  window.__syncUpdateBtn = syncUpdateBtnLabel;
   // Update a published app: reopen the full editor with everything already filled (the same-session
   // package / listing / reach state is still in memory), so the developer can change anything and
   // resubmit. The live version stays published until the update clears certification.
@@ -13872,20 +14206,24 @@
       announce('An update is already in review \u2014 you can submit another once it\u2019s live.');
       return;
     }
+    // Resume a paused update (edits + change-tracking baseline kept) instead of starting fresh.
+    var resuming = updateResumable;
     const pill = $('app-status');
     if (pill) { pill.textContent = 'Updating'; pill.className = 'status-pill status-pill--in-review'; }
-    // Entering the update flow: adding a NEW package will prompt once for "What's new in this version".
     inUpdateFlow = true; window.__inUpdateFlow = true;
-    whatsNewPrompted = false;
+    if (!resuming) whatsNewPrompted = false;   // adding a NEW package prompts once for "What's new in this version"
     try { document.getElementById('flow-wrap').classList.add('is-update-flow'); } catch (e) {}
-    try { updateBaselineIds = new Set(packages.map(function (p) { return p.id; })); } catch (e) { updateBaselineIds = new Set(); }
-    try { captureUpdateBaseline(); } catch (e) {}
+    if (!resuming) {
+      try { updateBaselineIds = new Set(packages.map(function (p) { return p.id; })); } catch (e) { updateBaselineIds = new Set(); }
+      try { captureUpdateBaseline(); } catch (e) {}   // fresh baseline; on resume we keep the earlier one so edits stay flagged
+    }
     $('state-done').hidden = true;
     $('editor').hidden = false;
     $('submit-bar').hidden = false;
-    try { if (typeof showWzStep === 'function') showWzStep(0); } catch (e) {}
+    try { if (typeof showWzStep === 'function') showWzStep(resuming ? (updateResumeStep || 0) : 0); } catch (e) {}
+    try { recomputeUpdateChanges(); } catch (e) {}
     try { renderUpdateChanges(); } catch (e) {}
-    announce('Update started \u2014 change anything you need, then submit for review again.');
+    announce(resuming ? 'Resuming your update \u2014 pick up where you left off.' : 'Update started \u2014 change anything you need, then submit for review again.');
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   };
   // Review a PUBLISHED submission read-only: reopen the editor (all fields still filled) with its
@@ -13933,6 +14271,11 @@
   }
   // Leave the update flow WITHOUT submitting \u2014 back to the published hub (the app stays live).
   function exitUpdateToHub() {
+    // Remember an in-progress update (with real edits) so the header can offer to continue it; the
+    // edited fields stay in session memory, and the baseline is kept so changes stay flagged on resume.
+    try { recomputeUpdateChanges(); } catch (e) {}
+    updateResumable = inUpdateFlow && updateChangedSet.size > 0;
+    try { updateResumeStep = (typeof wzIndex === 'number') ? wzIndex : 0; } catch (e) { updateResumeStep = 0; }
     inUpdateFlow = false; window.__inUpdateFlow = false;
     try { document.getElementById('flow-wrap').classList.remove('is-update-flow'); } catch (e) {}
     var pill = $('app-status'); if (pill) { pill.textContent = 'Published'; pill.className = 'status-pill status-pill--published'; }
@@ -13943,6 +14286,7 @@
     try { var d = $('state-done'); if (d) d.__result = 'passed'; } catch (e) {}
     $('state-done').hidden = false;
     try { if (typeof window.__renderLiveHub === 'function') window.__renderLiveHub(); } catch (e) {}
+    try { syncUpdateBtnLabel(); } catch (e) {}
     window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
   }
   // ---- Page back arrow (\u201c\u2190 Apps\u201d): go UP one level. From a sub-view (Review details, Update,
@@ -15210,6 +15554,8 @@
     if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
     if (!adv.schedule) adv.schedule = { end: { mode: 'never', date: '' } };
     if (!adv.schedule.end) adv.schedule.end = { mode: 'never', date: '' };
+    // "Stop offering to new customers" applies to updates; a first submission is always "keep available".
+    if (!inUpdateFlow && adv.schedule.end.mode !== 'never') adv.schedule.end = { mode: 'never', date: '' };
     const ph = adv.publishHold, end = adv.schedule.end;
     setSdRadio('publish-hold', ph.mode);
     const dateEl = $('publish-hold-date');
@@ -15217,6 +15563,7 @@
     setSdRadio('release-end', end.mode);
     const endEl = $('release-end-date');
     if (endEl) { endEl.value = end.date || ''; endEl.disabled = end.mode !== 'date'; }
+    const reField = $('submit-release-end-field'); if (reField) reField.hidden = !inUpdateFlow;
     updateHoldSummary();
   }
   (function wirePublishHold() {
@@ -15294,6 +15641,7 @@
   if ($('app-storelink')) $('app-storelink').addEventListener('click', () => announce('Opening your Store listing…'));
   if ($('head-analytics-btn')) $('head-analytics-btn').addEventListener('click', function () { location.href = '../' + (window.__portalFile || 'developer-portal.html') + '?anaApp=' + encodeURIComponent(app.id) + '&anaTab=acquisition#analytics'; });
   if ($('head-update-btn')) $('head-update-btn').addEventListener('click', function () { if (typeof window.startAppUpdate === 'function') window.startAppUpdate(); });
+  if ($('head-share-btn')) $('head-share-btn').addEventListener('click', function () { if (typeof window.startShareListing === 'function') window.startShareListing(); });
   if ($('review-done-btn')) $('review-done-btn').addEventListener('click', exitReviewDetails);
   if ($('review-update-btn')) $('review-update-btn').addEventListener('click', updateFromReview);
 
@@ -15430,7 +15778,14 @@
       const oc = Object.keys(adv.price.overrides || {}).length;
       const pol = $('price-overrides-label');
       if (pol) pol.textContent = oc ? ('Local prices \u00b7 ' + oc + ' customized') : 'See & customize local prices';
-      $('price-schedule-label').textContent = adv.price.schedule ? ('Price change on ' + adv.price.schedule.date) : 'Schedule a price change';
+      let schedLabel = 'Schedule a price change';
+      if (adv.price.schedule) {
+        schedLabel = 'Price change on ' + adv.price.schedule.date;
+        const _sc = adv.price.schedule.scope;
+        if (_sc && _sc.mode === 'group') { const _g = (adv.price.groups || []).find(x => x.id === _sc.groupId); if (_g) schedLabel += ' \u00b7 ' + _g.name; }
+      }
+      $('price-schedule-label').textContent = schedLabel;
+      try { window.__renderGroups?.(); } catch (e) {}
       try { window.__renderSales?.(); } catch (e) {}
       applyTrial();
       try { ezRenderPreview(); } catch (e) {}   // reflect the paid price on the preview Buy CTA
@@ -15472,6 +15827,7 @@
     const mp = $('markets-pick-btn'); if (mp) mp.addEventListener('click', () => { if (typeof openMarketsDialog === 'function') openMarketsDialog(); });
     const gp = $('groups-pick-btn'); if (gp) gp.addEventListener('click', () => { if (typeof openGroupsDialog === 'function') openGroupsDialog(); });
     const po = $('price-overrides-btn'); if (po) po.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
+    const pgb = $('price-group-btn'); if (pgb) pgb.addEventListener('click', () => { if (window.openPriceGroupDialog) window.openPriceGroupDialog(); });
     const ps = $('price-schedule-btn'); if (ps) ps.addEventListener('click', () => { if (typeof openPriceScheduleDialog === 'function') openPriceScheduleDialog(); });
     const psale = $('price-sale-btn'); if (psale) psale.addEventListener('click', () => { if (window.openPriceSaleDialog) window.openPriceSaleDialog(); });
     // (Advanced pricing + free trial now live in a fluent-accordion — expand/collapse is native.)
@@ -16231,7 +16587,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
    Source of truth is the shared `adv.price` object:
      adv.price.amount   -> base amount the developer prices in
      adv.price.currency -> ISO 4217 base currency (e.g. 'USD')
-     adv.price.schedule -> { date:'YYYY-MM-DD', price:Number } | null
+     adv.price.schedule -> { date:'YYYY-MM-DD', time:'HH:MM', tz:'local'|'utc', price:Number } | null
    Seeds from adv.price.schedule on open; on Save writes back to adv +
    persistAdvanced() + window.__reachRefresh.price(); Cancel/X restores the
    on-open snapshot; Remove clears the schedule and closes. */
@@ -16242,6 +16598,8 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   const priceSchedulePreview = $('price-schedule-preview');
   const priceScheduleSave    = $('price-schedule-save');
   const priceScheduleRemove  = $('price-schedule-remove');
+  const priceScheduleTime    = $('price-schedule-time');
+  const priceScheduleTz      = $('price-schedule-tz');
 
   // Snapshot of adv.price.schedule taken when the dialog opens; restored on Cancel/X.
   let priceScheduleSnapshot = null;
@@ -16282,7 +16640,67 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     const cur = _baseCurrency();
     const digits = fractionDigitsFor(cur);
     const niceDate = formatScheduleDate(date);
-    priceSchedulePreview.innerHTML = `On <strong>${niceDate}</strong>, your base price changes from <strong>${cur} ${_baseAmount().toFixed(digits)}</strong> to <strong>${cur} ${price.toFixed(digits)}</strong>.`;
+    const t = (priceScheduleTime && priceScheduleTime.value) || '00:00';
+    const niceTime = formatScheduleTime(t);
+    const tzLabel = scheduleTzLabel(scheduleTzValue());
+    priceSchedulePreview.innerHTML = `On <strong>${niceDate}</strong> at <strong>${niceTime}</strong> ${tzLabel}, your base price changes from <strong>${cur} ${_baseAmount().toFixed(digits)}</strong> to <strong>${cur} ${price.toFixed(digits)}</strong>${scheduleScopeLabel()}.`;
+  }
+
+  // Market-group scope for a scheduled change (all markets, or one saved group).
+  const gEsc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+  function priceGroupsArr() { return (adv && adv.price && Array.isArray(adv.price.groups)) ? adv.price.groups : []; }
+  function populateScheduleScope(scope) {
+    const dd = $('price-schedule-scope'), field = $('price-schedule-scope-field');
+    if (!dd || !field) return;
+    const groups = priceGroupsArr();
+    if (!groups.length) { field.hidden = true; return; }
+    field.hidden = false;
+    const lb = dd.querySelector('fluent-listbox') || dd;
+    const cur = (scope && scope.mode === 'group' && scope.groupId && groups.some(g => g.id === scope.groupId)) ? scope.groupId : 'all';
+    const opts = [{ v: 'all', t: 'All markets' }].concat(groups.map(g => ({ v: g.id, t: g.name })));
+    lb.innerHTML = opts.map(o => '<fluent-option value="' + o.v + '"' + (o.v === cur ? ' selected' : '') + '>' + gEsc(o.t) + '</fluent-option>').join('');
+    try { dd.value = cur; } catch (e) {}
+  }
+  function scheduleScopeValue() {
+    const dd = $('price-schedule-scope'), field = $('price-schedule-scope-field');
+    if (!dd || !field || field.hidden) return { mode: 'all' };
+    const v = dd.value || 'all';
+    return v === 'all' ? { mode: 'all' } : { mode: 'group', groupId: v };
+  }
+  function scheduleScopeLabel() {
+    const sc = scheduleScopeValue();
+    if (sc.mode === 'group') { const g = priceGroupsArr().find(x => x.id === sc.groupId); if (g) return ' for <strong>' + gEsc(g.name) + '</strong>'; }
+    return '';
+  }
+
+  // Time + time-zone helpers. Timezone is a plain choice between the viewer's local
+  // zone (auto-detected & labeled) and UTC — no long timezone list to scroll.
+  function localZoneLabel(kind) {
+    try {
+      const p = new Intl.DateTimeFormat('en', { timeZoneName: kind }).formatToParts(new Date()).find(x => x.type === 'timeZoneName');
+      return p ? p.value : '';
+    } catch (e) { return ''; }
+  }
+  function formatScheduleTime(t) {
+    if (!t) return '';
+    const parts = String(t).split(':');
+    const d = new Date(); d.setHours(parseInt(parts[0], 10) || 0, parseInt(parts[1], 10) || 0, 0, 0);
+    return d.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' });
+  }
+  function scheduleTzLabel(tz) {
+    if (tz === 'utc') return 'UTC';
+    return localZoneLabel('short') || 'your local time';
+  }
+  function setScheduleTz(tz) {
+    if (!priceScheduleTz) return;
+    const val = tz === 'utc' ? 'utc' : 'local';
+    priceScheduleTz.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === val; r.checked = on; r.toggleAttribute('checked', on); });
+    const zoneSpan = document.getElementById('ptz-local-zone');
+    if (zoneSpan) { const s = localZoneLabel('short'); zoneSpan.textContent = s ? '\u00a0(' + s + ')' : ''; }
+  }
+  function scheduleTzValue() {
+    const r = priceScheduleTz && priceScheduleTz.querySelector('fluent-radio[value="utc"]');
+    return (r && r.checked) ? 'utc' : 'local';
   }
 
   function openPriceScheduleDialog() {
@@ -16291,11 +16709,14 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     // Take a restore snapshot of the current adv schedule.
     priceScheduleSnapshot = sched ? { ...sched } : null;
     if (priceScheduleDate) priceScheduleDate.value = sched?.date || '';
+    if (priceScheduleTime) priceScheduleTime.value = (sched && sched.time) || '00:00';
     if (priceSchedulePrice) priceSchedulePrice.value = sched ? String(sched.price) : '';
     if (priceScheduleRemove) priceScheduleRemove.hidden = !sched;
     // Update the input label to reflect the current base currency.
     const priceLabel = priceScheduleDialog.querySelector('label[for="price-schedule-price"]');
     if (priceLabel) priceLabel.textContent = `New base price (${_baseCurrency()})`;
+    setScheduleTz(sched && sched.tz);
+    populateScheduleScope(sched && sched.scope);
     syncScheduleSaveEnabled();
     priceScheduleDialog.setAttribute('open', '');
     priceScheduleDialog.removeAttribute('hidden');
@@ -16317,16 +16738,21 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   });
   priceScheduleDate?.addEventListener('input', syncScheduleSaveEnabled);
   priceSchedulePrice?.addEventListener('input', syncScheduleSaveEnabled);
+  priceScheduleTime?.addEventListener('input', syncScheduleSaveEnabled);
+  priceScheduleTz?.addEventListener('change', renderSchedulePreview);
+  $('price-schedule-scope')?.addEventListener('change', renderSchedulePreview);
 
   priceScheduleSave?.addEventListener('click', () => {
     const date = priceScheduleDate?.value;
     const price = parseFloat(priceSchedulePrice?.value || '');
     if (!date || !Number.isFinite(price)) return;
-    if (adv && adv.price) adv.price.schedule = { date, price };
+    const time = (priceScheduleTime?.value) || '00:00';
+    const tz = scheduleTzValue();
+    if (adv && adv.price) adv.price.schedule = { date, time, tz, price, scope: scheduleScopeValue() };
     priceScheduleSnapshot = null;
     persistAdvanced();
     try { window.__reachRefresh?.price?.(); } catch (e) {}
-    announce(`Price change scheduled for ${formatScheduleDate(date)}.`);
+    announce(`Price change scheduled for ${formatScheduleDate(date)} at ${formatScheduleTime(time)} ${scheduleTzLabel(tz)}.`);
     priceScheduleDialog?.removeAttribute('open');
     try { if (typeof priceScheduleDialog?.hide === 'function') priceScheduleDialog.hide(); } catch (e) {}
   });
@@ -16615,6 +17041,183 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   renderSalesList();
   window.openPriceSaleDialog = openPriceSaleDialog;
 
+  // ---- Market groups: name a set of markets, optionally give the whole group its own price, and
+  // reuse the group as the scope of a scheduled price change. ----
+  const priceGroupDialog = $('price-group-dialog');
+  const priceGroupName = $('price-group-name');
+  const priceGroupSave = $('price-group-save');
+  const priceGroupSaveLabel = $('price-group-save-label');
+  const priceGroupRemove = $('price-group-remove');
+  const priceGroupTitleText = $('price-group-title-text');
+  const priceGroupCustomToggle = $('price-group-custom-toggle');
+  const priceGroupPriceRow = $('price-group-price-row');
+  const priceGroupCurrency = $('price-group-currency');
+  const priceGroupPrice = $('price-group-price');
+  const priceGroupMarketsPick = $('price-group-markets-pick');
+  const priceGroupMarketsList = $('price-group-markets-list');
+  const priceGroupMarketsSearch = $('price-group-markets-search');
+  let groupMarketsMode = 'choose';
+  const groupMarketsSel = new Set();
+  let priceGroupEditId = null;
+  function updateGroupMarketsCount() {
+    const total = Object.keys(window.MARKET_NAME || {}).length;
+    const el = $('price-group-markets-count');
+    if (el) el.textContent = groupMarketsSel.size + ' of ' + total + ' selected';
+  }
+  function renderGroupMarketsList(filter) {
+    if (!priceGroupMarketsList) return;
+    const q = (filter || '').trim().toLowerCase();
+    const all = saleAllMarkets();
+    const filtered = q ? all.filter(m => m.name.toLowerCase().includes(q)) : all;
+    if (!filtered.length) { priceGroupMarketsList.innerHTML = '<div class="markets-dialog__empty">No markets match &ldquo;' + gEsc(q) + '&rdquo;.</div>'; return; }
+    priceGroupMarketsList.innerHTML = filtered.map(m => {
+      const checked = groupMarketsSel.has(m.code) ? 'checked' : '';
+      return '<label class="markets-dialog__row" role="option" aria-selected="' + (!!checked) + '">' +
+        '<input type="checkbox" data-group-market="' + m.code + '" ' + checked + ' />' +
+        '<span class="markets-dialog__row-name">' + gEsc(m.name) + '</span></label>';
+    }).join('');
+    priceGroupMarketsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const code = cb.getAttribute('data-group-market');
+        if (cb.checked) groupMarketsSel.add(code); else groupMarketsSel.delete(code);
+        updateGroupMarketsCount(); syncGroupSaveEnabled();
+      });
+    });
+  }
+  function setGroupMarketsMode(mode, sync) {
+    groupMarketsMode = (mode === 'all') ? 'all' : 'choose';
+    const seg = $('price-group-markets-mode');
+    if (seg) seg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === groupMarketsMode; r.checked = on; r.toggleAttribute('checked', on); });
+    if (priceGroupMarketsPick) priceGroupMarketsPick.hidden = groupMarketsMode !== 'choose';
+    if (groupMarketsMode === 'choose') { renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); }
+    if (sync) syncGroupSaveEnabled();
+  }
+  function groupCustomOn() { return !!(priceGroupCustomToggle && priceGroupCustomToggle.checked); }
+  function groupPriceHint(on) {
+    var h = document.querySelector('#price-group-dialog .price-group-price-toggle__hint');
+    if (h) h.textContent = on ? 'One custom price applies to every market in this group.' : 'Off \u2014 these markets keep your auto-converted local prices.';
+  }
+  function setGroupCustomPrice(on, sync) {
+    if (priceGroupCustomToggle) { priceGroupCustomToggle.checked = !!on; priceGroupCustomToggle.toggleAttribute('checked', !!on); }
+    if (priceGroupPriceRow) priceGroupPriceRow.hidden = !on;
+    groupPriceHint(!!on);
+    if (sync) syncGroupSaveEnabled();
+  }
+  function groupValid() {
+    if (!priceGroupName || !priceGroupName.value.trim()) return false;
+    if (groupMarketsMode === 'choose' && groupMarketsSel.size === 0) return false;
+    if (groupCustomOn()) { const v = parseFloat((priceGroupPrice && priceGroupPrice.value) || ''); if (!(Number.isFinite(v) && v > 0)) return false; }
+    return true;
+  }
+  function syncGroupSaveEnabled() { const bad = !groupValid(); if (priceGroupSave) { priceGroupSave.disabled = bad; priceGroupSave.toggleAttribute('disabled', bad); } }
+  function populateGroupCurrency() {
+    const src = $('price-currency');
+    if (!priceGroupCurrency || !src) return;
+    const lb = priceGroupCurrency.querySelector('fluent-listbox');
+    if (lb && !lb.children.length) {
+      src.querySelectorAll('fluent-option').forEach(o => { const opt = document.createElement('fluent-option'); opt.setAttribute('value', o.getAttribute('value') || ''); opt.textContent = o.textContent; lb.appendChild(opt); });
+    }
+    tightenCurrencyDropdown(priceGroupCurrency);
+  }
+  function groupScopeLabel(g) {
+    if (g.markets === 'all') return 'All markets';
+    if (Array.isArray(g.markets)) return g.markets.length === 1 ? ((window.MARKET_NAME || {})[g.markets[0]] || g.markets[0]) : (g.markets.length + ' markets');
+    return '0 markets';
+  }
+  function groupSummary(g) {
+    let priceTxt = 'Auto-converted prices';
+    if (g.price != null && Number.isFinite(g.price)) { const cur = g.currency || _baseCurrency(); priceTxt = cur + ' ' + Number(g.price).toFixed(fractionDigitsFor(cur)); }
+    return gEsc(g.name) + ' \u00b7 ' + groupScopeLabel(g) + ' \u00b7 ' + priceTxt;
+  }
+  function renderGroupsList() {
+    const host = $('price-groups');
+    if (host) {
+      host.innerHTML = priceGroupsArr().map(g =>
+        '<div class="price-sale-item" data-group-edit="' + g.id + '" role="button" tabindex="0">' +
+          '<iconify-icon icon="fluent:group-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+          '<span class="price-sale-item__text">' + groupSummary(g) + '</span>' +
+          '<button type="button" class="price-sale-item__remove" data-group-remove="' + g.id + '" aria-label="Remove group"><iconify-icon icon="fluent:dismiss-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
+        '</div>'
+      ).join('');
+    }
+    const label = $('price-group-label');
+    if (label) { const n = priceGroupsArr().length; label.textContent = n ? ('Market groups \u00b7 ' + n) : 'Create a market group'; }
+  }
+  window.__renderGroups = renderGroupsList;
+  function openPriceGroupDialog(id) {
+    if (!priceGroupDialog) return;
+    populateGroupCurrency();
+    const g = id ? priceGroupsArr().find(x => x.id === id) : null;
+    priceGroupEditId = g ? g.id : null;
+    if (priceGroupTitleText) priceGroupTitleText.textContent = g ? 'Edit market group' : 'Create a market group';
+    if (priceGroupSaveLabel) priceGroupSaveLabel.textContent = g ? 'Save group' : 'Create group';
+    if (priceGroupRemove) priceGroupRemove.hidden = !g;
+    if (priceGroupName) priceGroupName.value = g ? (g.name || '') : '';
+    groupMarketsSel.clear();
+    const seed = g && g.markets;
+    if (Array.isArray(seed)) seed.forEach(c => { if ((window.MARKET_NAME || {})[c]) groupMarketsSel.add(c); });
+    if (priceGroupMarketsSearch) priceGroupMarketsSearch.value = '';
+    setGroupMarketsMode(seed === 'all' ? 'all' : 'choose', false);
+    const hasCustom = !!(g && g.price != null && Number.isFinite(g.price));
+    reselectDD(priceGroupCurrency, (g && g.currency) || _baseCurrency());
+    if (priceGroupPrice) priceGroupPrice.value = hasCustom ? String(g.price) : '';
+    setGroupCustomPrice(hasCustom, false);
+    syncGroupSaveEnabled();
+    priceGroupDialog.setAttribute('open', '');
+    priceGroupDialog.removeAttribute('hidden');
+    try { if (typeof priceGroupDialog.show === 'function') priceGroupDialog.show(); } catch (e) {}
+    setTimeout(() => { try { priceGroupName && priceGroupName.focus(); } catch (e) {} }, 40);
+  }
+  function closePriceGroupDialog() {
+    if (!priceGroupDialog) return;
+    priceGroupDialog.removeAttribute('open');
+    try { if (typeof priceGroupDialog.hide === 'function') priceGroupDialog.hide(); } catch (e) {}
+  }
+  priceGroupName?.addEventListener('input', syncGroupSaveEnabled);
+  priceGroupPrice?.addEventListener('input', syncGroupSaveEnabled);
+  priceGroupCurrency?.addEventListener('change', syncGroupSaveEnabled);
+  priceGroupCustomToggle?.addEventListener('change', () => { const on = priceGroupCustomToggle.checked; if (priceGroupPriceRow) priceGroupPriceRow.hidden = !on; groupPriceHint(on); syncGroupSaveEnabled(); });
+  $('price-group-markets-mode')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'choose'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setGroupMarketsMode(v, true); });
+  priceGroupMarketsSearch?.addEventListener('input', e => renderGroupMarketsList(e.target.value));
+  $('price-group-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => groupMarketsSel.add(m.code)); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
+  $('price-group-markets-clear')?.addEventListener('click', () => { groupMarketsSel.clear(); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
+  priceGroupDialog?.querySelectorAll('[data-price-group-close]').forEach(el => el.addEventListener('click', () => closePriceGroupDialog()));
+  priceGroupSave?.addEventListener('click', () => {
+    if (!groupValid()) return;
+    const name = priceGroupName.value.trim();
+    const markets = groupMarketsMode === 'all' ? 'all' : [...groupMarketsSel];
+    let currency = null, price = null;
+    if (groupCustomOn()) { currency = (priceGroupCurrency && priceGroupCurrency.value) || _baseCurrency(); price = parseFloat(priceGroupPrice.value); }
+    if (adv && adv.price) {
+      if (!Array.isArray(adv.price.groups)) adv.price.groups = [];
+      if (priceGroupEditId) { const g = adv.price.groups.find(x => x.id === priceGroupEditId); if (g) { g.name = name; g.markets = markets; g.currency = currency; g.price = price; } }
+      else adv.price.groups.push({ id: 'mg' + Date.now().toString(36), name, markets, currency, price });
+    }
+    persistAdvanced();
+    renderGroupsList();
+    try { window.__reachRefresh?.price?.(); } catch (e) {}
+    announce(priceGroupEditId ? 'Market group updated.' : ('Market group \u201c' + name + '\u201d created.'));
+    closePriceGroupDialog();
+  });
+  function removeGroupById(id) {
+    if (!adv || !adv.price || !Array.isArray(adv.price.groups)) return;
+    adv.price.groups = adv.price.groups.filter(g => g.id !== id);
+    if (adv.price.schedule && adv.price.schedule.scope && adv.price.schedule.scope.groupId === id) adv.price.schedule.scope = { mode: 'all' };
+    persistAdvanced();
+    renderGroupsList();
+    try { window.__reachRefresh?.price?.(); } catch (e) {}
+    announce('Market group removed.');
+  }
+  priceGroupRemove?.addEventListener('click', () => { if (priceGroupEditId) removeGroupById(priceGroupEditId); closePriceGroupDialog(); });
+  $('price-groups')?.addEventListener('click', (e) => {
+    const rm = e.target.closest('[data-group-remove]');
+    if (rm) { e.stopPropagation(); removeGroupById(rm.getAttribute('data-group-remove')); return; }
+    const row = e.target.closest('[data-group-edit]');
+    if (row) openPriceGroupDialog(row.getAttribute('data-group-edit'));
+  });
+  renderGroupsList();
+  window.openPriceGroupDialog = openPriceGroupDialog;
+
   // Expose the opener at parse time (hoisted alias for the IIFE-scoped opener).
   window.openPriceScheduleDialog = openPriceScheduleDialog;
 })();
@@ -16633,8 +17236,8 @@ function openPriceScheduleDialog() {
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 
     // ===== Multi-language listing — per-locale buckets for the translated fields
-    // (description, short description, features). Category / subcategory / privacy /
-    // keywords are default-only (locked on other locales). Session-only, like adv. =====
+    // (description, short description, features, search keywords). Category / subcategory /
+    // privacy are default-only (locked on other locales). Session-only, like adv. =====
     const SUPPORTED_LOCALES = [
       { code: 'en-US', name: 'English (United States)' }, { code: 'en-GB', name: 'English (United Kingdom)' },
       { code: 'es-ES', name: 'Spanish (Spain)' }, { code: 'es-MX', name: 'Spanish (Mexico)' },
@@ -16652,7 +17255,7 @@ function openPriceScheduleDialog() {
     let DEFAULT_LOCALE = (L.defaultLocale) || 'en-US';   // the base language; changeable from Manage languages
     const localeNameOf = (c) => (SUPPORTED_LOCALES.find(l => l.code === c) || {}).name || c;
     const localeShortNameOf = (c) => localeNameOf(c).replace(/\s*\(.*\)$/, '');
-    const emptyLangBucket = () => ({ description: '', shortDesc: '', features: '' });
+    const emptyLangBucket = () => ({ description: '', shortDesc: '', features: '', keywords: [] });
     const langTranslating = new Set();
     if (!L.locales) L.locales = {};
     if (!L.activeLocale) L.activeLocale = DEFAULT_LOCALE;
@@ -16660,8 +17263,8 @@ function openPriceScheduleDialog() {
     function localeLocked() { return (L.activeLocale || DEFAULT_LOCALE) !== DEFAULT_LOCALE; }
     function addedLocales() { return [DEFAULT_LOCALE].concat(Object.keys(L.locales).filter(c => c !== DEFAULT_LOCALE)); }
 
-    // Fields that are identical across every language (category, subcategory, keywords,
-    // privacy, license terms, developer / copyright). They stay editable in any locale, but the
+    // Fields that are identical across every language (category, subcategory, privacy,
+    // license terms, developer / copyright). They stay editable in any locale, but the
     // first time the developer changes one while a non-default editing language is active, we
     // warn that the change applies to ALL languages (acknowledged once per session).
     let sharedEditAck = false;
@@ -16670,7 +17273,7 @@ function openPriceScheduleDialog() {
       if (!localeLocked() || sharedEditAck) { proceed(); return; }
       const dlg = $('shared-warn'); if (!dlg) { proceed(); return; }
       const body = $('shared-warn-body');
-      if (body) body.textContent = 'Category, subcategory, keywords, privacy policy and other shared details are identical in every language. Changing this while editing ' + localeShortNameOf(L.activeLocale) + ' updates it for all ' + addedLocales().length + ' languages.';
+      if (body) body.textContent = 'Category, subcategory, privacy policy and other shared details are identical in every language. Changing this while editing ' + localeShortNameOf(L.activeLocale) + ' updates it for all ' + addedLocales().length + ' languages.';
       dlg.__proceed = proceed;
       dlg.hidden = false;
     }
@@ -16748,7 +17351,7 @@ function openPriceScheduleDialog() {
     }
     // Fill the keyword list from the description once, while the user hasn't taken manual control.
     function seedKeywords() {
-      if (kwUserEdited || (typeof localeLocked === 'function' && localeLocked()) || L.keywords.length) return;
+      if (kwUserEdited || L.keywords.length) return;
       const seed = suggestKeywords(6);
       if (seed.length) { L.keywords = seed; seed.forEach(w => aiKw.add(w)); persistAdvanced(); }
     }
@@ -16765,7 +17368,7 @@ function openPriceScheduleDialog() {
     }
     function renderKwSuggest() {
       if (!kwSuggestWrap || !kwSuggestChips) return;
-      const sugg = localeLocked() ? [] : suggestKeywords(6);
+      const sugg = suggestKeywords(6);
       if (!sugg.length) { kwSuggestWrap.hidden = true; kwSuggestChips.innerHTML = ''; return; }
       kwSuggestWrap.hidden = false;
       kwSuggestChips.innerHTML = sugg.map(w => '<button type="button" class="ez-kw-chips__chip ez-kw-chips__chip--suggest" data-suggest="' + esc(w) + '"><iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + esc(w) + '</button>').join('');
@@ -16785,15 +17388,15 @@ function openPriceScheduleDialog() {
       renderKwSuggest();
       renderKwEasy();
     }
-    function addKeyword(v, fromAI) { v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(function () { addKeyword(v, fromAI); }); return; } kwUserEdited = true; if (fromAI) { aiKw.add(v); } else { aiKw.delete(v); } L.keywords.push(v); persistAdvanced(); renderKeywords(); }
+    function addKeyword(v, fromAI) { v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; kwUserEdited = true; if (fromAI) { aiKw.add(v); } else { aiKw.delete(v); } L.keywords.push(v); persistAdvanced(); renderKeywords(); }
     if (kwInput) {
       kwInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKeyword(kwInput.value); kwInput.value = ''; }
-        else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length && (!localeLocked() || sharedEditAck)) { kwUserEdited = true; L.keywords.pop(); persistAdvanced(); renderKeywords(); }
+        else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length) { kwUserEdited = true; L.keywords.pop(); persistAdvanced(); renderKeywords(); }
       });
       kwInput.addEventListener('blur', () => { if (kwInput.value.trim()) { addKeyword(kwInput.value); kwInput.value = ''; } });
     }
-    if (chipsWrap) chipsWrap.addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; const doRemove = () => { kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); }; if (localeLocked() && !sharedEditAck) { ensureSharedEdit(doRemove); return; } doRemove(); });
+    if (chipsWrap) chipsWrap.addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); });
     renderKeywords();
 
     // ---- Privacy policy: Link or Text ----
@@ -17214,14 +17817,17 @@ function openPriceScheduleDialog() {
       b.description = (fDesc.value || '');
       b.shortDesc = L.shortDesc || '';
       b.features = L.features || '';
+      b.keywords = (L.keywords || []).slice();
     }
     function loadActiveLocale() {
       const code = L.activeLocale || DEFAULT_LOCALE;
       const b = L.locales[code];
-      if (b) { if (fDesc) fDesc.value = b.description || ''; L.shortDesc = b.shortDesc || ''; L.features = b.features || ''; }
-      else if (code !== DEFAULT_LOCALE) { if (fDesc) fDesc.value = ''; L.shortDesc = ''; L.features = ''; }
+      if (b) { if (fDesc) fDesc.value = b.description || ''; L.shortDesc = b.shortDesc || ''; L.features = b.features || ''; L.keywords = Array.isArray(b.keywords) ? b.keywords.slice() : (code === DEFAULT_LOCALE ? (L.keywords || []) : []); }
+      else if (code !== DEFAULT_LOCALE) { if (fDesc) fDesc.value = ''; L.shortDesc = ''; L.features = ''; L.keywords = []; }
       if (fShort) fShort.value = L.shortDesc || '';
+      kwUserEdited = !!(L.keywords && L.keywords.length);   // per-language: an empty locale re-seeds from its own description
       renderKeywords(); renderFeatures(); renderInfo();
+      try { if (typeof renderWhatsNew === 'function') renderWhatsNew(); } catch (e) {}   // per-language "What's new" reflects the active locale
     }
     function switchLocale(next) {
       if (!next || next === L.activeLocale) return;
@@ -17275,10 +17881,18 @@ function openPriceScheduleDialog() {
         'Export to CSV' +
         '</fluent-menu-item>' +
         '<fluent-divider role="separator" aria-hidden="true"></fluent-divider>';
-      langMenuList.innerHTML = manageItem + codes.map(c =>
-        '<fluent-menu-item data-code="' + c + '"' + (c === L.activeLocale ? ' aria-checked="true"' : '') + '>' +
-        esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + '</fluent-menu-item>'
-      ).join('');
+      langMenuList.innerHTML = manageItem + codes.map(c => {
+        // Each language shows its progress at a glance: translating, description done, or still needed.
+        const tr = langTranslating.has(c);
+        const done = localeDescFilled(c);
+        const st = tr
+          ? '<span slot="end" class="lang-menu__st lang-menu__st--tr"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating\u2026</span>'
+          : done
+            ? '<span slot="end" class="lang-menu__st lang-menu__st--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Complete</span>'
+            : '<span slot="end" class="lang-menu__st lang-menu__st--warn"><iconify-icon icon="fluent:warning-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Add description</span>';
+        return '<fluent-menu-item data-code="' + c + '"' + (c === L.activeLocale ? ' aria-checked="true"' : '') + '>' +
+          esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + st + '</fluent-menu-item>';
+      }).join('');
       const manageEl = langMenuList.querySelector('[data-lang-manage]');
       if (manageEl) manageEl.addEventListener('click', () => openLangDialog());
       const csvImpEl = langMenuList.querySelector('[data-csv-import]');
@@ -17294,7 +17908,9 @@ function openPriceScheduleDialog() {
       if (kwInput) {
         if (kwInput.dataset.ph == null) kwInput.dataset.ph = kwInput.getAttribute('placeholder') || 'Type a keyword, then press Enter';
         kwInput.disabled = false;
-        kwInput.placeholder = locked ? 'Shared across all languages — press Enter to add' : kwInput.dataset.ph;
+        const ph = locked ? ('Keywords for ' + localeShortNameOf(L.activeLocale) + ' \u2014 press Enter to add') : kwInput.dataset.ph;
+        kwInput.setAttribute('placeholder', ph);
+        try { const inner = kwInput.shadowRoot && kwInput.shadowRoot.querySelector('input, textarea'); if (inner) inner.setAttribute('placeholder', ph); } catch (e) {}
       }
       renderInfo();
     }
@@ -17425,15 +18041,14 @@ function openPriceScheduleDialog() {
         else {
           const bucket = emptyLangBucket();
           langDraft.added.set(code, bucket);
-          if (langDupTgl && langDupTgl.checked) {
-            const def = L.locales[DEFAULT_LOCALE] || { description: (fDesc.value || ''), shortDesc: L.shortDesc || '', features: L.features || '' };
-            const src = { description: def.description || '', shortDesc: def.shortDesc || '', features: def.features || '' };
-            // Seed the default content into the new locale synchronously, so it's copied even if the
-            // developer saves before the (async) translation finishes; translateInto then refines it
-            // in place. Without this, a quick Save committed an empty bucket (content didn't copy).
-            bucket.description = src.description;
-            bucket.shortDesc = src.shortDesc;
-            bucket.features = src.features;
+          // Always copy the default listing's content into the new locale as a starting point.
+          const def = L.locales[DEFAULT_LOCALE] || { description: (fDesc.value || ''), shortDesc: L.shortDesc || '', features: L.features || '' };
+          const src = { description: def.description || '', shortDesc: def.shortDesc || '', features: def.features || '' };
+          bucket.description = src.description;
+          bucket.shortDesc = src.shortDesc;
+          bucket.features = src.features;
+          // Vision only: auto-translate the copied content in place.
+          if (!isMvp() && langDupTgl && langDupTgl.checked) {
             langTranslating.add(code);
             renderLangList(langSearch ? langSearch.value : '');
             updateTranslatingBanner();
