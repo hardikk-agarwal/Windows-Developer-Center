@@ -955,9 +955,11 @@
         '</div>' +
         '<div class="certcard__meta">' + facts + pill + '</div>' +
       '</header>' +
-      '<div class="table-wrap"><table class="table apptable">' +
-        '<thead><tr><th>App</th><th>Crash analytics</th><th>Download sources</th><th class="col-store">Store</th></tr></thead>' +
-        '<tbody>' + g.apps.map(appRowHTML).join("") + '</tbody>' +
+      '<div class="table-wrap"><table class="table apptable' + (STORE ? ' apptable--store' : '') + '">' +
+        (STORE
+          ? '<thead><tr><th>App</th><th>Type</th><th>Status</th><th>Installs</th><th>Crash rate</th><th>Rating</th><th class="col-store"></th></tr></thead>'
+          : '<thead><tr><th>App</th><th>Crash analytics</th><th>Download sources</th><th class="col-store">Store</th></tr></thead>') +
+        '<tbody>' + g.apps.map(STORE ? storeCertRowHTML : appRowHTML).join("") + '</tbody>' +
       '</table></div>' +
     '</section>';
   }
@@ -1148,6 +1150,50 @@
       '<td>' + health + '</td>' +
       '<td>' + sources + '</td>' +
       '<td class="col-store">' + store + '</td>' +
+    '</tr>';
+  }
+
+  // Store-portal cert row: mirrors the top Store-apps table (App · Type · Status · Installs · Crash rate ·
+  // Rating · action) so the two tables read as one. Cert-found apps have only crash health + the Publish
+  // upsell; Store-only metrics (installs, rating) and Store status stay blank. Download sources is dropped.
+  function storeCertRowHTML(a) {
+    var iconHTML = appIcoImg(a);
+    var locked = storeLocked(a);
+    var created = a.store || a.storeStatus === "in-progress";
+    var lockCell = '<span class="celllock" data-openmodal title="Verify certificate ownership to unlock">' +
+      '<iconify-icon icon="fluent:lock-closed-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>Locked</span>';
+    var na = '<span class="muted">\u2014</span>';
+    var tm = appTypeMeta(a);
+    var typeCell = tm.label ? '<span class="apptype apptype--' + tm.key + '">' + esc(tm.label) + '</span>' : na;
+    var statusCell = locked ? lockCell : (a.store ? '<span class="pill pill--ok pill--sm">\u2713 In the Store</span>' : '<span class="pill pill--ghost pill--sm">Not in Store</span>');
+    var crashCell = na, crashAttr = "";
+    // Store-only metrics (installs + rating) render as a BLURRED teaser that nudges the developer to
+    // publish and unlock the real numbers; clicking it opens the publish flow. Crash health needs no
+    // Store (the cert is verified), so it shows for real.
+    var instCell = na, rateCell = na;
+    if (!locked) {
+      var ana = anaData(a), dot = ana.crashRate >= 5 ? "warn" : "ok";
+      crashCell = '<span class="metric__row"><span class="health__dot is-' + dot + '"></span>' + ana.crashRate.toFixed(2) + '%</span>';
+      crashAttr = ' class="metric-cell" data-analytics="' + a.id + '" data-health="' + a.id + '" title="View crash analytics"';
+      var TIP = 'Publish to the Store to start tracking installs and ratings';
+      instCell = '<span class="metric-teaser" data-store="' + a.id + '" title="' + TIP + '"><span class="metric-teaser__val"><strong>' + fmtCompact(acqData(a).instTotal) + '</strong></span>' +
+        '<iconify-icon class="metric-teaser__lock" icon="fluent:lock-closed-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span>';
+      rateCell = '<span class="metric-teaser" data-store="' + a.id + '" title="' + TIP + '"><span class="metric-teaser__val ratecell"><span class="ratecell__star">\u2605</span><strong>' + ratingsData(a).avg.toFixed(1) + '</strong></span>' +
+        '<iconify-icon class="metric-teaser__lock" icon="fluent:lock-closed-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span>';
+    }
+    var action = (locked || a.store) ? ""
+      : created
+        ? '<fluent-button appearance="outline" size="small" data-continue="' + a.id + '">Continue setup</fluent-button>'
+        : '<fluent-button appearance="primary" size="small" data-store="' + a.id + '">Publish to Store</fluent-button>';
+    return '<tr' + (created ? ' class="approw--open" data-openapp="' + a.id + '" title="Open publishing flow"' : '') + '>' +
+      '<td><div class="cell-main">' + iconHTML +
+        '<div><strong>' + esc(a.storeName || a.name) + '</strong></div></div></td>' +
+      '<td>' + typeCell + '</td>' +
+      '<td>' + statusCell + '</td>' +
+      '<td>' + instCell + '</td>' +
+      '<td' + crashAttr + '>' + crashCell + '</td>' +
+      '<td>' + rateCell + '</td>' +
+      '<td class="col-store">' + action + '</td>' +
     '</tr>';
   }
 

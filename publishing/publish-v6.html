@@ -147,7 +147,7 @@
   .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
   /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
      — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
-  #lang-menu-list { min-width: 320px; }
+  #lang-menu-list { min-width: 248px; }
   /* "Autofill with AI" — a distinct, prominent AI action so developers actually spot it.
      This Fluent build paints the button surface on the host element (it exposes no "control"
      part), so the gradient/glow go on the host, with !important to beat the component styles.
@@ -648,9 +648,12 @@
   .kw-tagpicker__box { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6); min-height: 40px; padding: 5px 10px 5px 8px; border: 1px solid var(--stroke-2); border-radius: var(--r-4); background: var(--layer); cursor: text; transition: border-color var(--dur-2) var(--ease-out); }
   .kw-tagpicker__box:focus-within { border-color: var(--brand); }
   .kw-tagpicker__tags { display: contents; }
-  .kw-tagpicker__input { flex: 1 1 160px; min-width: 140px; border: 0; outline: 0; background: transparent; color: var(--fg-1); font: inherit; font-size: var(--font-size-base-300); padding: 5px 2px; }
-  .kw-tagpicker__input::placeholder { color: var(--fg-3); }
-  .kw-tagpicker__input:disabled { cursor: not-allowed; opacity: 1; -webkit-text-fill-color: var(--fg-3); }
+  .kw-tagpicker__input { flex: 1 1 160px; min-width: 140px; }
+  .kw-tagpicker__input::part(root) { border: 0; outline: 0; background: transparent; box-shadow: none; min-height: 0; min-width: 0; padding: 0; }
+  /* Kill Fluent's bottom active-indicator (root::after) — the tag box's own :focus-within border shows focus. */
+  .kw-tagpicker__input::part(root)::after { display: none; }
+  .kw-tagpicker__input::part(control) { padding: 5px 2px; height: auto; color: var(--fg-1); font: inherit; font-size: var(--font-size-base-300); background: transparent; }
+  .kw-tagpicker__input[disabled] { cursor: not-allowed; }
   .kw-tagpicker__box.is-full { cursor: default; }
   .ez-kw-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); }
   .ez-kw-suggest__label { font-size: 12px; color: var(--fg-3); }
@@ -967,6 +970,12 @@
   .lpv-card .ez-store-hero__icon,
   .lpv-card .ez-store-cta { pointer-events: none; cursor: default; }
   .lpv-card .ez-store-hero__icon { border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  /* The preview renders outside #flow-wrap (where --store-link is defined), so re-declare it here — the
+     publisher + category read as blue links like the real Store. The category drops the editor pill's
+     padding/border to sit as a plain link, left-aligned with the publisher. */
+  .lpv-card { --store-link: #60CDFF; }
+  [data-theme="light"] .lpv-card { --store-link: #005FB8; }
+  .lpv-card .ez-store-hero__cat { padding: 0 !important; border: 0 !important; font-weight: 400; }
   /* Read-only zero states: a customer never sees "Click to…" edit prompts. Missing
      content reads as a calm, muted "not added yet" placeholder instead. */
   .lpv-card .lpv-empty { color: var(--fg-4); font-style: italic; }
@@ -1395,6 +1404,8 @@
   #lang-menu-list .lang-menu__st--ok { color: var(--status-success); }
   #lang-menu-list .lang-menu__st--warn { color: var(--status-warning, #e0a23a); }
   #lang-menu-list .lang-menu__st--tr { color: var(--brand); }
+  /* Count of still-missing localized fields (hover the badge for the list). */
+  #lang-menu-list .lang-menu__count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--status-warning, #e0a23a); color: #1b1b1b; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; cursor: default; }
   /* Small muted "in your package" icon next to the name (no text pill). */
   #lang-dialog .lang-row__pkg { color: var(--fg-4); flex: 0 0 auto; }
   /* Default control (col 3): a clear filled "Default" pill marks the current default; other added
@@ -1709,7 +1720,16 @@
   .ez-store-hero__name { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 600; color: #fff; margin: 0; letter-spacing: -.2px; word-break: break-word; }
   .ez-store-hero__publisher { display: inline-block; font-size: 14px; color: var(--store-link); margin: var(--sp-2) 0 0; }
   .ez-store-hero__meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-6); margin: var(--sp-8) 0 0; font-size: 12px; color: rgba(255,255,255,.92); }
-  .ez-store-hero__cat { color: var(--store-link); }
+  /* Category: a plain blue link (matches the real Store + the read-only preview). Kept discoverable and
+     obviously editable by the bookmark glyph + a persistent dashed underline; on hover the underline
+     solidifies, the colour brightens, and a pencil appears so "click to change" is unmistakable. */
+  .ez-store-hero__cat { display: inline-flex; align-items: center; gap: var(--sp-6); color: var(--store-link); font-weight: var(--font-weight-semibold); border-bottom: 1.5px dashed color-mix(in srgb, var(--store-link) 45%, transparent); padding-bottom: 1px; }
+  #ez-pv-category.live-edit-target[data-empty-required="false"]:not(.live-edit--active)::before { content: ''; width: 12px; height: 12px; flex: none; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'/></svg>") center/contain no-repeat; mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'/></svg>") center/contain no-repeat; }
+  #ez-pv-category.live-edit-target[data-empty-required="true"]:not(.live-edit--active) { font-style: normal; }
+  .ez-live .ez-store-hero__cat.live-edit-target:hover { background: transparent; outline: none; border-bottom-style: solid; border-bottom-color: var(--store-link); color: color-mix(in srgb, var(--store-link) 80%, #fff); }
+  /* On hover, append a pencil glyph so "click to edit" is explicit. */
+  .ez-live .ez-store-hero__cat.live-edit-target:hover::after { content: ''; position: static; top: auto; right: auto; transform: none; box-shadow: none; border-radius: 0; width: 12px; height: 12px; flex: none; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/contain no-repeat; mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/contain no-repeat; }
+  .ez-live #ez-pv-category.live-edit--active { padding: 0; background: transparent; border-bottom-color: transparent; }
   .ez-store-hero__sep { opacity: .5; }
   .ez-store-hero__desc { font-size: 14px; line-height: 19px; color: rgba(255,255,255,.92); margin: var(--sp-16) 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .ez-store-hero__cta { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-16); }
@@ -2356,9 +2376,8 @@
   #image-edit-dialog .image-edit__caption { display: flex; flex-direction: column; gap: var(--sp-4); margin-bottom: var(--sp-12); }
   #image-edit-dialog .image-edit__caption[hidden] { display: none; }
   #image-edit-dialog .image-edit__caption-lbl { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); display: inline-flex; align-items: center; gap: var(--sp-6); }
-  #image-edit-dialog .image-edit__caption-opt { font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-4); }
-  #image-edit-dialog #image-edit-caption { width: 100%; }
-  #image-edit-dialog #image-edit-caption::part(root), #image-edit-dialog #image-edit-caption::part(control) { width: 100%; box-sizing: border-box; }
+  #image-edit-dialog #image-edit-caption { display: block; width: 100% !important; max-width: 100% !important; }
+  #image-edit-dialog #image-edit-caption::part(root), #image-edit-dialog #image-edit-caption::part(control) { width: 100% !important; min-width: 100%; box-sizing: border-box; }
   #image-edit-dialog .image-edit__caption-hint { font-size: 12px; color: var(--fg-3); line-height: 1.4; }
   #image-edit-dialog .image-edit__zoom { display: flex; align-items: center; gap: var(--sp-8); flex: 1; color: var(--fg-3); }
   #image-edit-dialog .image-edit__zoom input[type="range"] { flex: 1; accent-color: var(--brand); }
@@ -2399,6 +2418,12 @@
   #ez-pv-icon[data-empty-required="true"]::after { content: '*'; position: absolute; top: -5px; right: -5px; color: var(--status-danger); font-weight: 700; font-size: 16px; line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
   /* Real logo shows directly — drop the placeholder tile's shadow/rounding box behind it. */
   #ez-pv-icon.has-img { box-shadow: none; border-radius: 0; }
+  /* A real/auto-added logo (e.g. auto-filled from an MSIX package) still needs to read as EDITABLE:
+     a persistent dashed ring (like the empty-logo tile); on hover it brightens and an edit pencil fades in. */
+  .ez-live #ez-pv-icon.has-img { outline: 2px dashed rgba(255,255,255,.5); outline-offset: 3px; }
+  .ez-live #ez-pv-icon.has-img:hover { outline-color: rgba(255,255,255,.9); }
+  .ez-live #ez-pv-icon.has-img::after { content: ''; position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--brand) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/11px no-repeat; box-shadow: 0 1px 4px rgba(0,0,0,.45); opacity: 0; transition: opacity var(--dur-3) var(--ease-out); pointer-events: none; }
+  .ez-live #ez-pv-icon.has-img:hover::after { opacity: 1; }
   /* Screenshots in edit mode: thumbnails + add tile + hover-reveal delete */
   .ez-store-shots--edit .ez-pv-shot { position: relative; }
   .ez-store-shots--edit .ez-pv-shot img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); display: block; background: var(--canvas-tint); }
@@ -4875,7 +4900,7 @@
           <div class="ez-extra-field" id="keywords-field">
             <div class="ez-extra-field__head">
               <strong>Search keywords</strong>
-              <span class="ez-extra-tag ez-extra-tag--meta"><iconify-icon icon="fluent:eye-off-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon> Not shown on your listing</span>
+              <span class="ez-field__info" data-tooltip="Not shown on your listing — they only help customers find your app in Store search." tabindex="0" role="img" aria-label="Search keywords are not shown on your listing"><iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span>
             </div>
             <!-- Simple view: one caption, then the read-only keywords derived from the description. -->
             <div class="ez-kw-easy" id="kw-easy">
@@ -4888,10 +4913,10 @@
             <!-- Advanced view: full editor. Reading order: input, then what you've Added
                  (AI-added ones carry a sparkle), then AI Suggestions you can tap to add. -->
             <div class="ez-kw-adv" id="kw-adv">
-              <p class="ez-extra-field__hint">Words people might search to find your app in the Store — up to 7 keywords (21 words total). You can set different keywords for each language.</p>
+              <p class="ez-extra-field__hint">Words people might search to find your app in the Store. You can set different keywords for each language.</p>
               <div class="kw-tagpicker__box" id="kw-box">
                 <span id="adv-keywords" class="kw-tagpicker__tags"></span>
-                <input type="text" id="adv-keyword-input" class="kw-tagpicker__input" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword" autocomplete="off" />
+                <fluent-text-input type="text" id="adv-keyword-input" class="kw-tagpicker__input" appearance="outline" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword" autocomplete="off"></fluent-text-input>
               </div>
               <div id="kw-suggest" hidden class="ez-kw-section">
                 <p class="ez-kw-section__label"><iconify-icon icon="fluent:sparkle-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon>Suggested by AI</p>
@@ -5978,7 +6003,7 @@
     </div>
 
     <div class="image-edit__caption" id="image-edit-caption-field" hidden>
-      <label class="image-edit__caption-lbl" for="image-edit-caption">Caption <span class="image-edit__caption-opt">optional</span></label>
+      <label class="image-edit__caption-lbl" for="image-edit-caption">Caption</label>
       <fluent-text-input id="image-edit-caption" maxlength="200" placeholder="Describe what this screenshot shows"></fluent-text-input>
       <span class="image-edit__caption-hint">Shown to customers when they open this screenshot in the Store.</span>
     </div>
@@ -12890,16 +12915,9 @@
     const grid = $('ez-pv-shots');
     if (!grid) return;
     grid.innerHTML = '';
-    // Add tile (screenshots) is always the first card. Trailers use the header button.
-    if (state.shots.length < 8) {
-      const add = document.createElement('button');
-      add.type = 'button'; add.className = 'ez-pv-shot-add'; add.id = 'shot-add';
-      add.innerHTML = '<iconify-icon icon="fluent:image-add-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon><span>Add screenshot</span>';
-      grid.appendChild(add);
-    }
-    // Trailers next — distinct thumbnail items, shown first (right after the add tile) like the
-    // real Store. Render whenever any exist, regardless of mode: the wizard runs in easy mode but
-    // can still add a trailer via "Show advanced options", and it must appear here too.
+    // Trailers first — distinct thumbnail items, shown first like the real Store. Render whenever any
+    // exist, regardless of mode: the wizard runs in easy mode but can still add a trailer via "Show
+    // advanced options", and it must appear here too. Trailers use the header button, not the add tile.
     if (adv.listing.trailers && adv.listing.trailers.length) {
       adv.listing.trailers.forEach((tr, i) => {
         const video = (tr && tr.video) || tr, thumb = (tr && tr.thumb) || '';
@@ -12929,6 +12947,14 @@
       w.appendChild(del);
       grid.appendChild(w);
     });
+    // Add tile LAST — it trails the media so a newly added screenshot lands where the tile was (the
+    // tile then shifts one slot right), matching App Store Connect / Play Console / Partner Center.
+    if (state.shots.length < 8) {
+      const add = document.createElement('button');
+      add.type = 'button'; add.className = 'ez-pv-shot-add'; add.id = 'shot-add';
+      add.innerHTML = '<iconify-icon icon="fluent:image-add-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon><span>Add screenshot</span>';
+      grid.appendChild(add);
+    }
     updateGate();
     updateShotsNav();
   }
@@ -12987,6 +13013,17 @@
     const overflow = (strip.scrollWidth - strip.clientWidth) > 4;
     if (prev) prev.hidden = !overflow || strip.scrollLeft <= 2;
     if (next) next.hidden = !overflow || strip.scrollLeft >= (strip.scrollWidth - strip.clientWidth - 2);
+  }
+  // After adding a screenshot, bring the tail (new shot + the Add tile) into view so the Add tile
+  // never stays hidden off the right edge once the strip overflows. Direct scrollLeft (the app disables
+  // CSS smooth-scroll globally); the small timeout lets the edit dialog close + layout settle first.
+  function scrollShotsToEnd() {
+    const strip = $('ez-pv-shots'); if (!strip) return;
+    setTimeout(() => {
+      const to = strip.scrollWidth - strip.clientWidth;
+      if (to > 2) strip.scrollLeft = to;
+      updateShotsNav();
+    }, 80);
   }
   (function shotsCarousel() {
     const strip = $('ez-pv-shots'), prev = $('ez-shots-prev'), next = $('ez-shots-next');
@@ -13261,6 +13298,7 @@
             state.shots.push(dataUrl);
             setShotCap(dataUrl, caption);
             renderShots();
+            scrollShotsToEnd();
             announce('Screenshot added.');
             if (typeof updateGate === 'function') updateGate(); // screenshot is required → refresh gate + tabs + checklist
             if (window.__scheduleFlowSave) window.__scheduleFlowSave(); // persist the new screenshot promptly (IndexedDB)
@@ -13283,6 +13321,7 @@
     Promise.all(use.map(f => readFileAsDataURL(f).then(d => fitImageToAspect(d, 16 / 10)))).then(urls => {
       urls.forEach(u => state.shots.push(u));
       renderShots();
+      scrollShotsToEnd();
       if (typeof updateGate === 'function') updateGate();
       if (window.__scheduleFlowSave) window.__scheduleFlowSave();
       announce(use.length + ' screenshot' + (use.length > 1 ? 's' : '') + ' added.' + (imgs.length > use.length ? ' Reached the 8-screenshot limit.' : ''));
@@ -17928,7 +17967,7 @@ function openPriceScheduleDialog() {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKeyword(kwInput.value); kwInput.value = ''; }
         else if (e.key === 'Backspace' && !kwInput.value && L.keywords.length) { kwUserEdited = true; L.keywords.pop(); persistAdvanced(); renderKeywords(); }
       });
-      kwInput.addEventListener('blur', () => { if (kwInput.value.trim()) { addKeyword(kwInput.value); kwInput.value = ''; } });
+      kwInput.addEventListener('focusout', () => { if ((kwInput.value || '').trim()) { addKeyword(kwInput.value); kwInput.value = ''; } });
     }
     if (chipsWrap) chipsWrap.addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; kwUserEdited = true; L.keywords.splice(parseInt(b.dataset.i, 10), 1); persistAdvanced(); renderKeywords(); });
     renderKeywords();
@@ -18409,6 +18448,26 @@ function openPriceScheduleDialog() {
       const b = L.locales[code];
       return !!(b && (b.description || '').trim());
     }
+    // Full per-language field status. Description is REQUIRED; short description, feature highlights and
+    // search keywords are optional but still count as "missing" until filled. The active locale reads the
+    // live buffers; other locales read their stored bucket. Powers the language menu's count + tooltip.
+    function localeFieldList(code) {
+      const active = L.activeLocale || DEFAULT_LOCALE;
+      let d, s, f, k;
+      if (code === active) {
+        d = ((fDesc && fDesc.value) || '').trim(); s = (L.shortDesc || '').trim(); f = (L.features || '').trim(); k = (L.keywords || []).length;
+      } else {
+        const b = L.locales[code] || {};
+        d = (b.description || '').trim(); s = (b.shortDesc || '').trim(); f = (b.features || '').trim(); k = (Array.isArray(b.keywords) ? b.keywords : []).length;
+      }
+      return [
+        { label: 'Description', filled: !!d, req: true },
+        { label: 'Short description', filled: !!s, req: false },
+        { label: 'Feature highlights', filled: !!f, req: false },
+        { label: 'Search keywords', filled: k > 0, req: false }
+      ];
+    }
+    function localeMissing(code) { return localeFieldList(code).filter(function (x) { return !x.filled; }); }
     window.__advAddedLocales = function () { return addedLocales(); };
     window.__advLocaleShortName = function (c) { return localeShortNameOf(c); };
     window.__advLocaleName = function (c) { return localeNameOf(c); };
@@ -18440,14 +18499,12 @@ function openPriceScheduleDialog() {
         '</fluent-menu-item>' +
         '<fluent-divider role="separator" aria-hidden="true"></fluent-divider>';
       langMenuList.innerHTML = manageItem + codes.map(c => {
-        // Each language shows its progress at a glance: translating, description done, or still needed.
+        // Per-language completeness lives in the left-side checklist rail, so the menu stays clean —
+        // only a transient "Translating\u2026" indicator shows here.
         const tr = langTranslating.has(c);
-        const done = localeDescFilled(c);
         const st = tr
           ? '<span class="lang-menu__st lang-menu__st--tr"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating\u2026</span>'
-          : done
-            ? '<span class="lang-menu__st lang-menu__st--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Complete</span>'
-            : '<span class="lang-menu__st lang-menu__st--warn"><iconify-icon icon="fluent:warning-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Add description</span>';
+          : '';
         return '<fluent-menu-item data-code="' + c + '"' + (c === L.activeLocale ? ' aria-checked="true"' : '') + '>' +
           '<span class="lang-menu__wrap"><span class="lang-menu__name">' + esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + '</span>' + st + '</span>' +
           '</fluent-menu-item>';

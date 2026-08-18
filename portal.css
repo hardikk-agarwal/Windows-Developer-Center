@@ -440,6 +440,11 @@ fluent-message-bar[hidden] { display: none; }
 .apptable .ratecell__star { color: var(--gold); font-size: 14px; line-height: 1; }
 .apptable .rowactions { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
 .apptable .row-chev { opacity: .5; flex: none; }
+/* Cert-app teaser: Store-only metrics (installs/rating) blurred behind a publish nudge (click = publish). */
+.apptable .metric-teaser { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.apptable .metric-teaser__val { display: inline-flex; align-items: center; gap: 4px; filter: blur(4px); opacity: .85; user-select: none; pointer-events: none; }
+.apptable .metric-teaser__lock { color: var(--text-3); flex: none; }
+.apptable .metric-teaser:hover .metric-teaser__lock { color: var(--brand); }
 /* Live-app metric cells (installs / crash rate / rating) open that app's analytics; the rest of the
    row opens the app's page. On hover the metric text turns into a blue link — no box highlight. */
 .apptable--store td.metric-cell { cursor: pointer; }
@@ -463,6 +468,19 @@ fluent-message-bar[hidden] { display: none; }
 .apptype--win32 > iconify-icon { color: #b99bf0; }
 /* Store Apps table: app type is plain secondary TEXT (no icon, no tag); status stays a proper colored pill. */
 .apptable--store .apptype { color: var(--text-2); font-size: 12px; }
+/* Both store tables (top pipeline + cert groups) share the SAME percentage column widths so rows line
+   up top-to-bottom and the space divides evenly (App gets a bit more for the icon+name; the action
+   column a bit more for the Publish button; the middle five are equal). */
+.apptable--store { table-layout: fixed; }
+.apptable--store th:nth-child(1), .apptable--store td:nth-child(1) { width: 20%; }
+.apptable--store th:nth-child(2), .apptable--store td:nth-child(2) { width: 13%; }
+.apptable--store th:nth-child(3), .apptable--store td:nth-child(3) { width: 13%; }
+.apptable--store th:nth-child(4), .apptable--store td:nth-child(4) { width: 13%; }
+.apptable--store th:nth-child(5), .apptable--store td:nth-child(5) { width: 13%; }
+.apptable--store th:nth-child(6), .apptable--store td:nth-child(6) { width: 13%; }
+.apptable--store th:nth-child(7), .apptable--store td:nth-child(7) { width: 15%; }
+.apptable--store .cell-main > div { min-width: 0; }
+.apptable--store .cell-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
 .th-sort:hover { color: var(--text-2); }
 .th-sort.is-active { color: var(--text); }
