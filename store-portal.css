@@ -173,10 +173,11 @@
 .ovx-hrow__t span { font-size: 12px; color: var(--text-3); line-height: 1.35; }
 .ovx-hrow__chev { color: var(--text-3); flex: 0 0 auto; }
 a.ovx-hrow:hover strong, a.ovx-hrow:hover .ovx-hrow__chev { color: var(--brand-soft); }
-/* Consolidated hub strip — three labelled groups in one slim card. */
-.ovx-hub { padding: 0; overflow: hidden; }
-.ovx-hub__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.ovx-hub__grp { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-left: 1px solid var(--border); min-width: 0; }
+/* Consolidated hub — labelled groups that flow into a responsive grid and top-align, so each group is
+   its natural height (any number of rows) without awkward full-height dividers or stretched columns. */
+.ovx-hub { padding: 18px 20px; }
+.ovx-hub__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px 40px; align-items: start; }
+.ovx-hub__grp { display: flex; flex-direction: column; gap: 12px; padding: 0; min-width: 0; }
 .ovx-hub__grp:first-child { border-left: 0; }
 .ovx-hub__label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); }
 .ovx-hub__id { display: flex; align-items: center; gap: 10px; }
@@ -222,7 +223,7 @@ a.ovx-hub__row:hover .ovx-hub__rowt, a.ovx-hub__row:hover .ovx-hub__rowchev { co
 .ovx-focus__clear > span { display: flex; flex-direction: column; gap: 1px; }
 .ovx-focus__clear > span > span { font-size: 12.5px; color: var(--text-3); }
 .ovx-appgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
-.ovx-appcard { display: flex; flex-direction: column; gap: 10px; text-align: left; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-md); background: color-mix(in srgb, var(--text) 2.5%, transparent); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.ovx-appcard { display: flex; flex-direction: column; gap: 14px; text-align: left; padding: 16px; min-height: 158px; border: 1px solid var(--border); border-radius: var(--r-md); background: color-mix(in srgb, var(--text) 2.5%, transparent); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .ovx-appcard:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); box-shadow: 0 4px 14px rgba(0,0,0,.14); transform: translateY(-1px); }
 .ovx-appcard:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .ovx-appcard__head { display: flex; align-items: center; gap: 10px; }
@@ -245,4 +246,57 @@ a.ovx-hub__row:hover .ovx-hub__rowt, a.ovx-hub__row:hover .ovx-hub__rowchev { co
 .ovx-appcard__fchev { margin-left: auto; flex: 0 0 auto; color: var(--text-3); }
 .ovx-appcard:hover .ovx-appcard__fchev, .ovx-appcard:hover .ovx-appcard__name strong { color: var(--brand-soft); }
 .ovx-appcard__pre { font-size: 12.5px; color: var(--text-3); line-height: 1.45; }
-@media (max-width: 900px) { .ovx-metrics { grid-template-columns: 1fr; } .ovx-grid, .ovx-grid3 { grid-template-columns: 1fr; } .ovx-hub__grid { grid-template-columns: 1fr; } .ovx-hub__grp { border-left: 0; border-top: 1px solid var(--border); } .ovx-hub__grp:first-child { border-top: 0; } }
+@media (max-width: 900px) { .ovx-metrics { grid-template-columns: 1fr; } .ovx-grid, .ovx-grid3 { grid-template-columns: 1fr; } .ovx-hub__grid { grid-template-columns: 1fr; } }
+
+/* ===== Overview (flat rewrite): ONE light container per section, flat rows inside — no card-in-card ===== */
+.ovn { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+/* Magazine 2-col row (Your apps | Recent activity); collapses on narrow. */
+.ovn-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+.ovn-2col > .ovn-sec { margin: 0; }
+.ovn-sec { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); padding: 6px 10px 8px; }
+.ovn-sec__head { display: flex; align-items: center; gap: 9px; padding: 11px 8px 9px; }
+.ovn-sec__head h3 { font-size: 15px; font-weight: 600; margin: 0; color: var(--text); }
+.ovn-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--gold, #e0a23a) 22%, transparent); color: var(--text); font-size: 12px; font-weight: 700; }
+.ovn-sec__link { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
+.ovn-sec__link:hover { text-decoration: underline; }
+.ovn-rows { display: flex; flex-direction: column; }
+/* Flat row: no border/background of its own — grouping comes from the section, separation from a hairline. */
+.ovn-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 8px; border: 0; border-radius: var(--r-md); background: none; color: inherit; font: inherit; }
+.ovn-row + .ovn-row { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+button.ovn-row, a.ovn-row { cursor: pointer; transition: background .12s ease; }
+button.ovn-row:hover, a.ovn-row:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+button.ovn-row:focus-visible, a.ovn-row:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.ovn-row__ico { width: 34px; height: 34px; border-radius: 9px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
+.ovn-row .app-ico { width: 34px; height: 34px; border-radius: var(--r-sm); flex: 0 0 auto; font-size: 14px; }
+.ovn-row__main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.ovn-row__main strong { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovn-row__main span { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovn-row .pill { flex: 0 0 auto; }
+.ovn-row__chev { color: var(--text-4, var(--text-3)); flex: 0 0 auto; }
+button.ovn-row:hover strong, a.ovn-row:hover strong, button.ovn-row:hover .ovn-row__chev { color: var(--brand-soft); }
+/* Icons stay NEUTRAL (project standard: color lives in pills/badges/text, not icon chips); type reads from glyph + copy. */
+.ovn-act { cursor: default; }
+/* "All caught up" clear state */
+.ovn-clear { display: flex; align-items: center; gap: 12px; padding: 15px 16px; }
+.ovn-clear > iconify-icon { color: var(--ok); flex: 0 0 auto; }
+.ovn-clear span { font-size: 13px; color: var(--text-2); }
+.ovn-clear strong { color: var(--text); font-weight: 600; }
+/* Account strip — replaces the 3-column hub */
+.ovn-acct { padding: 15px 16px; }
+.ovn-acct__row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ovn-acct__ava { width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; background: var(--brand); color: #fff; font-weight: 700; font-size: 14px; }
+.ovn-acct__id { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ovn-acct__id strong { font-size: 14px; font-weight: 600; color: var(--text); }
+.ovn-acct__id .muted { font-size: 12px; }
+.ovn-acct__chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.ovn-chip { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); text-decoration: none; }
+a.ovn-chip { cursor: pointer; }
+a.ovn-chip:hover { filter: brightness(1.08); }
+.ovn-chip--ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.ovn-chip--warn { background: color-mix(in srgb, var(--gold, #e0a23a) 18%, transparent); color: var(--gold, #e0a23a); }
+.ovn-chip--info { background: var(--brand-tint); color: var(--brand-soft); }
+.ovn-acct__links { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 18px; margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--border); }
+.ovn-link { font-size: 13px; color: var(--text-2); text-decoration: none; }
+.ovn-link:hover { color: var(--brand-soft); text-decoration: underline; }
+@media (max-width: 900px) { .ovn-2col { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .ovn-acct__chips { margin-left: 0; width: 100%; } }

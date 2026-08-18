@@ -557,27 +557,151 @@
       '<div class="ovx-focus__grid">' + items.slice(0, 3).map(card).join("") + '</div>' +
     '</section>';
   }
+  // Flat overview: every section is ONE light container of flat rows — no cards nested inside cards.
   function unifiedDashHTML() {
     var apps = (state.apps || []).slice().sort(function (a, b) {
       return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (statusRank(a) - statusRank(b));
     });
-    var appsSection =
-      '<section class="ovx-card">' +
-        '<div class="ovx-card__head"><h3>Your apps</h3><a class="ovx-card__link" href="#apps" data-jump="apps">See all</a></div>' +
-        '<div class="ovx-appgrid">' + apps.slice(0, 6).map(ovxAppCard).join("") + '</div>' +
-      '</section>';
-    var actsCard =
-      '<section class="ovx-card">' +
-        '<div class="ovx-card__head"><h3>Recent activity</h3></div>' +
-        '<div class="ovx-list">' + notifItems().slice(0, 5).map(ovxActRow).join("") + '</div>' +
-      '</section>';
-    // Action-first: what needs you \u2192 your apps' own health \u2192 what happened \u2192 account hub.
-    // (No portfolio aggregates \u2014 averaging installs/ratings/crash across unlike apps misleads; trends live in Analytics.)
-    return '<div class="ovx">' +
-      ovxFocusHTML() +
-      '<div class="ovx-grid">' + appsSection + actsCard + '</div>' +
-      ovxHubHTML() +
+    // 2-col (your apps | needs-attention rail) -> full-width account. Recent activity dropped: it duplicated
+    // Needs attention (same crash/review/draft events).
+    return '<div class="ovn">' +
+      '<div class="ovn-2col">' + ovnAppsHTML(apps) + ovnAttnHTML() + '</div>' +
+      ovnAccountHTML() +
     '</div>';
+  }
+  // "Needs attention" items derived from each app's state (rejected / draft / in-review / crash / reviews).
+  function ovnAttnItems() {
+    var apps = state.apps || [];
+    var flow = function (a) { return "publishing/publish-v6.html?from=wdp&id=" + encodeURIComponent(a.id); };
+    var ana = function (a, tab) { return "?anaApp=" + encodeURIComponent(a.id) + "&anaTab=" + tab + "#analytics"; };
+    var nm = function (a) { return a.storeName || a.name || "Your app"; };
+    var items = [];
+    apps.forEach(function (a) {
+      var k = appStatusKey(a);
+      if (k === "rejected") items.push({ type: "error", icon: "fluent:error-circle-20-filled", title: "Resolve certification", text: nm(a) + " didn\u2019t pass \u2014 review and resubmit.", href: flow(a) });
+      else if (k === "draft") items.push({ type: "info", icon: "fluent:document-edit-20-filled", title: "Finish your submission", text: nm(a) + " is still a draft.", href: flow(a) });
+      else if (k === "in-review") items.push({ type: "info", icon: "fluent:clock-20-filled", title: "Certification in progress", text: nm(a) + " \u2014 typically 24\u201348 hours.", href: flow(a) });
+      else if (k === "live") {
+        var cr = anaData(a).crashRate;
+        if (cr >= 5) items.push({ type: "warning", icon: "fluent:arrow-trending-lines-20-filled", title: "Crash rate needs a look", text: nm(a) + " is at " + cr.toFixed(2) + "%.", href: ana(a, "crashes") });
+        var rd = ratingsData(a);
+        if (rd && rd.total) items.push({ type: "info", icon: "fluent:comment-multiple-20-filled", title: "Respond to reviews", text: "Reply to recent reviews for " + nm(a) + ".", href: ana(a, "ratings") });
+      }
+    });
+    // Account / compliance items - Needs attention is cross-domain, not app-only (cert, agreement, payout).
+    var acct = state.account || {};
+    if (!(state.certs && state.certs.length))
+      items.push({ type: "warning", icon: "fluent:certificate-20-filled", title: "Set up a signing certificate", text: "Verify your identity to publish and unlock analytics.", href: "#certificates" });
+    if (acct.agreementSigned === false)
+      items.push({ type: "error", icon: "fluent:document-error-20-filled", title: "Sign the Developer Agreement", text: "Required before you can publish to the Store.", href: "https://learn.microsoft.com/legal/windows/agreements/app-developer-agreement", external: true });
+    if (acct.payoutSetup !== true)
+      items.push({ type: "warning", icon: "fluent:money-20-filled", title: "Set up payout and tax", text: "Add your banking and tax details to get paid.", href: "https://partner.microsoft.com/dashboard/account/v3/payoutandtax/status", external: true });
+    var rank = { error: 0, warning: 1, info: 2 };
+    items.sort(function (x, y) { return (rank[x.type] == null ? 3 : rank[x.type]) - (rank[y.type] == null ? 3 : rank[y.type]); });
+    return items;
+  }
+  // Flat action rows; type is shown by the icon colour only (no bordered sub-card).
+  function ovnAttnHTML() {
+    var items = ovnAttnItems();
+    if (!items.length) {
+      return '<section class="ovn-sec ovn-clear">' +
+        '<iconify-icon icon="fluent:checkmark-circle-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+        '<span><strong>You\u2019re all caught up.</strong> Nothing needs your attention right now.</span>' +
+      '</section>';
+    }
+    var rows = items.slice(0, 4).map(function (it) {
+      var tag = it.external ? "a" : "button";
+      var attrs = it.external
+        ? ' href="' + esc(it.href) + '" target="_blank" rel="noopener noreferrer"'
+        : ' type="button"' + (it.href ? ' data-acthref="' + esc(it.href) + '"' : "");
+      return '<' + tag + ' class="ovn-row ovn-row--' + it.type + '"' + attrs + '>' +
+        '<span class="ovn-row__ico"><iconify-icon icon="' + it.icon + '" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="ovn-row__main"><strong>' + esc(it.title) + '</strong><span>' + esc(it.text) + '</span></span>' +
+        '<iconify-icon class="ovn-row__chev" icon="' + (it.external ? "fluent:open-20-regular" : "fluent:chevron-right-20-regular") + '" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '</' + tag + '>';
+    }).join("");
+    var more = items.length > 4 ? '<a class="ovn-sec__link" href="#apps" data-jump="apps">+' + (items.length - 4) + ' more</a>' : "";
+    return '<section class="ovn-sec">' +
+      '<div class="ovn-sec__head"><h3>Needs attention</h3><span class="ovn-count">' + items.length + '</span>' + more + '</div>' +
+      '<div class="ovn-rows">' + rows + '</div>' +
+    '</section>';
+  }
+  // "Your apps" \u2014 one flat row per app (icon + name + a one-line read + status); click opens the app.
+  function ovnAppRowHTML(a) {
+    var k = appStatusKey(a), live = k === "live", nm = a.storeName || a.name, sub;
+    if (live) {
+      var ac = acqData(a), rd = ratingsData(a), an = anaData(a), bits = [fmtCompact(ac.instTotal) + " installs"];
+      if (rd && rd.total) bits.push(rd.avg.toFixed(1) + "\u2605");
+      if (an && an.crashRate != null) bits.push((100 - an.crashRate).toFixed(1) + "% crash-free");
+      sub = bits.join("   \u00b7   ");
+    } else {
+      sub = k === "rejected" ? "Didn\u2019t pass certification \u2014 review and resubmit."
+        : k === "in-review" ? "In certification \u2014 typically 24\u201348 hours." : "Finish your submission to publish.";
+    }
+    return '<button type="button" class="ovn-row ovn-app" data-openapp="' + a.id + '">' +
+      appIcoImg(a) +
+      '<span class="ovn-row__main"><strong>' + esc(nm) + '</strong><span>' + esc(sub) + '</span></span>' +
+      ovxStatusPill(k) +
+      '<iconify-icon class="ovn-row__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+    '</button>';
+  }
+  function ovnAppsHTML(apps) {
+    if (!apps.length) return "";
+    return '<section class="ovn-sec">' +
+      '<div class="ovn-sec__head"><h3>Your apps</h3><a class="ovn-sec__link" href="#apps" data-jump="apps">See all</a></div>' +
+      '<div class="ovn-rows">' + apps.slice(0, 6).map(ovnAppRowHTML).join("") + '</div>' +
+    '</section>';
+  }
+  // "Recent activity" \u2014 flat rows (reuses notifItems()).
+  function ovnActivityHTML() {
+    var items = notifItems().slice(0, 4);
+    if (!items.length) return "";
+    var rows = items.map(function (n) {
+      var open = n.href ? 'button type="button"' : "div", close = n.href ? "button" : "div";
+      return '<' + open + ' class="ovn-row ovn-act"' + (n.href ? ' data-acthref="' + esc(n.href) + '"' : "") + '>' +
+        '<span class="ovn-row__ico ovn-row__ico--' + n.type + '"><iconify-icon icon="' + n.icon + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="ovn-row__main"><strong>' + esc(n.title) + '</strong><span>' + esc(n.text) + '</span></span>' +
+      '</' + close + '>';
+    }).join("");
+    return '<section class="ovn-sec">' +
+      '<div class="ovn-sec__head"><h3>Recent activity</h3></div>' +
+      '<div class="ovn-rows">' + rows + '</div>' +
+    '</section>';
+  }
+  // Account \u2014 a compact strip: identity + a few status chips + resource links (replaces the 3-column hub).
+  function ovnAccountHTML() {
+    var acct = state.account || {};
+    var name = acct.name || "Your account";
+    var inits = acct.initials || (name.charAt(0) || "A").toUpperCase();
+    var certN = (state.certs || []).length;
+    var pubId = "MS-" + (Math.abs(hashStr(name + "|pub")) % 900000 + 100000);
+    var payoutOk = acct.payoutSetup === true;
+    var agreementOk = acct.agreementSigned !== false;
+    var chip = function (label, cls, href, jump) {
+      var tag = href ? "a" : "span";
+      var attr = href ? ' href="' + esc(href) + '"' + (jump ? ' data-jump="' + jump + '"' : "") : "";
+      return '<' + tag + ' class="ovn-chip' + (cls ? " ovn-chip--" + cls : "") + '"' + attr + '>' + esc(label) + '</' + tag + '>';
+    };
+    // Footer shows only COMPLETE statuses (quiet reference); anything incomplete surfaces in Needs attention instead.
+    var chips = "";
+    if (certN) chips += chip("Certificates \u00b7 " + certN + " active", "ok", "#certificates", "certificates");
+    if (payoutOk) chips += chip("Payout complete", "ok");
+    if (agreementOk) chips += chip("Agreement signed", "ok");
+    var link = function (label, href) { return '<a class="ovn-link" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(label) + '</a>'; };
+    return '<section class="ovn-sec ovn-acct">' +
+      '<div class="ovn-acct__row">' +
+        '<span class="ovn-acct__ava">' + esc(inits) + '</span>' +
+        '<span class="ovn-acct__id"><strong>' + esc(name) + '</strong><span class="muted">Individual \u00b7 ' + pubId + '</span></span>' +
+        '<span class="ovn-acct__chips">' + chips + '</span>' +
+      '</div>' +
+      '<div class="ovn-acct__links">' +
+        link("Documentation", "https://learn.microsoft.com/windows/apps/") +
+        link("Developer blog", "https://blogs.windows.com/windowsdeveloper/") +
+        link("Community & forums", "https://techcommunity.microsoft.com/") +
+        link("Store policies", "https://learn.microsoft.com/windows/apps/publish/store-policies") +
+        link("Contact support", "https://support.microsoft.com/") +
+      '</div>' +
+    '</section>';
   }
 
   function renderSummary() {
