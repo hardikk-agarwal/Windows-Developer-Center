@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
-  <title>Create your developer account | Windows Developer Program</title>
+  <title>Create your developer account | Windows Developer Center</title>
   <script>
     try {
       var t = localStorage.getItem('msstore.theme');
@@ -55,7 +55,7 @@
   <div id="wiz" hidden>
     <!-- top app bar (same as the portal) -->
     <header class="appbar">
-      <a class="brand" href="wdp-marketing.html" aria-label="Microsoft Windows Developer Program">
+      <a class="brand" id="brandLink" href="wdp-marketing.html" aria-label="Microsoft Windows Developer Center">
         <svg class="brand__logo" width="20" height="20" viewBox="0 0 23 23" aria-hidden="true">
           <rect x="1" y="1" width="10" height="10" fill="#F25022" />
           <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
@@ -64,7 +64,7 @@
         </svg>
         <span class="brand__name">Microsoft</span>
         <span class="brand__divider" aria-hidden="true"></span>
-        <span class="brand__sub">Windows Developer Program</span>
+        <span class="brand__sub">Windows Developer Center</span>
       </a>
       <div class="appbar__right">
         <button class="iconbtn" id="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
@@ -80,13 +80,13 @@
         <div class="wiz-rail">
           <div class="wiz-rail__intro">
             <h2>Create your developer account</h2>
-            <p>Set up your developer account in a few quick steps, then continue to your developer portal to publish apps and add a signing certificate.</p>
+            <p>A few quick steps to set up your account. Then publish apps to the Store or add a signing certificate &mdash; all in the Windows Developer Center.</p>
           </div>
           <div class="wsteps" id="wsteps"><!-- rendered by signup.js --></div>
         </div>
         <div class="snav snav--foot">
           <a href="#"><iconify-icon icon="fluent:question-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Get support</a>
-          <a href="wdp-marketing.html"><iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Back to home</a>
+          <a id="backHome" href="wdp-marketing.html"><iconify-icon icon="fluent:home-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Back to home</a>
         </div>
       </aside>
 
@@ -151,6 +151,6 @@
   <!-- Fluent 2 web components (stable 3.1.0): all-in-one bundle auto-registers every element used. -->
   <script type="module" src="https://unpkg.com/@fluentui/web-components@3.0.0-rc.27/dist/web-components.min.js"></script>
   <script type="module" src="theme-fluent.js?v=64"></script>
-  <script src="signup.js?v=62"></script>
+  <script src="signup.js?v=67"></script>
 </body>
 </html>

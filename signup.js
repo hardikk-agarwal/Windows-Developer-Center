@@ -281,10 +281,10 @@
       '<div class="status-card__body">' +
         '<span class="pill pill--ok"><span class="verified-dot"></span>Account created</span>' +
         '<h2>Your developer account is ready</h2>' +
-        '<p class="muted">Your account is set up. Continue to your developer portal to publish apps, add a signing certificate, and track your app health.</p>' +
+        '<p class="muted">You\u2019re all set. Publish apps, add a signing certificate, and track your app health \u2014 all in the Windows Developer Center.</p>' +
       '</div>' +
       '<div class="status-card__action">' +
-        '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:open-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Continue to developer portal</fluent-button>' +
+        '<fluent-button appearance="primary" size="large" id="goPortal"><iconify-icon slot="start" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Get started</fluent-button>' +
       '</div>' +
     '</div>' +
     perksHTML();
@@ -296,11 +296,11 @@
         '<div><strong>' + title + '</strong><span>' + desc + '</span></div></div>';
     }
     return '<div class="wiz-next">' +
-      '<p class="wiz-next__lead">In your developer portal:</p>' +
+      '<p class="wiz-next__lead">What you can do next:</p>' +
       '<div class="wiz-next__grid">' +
-        item("fluent:data-trending-20-regular", "Crash analytics", "You can monitor crashes and app health.") +
-        item("fluent:share-20-regular", "Distribution control", "You can control where your apps are distributed.") +
-        item("fluent:certificate-20-regular", "Certificates", "You can add and manage signing certificates.") +
+        item("fluent:rocket-20-regular", "Publish to the Store", "Bring your apps to the Microsoft Store and reach Windows users.") +
+        item("fluent:data-trending-20-regular", "Analytics & app health", "Track installs, ratings, and crashes across your apps.") +
+        item("fluent:certificate-20-regular", "Certificates", "Add and manage your signing certificates.") +
       '</div></div>';
   }
 
@@ -309,7 +309,7 @@
     renderRail();
     if (done) {
       $("wizTitle").textContent = "Your developer account is ready";
-      $("wizSub").textContent = "Your account is created. Continue to your developer portal to get started.";
+      $("wizSub").textContent = "Your account is created and ready to go.";
       $("wizBody").innerHTML = bodyDone();
       $("wizFootbar").innerHTML = "";
       wireDone();
@@ -426,7 +426,7 @@
     var gp = $("goPortal");
     if (gp) gp.addEventListener("click", function () {
       var src = portalSource();
-      if (src === "store") { seedStorePortal(); location.href = "store-portal.html#apps"; return; }
+      if (src === "store") { seedStorePortal(); location.href = "store-portal.html#overview"; return; }
       seedPortal();
       location.href = src === "wdp" ? "portal.html#certificates" : "portal.html";
     });
@@ -530,6 +530,14 @@
   $("msaTile").addEventListener("click", showWiz);
   var other = $("msaOther"); if (other) other.addEventListener("click", showWiz);
   wireReserve();
+
+  // Unified signup: point brand + "Back to home" at whichever door the developer came from.
+  (function () {
+    var src = portalSource();
+    var home = src === "wdp" ? "wdp-marketing.html" : "store-developer.html";
+    var bl = $("brandLink"); if (bl) bl.setAttribute("href", home);
+    var bh = $("backHome"); if (bh) bh.setAttribute("href", home);
+  })();
 
   // Deep-link from an external account picker (e.g. the Partner Center Insights migration flow):
   // the user has ALREADY chosen an account there, so skip this page's own MSA sign-in and go
