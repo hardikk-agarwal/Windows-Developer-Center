@@ -26,7 +26,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=3" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=69" defer></script>
+<script src="tdp-bridge.js?v=70" defer></script>
 <link rel="stylesheet" href="styles.css?v=2">
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
@@ -3480,8 +3480,8 @@
   .app-rail__id .appnav__icon { width: 28px; height: 28px; border-radius: 6px; font-size: 12px; }
   .app-rail__name { font-size: 16px; font-weight: 700; color: var(--fg-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .app-rail__sep { height: 1px; background: var(--colorNeutralStroke2, #272c3a); margin: 2px 0 6px; }
-  .app-rail__group { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
-  .app-rail__ghdr { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--colorNeutralForeground3, #8b909e); padding: 2px 12px 4px; }
+  .app-rail__group { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; }
+  .app-rail__ghdr { font-size: 12px; font-weight: 600; color: var(--colorNeutralForeground3, #8b909e); padding: 2px 12px 4px; }
   .app-rail__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* App switcher: the identity header becomes a button (chevron) that opens a fixed-position menu of
@@ -3880,6 +3880,10 @@
   /* The View-in-Store link mirrors the header actions: submitted (published) view only, and only once JS un-hides it. */
   #flow-wrap.wz-v2 #app-storelink { display: none; }
   #flow-wrap.wz-v2 .wz-layout:has(#editor[hidden]) #app-storelink:not([hidden]) { display: inline-flex; }
+  #head-more-wrap[hidden] { display: none; }
+  #head-more-wrap { order: -1; display: inline-flex; align-items: center; }
+  #head-more-btn { min-width: 40px; }
+  #head-more-btn::part(content) { padding-inline: 2px; }
   /* Withdraw now lives in the header, so drop the body "Need to make changes?" strip. */
   #flow-wrap.wz-v2 #cert-actions { display: none; }
   /* No rail in the submitted view, so it doesn't need the wizard's full 1360px. Narrow the whole
@@ -4254,6 +4258,24 @@
             <iconify-icon slot="start" icon="fluent:data-histogram-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             View analytics
           </fluent-button>
+          <span class="head-more" id="head-more-wrap" hidden>
+            <fluent-menu id="head-more-menu">
+              <fluent-menu-button slot="trigger" appearance="subtle" id="head-more-btn" aria-label="More actions" title="More actions">
+                <iconify-icon icon="fluent:more-horizontal-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
+                <span slot="end"></span>
+              </fluent-menu-button>
+              <fluent-menu-list>
+                <fluent-menu-item id="head-more-share">
+                  <iconify-icon slot="start" icon="fluent:share-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  Share
+                </fluent-menu-item>
+                <fluent-menu-item id="head-more-store">
+                  <iconify-icon slot="start" icon="fluent:open-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+                  View in Store
+                </fluent-menu-item>
+              </fluent-menu-list>
+            </fluent-menu>
+          </span>
           <fluent-button appearance="secondary" id="head-withdraw-btn" hidden>
             <iconify-icon slot="start" icon="fluent:arrow-undo-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
             Withdraw submission
@@ -13699,13 +13721,14 @@
   // Demo (?app=, no portal): mirror tdp-bridge's setHeadActions so the submitted header shows the
   // right buttons (View in Store + Review details when published).
   function demoHeadActions(view) {
-    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), an = $('head-analytics-btn'), s = $('head-share-btn');
+    var w = $('head-withdraw-btn'), v = $('app-storelink'), r = $('head-report-btn'), e = $('head-editfix-btn'), an = $('head-analytics-btn'), s = $('head-share-btn'), m = $('head-more-wrap');
     if (w) w.hidden = (view !== 'progress');
-    if (v) v.hidden = (view !== 'passed');
+    if (v) v.hidden = true;                   // View in Store now lives in the … (More) menu
     if (r) r.hidden = (view !== 'failed');
     if (e) e.hidden = (view !== 'failed');
     if (an) an.hidden = (view !== 'passed');
-    if (s) s.hidden = (view !== 'passed');
+    if (s) s.hidden = true;                   // Share now lives in the … (More) menu
+    if (m) m.hidden = (view !== 'passed');
   }
   function demoCertView(view) {
     var isUpdate = false; try { isUpdate = !!inUpdateFlow || !!(app && app.submissionIsUpdate); } catch (e) {}
@@ -15642,6 +15665,8 @@
   if ($('head-analytics-btn')) $('head-analytics-btn').addEventListener('click', function () { location.href = '../' + (window.__portalFile || 'developer-portal.html') + '?anaApp=' + encodeURIComponent(app.id) + '&anaTab=acquisition#analytics'; });
   if ($('head-update-btn')) $('head-update-btn').addEventListener('click', function () { if (typeof window.startAppUpdate === 'function') window.startAppUpdate(); });
   if ($('head-share-btn')) $('head-share-btn').addEventListener('click', function () { if (typeof window.startShareListing === 'function') window.startShareListing(); });
+  if ($('head-more-share')) $('head-more-share').addEventListener('click', function () { if (typeof window.startShareListing === 'function') window.startShareListing(); });
+  if ($('head-more-store')) $('head-more-store').addEventListener('click', function () { announce('Opening your Store listing\u2026'); });
   if ($('review-done-btn')) $('review-done-btn').addEventListener('click', exitReviewDetails);
   if ($('review-update-btn')) $('review-update-btn').addEventListener('click', updateFromReview);
 

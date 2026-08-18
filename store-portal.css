@@ -107,7 +107,23 @@
 .ovx { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
 .ovx-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .ovx-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.ovx-empty { display: flex; align-items: center; gap: 12px; padding: 14px 2px 6px; }
+.ovx-kpi { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 138px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); padding: 16px 18px 0; text-decoration: none; color: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.ovx-kpi:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); box-shadow: 0 4px 14px rgba(0,0,0,.16); transform: translateY(-1px); }
+.ovx-kpi:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ovx-kpi__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ovx-kpi__label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text-2); min-width: 0; }
+.ovx-kpi__label iconify-icon { color: var(--text-4); flex: 0 0 auto; }
+.ovx-kpi__delta { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 700; padding: 2px 7px 2px 5px; border-radius: 999px; white-space: nowrap; flex: 0 0 auto; }
+.ovx-kpi__delta--good { color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent); }
+.ovx-kpi__delta--bad { color: var(--danger); background: color-mix(in srgb, var(--danger) 15%, transparent); }
+.ovx-kpi__delta--flat { color: var(--text-3); background: color-mix(in srgb, var(--text) 8%, transparent); font-weight: 600; padding: 2px 8px; }
+.ovx-kpi__val { font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin: 8px 0 2px; color: var(--text); }
+.ovx-kpi__sub { font-size: 12px; }.ovx-kpi__foot { margin-top: auto; }
+.ovx-kpi .cardspark { display: block; width: calc(100% + 36px); height: 46px; margin: 0 -18px; }
+.ovx-kpi__legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 10px 0 6px; }
+.ovx-kpi__leg { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); min-width: 0; max-width: 100%; }
+.ovx-kpi__leg-dot { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
+.ovx-kpi__leg-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }.ovx-empty { display: flex; align-items: center; gap: 12px; padding: 14px 2px 6px; }
 .ovx-empty > iconify-icon { color: var(--ok); flex: 0 0 auto; }
 .ovx-empty strong { display: block; font-size: 14px; color: var(--text); }
 .ovx-empty span { font-size: 12px; color: var(--text-3); }

@@ -484,18 +484,22 @@
     var live = apps.filter(function (a) { return a.store || a.storeStatus === "published"; });
     var totalInstalls = 0, ratingSum = 0, ratingWt = 0, worstCrash = null, worstCrashApp = null, ratedCount = 0;
     var instSeries = null, rateSeries = null, crashSeries = null;
-    live.forEach(function (a) {
+    var instByApp = [], rateByApp = [], crashByApp = [];
+    live.forEach(function (a, idx) {
+      var color = anaAppColor(idx), nm = a.storeName || a.name;
       var ac = acqData(a); totalInstalls += ac.instTotal || 0;
       if (!instSeries) instSeries = ac.inst.slice(); else ac.inst.forEach(function (v, i) { instSeries[i] += v; });
+      instByApp.push({ name: nm, color: color, values: ac.inst });
       var rd = ratingsData(a);
       if (rd && rd.total > 0) {
         ratingSum += rd.avg * rd.total; ratingWt += rd.total; ratedCount++;
         if (!rateSeries) rateSeries = rd.avgSeries.slice(); else rd.avgSeries.forEach(function (v, i) { rateSeries[i] += v; });
+        rateByApp.push({ name: nm, color: color, values: rd.avgSeries });
       }
       var an = anaData(a), cr = an.crashRate;
       if (cr != null && (worstCrash == null || cr > worstCrash)) { worstCrash = cr; worstCrashApp = a; }
       var cs = an.hits && an.hits.series && an.hits.series[0] && an.hits.series[0].values;
-      if (cs) { if (!crashSeries) crashSeries = cs.slice(); else cs.forEach(function (v, i) { crashSeries[i] += v; }); }
+      if (cs) { if (!crashSeries) crashSeries = cs.slice(); else cs.forEach(function (v, i) { crashSeries[i] += v; }); crashByApp.push({ name: nm, color: color, values: cs }); }
     });
     if (rateSeries && ratedCount > 1) rateSeries = rateSeries.map(function (v) { return v / ratedCount; });
     var avgRating = ratingWt ? ratingSum / ratingWt : null;
@@ -504,13 +508,29 @@
     var tiles = "";
     if (live.length) {
       var multi = live.length > 1;
-      tiles += sumCard("Installs", fmtCompact(totalInstalls), multi ? ("Across " + live.length + " live apps") : "Last 28 days", instSeries, "var(--brand)");
-      if (avgRating != null) tiles += sumCard("Avg rating", avgRating.toFixed(1), fmtCompact(ratingWt) + " ratings" + (multi ? " \u00b7 across " + ratedCount + " apps" : ""), rateSeries, "var(--gold)");
+      var kpiHref = function (tab) {
+        return multi ? ("?anaApp=__all__&anaTab=" + tab + "#analytics")
+                     : ("?anaApp=" + encodeURIComponent(live[0].id) + "&anaTab=" + tab + "#analytics");
+      };
+      tiles += ovxKpi({ label: "Installs", icon: "fluent:arrow-download-16-regular", val: fmtCompact(totalInstalls),
+        sub: multi ? ("Across " + live.length + " live apps") : "Last 28 days",
+        trendPct: ovxTrend(instSeries), upIsGood: true, series: instSeries, color: "var(--brand)",
+        seriesList: multi ? instByApp : null, href: kpiHref("acquisition") });
+      if (avgRating != null) tiles += ovxKpi({ label: "Avg rating", icon: "fluent:star-16-regular", val: avgRating.toFixed(1),
+        sub: fmtCompact(ratingWt) + " ratings" + (multi ? " \u00b7 " + ratedCount + " apps" : ""),
+        trendPct: ovxTrend(rateSeries), upIsGood: true, series: rateSeries, color: "var(--gold)",
+        seriesList: multi ? rateByApp : null, href: kpiHref("ratings") });
       if (worstCrash != null) {
-        // Name the app driving the highest crash so it reads as a per-app max, not a blended number.
+        // Crash-free reads clearer than a raw crash rate; name the worst app when there are several.
         var crashName = worstCrashApp ? (worstCrashApp.storeName || worstCrashApp.name) : "";
-        var crashSub = multi ? ((crashName ? crashName + " \u00b7 " : "") + (worstCrash >= 5 ? "needs a look" : "healthy")) : (worstCrash >= 5 ? "Needs a look" : "Healthy");
-        tiles += sumCard(multi ? "Highest crash rate" : "Crash rate", worstCrash.toFixed(2) + "%", crashSub, crashSeries, worstCrash >= 5 ? "var(--danger)" : "var(--ok)");
+        var crashFree = 100 - worstCrash;
+        var cfSub = multi ? ((crashName ? crashName + " \u00b7 " : "") + "lowest of " + live.length + " apps")
+                          : (worstCrash >= 5 ? "Below the 95% healthy bar" : "Within a healthy range");
+        var crashHitsTrend = ovxTrend(crashSeries);   // fewer crashes over time = crash-free trending UP
+        tiles += ovxKpi({ label: multi ? "Lowest crash-free" : "Crash-free", icon: "fluent:shield-checkmark-16-regular",
+          val: crashFree.toFixed(1) + "%", sub: cfSub,
+          trendPct: (crashHitsTrend == null ? null : -crashHitsTrend), upIsGood: true,
+          series: crashSeries, color: worstCrash >= 5 ? "var(--danger)" : "var(--ok)", href: kpiHref("crashes") });
       }
       tiles = '<div class="ovx-metrics">' + tiles + '</div>';
     }
@@ -1440,6 +1460,24 @@
     var pts = values.map(function (v, i) { return (W * i / (n - 1)).toFixed(1) + "," + (H - 5 - (H - 11) * (v - mn) / rng).toFixed(1); }).join(" ");
     return '<svg class="cardspark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img"><polygon points="0,' + H + ' ' + pts + ' ' + W + ',' + H + '" fill="' + color + '" opacity=".12"/><polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2"/></svg>';
   }
+  // Portfolio sparkline: one thin line per app on a shared scale, so per-app trends stay visible.
+  function sparkMulti(seriesList) {
+    var W = 280, H = 54, mx = -Infinity, mn = Infinity;
+    seriesList.forEach(function (s) { (s.values || []).forEach(function (v) { if (v > mx) mx = v; if (v < mn) mn = v; }); });
+    if (!isFinite(mx)) return "";
+    var rng = (mx - mn) || 1;
+    var lines = seriesList.map(function (s) {
+      var vals = s.values || [], n = vals.length; if (n < 2) return "";
+      var pts = vals.map(function (v, i) { return (W * i / (n - 1)).toFixed(1) + "," + (H - 5 - (H - 11) * (v - mn) / rng).toFixed(1); }).join(" ");
+      return '<polyline points="' + pts + '" fill="none" stroke="' + s.color + '" stroke-width="1.75"/>';
+    }).join("");
+    return '<svg class="cardspark cardspark--multi" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img">' + lines + '</svg>';
+  }
+  function ovxKpiLegend(items) {
+    return '<div class="ovx-kpi__legend">' + items.map(function (it) {
+      return '<span class="ovx-kpi__leg"><span class="ovx-kpi__leg-dot" style="background:' + it.color + '"></span><span class="ovx-kpi__leg-name">' + esc(it.name) + '</span></span>';
+    }).join("") + '</div>';
+  }
 
   /* ---- render ---- */
   function anaTabsHTML(app) {
@@ -1458,6 +1496,37 @@
     return '<div class="sumcard"><span class="sumcard__label">' + label + (tag ? ' <span class="pill pill--ghost pill--sm sa-tag">Preview</span>' : "") + '</span>' +
       '<strong class="sumcard__big">' + val + '</strong><span class="sumcard__sub muted">' + sub + '</span>' +
       (series ? spark(series, color) : "") + '</div>';
+  }
+  // Recent momentum from a series: mean of the second half vs the first half, as a signed %.
+  function ovxTrend(series) {
+    if (!series || series.length < 6) return null;
+    var n = series.length, h = Math.floor(n / 2), a = 0, b = 0, i;
+    for (i = 0; i < h; i++) a += series[i];
+    for (i = h; i < n; i++) b += series[i];
+    a /= h; b /= (n - h);
+    if (!isFinite(a) || a === 0) return null;
+    return (b - a) / Math.abs(a) * 100;
+  }
+  // Overview KPI: label + momentum pill + big value + sparkline; the whole card deep-links into Analytics.
+  function ovxKpi(o) {
+    var d;
+    if (o.trendPct != null && Math.abs(o.trendPct) >= 0.5) {
+      var up = o.trendPct > 0, good = (up === (o.upIsGood !== false));
+      d = '<span class="ovx-kpi__delta ovx-kpi__delta--' + (good ? "good" : "bad") + '">' +
+        '<iconify-icon icon="fluent:arrow-' + (up ? "up" : "down") + '-16-filled" width="12" height="12" aria-hidden="true"></iconify-icon>' +
+        Math.abs(o.trendPct).toFixed(0) + '%</span>';
+    } else {
+      d = '<span class="ovx-kpi__delta ovx-kpi__delta--flat">Steady</span>';
+    }
+    var multiList = (o.seriesList && o.seriesList.length) ? o.seriesList.filter(function (s) { return s && s.values && s.values.length; }) : null;
+    var foot = "";
+    if (multiList && multiList.length > 1) foot = '<div class="ovx-kpi__foot">' + ovxKpiLegend(multiList) + sparkMulti(multiList) + '</div>';
+    else if (o.series) foot = '<div class="ovx-kpi__foot">' + spark(o.series, o.color) + '</div>';
+    return '<a class="ovx-kpi" href="' + o.href + '" aria-label="' + esc(o.label + ": " + o.val) + ' \u2014 open analytics">' +
+      '<span class="ovx-kpi__top"><span class="ovx-kpi__label"><iconify-icon icon="' + o.icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' + esc(o.label) + '</span>' + d + '</span>' +
+      '<strong class="ovx-kpi__val">' + o.val + '</strong>' +
+      '<span class="ovx-kpi__sub muted">' + esc(o.sub) + '</span>' +
+      foot + '</a>';
   }
   function chartLegend(series) {
     return '<div class="chart-legend">' + series.map(function (s) {

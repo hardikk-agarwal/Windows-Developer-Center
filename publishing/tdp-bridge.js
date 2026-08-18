@@ -958,14 +958,15 @@
   // App-header card's contextual action: once published the PRIMARY action is Update; View submissions is
   // secondary and "View in Store" rides on the status pill (#app-storelink). Withdraw while in review; report/fix when failed.
   function setHeadActions(view) {
-    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), an = $id("head-analytics-btn"), u = $id("head-update-btn"), s = $id("head-share-btn");
+    var w = $id("head-withdraw-btn"), v = $id("app-storelink"), r = $id("head-report-btn"), e = $id("head-editfix-btn"), an = $id("head-analytics-btn"), u = $id("head-update-btn"), s = $id("head-share-btn"), m = $id("head-more-wrap");
     if (w) w.hidden = (view !== "progress");
-    if (v) v.hidden = (view !== "passed");
+    if (v) v.hidden = true;                   // View in Store now lives in the … (More) menu
     if (r) r.hidden = (view !== "failed");
     if (e) e.hidden = (view !== "failed");
     if (an) an.hidden = (view !== "passed");
     if (u) u.hidden = (view !== "passed");   // Update is the primary action for a live app
-    if (s) s.hidden = (view !== "passed");   // Share the Store listing (moved from the sidebar)
+    if (s) s.hidden = true;                   // Share now lives in the … (More) menu
+    if (m) m.hidden = (view !== "passed");   // … (More) menu = Share + View in Store, live apps only
     syncHeadUpdatePrimary();
   }
   // When the dashboard shows a needs-attention banner (anomaly), its "Investigate" is the single
