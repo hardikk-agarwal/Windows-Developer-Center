@@ -1230,9 +1230,42 @@
   .pkgd-file__name { font-weight: 600; color: var(--fg-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pkgd-intro { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 0 0 var(--sp-16); line-height: 1.5; }
   .pkgd-fields { display: flex; flex-direction: column; gap: var(--sp-16); }
-  .pkgd-fields .ez-field { margin: 0; display: flex; flex-direction: column; }
+  .pkgd-fields .ez-field { margin: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
   .pkgd-fields .ez-field__label { margin-bottom: 0; }
   .pkgd-fields .ez-field__hint { font-size: var(--font-size-base-200); color: var(--fg-3); margin: 2px 0 var(--sp-6); }
+  /* Inline info affordance on a field label (Fluent tooltip via data-tooltip). */
+  .ez-field__info { display: inline-flex; align-items: center; margin-left: 4px; color: var(--fg-3); cursor: help; vertical-align: -3px; }
+  .ez-field__info:hover, .ez-field__info:focus-visible { color: var(--brand); outline: none; }
+  /* "Edit link" affordance folded into the installer file chip (URL source). */
+  .pkgd-file__edit { margin-left: auto; flex: 0 0 auto; background: none; border: 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); cursor: pointer; padding: 2px 4px; border-radius: var(--r-4); }
+  .pkgd-file__edit:hover { text-decoration: underline; }
+  .pkgd-file__edit[hidden] { display: none; }
+  /* ===== Language tag-picker (Fluent combobox / tag-picker) — inline tags + upward dropdown ===== */
+  .lang-tagpicker { position: relative; width: 100%; }
+  .lang-tagpicker__box { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 36px; padding: 5px 30px 5px 6px; border: 1px solid var(--stroke-2); border-bottom-color: var(--fg-4); border-radius: var(--r-4); background: var(--layer); cursor: text; position: relative; transition: border-color var(--dur-2) var(--ease-out); }
+  .lang-tagpicker__box[data-open="true"], .lang-tagpicker__box:focus-within { border-color: var(--brand); border-bottom-width: 2px; padding-bottom: 4px; }
+  .lang-tag { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 3px 3px 8px; border: 1px solid var(--stroke-2); border-radius: var(--r-4); background: color-mix(in srgb, var(--fg-1) 5%, transparent); font-size: var(--font-size-base-200); color: var(--fg-1); }
+  .lang-tag > iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
+  .lang-tag__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lang-tag__x { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: var(--r-4); background: transparent; color: var(--fg-3); cursor: pointer; flex: 0 0 auto; }
+  .lang-tag__x:hover { background: color-mix(in srgb, var(--fg-1) 12%, transparent); color: var(--fg-1); }
+  .lang-tagpicker__input { flex: 1 1 80px; min-width: 80px; border: 0; outline: 0; background: transparent; color: var(--fg-1); font: inherit; font-size: var(--font-size-base-300); padding: 4px 2px; }
+  .lang-tagpicker__input::placeholder { color: var(--fg-3); }
+  .lang-tagpicker__chev { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--fg-3); pointer-events: none; transition: transform var(--dur-2) var(--ease-out); }
+  .lang-tagpicker__box[data-open="true"] .lang-tagpicker__chev { transform: translateY(-50%) rotate(180deg); }
+  .lang-tagpicker__pop { position: absolute; z-index: 60; left: 0; right: 0; bottom: calc(100% + 4px); max-height: 240px; overflow-y: auto; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); box-shadow: var(--shadow-16, 0 12px 34px -8px rgba(0,0,0,.55)); padding: 4px; scrollbar-width: thin; }
+  .lang-tagpicker__pop[hidden] { display: none; }
+  .lang-tagpicker__section { font-size: var(--font-size-base-200); color: var(--fg-3); padding: 6px 10px 4px; }
+  .lang-opt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 7px 10px; border: 0; border-radius: var(--r-4); background: transparent; color: var(--fg-1); font: inherit; cursor: pointer; }
+  .lang-opt:hover { background: color-mix(in srgb, var(--fg-1) 7%, transparent); }
+  .lang-opt[disabled] { opacity: .5; cursor: not-allowed; }
+  .lang-opt[disabled]:hover { background: transparent; }
+  .lang-opt > iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
+  .lang-opt__text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+  .lang-opt__primary { font-size: var(--font-size-base-300); color: var(--fg-1); }
+  .lang-opt__secondary { font-size: var(--font-size-base-200); color: var(--fg-3); }
+  .lang-opt__badge { margin-left: auto; font-size: var(--font-size-base-200); color: var(--fg-3); flex: 0 0 auto; padding-left: 8px; }
+  .lang-tagpicker__empty { padding: 12px; color: var(--fg-3); font-size: var(--font-size-base-200); text-align: center; }
   .pkgd-fields fluent-dropdown, .pkgd-fields fluent-text-input { display: block; width: 100%; max-width: none; }
   .pkgd-fields fluent-text-input::part(root) { width: 100%; max-width: none; box-sizing: border-box; }
   .pkgd-fields fluent-dropdown::part(control), .pkgd-fields fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
@@ -6734,24 +6767,21 @@
     <p class="pkgd-intro" id="pkgd-intro">We read these from your installer's file name — review them and confirm. We'll validate the package in the background.</p>
 
     <div class="pkgd-fields">
+      <!-- Installer URL is folded into the file chip (Edit link); revealed inline only when edited or missing. -->
       <div class="ez-field" id="pkgd-url-field" hidden>
         <label class="ez-field__label" for="pkgd-url">Installer URL <span class="field-mark field-mark--req" aria-label="required">*</span></label>
-        <span class="ez-field__hint">Where the installer is downloaded from.</span>
         <fluent-text-input id="pkgd-url" class="pkgd-url"></fluent-text-input>
       </div>
       <div class="ez-field">
         <label class="ez-field__label" for="pkgd-arch">Architecture <span class="field-mark field-mark--req" aria-label="required">*</span></label>
-        <span class="ez-field__hint">The CPU this installer targets.</span>
         <div id="pkgd-arch-wrap"></div>
       </div>
       <div class="ez-field">
-        <label class="ez-field__label" for="pkgd-params">Install parameters <span class="field-mark field-mark--req" aria-label="required">*</span></label>
-        <span class="ez-field__hint">The silent-install flags we run — or tick the box below if none are needed.</span>
+        <label class="ez-field__label" for="pkgd-params">Install parameters <span class="field-mark field-mark--req" aria-label="required">*</span><span class="ez-field__info" data-tooltip="The silent-install flags we run, e.g. /S or /quiet — or tick “installs silently” if none are needed." tabindex="0" role="img" aria-label="About install parameters"><iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span></label>
         <div id="pkgd-params-wrap"></div>
       </div>
       <div class="ez-field">
         <label class="ez-field__label">Language <span class="field-mark field-mark--req" aria-label="required">*</span></label>
-        <span class="ez-field__hint">Locales bundled in this installer.</span>
         <div id="pkgd-lang-wrap"></div>
       </div>
     </div>
@@ -6761,7 +6791,7 @@
       <span id="pkgd-adv-label">Show advanced options</span>
     </button>
     <div class="pkgd-adv" id="pkgd-adv" hidden>
-      <p class="pkgd-adv__intro"><strong>Installer exit codes</strong> — your EXE/MSI returns a code when it finishes, and the Store reads it to know what happened (a reboot is needed, the app is already installed, and so on). This is optional: by default we treat <span class="pkgd-mono">0</span> as success and anything else as a failure. Map specific codes below only if your installer uses them.</p>
+      <p class="pkgd-adv__intro"><strong>Installer exit codes</strong> — optional. We treat <span class="pkgd-mono">0</span> as success and anything else as failure; map codes only if your installer uses them.<span class="ez-field__info" data-tooltip="Your EXE/MSI returns a code when it finishes. Mapping codes lets the Store react correctly — e.g. prompt for a reboot, or report the app is already installed." tabindex="0" role="img" aria-label="About installer exit codes"><iconify-icon icon="fluent:info-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span></p>
       <div id="pkgd-exit"></div>
     </div>
 
@@ -10595,15 +10625,110 @@
   let pkgdId = null, pkgdIsNew = false, pkgdSnapshot = null, pkgdTouched = false, pkgdArchManual = false;
   const pkgdEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
   function pkgdPkg() { return packages.find(p => p.id === pkgdId); }
+  // Fluent tag-picker for languages: selected locales render as inline removable tags inside an
+  // input-like box; focus/type opens a grouped list of the remaining languages. The list opens
+  // UPWARD and stays in-flow because the dialog is a native top-layer <dialog> (a body-portalled
+  // popover would be occluded) and .pkgd-scroll clips downward overflow. ctx = { arch(), exceptId,
+  // getLangs(), onChange(langs) }.
+  function renderLangTagPicker(host, ctx) {
+    if (!host) return;
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+    const sel = () => (ctx.getLangs() || []).slice();
+    const boxEl = () => host.querySelector('[data-lp-box]');
+    const inputEl = () => host.querySelector('[data-lp-input]');
+    const popEl = () => host.querySelector('[data-lp-pop]');
+    const isOpen = () => { const p = popEl(); return !!(p && !p.hidden); };
+
+    function openPop() {
+      const p = popEl(), b = boxEl(); if (!p) return;
+      p.hidden = false; if (b) b.setAttribute('data-open', 'true');
+      renderList((inputEl() || {}).value || '');
+    }
+    function closePop() {
+      const p = popEl(), b = boxEl();
+      if (p) p.hidden = true; if (b) b.setAttribute('data-open', 'false');
+    }
+    function renderList(query) {
+      const pop = popEl(); if (!pop) return;
+      const q = (query || '').trim().toLowerCase();
+      const arch = (ctx.arch && ctx.arch()) || '';
+      const chosen = sel();
+      const codes = Object.keys(LANG_LABEL).filter(c => chosen.indexOf(c) < 0 && langMatches(c, q));
+      if (!codes.length) { pop.innerHTML = '<div class="lang-tagpicker__empty">' + (q ? 'No languages match.' : 'All languages added.') + '</div>'; return; }
+      pop.innerHTML = '<div class="lang-tagpicker__section">Languages</div>' + codes.map(c => {
+        const taken = langTakenByOther(arch, c, ctx.exceptId);
+        return '<button type="button" class="lang-opt" data-code="' + c + '"' + (taken ? ' disabled' : '') + '>' +
+            '<iconify-icon icon="fluent:local-language-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+            '<span class="lang-opt__text"><span class="lang-opt__primary">' + esc(langLabelOf(c)) + '</span><span class="lang-opt__secondary">' + c + '</span></span>' +
+            (taken ? '<span class="lang-opt__badge">In use</span>' : '') +
+          '</button>';
+      }).join('');
+      pop.querySelectorAll('.lang-opt:not([disabled])').forEach(b => b.addEventListener('mousedown', e => { e.preventDefault(); addCode(b.getAttribute('data-code')); }));
+    }
+    function addCode(code) {
+      if (!code) return;
+      const arch = (ctx.arch && ctx.arch()) || '';
+      if (langTakenByOther(arch, code, ctx.exceptId)) return;
+      const langs = sel(); if (langs.indexOf(code) >= 0) return;
+      langs.push(code); ctx.onChange(langs);
+      renderShell(true);   // keep open for multi-add + refocus
+    }
+    function removeCode(code) {
+      const wasOpen = isOpen();
+      ctx.onChange(sel().filter(c => c !== code));
+      renderShell(wasOpen);
+    }
+    function tagsHtml(langs) {
+      return langs.map(code =>
+        '<span class="lang-tag" data-code="' + code + '">' +
+          '<iconify-icon icon="fluent:local-language-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+          '<span class="lang-tag__label">' + esc(langLabelOf(code)) + '</span>' +
+          '<button type="button" class="lang-tag__x" data-remove="' + code + '" aria-label="Remove ' + esc(langLabelOf(code)) + '" title="Remove"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button>' +
+        '</span>'
+      ).join('');
+    }
+    function renderShell(keepOpen) {
+      const langs = sel();
+      host.innerHTML =
+        '<div class="lang-tagpicker">' +
+          '<div class="lang-tagpicker__pop" data-lp-pop hidden></div>' +
+          '<div class="lang-tagpicker__box" data-lp-box data-open="false">' +
+            tagsHtml(langs) +
+            '<input type="text" class="lang-tagpicker__input" data-lp-input placeholder="' + (langs.length ? 'Add another language' : 'Add a language') + '" aria-label="Add a language" autocomplete="off" />' +
+            '<iconify-icon class="lang-tagpicker__chev" icon="fluent:chevron-down-16-regular" width="16" height="16" data-lp-chev aria-hidden="true"></iconify-icon>' +
+          '</div>' +
+        '</div>';
+      const box = boxEl(), input = inputEl(), chev = host.querySelector('[data-lp-chev]');
+      box.addEventListener('mousedown', e => {
+        if (e.target.closest('.lang-tag')) return;   // tags handle their own clicks
+        if (e.target === input) return;
+        e.preventDefault(); input.focus(); openPop();
+      });
+      input.addEventListener('focus', openPop);
+      input.addEventListener('input', () => { if (!isOpen()) openPop(); else renderList(input.value); });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closePop(); input.blur(); }
+        else if (e.key === 'Backspace' && !input.value) { const l = sel(); if (l.length) removeCode(l[l.length - 1]); }
+        else if (e.key === 'Enter') { e.preventDefault(); const first = popEl() && popEl().querySelector('.lang-opt:not([disabled])'); if (first) addCode(first.getAttribute('data-code')); }
+        else if (e.key === 'ArrowDown' && !isOpen()) { e.preventDefault(); openPop(); }
+      });
+      chev.addEventListener('mousedown', e => { e.preventDefault(); if (isOpen()) closePop(); else { input.focus(); openPop(); } });
+      host.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); removeCode(b.getAttribute('data-remove')); }));
+      if (host.__lpDocClose) document.removeEventListener('mousedown', host.__lpDocClose, true);
+      host.__lpDocClose = ev => { if (!host.contains(ev.target)) closePop(); };
+      document.addEventListener('mousedown', host.__lpDocClose, true);
+      if (keepOpen) { openPop(); try { input.focus(); } catch (e) {} }
+    }
+    renderShell(false);
+  }
   function renderPkgdLang() {
     const pkg = pkgdPkg(), wrap = $('pkgd-lang-wrap'); if (!pkg || !wrap) return;
-    wrap.innerHTML = langFieldHtml('data-pkgd-langs', 'pkgd', win32LangsOf(pkg));
-    const openBtn = wrap.querySelector('[data-open-langdlg]');
-    if (openBtn) openBtn.addEventListener('click', () => openPkgLangDialog({
-      arch: win32ArchOf(pkg), exceptId: pkg.id,
+    renderLangTagPicker(wrap, {
+      arch: () => win32ArchOf(pkg),
+      exceptId: pkg.id,
       getLangs: () => win32LangsOf(pkg),
-      commit: langs => { pkg.langs = langs.slice(); renderPkgdLang(); updatePkgdConfirm(); },
-    }));
+      onChange: langs => { pkg.langs = langs.slice(); updatePkgdConfirm(); },
+    });
   }
   function renderPkgdExit() {
     const host = $('pkgd-exit'); if (!host) return;
@@ -10641,8 +10766,20 @@
   }
   function renderPkgdFileChip() {
     const file = $('pkgd-file'), pkg = pkgdPkg(); if (!file) return;
-    if (pkg && pkg.filename) { file.hidden = false; file.innerHTML = '<iconify-icon icon="fluent:window-apps-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon><span class="pkgd-file__name" title="' + pkgdEsc(pkg.filename) + '">' + pkgdEsc(pkg.filename) + '</span>'; }
-    else { file.hidden = true; file.innerHTML = ''; }
+    if (pkg && pkg.filename) {
+      file.hidden = false;
+      const editLink = (pkg.source === 'url') ? '<button type="button" class="pkgd-file__edit" id="pkgd-file-editlink">Edit link</button>' : '';
+      file.innerHTML = '<iconify-icon icon="fluent:window-apps-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon><span class="pkgd-file__name" title="' + pkgdEsc(pkg.filename) + '">' + pkgdEsc(pkg.filename) + '</span>' + editLink;
+      const eb = $('pkgd-file-editlink'), uf = $('pkgd-url-field');
+      if (eb) {
+        if (uf && !uf.hidden) eb.hidden = true;   // link already revealed — hide the affordance
+        eb.addEventListener('click', () => {
+          if (uf) uf.hidden = false;
+          const ui = $('pkgd-url'); if (ui) { try { ui.focus(); } catch (e) {} }
+          eb.hidden = true;
+        });
+      }
+    } else { file.hidden = true; file.innerHTML = ''; }
   }
   function renderPkgdArch() {
     const archWrap = $('pkgd-arch-wrap'), pkg = pkgdPkg(); if (!archWrap || !pkg) return;
@@ -10677,13 +10814,12 @@
   function renderPkgdDialog() {
     const pkg = pkgdPkg(); if (!pkg) return;
     const intro = $('pkgd-intro');
-    if (intro) intro.textContent = pkg.source === 'url'
-      ? 'Paste a link to your hosted installer, then review the details and confirm. We’ll validate the package in the background.'
-      : 'We read these from your installer’s file name — review them and confirm. We’ll validate the package in the background.';
+    if (intro) intro.textContent = 'Confirm a couple of details — we’ll validate the package in the background.';
     renderPkgdFileChip();
     const urlField = $('pkgd-url-field'), urlInput = $('pkgd-url');
-    if (urlField) urlField.hidden = pkg.source !== 'url';
-    if (urlInput && pkg.source === 'url') urlInput.value = pkg.url || '';
+    if (urlInput) urlInput.value = pkg.url || '';
+    // URL is folded into the file chip (Edit link); reveal inline only if url-source with no link yet.
+    if (urlField) urlField.hidden = !(pkg.source === 'url' && !(pkg.url && pkg.url.trim()));
     renderPkgdArch();
     const prmWrap = $('pkgd-params-wrap');
     if (prmWrap) {
