@@ -29,6 +29,7 @@
   var state = load();
   var pending = []; // files staged in the modal
   var scanning = false; // true while discovering installed apps by certificate
+  var scanningCertId = null; // which cert's scan is in flight → spinner on that row + the certs page
 
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.certs && s.apps) return s; } catch (e) {}
@@ -316,7 +317,7 @@
         '<p class="muted">Four formats to bring an app or game to the Store \u2014 most new apps use MSIX.</p></div></div>' +
       '<div class="fmtgrid">' +
         card({ icon: 'fluent:box-20-regular', name: 'MSIX', rec: true, tags: ['App', 'Game'], desc: 'The modern Windows app package (.msix) \u2014 the default for new apps.', benefits: ['Automatic updates', 'Free hosting &amp; signing', 'Clean install / uninstall'] }) +
-        card({ icon: 'fluent:desktop-20-regular', name: 'Win32', tags: ['App'], desc: 'Your existing .exe or .msi desktop installer, published as-is.', benefits: ['Nothing to repackage', 'Full desktop access', 'Keep your installer'] }) +
+        card({ icon: 'fluent:desktop-20-regular', name: 'EXE/MSI', tags: ['App'], desc: 'Your existing .exe or .msi installer, published as-is.', benefits: ['Nothing to repackage', 'Full desktop access', 'Keep your installer'] }) +
         card({ icon: 'fluent:globe-20-regular', name: 'PWA', tags: ['App', 'Game'], desc: 'Your website or web game, wrapped as an installable app.', benefits: ['Reuse your web code', 'No native build', 'Quick to publish'] }) +
         card({ icon: 'fluent:xbox-controller-20-regular', name: 'GDK', tags: ['Game'], desc: 'PC games built with the Game Development Kit.', benefits: ['Xbox services &amp; achievements', 'Best performance', 'Windows + Xbox reach'] }) +
       '</div>' +
@@ -477,76 +478,104 @@
         '</div></div>' +
     '</div></section>';
   }
+  function ovxStatusPill(k) {
+    var m = { live: ["ok", "Live"], draft: ["ghost", "Draft"], "in-review": ["info", "In review"], rejected: ["warn", "Needs attention"] };
+    var p = m[k] || m.draft;
+    return '<span class="pill pill--' + p[0] + ' pill--sm">' + p[1] + '</span>';
+  }
+  // Per-app health card: each app's OWN installs / rating / crash-free + trend + the one action it
+  // needs (honest per-app read, not a portfolio aggregate). Pre-live apps show status + resume.
+  function ovxAppCard(a) {
+    var k = appStatusKey(a), live = k === "live", nm = a.storeName || a.name;
+    var head = '<span class="ovx-appcard__head">' + appIcoImg(a) +
+      '<span class="ovx-appcard__name"><strong>' + esc(nm) + '</strong></span>' + ovxStatusPill(k) + '</span>';
+    if (!live) {
+      var msg = k === "rejected" ? "Didn\u2019t pass certification \u2014 review and resubmit."
+        : k === "in-review" ? "In certification \u2014 typically 24\u201348 hours." : "Finish your submission to publish.";
+      var cta = k === "rejected" ? "Review" : k === "in-review" ? "View status" : "Resume";
+      return '<button type="button" class="ovx-appcard ovx-appcard--pre" data-openapp="' + a.id + '">' + head +
+        '<span class="ovx-appcard__pre">' + esc(msg) + '</span>' +
+        '<span class="ovx-appcard__action"><span>' + cta + '</span><iconify-icon class="ovx-appcard__fchev" icon="fluent:chevron-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span>' +
+      '</button>';
+    }
+    var ac = acqData(a), rd = ratingsData(a), an = anaData(a);
+    var t = ovxTrend(ac.inst), trend = "";
+    if (t != null && Math.abs(t) >= 0.5) {
+      var up = t > 0;
+      trend = '<span class="ovx-appcard__trend ovx-appcard__trend--' + (up ? "up" : "down") + '"><iconify-icon icon="fluent:arrow-' + (up ? "up" : "down") + '-12-filled" width="10" height="10" aria-hidden="true"></iconify-icon>' + Math.abs(t).toFixed(0) + '%</span>';
+    }
+    var crashFree = (an && an.crashRate != null) ? (100 - an.crashRate) : null;
+    var crashWarn = an && an.crashRate != null && an.crashRate >= 5;
+    var stats = '<span class="ovx-appcard__stats">' +
+      '<span class="ovx-appcard__stat"><span class="ovx-appcard__v">' + fmtCompact(ac.instTotal) + trend + '</span><span class="ovx-appcard__l">Installs</span></span>' +
+      (rd && rd.total ? '<span class="ovx-appcard__stat"><span class="ovx-appcard__v">' + rd.avg.toFixed(1) + '<iconify-icon class="ovx-appcard__star" icon="fluent:star-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon></span><span class="ovx-appcard__l">Rating</span></span>' : "") +
+      (crashFree != null ? '<span class="ovx-appcard__stat"><span class="ovx-appcard__v' + (crashWarn ? " ovx-appcard__v--warn" : "") + '">' + crashFree.toFixed(1) + '%</span><span class="ovx-appcard__l">Crash-free</span></span>' : "") +
+    '</span>';
+    var action;
+    if (crashWarn) action = '<span class="ovx-appcard__action ovx-appcard__action--warn"><iconify-icon icon="fluent:arrow-trending-lines-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Crash rate elevated</span><iconify-icon class="ovx-appcard__fchev" icon="fluent:chevron-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span>';
+    else if (rd && rd.total) action = '<span class="ovx-appcard__action"><iconify-icon icon="fluent:comment-multiple-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>Respond to reviews</span><iconify-icon class="ovx-appcard__fchev" icon="fluent:chevron-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span>';
+    else action = '<span class="ovx-appcard__action"><iconify-icon icon="fluent:data-trending-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>View analytics</span><iconify-icon class="ovx-appcard__fchev" icon="fluent:chevron-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></span>';
+    return '<button type="button" class="ovx-appcard" data-openapp="' + a.id + '">' + head + stats + action + '</button>';
+  }
+  // Elevated triage: the top things to act on, as a prominent band (the #1 reason to visit).
+  function ovxFocusHTML() {
+    var apps = state.apps || [];
+    var flow = function (a) { return "publishing/publish-v6.html?from=wdp&id=" + encodeURIComponent(a.id); };
+    var ana = function (a, tab) { return "?anaApp=" + encodeURIComponent(a.id) + "&anaTab=" + tab + "#analytics"; };
+    var nm = function (a) { return a.storeName || a.name || "Your app"; };
+    var items = [];
+    apps.forEach(function (a) {
+      var k = appStatusKey(a);
+      if (k === "rejected") items.push({ type: "error", icon: "fluent:error-circle-20-filled", title: "Resolve certification", text: nm(a) + " didn\u2019t pass \u2014 review and resubmit.", href: flow(a) });
+      else if (k === "draft") items.push({ type: "info", icon: "fluent:document-edit-20-filled", title: "Finish your submission", text: nm(a) + " is still a draft.", href: flow(a) });
+      else if (k === "in-review") items.push({ type: "info", icon: "fluent:clock-20-filled", title: "Certification in progress", text: nm(a) + " \u2014 typically 24\u201348 hours.", href: flow(a) });
+      else if (k === "live") {
+        var cr = anaData(a).crashRate;
+        if (cr >= 5) items.push({ type: "warning", icon: "fluent:arrow-trending-lines-20-filled", title: "Crash rate needs a look", text: nm(a) + " is at " + cr.toFixed(2) + "%.", href: ana(a, "crashes") });
+        var rd = ratingsData(a);
+        if (rd && rd.total) items.push({ type: "info", icon: "fluent:comment-multiple-20-filled", title: "Respond to reviews", text: "Reply to recent reviews for " + nm(a) + ".", href: ana(a, "ratings") });
+      }
+    });
+    var rank = { error: 0, warning: 1, info: 2 };
+    items.sort(function (x, y) { return (rank[x.type] == null ? 3 : rank[x.type]) - (rank[y.type] == null ? 3 : rank[y.type]); });
+    if (!items.length) {
+      return '<section class="ovx-focus ovx-focus--clear"><span class="ovx-focus__clear">' +
+        '<iconify-icon icon="fluent:checkmark-circle-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon>' +
+        '<span><strong>You\u2019re all caught up</strong><span>Nothing needs your attention right now.</span></span></span></section>';
+    }
+    var card = function (it) {
+      return '<button type="button" class="ovx-focus__card ovx-focus__card--' + it.type + '"' + (it.href ? ' data-acthref="' + esc(it.href) + '"' : "") + '>' +
+        '<span class="ovx-focus__ico"><iconify-icon icon="' + it.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="ovx-focus__t"><strong>' + esc(it.title) + '</strong><span>' + esc(it.text) + '</span></span>' +
+        '<iconify-icon class="ovx-focus__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '</button>';
+    };
+    var more = items.length > 3 ? '<span class="ovx-focus__more">+' + (items.length - 3) + ' more below</span>' : "";
+    return '<section class="ovx-focus">' +
+      '<div class="ovx-focus__head"><h3><iconify-icon icon="fluent:alert-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>Needs attention</h3>' +
+        '<span class="ovx-focus__count">' + items.length + '</span>' + more + '</div>' +
+      '<div class="ovx-focus__grid">' + items.slice(0, 3).map(card).join("") + '</div>' +
+    '</section>';
+  }
   function unifiedDashHTML() {
     var apps = (state.apps || []).slice().sort(function (a, b) {
       return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (statusRank(a) - statusRank(b));
     });
-    var live = apps.filter(function (a) { return a.store || a.storeStatus === "published"; });
-    var totalInstalls = 0, ratingSum = 0, ratingWt = 0, worstCrash = null, worstCrashApp = null, ratedCount = 0;
-    var instSeries = null, rateSeries = null, crashSeries = null;
-    var instByApp = [], rateByApp = [], crashByApp = [];
-    live.forEach(function (a, idx) {
-      var color = anaAppColor(idx), nm = a.storeName || a.name;
-      var ac = acqData(a); totalInstalls += ac.instTotal || 0;
-      if (!instSeries) instSeries = ac.inst.slice(); else ac.inst.forEach(function (v, i) { instSeries[i] += v; });
-      instByApp.push({ name: nm, color: color, values: ac.inst });
-      var rd = ratingsData(a);
-      if (rd && rd.total > 0) {
-        ratingSum += rd.avg * rd.total; ratingWt += rd.total; ratedCount++;
-        if (!rateSeries) rateSeries = rd.avgSeries.slice(); else rd.avgSeries.forEach(function (v, i) { rateSeries[i] += v; });
-        rateByApp.push({ name: nm, color: color, values: rd.avgSeries });
-      }
-      var an = anaData(a), cr = an.crashRate;
-      if (cr != null && (worstCrash == null || cr > worstCrash)) { worstCrash = cr; worstCrashApp = a; }
-      var cs = an.hits && an.hits.series && an.hits.series[0] && an.hits.series[0].values;
-      if (cs) { if (!crashSeries) crashSeries = cs.slice(); else cs.forEach(function (v, i) { crashSeries[i] += v; }); crashByApp.push({ name: nm, color: color, values: cs }); }
-    });
-    if (rateSeries && ratedCount > 1) rateSeries = rateSeries.map(function (v) { return v / ratedCount; });
-    var avgRating = ratingWt ? ratingSum / ratingWt : null;
-
-    // KPI cards reuse the Analytics summary card (sumCard / .sumcard) verbatim — same card, same sparkline.
-    var tiles = "";
-    if (live.length) {
-      var multi = live.length > 1;
-      var kpiHref = function (tab) {
-        return multi ? ("?anaApp=__all__&anaTab=" + tab + "#analytics")
-                     : ("?anaApp=" + encodeURIComponent(live[0].id) + "&anaTab=" + tab + "#analytics");
-      };
-      tiles += ovxKpi({ label: "Installs", icon: "fluent:arrow-download-16-regular", val: fmtCompact(totalInstalls),
-        sub: multi ? ("Across " + live.length + " live apps") : "Last 28 days",
-        trendPct: ovxTrend(instSeries), upIsGood: true, series: instSeries, color: "var(--brand)",
-        seriesList: multi ? instByApp : null, href: kpiHref("acquisition") });
-      if (avgRating != null) tiles += ovxKpi({ label: "Avg rating", icon: "fluent:star-16-regular", val: avgRating.toFixed(1),
-        sub: fmtCompact(ratingWt) + " ratings" + (multi ? " \u00b7 " + ratedCount + " apps" : ""),
-        trendPct: ovxTrend(rateSeries), upIsGood: true, series: rateSeries, color: "var(--gold)",
-        seriesList: multi ? rateByApp : null, href: kpiHref("ratings") });
-      if (worstCrash != null) {
-        // Crash-free reads clearer than a raw crash rate; name the worst app when there are several.
-        var crashName = worstCrashApp ? (worstCrashApp.storeName || worstCrashApp.name) : "";
-        var crashFree = 100 - worstCrash;
-        var cfSub = multi ? ((crashName ? crashName + " \u00b7 " : "") + "lowest of " + live.length + " apps")
-                          : (worstCrash >= 5 ? "Below the 95% healthy bar" : "Within a healthy range");
-        var crashHitsTrend = ovxTrend(crashSeries);   // fewer crashes over time = crash-free trending UP
-        tiles += ovxKpi({ label: multi ? "Lowest crash-free" : "Crash-free", icon: "fluent:shield-checkmark-16-regular",
-          val: crashFree.toFixed(1) + "%", sub: cfSub,
-          trendPct: (crashHitsTrend == null ? null : -crashHitsTrend), upIsGood: true,
-          series: crashSeries, color: worstCrash >= 5 ? "var(--danger)" : "var(--ok)", href: kpiHref("crashes") });
-      }
-      tiles = '<div class="ovx-metrics">' + tiles + '</div>';
-    }
-    var appsCard =
+    var appsSection =
       '<section class="ovx-card">' +
         '<div class="ovx-card__head"><h3>Your apps</h3><a class="ovx-card__link" href="#apps" data-jump="apps">See all</a></div>' +
-        '<div class="ovx-list">' + apps.slice(0, 5).map(ovxAppRow).join("") + '</div>' +
+        '<div class="ovx-appgrid">' + apps.slice(0, 6).map(ovxAppCard).join("") + '</div>' +
       '</section>';
     var actsCard =
       '<section class="ovx-card">' +
         '<div class="ovx-card__head"><h3>Recent activity</h3></div>' +
         '<div class="ovx-list">' + notifItems().slice(0, 5).map(ovxActRow).join("") + '</div>' +
       '</section>';
-    // Actionable dashboard row (apps / attention / activity) + one slim consolidated hub strip below.
-    return '<div class="ovx">' + tiles +
-      '<div class="ovx-grid3">' + appsCard + ovxAttnHTML() + actsCard + '</div>' +
+    // Action-first: what needs you \u2192 your apps' own health \u2192 what happened \u2192 account hub.
+    // (No portfolio aggregates \u2014 averaging installs/ratings/crash across unlike apps misleads; trends live in Analytics.)
+    return '<div class="ovx">' +
+      ovxFocusHTML() +
+      '<div class="ovx-grid">' + appsSection + actsCard + '</div>' +
       ovxHubHTML() +
     '</div>';
   }
@@ -758,7 +787,12 @@
     wrap.innerHTML = '<div class="table-wrap"><table class="table">' +
       '<thead><tr><th>Certificate</th><th>Thumbprint</th><th>Apps</th><th>Added</th><th>Status</th><th></th></tr></thead>' +
       '<tbody>' + state.certs.map(certRowHTML).join("") + '</tbody></table></div>' +
-      ((STORE && !UNIFIED) ? "" : certFoundBannerHTML());
+      (scanning ? certScanBannerHTML() : ((STORE && !UNIFIED) ? "" : certFoundBannerHTML()));
+  }
+  // Shown under the cert table while a discovery scan runs (adding a cert) — so the page clearly
+  // signals "we're finding your signed apps" instead of silently populating the count later.
+  function certScanBannerHTML() {
+    return '<div class="scan-banner"><span class="spinner"></span>Scanning your PC for apps signed with this certificate\u2026</div>';
   }
   // Discovery nudge under the cert table: certificates auto-populate the apps signed by them, so
   // point the developer at the crash analytics + apps that just appeared.
@@ -783,11 +817,15 @@
     var apps = state.apps.filter(function (a) { return a.certId === c.id; }).length;
     var sub = c.thumbKind === "hash" ? "File fingerprint (backend offline)" : "Authenticode signer";
     var algo = c.thumbKind === "cert" ? "SHA-1" : "SHA-256";
+    // While this cert's discovery scan is in flight, show a spinner where its app count will land.
+    var appsCell = (scanning && c.id === scanningCertId)
+      ? '<span class="cert-scan"><span class="spinner spinner--xs"></span>Scanning\u2026</span>'
+      : apps;
     return '<tr>' +
       '<td><div class="cell-main"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
         '<div><strong>' + esc(c.label) + '</strong><span class="muted">' + sub + '</span></div></div></td>' +
       '<td class="mono">' + fmtThumb(c.thumb) + ' <span class="muted">' + algo + '</span></td>' +
-      '<td>' + apps + '</td>' +
+      '<td>' + appsCell + '</td>' +
       '<td>' + esc(c.added) + '</td>' +
       '<td>' + trustPill(c.trust) + '</td>' +
       '<td><button class="linkbtn" data-removecert="' + c.id + '">Remove</button></td>' +
@@ -2820,7 +2858,7 @@
   // and add them automatically (one cert → all its apps).
   async function discoverApps(thumb, certId) {
     if (!thumb) return;
-    scanning = true; renderApps();
+    scanning = true; scanningCertId = certId; renderCerts(); renderApps();
     toast("Scanning installed apps signed with this certificate…", true);
     var added = 0, refreshed = 0;
     try {
@@ -2843,7 +2881,7 @@
         });
       }
     } catch (e) {}
-    scanning = false;
+    scanning = false; scanningCertId = null;
     if (added || refreshed) save();
     renderAll();
     toast(added ? "Found " + added + " app" + (added > 1 ? "s" : "") + " signed by this certificate"
@@ -2854,6 +2892,67 @@
     var certs = state.certs.filter(function (c) { return c.thumbKind === "cert"; });
     if (!certs.length) { toast("Add a certificate first", true); return; }
     certs.forEach(function (c) { discoverApps(c.thumb, c.id); });
+  }
+  // Removing a cert also drops the apps discovered only through it (and their crash analytics),
+  // so confirm first — spelling out exactly what goes away.
+  function confirmRemoveCert(cid) {
+    var cert = certById(cid);
+    var linked = state.apps.filter(function (a) { return a.certId === cid; });
+    var gone = linked.filter(function (a) { return !(a.store || a.storeStatus); }).length;
+    var kept = linked.length - gone;
+    var name = cert ? cert.label : "this certificate";
+    var li = function (icon, html) { return '<li><iconify-icon icon="' + icon + '" width="18" height="18" aria-hidden="true"></iconify-icon><span>' + html + '</span></li>'; };
+    var body = '<p class="cfx-lead">Removing <strong>' + esc(name) + '</strong> will:</p><ul class="cfx-list">' +
+      (gone ? li("fluent:apps-20-regular", "Remove <strong>" + gone + " app" + (gone > 1 ? "s" : "") + "</strong> discovered only through this certificate") : "") +
+      li("fluent:data-trending-20-regular", "Turn off <strong>crash &amp; hang analytics</strong> for " + (gone ? "those apps" : "apps discovered through it")) +
+      li("fluent:shield-20-regular", "Remove the <strong>identity proof</strong> this certificate provides") +
+      '</ul>' +
+      (kept ? '<p class="cfx-note">' + kept + ' app' + (kept > 1 ? "s" : "") + ' already in the Store pipeline will stay — just unlinked from this certificate.</p>' : "") +
+      '<p class="cfx-note">You can re-add the certificate anytime by uploading a signed binary.</p>';
+    confirmDialog({
+      title: "Remove this certificate?",
+      bodyHTML: body,
+      confirmText: "Remove certificate",
+      cancelText: "Keep certificate",
+      danger: true,
+      onConfirm: function () { doRemoveCert(cid); }
+    });
+  }
+  // A removed cert takes its discovered apps with it (they exist only via that cert); keep any that
+  // reached the Store pipeline — just unlink those from the cert.
+  function doRemoveCert(cid) {
+    state.certs = state.certs.filter(function (c) { return c.id !== cid; });
+    var certAppsRemoved = 0;
+    state.apps = state.apps.filter(function (a) {
+      if (a.certId !== cid) return true;
+      if (a.store || a.storeStatus) { a.certId = null; a.discovered = false; return true; }
+      certAppsRemoved++; return false;
+    });
+    if (!state.certs.length) state.verified = false;
+    save(); renderAll();
+    toast(certAppsRemoved ? "Certificate removed \u00b7 " + certAppsRemoved + " signed app" + (certAppsRemoved > 1 ? "s" : "") + " removed" : "Certificate removed", true);
+  }
+  // Reusable confirm dialog (Fluent), built on demand so it works across every portal variant.
+  function confirmDialog(opts) {
+    opts = opts || {};
+    var dlg = $("cfxModal");
+    if (!dlg) { dlg = document.createElement("fluent-dialog"); dlg.id = "cfxModal"; document.body.appendChild(dlg); }
+    dlg.setAttribute("aria-label", opts.title || "Confirm");
+    dlg.innerHTML =
+      '<fluent-dialog-body class="cfxdialog">' +
+        '<span slot="title">' + esc(opts.title || "Are you sure?") + '</span>' +
+        '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-cfx-close>' +
+          '<iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+        '</fluent-button>' +
+        '<div class="cfx-body">' + (opts.bodyHTML || esc(opts.message || "")) + '</div>' +
+        '<fluent-button slot="action" appearance="outline" data-cfx-close>' + esc(opts.cancelText || "Cancel") + '</fluent-button>' +
+        '<fluent-button slot="action" appearance="primary"' + (opts.danger ? ' class="cfx-danger"' : "") + ' data-cfx-confirm>' + esc(opts.confirmText || "Confirm") + '</fluent-button>' +
+      '</fluent-dialog-body>';
+    var close = function () { try { dlg.hide(); } catch (e) {} };
+    dlg.querySelectorAll("[data-cfx-close]").forEach(function (b) { b.addEventListener("click", close); });
+    var cbtn = dlg.querySelector("[data-cfx-confirm]");
+    if (cbtn) cbtn.addEventListener("click", function () { close(); if (typeof opts.onConfirm === "function") opts.onConfirm(); });
+    try { dlg.show(); } catch (e) { if (window.confirm(opts.title || "Are you sure?") && typeof opts.onConfirm === "function") opts.onConfirm(); }
   }
   // ===== TEMP DEMO (store portal, revert later) =========================================
   // Once an app is published in the Store portal we "recognize" the developer's code signing
@@ -2870,7 +2969,7 @@
     var certId = uid();
     state.certs.push({ id: certId, label: "Microsoft Corporation", thumb: CS_THUMB,
       thumbKind: "cert", trust: "Valid", signed: true, added: today(), verified: false });
-    scanning = true; renderApps();
+    scanning = true; scanningCertId = certId; renderCerts(); renderApps();
     // Populate the REAL apps signed by this certificate — the same /api/apps-by-cert scan the WDP portal uses.
     var added = 0;
     try {
@@ -2888,7 +2987,7 @@
         });
       }
     } catch (e) {}
-    scanning = false; save(); renderAll();
+    scanning = false; scanningCertId = null; save(); renderAll();
     toast(added ? "Found " + added + " app" + (added > 1 ? "s" : "") + " signed by your certificate"
                 : "No other apps found for this certificate", !added);
   }
@@ -3302,19 +3401,7 @@
       var an = e.target.closest("[data-analytics]");
       if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; goView("analytics"); renderAnalytics(); return; }
       var rc = e.target.closest("[data-removecert]");
-      if (rc) { var cid = rc.getAttribute("data-removecert");
-        state.certs = state.certs.filter(function (c) { return c.id !== cid; });
-        // A removed cert takes its discovered apps with it (they exist only via that cert);
-        // keep any that reached the Store pipeline — just unlink those from the cert.
-        var certAppsRemoved = 0;
-        state.apps = state.apps.filter(function (a) {
-          if (a.certId !== cid) return true;
-          if (a.store || a.storeStatus) { a.certId = null; a.discovered = false; return true; }
-          certAppsRemoved++; return false;
-        });
-        if (!state.certs.length) state.verified = false;
-        save(); renderAll();
-        toast(certAppsRemoved ? "Certificate removed \u00b7 " + certAppsRemoved + " signed app" + (certAppsRemoved > 1 ? "s" : "") + " removed" : "Certificate removed", true); return; }
+      if (rc) { confirmRemoveCert(rc.getAttribute("data-removecert")); return; }
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
       var acthref = e.target.closest("[data-acthref]");

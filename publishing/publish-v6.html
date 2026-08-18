@@ -147,7 +147,7 @@
   .ez-step__lang { display: inline-flex; align-items: center; flex: 0 0 auto; }
   /* Widen the language dropdown so its first item ("Add or manage languages…") isn't clipped
      — the Fluent menu-list otherwise sits near its 160px min-width and truncates the label. */
-  #lang-menu-list { min-width: 224px; }
+  #lang-menu-list { min-width: 320px; }
   /* "Autofill with AI" — a distinct, prominent AI action so developers actually spot it.
      This Fluent build paints the button surface on the host element (it exposes no "control"
      part), so the gradient/glow go on the host, with !important to beat the component styles.
@@ -335,6 +335,8 @@
   .pkgd-msix-tip__line { margin: 0; color: var(--fg-2); }
   .ez-add-pkg { margin-top: var(--sp-12); }
   .ez-add-pkg[hidden] { display: none !important; }
+  /* In the package step header, sit "Add another package" top-right, inline with the title. */
+  #step-package .ez-step__head .ez-add-pkg { margin-top: 0; margin-left: auto; }
   .ez-package__caps { display: flex; align-items: center; gap: var(--sp-4); margin-top: var(--sp-4); font-size: 12px; line-height: 1.4; color: var(--status-warning); }
   .ez-package__caps iconify-icon { color: var(--status-warning); flex: 0 0 auto; }
   .ez-package__caps a { color: var(--brand); text-decoration: none; }
@@ -641,6 +643,15 @@
   .ez-extra-input { width: 100%; display: block; box-sizing: border-box; }
   .ez-extra-input::part(root),
   .ez-extra-input::part(control) { width: 100%; box-sizing: border-box; }
+  /* Fluent tag-picker for search keywords: added keyword pills live INSIDE a bordered input box
+     (like the language picker), free-text input trailing; AI suggestions sit below. */
+  .kw-tagpicker__box { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6); min-height: 40px; padding: 5px 10px 5px 8px; border: 1px solid var(--stroke-2); border-radius: var(--r-4); background: var(--layer); cursor: text; transition: border-color var(--dur-2) var(--ease-out); }
+  .kw-tagpicker__box:focus-within { border-color: var(--brand); }
+  .kw-tagpicker__tags { display: contents; }
+  .kw-tagpicker__input { flex: 1 1 160px; min-width: 140px; border: 0; outline: 0; background: transparent; color: var(--fg-1); font: inherit; font-size: var(--font-size-base-300); padding: 5px 2px; }
+  .kw-tagpicker__input::placeholder { color: var(--fg-3); }
+  .kw-tagpicker__input:disabled { cursor: not-allowed; opacity: 1; -webkit-text-fill-color: var(--fg-3); }
+  .kw-tagpicker__box.is-full { cursor: default; }
   .ez-kw-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8); margin-top: var(--sp-12); }
   .ez-kw-suggest__label { font-size: 12px; color: var(--fg-3); }
   /* Two stacked sections under the keyword input: "Added" then "Suggested by AI". Same rhythm so
@@ -813,7 +824,7 @@
      sections, so show it only while the Package step is active (the wizard shows one step at a time). */
   .sysreq { border: 1px solid var(--stroke-2); border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 2%, var(--layer)); margin-top: var(--sp-16); overflow: hidden; }
   #flow-wrap.is-wizard #editor > #sysreq-sec { display: none; }
-  #flow-wrap.is-wizard #step-package.is-wz-active ~ #sysreq-sec { display: block; }
+  #flow-wrap.is-wizard.has-pkg #step-package.is-wz-active ~ #sysreq-sec { display: block; }   /* System requirements card appears only once a package is added */
   /* Match the wizard package card's shell (radius, border, solid surface) and align the sysreq
      card's inner content to the same 32px edges so the two cards read as one consistent family. */
   #flow-wrap.is-wizard #sysreq-sec { border-radius: var(--r-16); border-color: var(--stroke-3); background: var(--layer); }
@@ -1044,11 +1055,6 @@
      overlapping its bottom-left (avatar style) and the name / change-logo in a footer strip. */
   .pwapkg__site { border: 1px solid var(--stroke-2); border-radius: var(--r-12); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--layer); }
   .pwapkg__chrome { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8) var(--sp-10); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); border-bottom: 1px solid var(--stroke-3); }
-  .pwapkg__dots { display: inline-flex; gap: 5px; flex: 0 0 auto; }
-  .pwapkg__dots i { width: 9px; height: 9px; border-radius: 50%; }
-  .pwapkg__dots i:nth-child(1) { background: #ff5f57; }
-  .pwapkg__dots i:nth-child(2) { background: #febc2e; }
-  .pwapkg__dots i:nth-child(3) { background: #28c840; }
   .pwapkg__omni { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; padding: 3px var(--sp-10); border-radius: 999px; background: var(--canvas-tint); border: 1px solid var(--stroke-3); font-size: 12px; color: var(--fg-3); text-decoration: none; }
   .pwapkg__omni span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pwapkg__omni:hover { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-3)); }
@@ -1062,6 +1068,7 @@
   .pwapkg__logo { position: absolute; left: var(--sp-14); top: -30px; width: 64px; height: 64px; padding: 0; border: 0; border-radius: var(--r-12); background: #fff; cursor: pointer; overflow: hidden; box-shadow: 0 0 0 3px var(--layer), 0 8px 22px rgba(0,0,0,.45); transition: box-shadow var(--dur-2) var(--ease-out); }
   .pwapkg__logo:hover, .pwapkg__logo:focus-visible { box-shadow: 0 0 0 3px var(--layer), 0 0 0 5px color-mix(in srgb, var(--brand) 60%, transparent), 0 8px 22px rgba(0,0,0,.45); outline: none; }
   .pwapkg__logo-img { width: 100%; height: 100%; object-fit: contain; display: block; background: #fff; }
+  .pwapkg__logo-fb { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; color: #fff; text-transform: uppercase; }
   .pwapkg__logo-edit { position: absolute; right: 0; bottom: 0; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--brand); color: #fff; border-top-left-radius: var(--r-8); }
   .pwapkg__app-text { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
   .pwapkg__app-name { font-size: 16px; font-weight: 600; color: var(--fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1097,6 +1104,35 @@
   .pwapkg__prefill-title iconify-icon { color: var(--brand); flex: 0 0 auto; }
   .pwapkg__prefill-hint { font-size: 12px; color: var(--fg-3); margin-top: 2px; line-height: 1.45; }
   .pwapkg__prefill fluent-switch { flex: 0 0 auto; margin-top: 2px; }
+  /* Manifest gate (no manifest found) + generated-manifest guidance. */
+  .pwapkg__gate { padding: var(--sp-16); border: 1px solid color-mix(in srgb, var(--status-warning, #e0a23a) 40%, var(--stroke-2)); border-radius: var(--r-8); background: color-mix(in srgb, var(--status-warning, #e0a23a) 8%, transparent); margin: 0 0 var(--sp-4); }
+  .pwapkg__gate--gen { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 6%, transparent); }
+  .pwapkg__gate-head { display: flex; align-items: center; gap: var(--sp-8); font-size: 15px; font-weight: 600; color: var(--fg-1); margin-bottom: var(--sp-6); }
+  .pwapkg__gate-head iconify-icon { color: var(--status-warning, #e0a23a); flex: 0 0 auto; }
+  .pwapkg__gate--gen .pwapkg__gate-head iconify-icon { color: var(--brand); }
+  .pwapkg__gate p { margin: 0 0 var(--sp-8); font-size: 13px; color: var(--fg-2); line-height: 1.5; }
+  .pwapkg__gate p:last-of-type { margin-bottom: var(--sp-12); }
+  .pwapkg__gate strong { color: var(--fg-1); font-weight: 600; }
+  .pwapkg__gate a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .pwapkg__gate a:hover { text-decoration: underline; }
+  .pwapkg__gate-actions { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  .pwapkg__steps { margin: 0 0 var(--sp-12); padding-left: var(--sp-20); font-size: 13px; color: var(--fg-2); line-height: 1.7; }
+  .pwapkg__steps li { margin-bottom: var(--sp-4); }
+  .pwapkg__gate code, .pwapkg__steps code { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 12px; background: var(--subtle); padding: 1px 5px; border-radius: var(--r-4); color: var(--fg-1); }
+  .pwapkg__code { border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; margin: 0 0 var(--sp-12); background: var(--layer); }
+  .pwapkg__code-bar { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4) var(--sp-6) var(--sp-4) var(--sp-12); background: color-mix(in srgb, var(--fg-1) 5%, var(--layer)); border-bottom: 1px solid var(--stroke-2); }
+  .pwapkg__code-bar > span { flex: 1 1 auto; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 12px; color: var(--fg-3); }
+  .pwapkg__code-btn { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 0; color: var(--brand); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 3px 8px; border-radius: var(--r-4); }
+  .pwapkg__code-btn:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  .pwapkg__code pre { margin: 0; padding: var(--sp-12); max-height: 210px; overflow: auto; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 12px; line-height: 1.5; color: var(--fg-1); white-space: pre; scrollbar-width: thin; }
+  .pwapkg__adv { margin: 0 0 var(--sp-12); border: 1px solid var(--stroke-3); border-radius: var(--r-8); padding: var(--sp-8) var(--sp-12); background: var(--subtle); }
+  .pwapkg__adv > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--fg-2); list-style: none; display: flex; align-items: center; gap: var(--sp-6); user-select: none; }
+  .pwapkg__adv > summary::-webkit-details-marker { display: none; }
+  .pwapkg__adv-chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  .pwapkg__adv[open] .pwapkg__adv-chev { transform: rotate(90deg); }
+  .pwapkg__adv-hint { font-weight: 400; color: var(--fg-4); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .pwapkg__adv[open] > summary { margin-bottom: var(--sp-10); }
+  .pwapkg__adv .pwapkg__steps, .pwapkg__adv .pwapkg__code { margin-bottom: var(--sp-10); }
 
   /* ===== Restricted capabilities dialog (justification) ===== */
   #restricted-caps-dialog, #restricted-caps-dialog::part(control), #restricted-caps-dialog::part(dialog) { width: min(560px, 92vw); max-width: min(560px, 92vw); }
@@ -1350,7 +1386,11 @@
   #lang-dialog .lang-row__st--ok { color: var(--status-success); background: color-mix(in srgb, var(--status-success) 12%, transparent); }
   #lang-dialog .lang-row__st--warn { color: var(--status-warning, #e0a23a); background: color-mix(in srgb, var(--status-warning, #e0a23a) 14%, transparent); }
   /* At-a-glance per-language progress trailing each item in the editing-language dropdown. */
-  #lang-menu-list .lang-menu__st { display: inline-flex; align-items: center; gap: 4px; margin-left: var(--sp-12); font-size: 11px; font-weight: var(--font-weight-semibold); white-space: nowrap; }
+  /* Language rows: fluent-menu-item's slot="end" lands in a 20px grid column (beta.133) so a wide
+     status chip overflowed onto the name. Render name + status together in the DEFAULT slot as ONE
+     inline-flex wrapper (a single grid item that can't overlap or collapse its children). */
+  #lang-menu-list .lang-menu__wrap { grid-column: 3; display: inline-flex; align-items: center; gap: var(--sp-8); }
+  #lang-menu-list .lang-menu__st { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-size: 11px; font-weight: var(--font-weight-semibold); white-space: nowrap; }
   #lang-menu-list .lang-menu__st iconify-icon, #lang-menu-list .lang-menu__st fluent-spinner { flex: 0 0 auto; }
   #lang-menu-list .lang-menu__st--ok { color: var(--status-success); }
   #lang-menu-list .lang-menu__st--warn { color: var(--status-warning, #e0a23a); }
@@ -2313,6 +2353,13 @@
   #image-edit-dialog .image-edit__crop:active { cursor: grabbing; }
   #image-edit-dialog #image-edit-img { position: absolute; top: 50%; left: 50%; transform-origin: center center; pointer-events: none; max-width: none; user-select: none; }
   #image-edit-dialog .image-edit__controls { display: flex; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-12); }
+  #image-edit-dialog .image-edit__caption { display: flex; flex-direction: column; gap: var(--sp-4); margin-bottom: var(--sp-12); }
+  #image-edit-dialog .image-edit__caption[hidden] { display: none; }
+  #image-edit-dialog .image-edit__caption-lbl { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); display: inline-flex; align-items: center; gap: var(--sp-6); }
+  #image-edit-dialog .image-edit__caption-opt { font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-4); }
+  #image-edit-dialog #image-edit-caption { width: 100%; }
+  #image-edit-dialog #image-edit-caption::part(root), #image-edit-dialog #image-edit-caption::part(control) { width: 100%; box-sizing: border-box; }
+  #image-edit-dialog .image-edit__caption-hint { font-size: 12px; color: var(--fg-3); line-height: 1.4; }
   #image-edit-dialog .image-edit__zoom { display: flex; align-items: center; gap: var(--sp-8); flex: 1; color: var(--fg-3); }
   #image-edit-dialog .image-edit__zoom input[type="range"] { flex: 1; accent-color: var(--brand); }
   #image-edit-dialog .image-edit__ai { margin-top: var(--sp-8); padding-top: var(--sp-12); border-top: 1px solid var(--stroke-3); }
@@ -2339,6 +2386,9 @@
   .ez-desc-error { margin: var(--sp-4) 0 0; font-size: 12px; color: var(--status-danger); }
   .ez-desc-error[hidden] { display: none; }
   .ez-live .live-edit-input { font: inherit; color: inherit; background: transparent; border: 0; outline: none; padding: 0; margin: 0; width: 100%; box-sizing: border-box; resize: none; min-height: 1em; line-height: inherit; }
+  /* Character/count meters shown on listing fields (description, short desc, what's new, features, keywords). */
+  .ez-char-count { display: block; margin-top: var(--sp-4); font-size: 12px; color: var(--fg-3); text-align: right; font-variant-numeric: tabular-nums; }
+  .ez-char-count--max { color: var(--status-warning, #e0a23a); font-weight: var(--font-weight-semibold); }
   /* Inline Fluent dropdown used by the category / subcategory live-editors. */
   .live-edit-dropdown { min-width: 180px; max-width: 100%; vertical-align: middle; }
   @keyframes live-save-flash { 0% { opacity: 0; transform: translateY(-50%) scale(.6); } 20% { opacity: 1; transform: translateY(-50%) scale(1); } 80% { opacity: 1; transform: translateY(-50%) scale(1); } 100% { opacity: 0; transform: translateY(-50%) scale(.9); } }
@@ -2352,11 +2402,36 @@
   /* Screenshots in edit mode: thumbnails + add tile + hover-reveal delete */
   .ez-store-shots--edit .ez-pv-shot { position: relative; }
   .ez-store-shots--edit .ez-pv-shot img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); display: block; background: var(--canvas-tint); }
+  /* Optional per-screenshot caption input (editor) + the customer-facing lightbox that shows it. */
+  .ez-store-shots--edit .ez-pv-shot > img, .lpv-card .ez-pv-shot img { cursor: zoom-in; }
+  /* Hover action on a screenshot tile: edit (re-crop + caption), sitting left of the remove button. */
+  .ez-pv-shot__edit { position: absolute; top: 6px; right: 36px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s ease, background .15s ease; }
+  .ez-pv-shot:hover .ez-pv-shot__edit, .ez-pv-shot__edit:focus-visible { opacity: 1; }
+  .ez-pv-shot__edit:hover { background: var(--brand); }
+  .shotlb { position: fixed; inset: 0; z-index: 4000; box-sizing: border-box; width: 100%; height: 100%; max-width: 100vw; max-height: 100vh; margin: 0; border: 0; padding: 48px; align-items: center; justify-content: center; background: rgba(0,0,0,.84); color: inherit; }
+  .shotlb[open] { display: flex; }
+  .shotlb::backdrop { background: rgba(0,0,0,.5); }
+  .shotlb__stage { display: flex; flex-direction: column; align-items: center; gap: var(--sp-14); max-width: min(1040px, 92vw); }
+  .shotlb__img { max-width: 100%; max-height: 74vh; object-fit: contain; border-radius: var(--r-8); box-shadow: 0 24px 70px rgba(0,0,0,.55); background: #000; }
+  .shotlb__cap { color: #fff; font-size: 15px; line-height: 1.5; text-align: center; max-width: 760px; }
+  .shotlb__cap[hidden] { display: none; }
+  .shotlb__count { color: rgba(255,255,255,.65); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .shotlb__close { position: absolute; top: 20px; right: 24px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.14); border: 0; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .shotlb__close:hover { background: rgba(255,255,255,.26); }
+  .shotlb__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.14); border: 0; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background var(--dur-2) var(--ease-out); }
+  .shotlb__nav:hover:not([disabled]) { background: rgba(255,255,255,.28); }
+  .shotlb__nav[disabled] { opacity: .3; cursor: default; }
+  .shotlb__nav--prev { left: 22px; }
+  .shotlb__nav--next { right: 22px; }
   .ez-pv-shot__del { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s ease; }
   .ez-pv-shot:hover .ez-pv-shot__del, .ez-pv-shot__del:focus-visible { opacity: 1; }
   .ez-pv-shot__del:hover { background: rgba(196,43,28,.9); }
   .ez-pv-shot-add { aspect-ratio: 16/10; border: 2px dashed var(--stroke-1); border-radius: var(--r-8); background: transparent; color: var(--fg-3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); cursor: pointer; font: inherit; font-size: 12px; transition: border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
   .ez-pv-shot-add:hover { border-color: var(--brand); color: var(--brand); }
+  /* Drag OS image/video files onto the screenshots strip or the hero to add media directly. */
+  .ez-shots-wrap.is-file-drop, .ez-store-hero.is-file-drop { outline: 2px dashed var(--brand); outline-offset: -3px; }
+  .filedrop-veil { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; gap: var(--sp-6); padding: var(--sp-12); text-align: center; border-radius: inherit; background: color-mix(in srgb, var(--brand) 16%, color-mix(in srgb, var(--canvas) 74%, transparent)); color: var(--brand); font-size: 13px; font-weight: var(--font-weight-semibold); line-height: 1.35; pointer-events: none; }
+  .ez-store-hero .filedrop-veil { background: color-mix(in srgb, var(--brand) 26%, rgba(0,0,0,.5)); color: #fff; }
   /* Live listing bleeds to the step card's edges (full-bleed), clipped to the
      step's rounded corners. The hero spans edge-to-edge; the card keeps only a
      top hairline to separate it from the label above. */
@@ -3040,11 +3115,13 @@
   #flow-wrap.is-wizard #step-listing.is-more .ez-trailer-add-btn.adv-only { display: inline-flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-hero-empty.adv-only:not([hidden]) { display: flex !important; }
   #flow-wrap.is-wizard #step-listing.is-more .ez-hero-media__remove.adv-only:not([hidden]) { display: inline-flex !important; }
-  /* Keep the listing content clear of the drop zone while the empty state shows. */
-  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__top,
-  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__desc,
-  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__cta,
-  #flow-wrap.is-wizard:not(.has-win32-pkg) #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__iarc { max-width: 48%; }
+  /* Keep the listing content clear of the cover-image drop zone while the empty state shows.
+     Applies to ALL package types — the hero media + placeholder are available for Win32 too, so
+     the text must cap for Win32 as well (else the short description overlaps the placeholder). */
+  #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__top,
+  #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__desc,
+  #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__cta,
+  #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__iarc { max-width: 48%; }
   /* Hero image + trailer are available for all package types including Win32. */
   #flow-wrap.is-wizard #editor > .ez-step:not(.is-wz-active) { display: none !important; }
   #flow-wrap.is-wizard .ez-step__expand, #flow-wrap.is-wizard .ez-step__summary { display: none !important; }
@@ -4437,6 +4514,10 @@
             <p class="ez-step__sub">Add your app and we’ll read the details for you.</p>
             <p class="ez-step__summary" id="sum-package"></p>
           </div>
+          <fluent-button type="button" class="ez-add-pkg" id="add-more-pkg" appearance="secondary" hidden>
+            <iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            <span id="add-more-label">Add another package</span>
+          </fluent-button>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </div>
         <!-- Identity reference (Package step, MSIX only): sits INSIDE the package card at the top of
@@ -4447,9 +4528,9 @@
         <div class="v4-type" id="v4-type">
           <p class="v4-type__q">What are you publishing?</p>
           <fluent-tablist class="v4-type__tabs" aria-label="What are you publishing?" id="v4-type-seg" activeid="v4tab-msix">
-            <fluent-tab id="v4tab-msix" data-v4type="msix">MSIX app<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX app: Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall." data-tooltip="Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall."></iconify-icon></fluent-tab>
-            <fluent-tab id="v4tab-win32" data-v4type="win32">Desktop installer<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Desktop installer: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates."></iconify-icon></fluent-tab>
-            <fluent-tab id="v4tab-pwa" data-v4type="pwa">Web app<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About Web app: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip="Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-msix" data-v4type="msix">MSIX<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX: Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall." data-tooltip="Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-win32" data-v4type="win32">EXE/MSI<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About EXE/MSI: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-pwa" data-v4type="pwa">PWA<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About PWA: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip="Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build."></iconify-icon></fluent-tab>
           </fluent-tablist>
           <p class="v4-type__lock" id="v4-type-lock"><iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>Set by your package.</span></p>
         </div>
@@ -4492,10 +4573,6 @@
             <span>Reading the manifest, capabilities, and system requirements.</span>
           </div>
         </div>
-        <fluent-button type="button" class="ez-add-pkg" id="add-more-pkg" appearance="secondary" hidden>
-          <iconify-icon slot="start" icon="fluent:add-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-          <span id="add-more-label">Add another package</span>
-        </fluent-button>
       </section>
 
       <!-- System requirements (optional): its OWN card below the package card, shown with the package
@@ -4533,21 +4610,21 @@
               </fluent-listbox></fluent-dropdown>
             </div>
             <div class="sysreq-2col__row">
-              <span class="sysreq-2col__lbl" id="sr-storage-lbl">Storage</span>
-              <fluent-dropdown id="sr-storage" aria-labelledby="sr-storage-lbl"><fluent-listbox>
-                <fluent-option value="">Not specified</fluent-option><fluent-option value="500 MB">500 MB</fluent-option><fluent-option value="1 GB">1 GB</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="5 GB">5 GB</fluent-option><fluent-option value="10 GB">10 GB</fluent-option>
-              </fluent-listbox></fluent-dropdown>
-              <fluent-dropdown id="sr-storage-rec" aria-labelledby="sr-storage-lbl"><fluent-listbox>
-                <fluent-option value="">Not specified</fluent-option><fluent-option value="500 MB">500 MB</fluent-option><fluent-option value="1 GB">1 GB</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="5 GB">5 GB</fluent-option><fluent-option value="10 GB">10 GB</fluent-option>
-              </fluent-listbox></fluent-dropdown>
-            </div>
-            <div class="sysreq-2col__row">
               <span class="sysreq-2col__lbl" id="sr-dx-lbl">DirectX</span>
               <fluent-dropdown id="sr-dx" aria-labelledby="sr-dx-lbl"><fluent-listbox>
                 <fluent-option value="">Not specified</fluent-option><fluent-option value="9">DirectX 9</fluent-option><fluent-option value="10">DirectX 10</fluent-option><fluent-option value="11">DirectX 11</fluent-option><fluent-option value="12">DirectX 12</fluent-option>
               </fluent-listbox></fluent-dropdown>
               <fluent-dropdown id="sr-dx-rec" aria-labelledby="sr-dx-lbl"><fluent-listbox>
                 <fluent-option value="">Not specified</fluent-option><fluent-option value="9">DirectX 9</fluent-option><fluent-option value="10">DirectX 10</fluent-option><fluent-option value="11">DirectX 11</fluent-option><fluent-option value="12">DirectX 12</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+            </div>
+            <div class="sysreq-2col__row">
+              <span class="sysreq-2col__lbl" id="sr-vram-lbl">Dedicated GPU memory</span>
+              <fluent-dropdown id="sr-vram" aria-labelledby="sr-vram-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="512 MB">512 MB</fluent-option><fluent-option value="1 GB">1 GB</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="4 GB">4 GB</fluent-option><fluent-option value="6 GB">6 GB</fluent-option><fluent-option value="8 GB">8 GB</fluent-option>
+              </fluent-listbox></fluent-dropdown>
+              <fluent-dropdown id="sr-vram-rec" aria-labelledby="sr-vram-lbl"><fluent-listbox>
+                <fluent-option value="">Not specified</fluent-option><fluent-option value="512 MB">512 MB</fluent-option><fluent-option value="1 GB">1 GB</fluent-option><fluent-option value="2 GB">2 GB</fluent-option><fluent-option value="4 GB">4 GB</fluent-option><fluent-option value="6 GB">6 GB</fluent-option><fluent-option value="8 GB">8 GB</fluent-option>
               </fluent-listbox></fluent-dropdown>
             </div>
             <div class="sysreq-2col__row">
@@ -4565,11 +4642,12 @@
             <span class="sysreq-caps__lbl">Also requires</span>
             <div class="sysreq-chips" id="sysreq-caps">
               <button type="button" class="sysreq-chip" data-sr-cap="touch" aria-pressed="false"><iconify-icon icon="fluent:tap-single-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Touch screen</button>
-              <button type="button" class="sysreq-chip" data-sr-cap="keyboard" aria-pressed="false"><iconify-icon icon="fluent:keyboard-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Keyboard</button>
               <button type="button" class="sysreq-chip" data-sr-cap="mouse" aria-pressed="false"><iconify-icon icon="fluent:cursor-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Mouse</button>
-              <button type="button" class="sysreq-chip" data-sr-cap="gamepad" aria-pressed="false"><iconify-icon icon="fluent:xbox-controller-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Gamepad</button>
-              <button type="button" class="sysreq-chip" data-sr-cap="microphone" aria-pressed="false"><iconify-icon icon="fluent:mic-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Microphone</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="keyboard" aria-pressed="false"><iconify-icon icon="fluent:keyboard-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Keyboard</button>
               <button type="button" class="sysreq-chip" data-sr-cap="camera" aria-pressed="false"><iconify-icon icon="fluent:camera-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Camera</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="microphone" aria-pressed="false"><iconify-icon icon="fluent:mic-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Microphone</button>
+              <button type="button" class="sysreq-chip" data-sr-cap="bluetooth" aria-pressed="false"><iconify-icon icon="fluent:bluetooth-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Bluetooth</button>
+              <button type="button" class="sysreq-chip" id="sr-cap-gamepad" data-sr-cap="gamepad" aria-pressed="false" hidden><iconify-icon icon="fluent:xbox-controller-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Xbox controller or gamepad</button>
             </div>
           </div>
         </div>
@@ -4616,7 +4694,7 @@
         <!-- Hidden value stores: source of truth the live-edit fields commit to. -->
         <div class="ez-value-store" hidden aria-hidden="true">
           <fluent-text-input id="f-name" maxlength="50"></fluent-text-input>
-          <fluent-textarea id="f-desc"></fluent-textarea>
+          <fluent-textarea id="f-desc" maxlength="10000"></fluent-textarea>
           <fluent-dropdown id="f-category">
             <fluent-listbox>
               <fluent-option value="productivity">Productivity</fluent-option>
@@ -4782,7 +4860,7 @@
 
         <!-- Hidden value stores the live PDP edits commit to. -->
         <div class="ez-value-store">
-          <fluent-text-input id="f-short" maxlength="270"></fluent-text-input>
+          <fluent-text-input id="f-short" maxlength="1000"></fluent-text-input>
           <fluent-textarea id="f-features"></fluent-textarea>
         </div>
 
@@ -4810,13 +4888,10 @@
             <!-- Advanced view: full editor. Reading order: input, then what you've Added
                  (AI-added ones carry a sparkle), then AI Suggestions you can tap to add. -->
             <div class="ez-kw-adv" id="kw-adv">
-              <p class="ez-extra-field__hint">Words people might search to find your app in the Store. You can set different keywords for each language.</p>
-              <fluent-text-input id="adv-keyword-input" class="ez-extra-input" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword">
-                <iconify-icon slot="start" icon="fluent:search-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-              </fluent-text-input>
-              <div id="kw-added-section" hidden class="ez-kw-section">
-                <p class="ez-kw-section__label">Added</p>
-                <div class="ez-kw-chips" id="adv-keywords"></div>
+              <p class="ez-extra-field__hint">Words people might search to find your app in the Store — up to 7 keywords (21 words total). You can set different keywords for each language.</p>
+              <div class="kw-tagpicker__box" id="kw-box">
+                <span id="adv-keywords" class="kw-tagpicker__tags"></span>
+                <input type="text" id="adv-keyword-input" class="kw-tagpicker__input" placeholder="Type a keyword, then press Enter" aria-label="Add a search keyword" autocomplete="off" />
               </div>
               <div id="kw-suggest" hidden class="ez-kw-section">
                 <p class="ez-kw-section__label"><iconify-icon icon="fluent:sparkle-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon>Suggested by AI</p>
@@ -4891,14 +4966,6 @@
               <label for="decl-accessibility" class="declarations__label">This product has been tested to meet accessibility guidelines</label>
               <span class="declarations__answer">
                 <fluent-checkbox class="decl-seg" id="decl-answer-first" data-declaration="accessibility" aria-label="This product has been tested to meet accessibility guidelines"></fluent-checkbox>
-              </span>
-            </li>
-            <!-- Both types -->
-            <li class="declarations__item" id="decl-item-pen-ink">
-              <span class="declarations__ico"><iconify-icon icon="fluent:inking-tool-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
-              <label for="decl-pen-ink" class="declarations__label">This product supports pen and ink input</label>
-              <span class="declarations__answer">
-                <fluent-checkbox class="decl-seg" data-declaration="penInk" aria-label="This product supports pen and ink input"></fluent-checkbox>
               </span>
             </li>
             <!-- Both types -->
@@ -5663,7 +5730,6 @@
          overlapping its bottom-left (avatar style) and the name / change-logo in a footer strip. -->
     <div class="pwapkg__site">
       <div class="pwapkg__chrome">
-        <span class="pwapkg__dots" aria-hidden="true"><i></i><i></i><i></i></span>
         <a class="pwapkg__omni" id="pwa-pkg-preview" target="_blank" rel="noopener" aria-label="Open website in a new tab">
           <iconify-icon class="pwapkg__omni-lock" icon="fluent:lock-closed-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon>
           <span id="pwa-pkg-phost"></span>
@@ -5677,6 +5743,7 @@
       <div class="pwapkg__foot">
         <button type="button" class="pwapkg__logo" id="pwa-pkg-logo-btn" aria-label="Change app logo" title="Change app logo">
           <img class="pwapkg__logo-img" id="pwa-pkg-favicon" alt="" />
+          <span class="pwapkg__logo-fb" id="pwa-pkg-logo-fb" aria-hidden="true"></span>
           <span class="pwapkg__logo-edit" aria-hidden="true"><iconify-icon icon="fluent:edit-16-filled" width="12" height="12"></iconify-icon></span>
         </button>
         <div class="pwapkg__app-text">
@@ -5765,7 +5832,8 @@
     </label>
 
     <div id="whatsnew-single">
-      <fluent-textarea id="whatsnew-input" class="ez-ai-dialog__input" rows="5" placeholder="e.g. Added dark mode, faster startup, and fixed a sync bug."></fluent-textarea>
+      <fluent-textarea id="whatsnew-input" class="ez-ai-dialog__input" rows="5" maxlength="1500" placeholder="e.g. Added dark mode, faster startup, and fixed a sync bug."></fluent-textarea>
+      <div class="ez-char-count" id="whatsnew-count">0 / 1,500</div>
       <div class="ez-whatsnew-draftrow">
         <button type="button" class="ez-ai-chip" id="whatsnew-draft">
           <iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon><span>Draft with AI</span>
@@ -5907,6 +5975,12 @@
         <iconify-icon icon="fluent:zoom-in-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       </label>
       <button type="button" class="link-btn" id="image-edit-reset">Reset</button>
+    </div>
+
+    <div class="image-edit__caption" id="image-edit-caption-field" hidden>
+      <label class="image-edit__caption-lbl" for="image-edit-caption">Caption <span class="image-edit__caption-opt">optional</span></label>
+      <fluent-text-input id="image-edit-caption" maxlength="200" placeholder="Describe what this screenshot shows"></fluent-text-input>
+      <span class="image-edit__caption-hint">Shown to customers when they open this screenshot in the Store.</span>
     </div>
 
     <details class="image-edit__ai" id="image-edit-ai">
@@ -7240,20 +7314,11 @@
   // whenever the architecture or install parameters change. The result lives on pkg.validation.
   const validationTimers = {};
   function buildValidationChecks(pkg) {
-    const paramsOk = !!pkg.silentNoParams || (pkg.installParams || '').trim().length > 0;
     return [
       { key: 'malware', label: 'Malware check', kind: 'pass',
         desc: 'The package is found to be clean.' },
-      { key: 'silent', label: 'Silent install check', kind: paramsOk ? 'pass' : 'fail',
-        desc: paramsOk
-          ? 'Your app installs silently, as per the Microsoft Store Policy.'
-          : 'Your installer didn’t finish a silent install with the parameters provided. Set the correct silent-install flags, then re-validate.' },
-      { key: 'arp', label: 'Entry in Add or remove programs', kind: 'recommendation',
-        desc: 'There is a recommendation for an app entry in Add or remove programs.',
-        detail: 'Customers expect to uninstall your app from Settings → Apps. Registering an Add or remove programs entry is a Microsoft Store recommendation, not a blocker.' },
-      { key: 'bundleware', label: 'Bundleware check', kind: 'recommendation',
-        desc: 'There is a recommendation for bundleware.',
-        detail: 'Bundleware — extra software installed alongside your app without clear consent — is against Store policy. None was detected; keep your installer free of bundled offers.' },
+      { key: 'codesign', label: 'Code sign check', kind: 'pass',
+        desc: 'Your app has a valid code sign.' },
     ];
   }
   function runValidation(pkg) {
@@ -7506,7 +7571,7 @@
   // -------------------------------------------------------------
   // State + gate
   // -------------------------------------------------------------
-  const state = { pkg: false, name: false, desc: false, category: false, shots: [], rating: false };
+  const state = { pkg: false, name: false, desc: false, category: false, shots: [], shotCaptions: {}, rating: false };
 
   // Advanced section tabs: show one section at a time; mirror the gate's completion.
   // Entering Advanced always lands on Package (the start of the flow), matching the
@@ -7568,7 +7633,7 @@
     // Drop editing-only controls so it reads as the finished, customer-facing listing.
     clone.querySelectorAll(
       '.ez-hero-media__remove, .ez-trailer-add-btn, input[type="file"], ' +
-      '.ez-pv-shot__del, .ez-pv-shot-add, .ez-shots-arrow, ' +
+      '.ez-pv-shot__del, .ez-pv-shot__edit, .ez-pv-shot-add, .ez-shots-arrow, ' +
       '.ez-store-features-empty, .ez-whatsnew-empty, .ez-hero-empty, .ez-ai-chip'
     ).forEach(n => n.remove());
     // Neutralize the click-to-edit "Additional information" cells (privacy policy,
@@ -7696,6 +7761,8 @@
   if ($('wz-preview-open')) $('wz-preview-open').addEventListener('click', openListingPreview);
   // Show more / less for the System requirements card inside the preview (the body is re-cloned each open).
   if (listingPreviewBody) listingPreviewBody.addEventListener('click', function (e) {
+    var shot = e.target.closest && e.target.closest('.ez-pv-shot[data-shot-index]');
+    if (shot && e.target.tagName === 'IMG' && typeof window.__openShotLightbox === 'function') { window.__openShotLightbox(parseInt(shot.dataset.shotIndex, 10)); return; }
     var b = e.target.closest && e.target.closest('.ez-sysreq-more'); if (!b) return;
     var sec = b.closest('.ez-card-section'); if (!sec) return;
     var open = sec.classList.toggle('is-open');
@@ -7916,7 +7983,7 @@
     publishHold: { mode: 'auto', date: '' },
     // Test credentials for the certification team (both package types): [{name, value}].
     testCredentials: [],
-    declarations: { genAi: false, externalCommerce: false, drivers: false, accessibility: false, penInk: false, altDrives: true, oneDriveBackup: true, broadcast: true },
+    declarations: { genAi: false, externalCommerce: false, drivers: false, accessibility: false, altDrives: true, oneDriveBackup: true, broadcast: true },
     iarcId: '',
     listing: { shortDesc: '', features: '', whatsNew: '', whatsNewSameAll: true, whatsNewLocales: {}, keywords: [], privacyMode: 'url', privacyUrl: '', privacyText: '', subcategory: '', copyright: '', licenseTerms: '', developedBy: '', hero: null, trailers: [],
       // Support info (EU DSA contact details). mode 'account' = use account-level
@@ -8713,7 +8780,7 @@
     // Package
     { section: 'step-package', label: 'App package', required: true, done: () => !!state.pkg },
     { section: 'step-package', label: 'Restricted-capability reasons', applies: () => collectRestrictedCapabilities().length > 0, required: true, done: () => hasAllCapabilityReasons() },
-    { section: 'step-package', label: 'System requirements', required: false, done: () => { const has = o => !!(o && (o.ram || o.storage || o.dx || o.cpu || o.gpu || (o.caps && o.caps.length))); const s = sysreqState || {}; return has(s) || has(s.rec); }, focus: '#sysreq-sec', onJump: () => { const d = document.getElementById('sysreq-sec'); if (d) d.open = true; } },
+    { section: 'step-package', label: 'System requirements', required: false, done: () => { const has = o => !!(o && (o.ram || o.vram || o.dx || o.cpu || o.gpu || (o.caps && o.caps.length))); const s = sysreqState || {}; return has(s) || has(s.rec); }, focus: '#sysreq-sec', onJump: () => { const d = document.getElementById('sysreq-sec'); if (d) d.open = true; } },
     // Store listing — required
     { section: 'step-listing', label: 'App name', required: true, done: () => !!state.name, value: () => missLocaleNames(() => !!state.name), valueTitle: () => missLocaleNamesFull(() => !!state.name), focus: '#ez-pv-name' },
     { section: 'step-listing', label: 'Description', required: true,
@@ -9154,9 +9221,10 @@
     setHidden('decl-item-onedrive', isWin32);
     // Record & broadcast: Xbox-family packages only (not desktop-only).
     setHidden('decl-item-broadcast', !window.__hasXbox());
+    setHidden('sr-cap-gamepad', !window.__hasXbox());   // "Xbox controller or gamepad" applies to Xbox-family packages only
     // Win32-only disclosure
     setHidden('decl-item-drivers', !isWin32);
-    // accessibility, pen & ink and generative AI apply to both types (always shown)
+    // accessibility and generative AI apply to both types (always shown)
     // Hide the "Windows capabilities" group entirely when none of its items apply (e.g. Win32).
     const capGroup = $('decl-group-capabilities');
     if (capGroup) {
@@ -9755,11 +9823,11 @@
   // ---- "What are you publishing?" type chooser (ported from V5) --------------------------
   // Pick MSIX app / Desktop installer / Web app up front; a real package locks the choice.
   let v4Type = 'msix';  // 'msix' | 'win32' | 'pwa'
-  const V4_TYPE_LABEL = { msix: 'MSIX app', win32: 'Desktop installer', pwa: 'Web app' };
+  const V4_TYPE_LABEL = { msix: 'MSIX', win32: 'EXE/MSI', pwa: 'PWA' };
   // System requirements (optional, its own card below the Package step): the developer's stated
   // MINIMUM. Nothing pre-selected; providing any value surfaces it in the listing + drives the warning.
   // Minimum requirements live at the top level (back-compat); `rec` holds the optional Recommended set.
-  let sysreqState = { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [], rec: { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [] } };
+  let sysreqState = { ram: '', vram: '', dx: '', cpu: '', gpu: '', caps: [], rec: { ram: '', vram: '', dx: '', cpu: '', gpu: '', caps: [] } };
   // How the package step's add methods adapt per type: MSIX = upload only (packaged extensions),
   // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app is link-only.
   const V4_PKG_UI = {
@@ -9825,7 +9893,7 @@
     const shown = locked || v4Type;
     wrap.hidden = !!locked;   // a real package answers the question — hide the chooser
     const pkgSub = document.querySelector('#step-package .ez-step__sub');
-    if (pkgSub) { if (pkgSub.dataset.orig == null) pkgSub.dataset.orig = pkgSub.textContent; pkgSub.textContent = locked ? 'Your package is added — add another below, or keep filling out any section.' : pkgSub.dataset.orig; }
+    if (pkgSub) { if (pkgSub.dataset.orig == null) pkgSub.dataset.orig = pkgSub.textContent; pkgSub.textContent = locked ? 'Your package is added — add another, or keep filling out any section.' : pkgSub.dataset.orig; }
     if (seg.activeid !== 'v4tab-' + shown) seg.activeid = 'v4tab-' + shown;
     seg.querySelectorAll('fluent-tab').forEach(t => { t.toggleAttribute('disabled', !!locked); });
     wrap.classList.toggle('is-locked', !!locked);
@@ -9846,7 +9914,7 @@
     const lines = [];
     if (toWin32) {
       lines.push(paid ? 'Move pricing to your own commerce — your Store price and any sales won’t apply.' : 'Move pricing to your own commerce (Store pricing, sales and free trials aren’t available).');
-      if (priv) lines.push('Switch your private-group audience to Public — Desktop installers can’t be limited to a group.');
+      if (priv) lines.push('Switch your private-group audience to Public — EXE/MSI installers can’t be limited to a group.');
       if (cover || trailer) lines.push('Hide your cover image and trailer — those appear for MSIX apps only.');
       lines.push('Require a license terms link before you can submit.');
     } else {
@@ -10307,6 +10375,7 @@
       }));
     });
     const committedPkgs = packages.filter(p => !p._pending);   // pending = still being reviewed in the details dialog; not yet “added”
+    try { const fw = document.getElementById('flow-wrap'); if (fw) fw.classList.toggle('has-pkg', committedPkgs.length > 0); } catch (e) {}   // System requirements card is gated on a committed package
     if (committedPkgs.length === 0) {
       showAddUI('both');                       // nothing confirmed yet: offer both methods
     } else {
@@ -11154,58 +11223,157 @@
   let pwaPkgManifest = null;          // parsed web app manifest of the site being packaged (null until fetched)
   let pwaPkgManifestDone = false;     // true once the fetch settles — lets the report tell "checking" from "none found"
   let pwaPkgManifestPromise = null;   // in-flight manifest fetch, so packaging uses whatever has resolved
+  let pwaPkgGateView = 'auto';   // 'auto' = show found/missing from the scan; 'generated' = show the generated-manifest guide
+  let pwaPkgGenJson = '';         // the generated manifest JSON text (once "Create my manifest" is used)
+  const pwaEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function pwaPkgReady() { const mf = pwaPkgManifest; return !!(mf && mf.hadManifest); }
+  // Package button + prefill panel appear ONLY once the site has (or we've added) a web app manifest.
+  function pwaPkgSyncFooter() {
+    const go = $('pwa-pkg-go'), prefill = $('pwa-pkg-prefill');
+    const ready = pwaPkgManifestDone && pwaPkgReady() && pwaPkgGateView === 'auto';
+    if (go) go.hidden = !ready;
+    if (prefill) prefill.hidden = !ready;
+  }
+  // A minimal, valid web app manifest for the site (MDN-shaped: name, icons 192/512, start_url,
+  // display, colours) — offered when the site doesn't have one yet.
+  function pwaPkgBuildManifest() {
+    const host = hostnameOf(pwaPkgPendingUrl || '') || 'your-app';
+    const mf = pwaPkgManifest;
+    const name = (((mf && mf.name) || (($('pwa-pkg-ptitle') || {}).textContent) || (app && app.name) || host) || 'My App').trim() || 'My App';
+    const shortName = (name.length <= 12 ? name : (name.split(/\s+/)[0] || name)).slice(0, 12);
+    const theme = (mf && mf.themeColor && /^(#|rgb|hsl)/i.test(String(mf.themeColor).trim())) ? mf.themeColor : '#1F1F1F';
+    return {
+      name: name,
+      short_name: shortName,
+      description: (mf && mf.description) || (name + ' — installable web app'),
+      start_url: '/',
+      scope: '/',
+      display: 'standalone',
+      background_color: '#FFFFFF',
+      theme_color: theme,
+      icons: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ]
+    };
+  }
+  function pwaPkgDownloadManifest() {
+    try {
+      const blob = new Blob([pwaPkgGenJson], { type: 'application/manifest+json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'manifest.webmanifest';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { try { URL.revokeObjectURL(a.href); } catch (e) {} a.remove(); }, 120);
+      announce('manifest.webmanifest downloaded.');
+    } catch (e) {}
+  }
+  // Re-scan the live site for a manifest (after the developer adds one).
+  function pwaPkgRecheck() {
+    pwaPkgManifestDone = false; pwaPkgGateView = 'auto';
+    pwaPkgRenderReport();
+    pwaPkgManifestPromise = fetchWebManifest(pwaPkgPendingUrl)
+      .then(function (mf) { pwaPkgManifest = mf; applyPwaManifest(mf); return mf; })
+      .catch(function () { return null; })
+      .finally(function () {
+        pwaPkgManifestDone = true; pwaPkgRenderReport();
+        announce(pwaPkgReady() ? 'Web app manifest found. You can package your website now.' : 'We still couldn’t find a manifest on your site. Add it and re-check, or continue with the one we generated.');
+      });
+  }
+  // Accept the manifest we generated as the site's manifest so packaging can proceed (prototype:
+  // in production this would be re-verified from the live site).
+  function pwaPkgUseGenerated() {
+    const g = pwaPkgBuildManifest();
+    pwaPkgManifest = {
+      name: g.name, shortName: g.short_name, description: g.description || '',
+      themeColor: g.theme_color || '', categories: [],
+      icons: (g.icons || []).map(function (ic) { return { src: resolveUrlSafe(pwaPkgPendingUrl, ic.src), sizes: ic.sizes, purpose: ic.purpose || '' }; }),
+      screenshots: [], hadManifest: true, generated: true
+    };
+    pwaPkgManifestDone = true; pwaPkgGateView = 'auto';
+    try { applyPwaManifest(pwaPkgManifest); } catch (e) {}
+    pwaPkgRenderReport();
+    announce('Using the manifest we generated \u2014 we\u2019ll include it in your package.');
+  }
+  // The "no manifest" gate: explain what a manifest is + how to add one, or generate it.
+  function pwaPkgMissingHtml() {
+    const host = pwaEsc(hostnameOf(pwaPkgPendingUrl || ''));
+    return '<div class="pwapkg__gate">' +
+      '<div class="pwapkg__gate-head"><iconify-icon icon="fluent:warning-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>No web app manifest found</div>' +
+      '<p>A <strong>web app manifest</strong> is a small JSON file that makes your site installable — it gives Windows your app’s name, icon and colours. The Store needs it before it can package <strong>' + host + '</strong>. <a href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest" target="_blank" rel="noopener">Learn about manifests</a></p>' +
+      '<p>Add one yourself, or let us create it for you:</p>' +
+      '<div class="pwapkg__gate-actions">' +
+        '<fluent-button appearance="primary" data-pwa-act="genman"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Create my manifest</fluent-button>' +
+        '<fluent-button appearance="secondary" data-pwa-act="recheck"><iconify-icon slot="start" icon="fluent:arrow-sync-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Re-check my site</fluent-button>' +
+      '</div>' +
+    '</div>';
+  }
+  function pwaPkgGenHtml() {
+    const host = pwaEsc(hostnameOf(pwaPkgPendingUrl || ''));
+    return '<div class="pwapkg__gate pwapkg__gate--gen">' +
+      '<div class="pwapkg__gate-head"><iconify-icon icon="fluent:sparkle-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>We created a manifest for your app</div>' +
+      '<p>Your site has no web app manifest, so we generated one from its details. <strong>We’ll include it in your Store package</strong> — nothing to change on <strong>' + host + '</strong>.</p>' +
+      '<details class="pwapkg__adv">' +
+        '<summary><iconify-icon class="pwapkg__adv-chev" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Prefer to add it to your site? <span class="pwapkg__adv-hint">optional</span></summary>' +
+        '<ol class="pwapkg__steps">' +
+          '<li>Save the file below as <code>manifest.webmanifest</code> at your site’s root.</li>' +
+          '<li>Reference it in your page’s <code>&lt;head&gt;</code>: <code>&lt;link rel="manifest" href="/manifest.webmanifest"&gt;</code></li>' +
+        '</ol>' +
+        '<div class="pwapkg__code">' +
+          '<div class="pwapkg__code-bar"><span>manifest.webmanifest</span>' +
+            '<button type="button" class="pwapkg__code-btn" data-pwa-act="copy"><iconify-icon icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</button>' +
+            '<button type="button" class="pwapkg__code-btn" data-pwa-act="download"><iconify-icon icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download</button>' +
+          '</div>' +
+          '<pre>' + pwaEsc(pwaPkgGenJson) + '</pre>' +
+        '</div>' +
+        '<fluent-button size="small" appearance="secondary" data-pwa-act="recheck"><iconify-icon slot="start" icon="fluent:arrow-sync-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>I added it — re-check my site</fluent-button>' +
+      '</details>' +
+      '<div class="pwapkg__gate-actions">' +
+        '<fluent-button appearance="primary" data-pwa-act="usegen"><iconify-icon slot="start" icon="fluent:checkmark-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Use this manifest</fluent-button>' +
+      '</div>' +
+    '</div>';
+  }
   function pwaPkgRenderReport() {
     const body = $('pwa-pkg-body'); if (!body) return;
-    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const id = pwaPkgIdentity();
-    const mf = pwaPkgManifest;
-    const loading = !pwaPkgManifestDone;            // fetch still in flight → show "checking"
     const https = /^https:/i.test(pwaPkgPendingUrl || '');
-    const hasManifest = !!(mf && mf.hadManifest);
-    // Real checks, driven by what we actually read from the site (PWA Builder–style) — no auto-pass.
-    const row = (state, label, detail) => {
-      const icon = state === 'ok' ? 'fluent:checkmark-circle-16-filled'
-        : state === 'info' ? 'fluent:info-16-filled'
-        : 'fluent:warning-16-filled';
-      const mark = state === 'pending'
-        ? '<fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner>'
-        : '<iconify-icon icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>';
-      return '<li class="pwapkg__check pwapkg__check--' + state + '">' + mark +
-        '<span class="pwapkg__check-text"><span class="pwapkg__check-label">' + esc(label) + '</span>' +
-        (detail ? '<span class="pwapkg__check-detail">' + esc(detail) + '</span>' : '') + '</span></li>';
+    // Generated-manifest guidance takes over the body until the developer continues / re-checks.
+    if (pwaPkgGateView === 'generated') { body.innerHTML = pwaPkgGenHtml(); pwaPkgSyncFooter(); return; }
+    if (!pwaPkgManifestDone) {
+      body.innerHTML = '<ul class="pwapkg__checks"><li class="pwapkg__check pwapkg__check--pending"><fluent-spinner size="extra-small" aria-hidden="true"></fluent-spinner><span class="pwapkg__check-text"><span class="pwapkg__check-label">Checking your site for a web app manifest…</span></span></li></ul>';
+      pwaPkgSyncFooter(); return;
+    }
+    if (!pwaPkgReady()) { body.innerHTML = pwaPkgMissingHtml(); pwaPkgSyncFooter(); return; }
+    // Manifest present → the ready report + Store identity.
+    const id = pwaPkgIdentity();
+    const row = function (state, label, detail) {
+      const icon = state === 'ok' ? 'fluent:checkmark-circle-16-filled' : state === 'info' ? 'fluent:info-16-filled' : 'fluent:warning-16-filled';
+      return '<li class="pwapkg__check pwapkg__check--' + state + '"><iconify-icon icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        '<span class="pwapkg__check-text"><span class="pwapkg__check-label">' + pwaEsc(label) + '</span>' +
+        (detail ? '<span class="pwapkg__check-detail">' + pwaEsc(detail) + '</span>' : '') + '</span></li>';
     };
     const rows = [
-      loading ? row('pending', 'Your app details', 'Checking your site…')
-        : hasManifest ? row('ok', 'Your app details', 'Read from your web app manifest')
-        : row('info', 'Your app details', 'We’ll create these for you'),
+      row('ok', 'Web app manifest', (pwaPkgManifest && pwaPkgManifest.generated) ? 'Using the one we generated — included in your package' : 'Found on your site — we read your app’s name and icon'),
       row(https ? 'ok' : 'warn', 'Secure connection', https ? 'Your site is served over HTTPS' : 'Use HTTPS before you publish')
     ];
     const idRow =
-      '<li class="pwapkg__check pwapkg__check--ok">' +
-        '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' +
-        '<span class="pwapkg__check-text">' +
-          '<span class="pwapkg__check-label">Store identity</span>' +
-          '<dl class="pwapkg__identity-rows">' +
-            '<dt>Package name</dt><dd title="' + esc(id.identityName) + '">' + esc(id.identityName) + '</dd>' +
-            '<dt>Publisher</dt><dd>' + esc(id.publisherDisplay) + '</dd>' +
-          '</dl>' +
-        '</span>' +
-      '</li>';
+      '<li class="pwapkg__check pwapkg__check--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+        '<span class="pwapkg__check-text"><span class="pwapkg__check-label">Store identity</span>' +
+          '<dl class="pwapkg__identity-rows"><dt>Package name</dt><dd title="' + pwaEsc(id.identityName) + '">' + pwaEsc(id.identityName) + '</dd><dt>Publisher</dt><dd>' + pwaEsc(id.publisherDisplay) + '</dd></dl>' +
+        '</span></li>';
     body.innerHTML = '<ul class="pwapkg__checks">' + rows.join('') + idRow + '</ul>';
+    pwaPkgSyncFooter();
   }
   function pwaPkgSetPhase(phase) {   // 'scan' | 'review' | 'building'
     const scan = $('pwa-pkg-scan'), body = $('pwa-pkg-body'), go = $('pwa-pkg-go');
     if (scan) scan.hidden = phase !== 'scan';
     if (body) body.hidden = phase === 'scan';
-    const prefill = $('pwa-pkg-prefill');
-    if (prefill) prefill.hidden = phase === 'scan';
     if (go) {
-      go.hidden = phase === 'scan';
       go.disabled = phase === 'building';
       go.innerHTML = phase === 'building'
         ? '<fluent-spinner size="extra-small" slot="start" aria-hidden="true"></fluent-spinner> Packaging for the Store…'
         : '<iconify-icon slot="start" icon="fluent:box-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Package for the Store';
     }
+    // go + prefill visibility follow the manifest gate (hidden until a manifest is present).
+    pwaPkgSyncFooter();
   }
   // The app logo + website-preview image shown in the dialog, resolved in priority order.
   let pwaPkgMicrolinkLogo = '';
@@ -11218,9 +11386,20 @@
     return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(hostnameOf(pwaPkgPendingUrl || '')) + '&sz=128';
   }
   function pwaPkgSyncLogo() {
-    const fav = $('pwa-pkg-favicon'); if (!fav) return;
-    fav.onerror = function () { fav.style.display = 'none'; };
-    fav.style.display = ''; fav.src = pwaPkgLogoSrc();
+    const fav = $('pwa-pkg-favicon'), fb = $('pwa-pkg-logo-fb'); if (!fav) return;
+    // Letter-avatar fallback so the logo tile is never a blank white square when the favicon 404s.
+    if (fb) {
+      const nm = ((($('pwa-pkg-ptitle') && $('pwa-pkg-ptitle').textContent) || hostnameOf(pwaPkgPendingUrl || '') || '?')).replace(/^www\./i, '');
+      const hue = (typeof hashHue === 'function') ? hashHue(nm || '?') : 210;
+      fb.textContent = (nm.trim()[0] || '?').toUpperCase();
+      fb.style.background = 'linear-gradient(135deg, hsl(' + hue + ',58%,52%), hsl(' + ((hue + 38) % 360) + ',62%,40%))';
+    }
+    const showFb = function () { fav.style.display = 'none'; if (fb) fb.style.display = 'flex'; };
+    const showImg = function () { fav.style.display = ''; if (fb) fb.style.display = 'none'; };
+    fav.onerror = showFb;
+    fav.onload = function () { (fav.naturalWidth >= 16 ? showImg : showFb)(); };
+    showFb();                        // show the letter until the real icon confirms it loaded
+    fav.src = pwaPkgLogoSrc();
   }
   // Paint the browser-framed website preview. Primary = a LIVE screenshot of the actual page via
   // WordPress mShots (free, no key); its first hit can be a "generating" placeholder, so a warm-up
@@ -11418,6 +11597,8 @@
     pwaPkgMicrolinkLogo = '';
     pwaPkgMicrolinkImage = '';
     pwaPkgManifestDone = false;
+    pwaPkgGateView = 'auto';
+    pwaPkgGenJson = '';
     // Kick off the manifest read as the dialog opens; it usually resolves well before the user
     // clicks "Package as MSIX", so the logo + AI context are ready by then. Re-render the report
     // once it settles so the checks reflect the real site rather than a "checking…" state.
@@ -11464,6 +11645,17 @@
     if (go) go.addEventListener('click', () => {
       pwaPkgSetPhase('building');
       setTimeout(() => { addPackagedPwa(pwaPkgPendingUrl); try { dlg.hide(); } catch (e) {} }, 1200);
+    });
+    // Manifest-gate actions (delegated — the body re-renders): generate / re-check / copy / download / use.
+    const gateBody = $('pwa-pkg-body');
+    if (gateBody) gateBody.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-pwa-act]'); if (!b) return;
+      const act = b.getAttribute('data-pwa-act');
+      if (act === 'genman') { pwaPkgGenJson = JSON.stringify(pwaPkgBuildManifest(), null, 2); pwaPkgGateView = 'generated'; pwaPkgRenderReport(); }
+      else if (act === 'recheck') { pwaPkgRecheck(); }
+      else if (act === 'copy') { try { navigator.clipboard.writeText(pwaPkgGenJson); announce('Manifest copied to your clipboard.'); } catch (e2) {} }
+      else if (act === 'download') { pwaPkgDownloadManifest(); }
+      else if (act === 'usegen') { pwaPkgUseGenerated(); }
     });
     // Editable logo: the pencil overlay or the "Change logo" link opens a file picker.
     const logoFile = $('pwa-pkg-logo-file');
@@ -11514,6 +11706,7 @@
     updateGate();
     ezRenderPreview();
     if (typeof window.__refreshKwSuggest === 'function') window.__refreshKwSuggest();
+    if (typeof window.__advRenderLangMenu === 'function') window.__advRenderLangMenu(); // keep the language menu's per-language status fresh
   }
   function syncCategory() { state.category = !!fCategory.value; updateGate(); ezRenderPreview(); }
   window.__syncDesc = syncDesc;  // let the language switcher re-validate the gate after the default language changes
@@ -11830,6 +12023,12 @@
     else { p.textContent = ''; p.hidden = true; add.hidden = false; }
   }
   // Build the dialog body for the current mode (single shared textarea, or one per language).
+  function wnUpdateCount(ta, countEl, max) {
+    if (!ta || !countEl) return;
+    var n = ((typeof faVal === 'function' ? faVal(ta) : (ta.value || '')) || '').length;
+    countEl.textContent = n.toLocaleString() + ' / ' + max.toLocaleString();
+    countEl.classList.toggle('ez-char-count--max', n >= max);
+  }
   function whatsNewRenderMode() {
     var codes = whatsNewLocaleList();
     var multi = codes.length > 1;
@@ -11841,7 +12040,7 @@
     var single = $('whatsnew-single'), per = $('whatsnew-perlang');
     if (single) single.hidden = perMode;
     if (per) per.hidden = !perMode;
-    if (single && !perMode) { var ta = $('whatsnew-input'); if (ta) ta.value = adv.listing.whatsNew || ''; }
+    if (single && !perMode) { var ta = $('whatsnew-input'); if (ta) { ta.value = adv.listing.whatsNew || ''; var wc = $('whatsnew-count'); if (wc) { if (!ta.__cwired) { ta.__cwired = 1; ta.addEventListener('input', function () { wnUpdateCount(ta, wc, 1500); }); } wnUpdateCount(ta, wc, 1500); } } }
     if (per && perMode) {
       var def = whatsNewDefLoc();
       per.innerHTML = codes.map(function (c) {
@@ -11850,7 +12049,8 @@
         var ai = isDef ? '<button type="button" class="ez-ai-chip whatsnew-lang__ai" data-wn-draft="' + c + '"><iconify-icon icon="fluent:sparkle-16-filled" width="13" height="13" aria-hidden="true"></iconify-icon><span>Draft with AI</span></button>' : '';
         return '<div class="whatsnew-lang">' +
           '<div class="whatsnew-lang__head"><span class="whatsnew-lang__name">' + wnEsc(nm) + '</span>' + ai + '</div>' +
-          '<fluent-textarea class="whatsnew-lang__ta" data-wn-lang="' + c + '" rows="3" placeholder="Release notes for ' + wnEsc(whatsNewNameOf(c)) + '"></fluent-textarea>' +
+          '<fluent-textarea class="whatsnew-lang__ta" data-wn-lang="' + c + '" rows="3" maxlength="1500" placeholder="Release notes for ' + wnEsc(whatsNewNameOf(c)) + '"></fluent-textarea>' +
+          '<div class="ez-char-count" data-wn-count="' + c + '">0 / 1,500</div>' +
         '</div>';
       }).join('') +
       '<div class="whatsnew-perlang__foot"><button type="button" class="ez-ai-chip" id="whatsnew-copyall"><iconify-icon icon="fluent:copy-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon><span>Copy ' + wnEsc(whatsNewNameOf(def)) + ' to all languages</span></button></div>';
@@ -11860,6 +12060,8 @@
         if (!t) return;
         var val = (c === def) ? (adv.listing.whatsNew || '') : ((m[c] != null && m[c] !== '') ? m[c] : (adv.listing.whatsNew || ''));
         try { t.value = val; } catch (e) {}
+        var ce = per.querySelector('[data-wn-count="' + c + '"]');
+        if (ce) { (function (tt, cc) { tt.addEventListener('input', function () { wnUpdateCount(tt, cc, 1500); }); wnUpdateCount(tt, cc, 1500); })(t, ce); }
       });
     }
   }
@@ -12642,6 +12844,48 @@
 
   // Screenshots — REAL image upload, rendered inline on the live PDP (thumbnails + add tile).
   const ssFile = $('ss-file');
+  // Optional per-screenshot captions, keyed by image URL so they survive reorder/delete. Shown to
+  // customers in the screenshot lightbox (matches Partner Center + the real Store).
+  function shotCap(url) { return (state.shotCaptions && state.shotCaptions[url]) || ''; }
+  function setShotCap(url, text) { if (!state.shotCaptions) state.shotCaptions = {}; text = (text || '').trim(); if (text) state.shotCaptions[url] = text; else delete state.shotCaptions[url]; }
+  // Full-screen screenshot viewer: image + optional caption + prev/next + counter (Store gallery).
+  // A native <dialog> opened with showModal() so it joins the top layer — this keeps it ABOVE the
+  // read-only "Store listing preview" (itself a modal fluent-dialog) when a shot is clicked there.
+  var shotlbEl = null, shotlbIdx = 0;
+  function shotlbPaint() {
+    if (!shotlbEl) return;
+    var shots = state.shots || [], url = shots[shotlbIdx] || '', cap = shotCap(url);
+    shotlbEl.querySelector('.shotlb__img').src = url;
+    var capEl = shotlbEl.querySelector('.shotlb__cap'); capEl.textContent = cap; capEl.hidden = !cap;
+    shotlbEl.querySelector('.shotlb__count').textContent = (shotlbIdx + 1) + ' / ' + shots.length;
+    shotlbEl.querySelector('.shotlb__nav--prev').disabled = shotlbIdx <= 0;
+    shotlbEl.querySelector('.shotlb__nav--next').disabled = shotlbIdx >= shots.length - 1;
+  }
+  function shotlbGo(d) { var n = (state.shots || []).length; shotlbIdx = Math.max(0, Math.min(n - 1, shotlbIdx + d)); shotlbPaint(); }
+  function closeShotLightbox() { if (shotlbEl && shotlbEl.open) { try { shotlbEl.close(); } catch (e) { shotlbEl.removeAttribute('open'); } } }
+  function shotlbKey(e) { if (e.key === 'ArrowLeft') { e.preventDefault(); shotlbGo(-1); } else if (e.key === 'ArrowRight') { e.preventDefault(); shotlbGo(1); } }
+  function openShotLightbox(idx) {
+    var shots = state.shots || []; if (!shots.length) return;
+    shotlbIdx = Math.max(0, Math.min(shots.length - 1, idx || 0));
+    if (!shotlbEl) {
+      shotlbEl = document.createElement('dialog');
+      shotlbEl.className = 'shotlb'; shotlbEl.setAttribute('aria-label', 'Screenshot viewer');
+      shotlbEl.innerHTML =
+        '<button type="button" class="shotlb__close" aria-label="Close"><iconify-icon icon="fluent:dismiss-24-regular" width="20" height="20" aria-hidden="true"></iconify-icon></button>' +
+        '<button type="button" class="shotlb__nav shotlb__nav--prev" aria-label="Previous screenshot"><iconify-icon icon="fluent:chevron-left-24-filled" width="24" height="24" aria-hidden="true"></iconify-icon></button>' +
+        '<div class="shotlb__stage"><img class="shotlb__img" alt="Screenshot"><div class="shotlb__cap" hidden></div><div class="shotlb__count"></div></div>' +
+        '<button type="button" class="shotlb__nav shotlb__nav--next" aria-label="Next screenshot"><iconify-icon icon="fluent:chevron-right-24-filled" width="24" height="24" aria-hidden="true"></iconify-icon></button>';
+      document.body.appendChild(shotlbEl);
+      shotlbEl.querySelector('.shotlb__close').addEventListener('click', closeShotLightbox);
+      shotlbEl.querySelector('.shotlb__nav--prev').addEventListener('click', function () { shotlbGo(-1); });
+      shotlbEl.querySelector('.shotlb__nav--next').addEventListener('click', function () { shotlbGo(1); });
+      shotlbEl.addEventListener('click', function (e) { if (e.target === shotlbEl) closeShotLightbox(); }); // click the dark backdrop area
+      shotlbEl.addEventListener('keydown', shotlbKey); // Esc is handled natively by <dialog>; this adds ← →
+    }
+    if (!shotlbEl.open) { try { shotlbEl.showModal(); } catch (e) { shotlbEl.setAttribute('open', ''); } }
+    shotlbPaint();
+  }
+  window.__openShotLightbox = openShotLightbox;
   function renderShots() {
     const grid = $('ez-pv-shots');
     if (!grid) return;
@@ -12673,7 +12917,12 @@
       const w = document.createElement('div');
       w.className = 'ez-pv-shot'; w.draggable = true; w.dataset.shotIndex = i;
       const img = document.createElement('img'); img.src = url; img.alt = 'Screenshot ' + (i + 1); img.draggable = false;
+      if (shotCap(url)) img.title = shotCap(url);
       w.appendChild(img);
+      const edit = document.createElement('button');
+      edit.type = 'button'; edit.className = 'ez-pv-shot__edit'; edit.setAttribute('aria-label', 'Edit screenshot & caption'); edit.title = 'Edit screenshot & caption'; edit.dataset.editI = i;
+      edit.innerHTML = '<iconify-icon icon="fluent:edit-16-regular" width="12" height="12"></iconify-icon>';
+      w.appendChild(edit);
       const del = document.createElement('button');
       del.type = 'button'; del.className = 'ez-pv-shot__del'; del.setAttribute('aria-label', 'Remove screenshot'); del.dataset.i = i;
       del.innerHTML = '<iconify-icon icon="fluent:dismiss-16-regular" width="12" height="12"></iconify-icon>';
@@ -12690,12 +12939,30 @@
     tile.innerHTML = '<video src="' + video + '" controls autoplay playsinline style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-8);background:#000;"></video>' +
       '<button type="button" class="ez-pv-shot__del" aria-label="Remove trailer" data-trailer-del="' + tile.dataset.trailerI + '"><iconify-icon icon="fluent:dismiss-16-regular" width="12" height="12"></iconify-icon></button>';
   }
+  // Re-open the Edit screenshot dialog for an existing shot to adjust its crop and caption.
+  function editShot(i) {
+    const url = state.shots[i]; if (url == null) return;
+    openImageEditDialog({
+      dataUrl: url, aspect: 16 / 10, title: 'Edit screenshot', caption: true, captionValue: shotCap(url),
+      onApply: (dataUrl, caption) => {
+        const oldUrl = state.shots[i];
+        if (oldUrl !== dataUrl) setShotCap(oldUrl, '');
+        state.shots[i] = dataUrl; setShotCap(dataUrl, caption);
+        renderShots();
+        if (typeof updateGate === 'function') updateGate();
+        if (window.__scheduleFlowSave) window.__scheduleFlowSave();
+        announce('Screenshot updated.');
+      }
+    });
+  }
   $('ez-pv-shots').addEventListener('click', (e) => {
     const add = e.target.closest('#shot-add');
     const trDel = e.target.closest('[data-trailer-del]');
     const trTile = e.target.closest('.ez-pv-shot--trailer[data-trailer-i]');
+    const ed = e.target.closest('.ez-pv-shot__edit');
     const rm = e.target.closest('.ez-pv-shot__del');
     if (add) { ssFile.click(); }
+    else if (ed) { editShot(parseInt(ed.dataset.editI, 10)); }
     else if (trDel) {
       const ti = parseInt(trDel.dataset.trailerDel, 10);
       const removed = adv.listing.trailers[ti];
@@ -12709,7 +12976,8 @@
       persistAdvanced(); renderShots();
     }
     else if (trTile) { playTrailer(trTile, adv.listing.trailers[parseInt(trTile.dataset.trailerI, 10)]); }
-    else if (rm) { state.shots.splice(parseInt(rm.dataset.i, 10), 1); renderShots(); if (typeof updateGate === 'function') updateGate(); }
+    else if (rm) { const ri = parseInt(rm.dataset.i, 10); const ru = state.shots[ri]; if (ru) setShotCap(ru, ''); state.shots.splice(ri, 1); renderShots(); if (typeof updateGate === 'function') updateGate(); }
+    else { const st = e.target.closest('.ez-pv-shot[data-shot-index]'); if (st && e.target.tagName === 'IMG') openShotLightbox(parseInt(st.dataset.shotIndex, 10)); }
   });
 
   // Carousel nav — show prev/next only when the strip overflows; disable at the ends.
@@ -12843,6 +13111,11 @@
     if (imageEditCrop) imageEditCrop.style.aspectRatio = String(opts.aspect);
     if (imageEditTitleText) imageEditTitleText.textContent = opts.title || 'Edit image';
     if (imageEditAiPrompt) imageEditAiPrompt.value = '';
+    // Optional caption (screenshots only) — captured here at add/edit time, not on the tile afterward.
+    _imgEdit.wantCaption = !!opts.caption;
+    const capField = $('image-edit-caption-field'), capInput = $('image-edit-caption');
+    if (capField) capField.hidden = !opts.caption;
+    if (capInput) capInput.value = opts.caption ? (opts.captionValue || '') : '';
     const aiDetails = $('image-edit-ai');
     if (aiDetails) { aiDetails.open = false; aiDetails.hidden = isMvp(); }   // "Improve with AI" is Vision-only
     try { imageEditDialog.show(); } catch (e) {}
@@ -12922,11 +13195,52 @@
       // Preserve alpha for PNG sources (logos with transparency); JPEG stays compact for photos.
       const srcIsPng = /^data:image\/png/i.test(_imgEdit.currentDataUrl || '');
       const out = srcIsPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92);
-      try { _imgEdit.onApply(out); } catch (e) { console.error(e); }
+      const capEl = $('image-edit-caption');
+      const cap = _imgEdit.wantCaption ? (((capEl && capEl.value) || '').trim()) : '';
+      try { _imgEdit.onApply(out, cap); } catch (e) { console.error(e); }
       closeImageEditDialog();
     };
     img.src = _imgEdit.currentDataUrl;
   });
+
+  // ---- Drag-and-drop media helpers (shared by the screenshots strip and the hero) ----
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
+  }
+  // Center-cover an image into the target aspect (same 1024px output as the crop editor) so dropped
+  // images land correctly sized without a manual crop step.
+  function fitImageToAspect(dataUrl, aspect) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const outW = aspect >= 1 ? 1024 : Math.round(1024 * aspect);
+        const outH = aspect >= 1 ? Math.round(1024 / aspect) : 1024;
+        const canvas = document.createElement('canvas'); canvas.width = outW; canvas.height = outH;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(outW / img.naturalWidth, outH / img.naturalHeight);
+        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+        ctx.drawImage(img, (outW - dw) / 2, (outH - dh) / 2, dw, dh);
+        resolve(/^data:image\/png/i.test(dataUrl || '') ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  }
+  // Make an element accept dropped OS files: highlight + a labelled veil, then hand files to onFiles.
+  // Reacts only when the drag carries Files, so it never interferes with the internal reorder drag.
+  function wireFileDrop(el, opts) {
+    if (!el || el.dataset.fileDropWired) return;
+    el.dataset.fileDropWired = '1'; opts = opts || {};
+    let depth = 0, veil = null;
+    const hasFiles = (e) => { const t = e.dataTransfer && e.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t, 'Files') !== -1; };
+    const show = () => { el.classList.add('is-file-drop'); if (!veil && opts.hint !== false) { veil = document.createElement('div'); veil.className = 'filedrop-veil'; veil.textContent = opts.hint || 'Drop to add'; el.appendChild(veil); } };
+    const hide = () => { el.classList.remove('is-file-drop'); if (veil) { veil.remove(); veil = null; } depth = 0; };
+    el.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); depth++; show(); });
+    el.addEventListener('dragover', (e) => { if (!hasFiles(e)) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; });
+    el.addEventListener('dragleave', (e) => { if (!hasFiles(e)) return; depth = Math.max(0, depth - 1); if (depth === 0) hide(); });
+    el.addEventListener('drop', (e) => { if (!hasFiles(e)) return; e.preventDefault(); e.stopPropagation(); hide(); const fs = e.dataTransfer && e.dataTransfer.files; if (fs && fs.length && opts.onFiles) opts.onFiles(fs); });
+  }
+  window.__wireFileDrop = wireFileDrop; window.__fitImageToAspect = fitImageToAspect;
 
   // Screenshots: open the crop/AI editor for each picked image (16:10), then add it.
   // (Trailers are added separately via the "Add trailer" header button.)
@@ -12942,8 +13256,10 @@
           dataUrl: r.result,
           aspect: 16 / 10,
           title: 'Edit screenshot',
-          onApply: (dataUrl) => {
+          caption: true,
+          onApply: (dataUrl, caption) => {
             state.shots.push(dataUrl);
+            setShotCap(dataUrl, caption);
             renderShots();
             announce('Screenshot added.');
             if (typeof updateGate === 'function') updateGate(); // screenshot is required → refresh gate + tabs + checklist
@@ -12957,6 +13273,22 @@
     next();
     e.target.value = '';
   });
+  // Drag-and-drop: drop one or more image files on the strip to add them directly (up to 8).
+  function addDroppedShots(fileList) {
+    const all = Array.from(fileList || []), imgs = all.filter(f => /^image\//.test(f.type));
+    if (!imgs.length) { if (all.length) announce('Only image files can be added as screenshots.'); return; }
+    const room = Math.max(0, 8 - state.shots.length);
+    if (room <= 0) { announce('You already have the maximum of 8 screenshots.'); return; }
+    const use = imgs.slice(0, room);
+    Promise.all(use.map(f => readFileAsDataURL(f).then(d => fitImageToAspect(d, 16 / 10)))).then(urls => {
+      urls.forEach(u => state.shots.push(u));
+      renderShots();
+      if (typeof updateGate === 'function') updateGate();
+      if (window.__scheduleFlowSave) window.__scheduleFlowSave();
+      announce(use.length + ' screenshot' + (use.length > 1 ? 's' : '') + ' added.' + (imgs.length > use.length ? ' Reached the 8-screenshot limit.' : ''));
+    });
+  }
+  { const w = document.querySelector('.ez-shots-wrap'); if (w) wireFileDrop(w, { hint: 'Drop images to add screenshots', onFiles: addDroppedShots }); }
   // -------------------------------------------------------------
   // Live Store listing (Step 2) — click-to-edit on the PDP, ported from
   // the full flow's "Live" layout (always on here).
@@ -13165,6 +13497,18 @@
       el.classList.remove('live-edit-empty');
       el.innerHTML = '';
       el.appendChild(ed);
+      if (opts && opts.maxLength) {
+        const counter = document.createElement('span');
+        counter.className = 'ez-char-count';
+        const updCount = () => {
+          const n = ed.value.length;
+          counter.textContent = n.toLocaleString() + ' / ' + opts.maxLength.toLocaleString() + ' characters';
+          counter.classList.toggle('ez-char-count--max', n >= opts.maxLength);
+        };
+        ed.addEventListener('input', updCount);
+        updCount();
+        el.appendChild(counter);
+      }
       ed.focus();
       if (current) ed.select();
       let committed = false;
@@ -13378,7 +13722,7 @@
       pv.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     }
   })();
-  makeInlineEditable('#ez-pv-desc', fDesc, { required: true, multiline: true, rows: 6, placeholder: 'What does your app do, and why is it useful?' });
+  makeInlineEditable('#ez-pv-desc', fDesc, { required: true, multiline: true, rows: 6, maxLength: 10000, placeholder: 'What does your app do, and why is it useful?' });
   makeCategoryEditable('#ez-pv-category', fCategory);
   makeClickToUpload('#ez-pv-icon', () => $('icon-file').click());
 
@@ -13638,18 +13982,22 @@
     const marketsVal = adv.markets.mode === 'all' ? 'All markets' : (adv.markets.selected.length + ' markets');
     const audienceVal = adv.audience.mode === 'public' ? 'Public'
       : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group');
-    const rows = [
+    // Packages — type + architecture: the most concrete thing being submitted, so it leads.
+    const submitPkgs = (typeof packages !== 'undefined' ? packages : []).filter(p => p && !p._pending);
+    const pkgTypeOf = p => (p.kind === 'pwa' || p.fromPwa || p.type === 'PWA') ? 'PWA' : ((p.win32 || p.kind === 'win32') ? 'EXE/MSI' : 'MSIX');
+    const rows = [];
+    if (submitPkgs.length) {
+      const types = []; submitPkgs.forEach(p => { const t = pkgTypeOf(p); if (types.indexOf(t) < 0) types.push(t); });
+      const typeLabel = types.length === 1 ? (submitPkgs.length > 1 ? submitPkgs.length + ' \u00d7 ' + types[0] : types[0]) : (submitPkgs.length + ' packages');
+      const archLabel = (typeof pkgSysreqFacts === 'function') ? (pkgSysreqFacts().arch || '') : '';
+      rows.push(['Packages', archLabel ? (typeLabel + ' \u00b7 ' + archLabel) : typeLabel, 'fluent:box-20-regular', archLabel ? ('Architecture: ' + archLabel) : '']);
+    }
+    rows.push(
       ['Languages', langVal, 'fluent:local-language-20-regular'],
       ['Price', priceVal, 'fluent:tag-20-regular'],
       ['Markets', marketsVal, 'fluent:globe-20-regular'],
       ['Audience', audienceVal, 'fluent:people-20-regular']
-    ];
-    // Disclosures were set on the Disclosures & age rating step — echo a COUNT here (full list in
-    // the hover tooltip) so the developer confirms what they declared without a long inline string.
-    const d = adv.declarations || {};
-    const showBroadcast = (typeof window.__hasXbox === 'function') && window.__hasXbox();   // Record & broadcast is Xbox-only
-    const declared = [d.genAi && 'Uses generative AI', d.externalCommerce && 'Purchases outside the Store', d.drivers && 'Non-Microsoft drivers', d.accessibility && 'Accessibility tested', d.penInk && 'Pen & ink input', d.altDrives && 'Alternate drives', d.oneDriveBackup && 'OneDrive backup', (showBroadcast && d.broadcast) && 'Record & broadcast'].filter(Boolean);
-    if (declared.length) rows.push(['Disclosures', declared.length + (declared.length === 1 ? ' disclosure' : ' disclosures'), 'fluent:shield-20-regular', 'Disclosures: ' + declared.join(', ')]);
+    );
     if (inUpdateFlow && adv.rollout && adv.rollout.gradual) rows.push(['Rollout', 'Gradual \u00b7 ' + (adv.rollout.percent || 10) + '%' + (adv.rollout.mandatory ? ' \u00b7 Mandatory' : ''), 'fluent:arrow-trending-lines-20-regular']);
     else if (inUpdateFlow && adv.rollout && adv.rollout.mandatory) rows.push(['Rollout', 'All at once \u00b7 Mandatory', 'fluent:arrow-trending-lines-20-regular']);
     dl.innerHTML = rows.map(x =>
@@ -14016,13 +14364,16 @@
       var shots = state.shots || [];
       var hero = (adv.listing && adv.listing.hero) || null;
       var trailers = (adv.listing && adv.listing.trailers) || [];
+      var caps = state.shotCaptions || {};
       var sig = shots.length + '|' + shots.reduce(function (n, s) { return n + (s ? s.length : 0); }, 0)
               + '|' + ((userIconDataUrl || '').length) + '|' + ((pkgIconDataUrl || '').length)
-              + '|' + (hero ? JSON.stringify(hero).length : 0) + '|' + (Array.isArray(trailers) ? trailers.length : 0);
+              + '|' + (hero ? JSON.stringify(hero).length : 0) + '|' + (Array.isArray(trailers) ? trailers.length : 0)
+              + '|' + JSON.stringify(caps);
       if (sig !== __lastMediaSig) {
         __lastMediaSig = sig;
         idbPutMedia(app.id, {
           shots: shots.slice(),
+          shotCaptions: Object.assign({}, caps),
           userIcon: userIconDataUrl || null,
           pkgIcon: pkgIconDataUrl || null,
           hero: hero,
@@ -14109,14 +14460,14 @@
       if (d.reachVisited || (app && (app.status === 'published' || app.status === 'in-review'))) reachVisited = true;
       if (d.sysreq && typeof d.sysreq === 'object') {
         if (d.sysreq.ram != null) sysreqState.ram = d.sysreq.ram;
-        if (d.sysreq.storage != null) sysreqState.storage = d.sysreq.storage;
+        if (d.sysreq.vram != null) sysreqState.vram = d.sysreq.vram;
         if (d.sysreq.dx != null) sysreqState.dx = d.sysreq.dx;
         if (d.sysreq.cpu != null) sysreqState.cpu = d.sysreq.cpu;
         if (d.sysreq.gpu != null) sysreqState.gpu = d.sysreq.gpu;
         if (Array.isArray(d.sysreq.caps)) sysreqState.caps = d.sysreq.caps.slice();
         if (d.sysreq.rec && typeof d.sysreq.rec === 'object') {
           sysreqState.rec = {
-            ram: d.sysreq.rec.ram || '', storage: d.sysreq.rec.storage || '', dx: d.sysreq.rec.dx || '',
+            ram: d.sysreq.rec.ram || '', vram: d.sysreq.rec.vram || '', dx: d.sysreq.rec.dx || '',
             cpu: d.sysreq.rec.cpu || '', gpu: d.sysreq.rec.gpu || '', caps: Array.isArray(d.sysreq.rec.caps) ? d.sysreq.rec.caps.slice() : []
           };
         }
@@ -14151,6 +14502,7 @@
           if (!m) return;
           try {
             if (Array.isArray(m.shots)) state.shots = m.shots;
+            if (m.shotCaptions && typeof m.shotCaptions === 'object') state.shotCaptions = m.shotCaptions;
             if (m.userIcon) userIconDataUrl = m.userIcon;
             if (m.pkgIcon) pkgIconDataUrl = m.pkgIcon;
             if (adv.listing) {
@@ -14174,11 +14526,11 @@
   // writes sysreqState, recaps the collapsed summary, refreshes the listing preview, and autosaves.
   (function wireSysreq() {
     var summary = $('sysreq-summary');
-    var ram = $('sr-ram'), storage = $('sr-storage'), dx = $('sr-dx'), cpu = $('sr-cpu'), gpu = $('sr-gpu'), caps = $('sysreq-caps');
-    var ramR = $('sr-ram-rec'), storageR = $('sr-storage-rec'), dxR = $('sr-dx-rec'), cpuR = $('sr-cpu-rec'), gpuR = $('sr-gpu-rec');
+    var ram = $('sr-ram'), vram = $('sr-vram'), dx = $('sr-dx'), cpu = $('sr-cpu'), gpu = $('sr-gpu'), caps = $('sysreq-caps');
+    var ramR = $('sr-ram-rec'), vramR = $('sr-vram-rec'), dxR = $('sr-dx-rec'), cpuR = $('sr-cpu-rec'), gpuR = $('sr-gpu-rec');
     if (!ram && !caps) return;
     // Top-level sysreqState = Minimum; sysreqState.rec = Recommended (each field has its own control).
-    if (!sysreqState.rec) sysreqState.rec = { ram: '', storage: '', dx: '', cpu: '', gpu: '', caps: [] };
+    if (!sysreqState.rec) sysreqState.rec = { ram: '', vram: '', dx: '', cpu: '', gpu: '', caps: [] };
     // beta.133 fluent-dropdown shows its value via the selected OPTION's `.selected` PROPERTY (it
     // slots that option into the control) — the attribute alone leaves the control blank.
     function setDD(dd, val) {
@@ -14190,9 +14542,9 @@
       if (!summary) return;
       var bits = [];
       if (sysreqState.ram) bits.push(sysreqState.ram + ' RAM');
-      if (sysreqState.storage) bits.push(sysreqState.storage);
+      if (sysreqState.vram) bits.push(sysreqState.vram + ' VRAM');
       if (sysreqState.dx) bits.push('DirectX ' + sysreqState.dx);
-      var r = sysreqState.rec || {}, hasRec = !!(r.ram || r.storage || r.dx || r.cpu || r.gpu || (r.caps && r.caps.length));
+      var r = sysreqState.rec || {}, hasRec = !!(r.ram || r.vram || r.dx || r.cpu || r.gpu || (r.caps && r.caps.length));
       summary.textContent = bits.length
         ? ('Minimum: ' + bits.join(' \u00b7 ') + (hasRec ? ' \u00b7 + Recommended set' : ''))
         : 'Set the minimum specs to run \u2014 recommended ones are optional. Below-minimum installs won\u2019t hurt your score.';
@@ -14209,21 +14561,21 @@
     }
     window.__renderSysreqAuto = renderSysreqAuto;
     window.__syncSysreq = function () {
-      setDD(ram, sysreqState.ram); setDD(storage, sysreqState.storage); setDD(dx, sysreqState.dx);
+      setDD(ram, sysreqState.ram); setDD(vram, sysreqState.vram); setDD(dx, sysreqState.dx);
       if (cpu) cpu.value = sysreqState.cpu || ''; if (gpu) gpu.value = sysreqState.gpu || '';
       var r = sysreqState.rec || {};
-      setDD(ramR, r.ram); setDD(storageR, r.storage); setDD(dxR, r.dx);
+      setDD(ramR, r.ram); setDD(vramR, r.vram); setDD(dxR, r.dx);
       if (cpuR) cpuR.value = r.cpu || ''; if (gpuR) gpuR.value = r.gpu || '';
       if (caps) Array.prototype.forEach.call(caps.querySelectorAll('[data-sr-cap]'), function (b) { b.setAttribute('aria-pressed', (sysreqState.caps || []).indexOf(b.getAttribute('data-sr-cap')) >= 0 ? 'true' : 'false'); });
       recap();
     };
     if (ram) ram.addEventListener('change', function () { sysreqState.ram = ram.value; changed(); });
-    if (storage) storage.addEventListener('change', function () { sysreqState.storage = storage.value; changed(); });
+    if (vram) vram.addEventListener('change', function () { sysreqState.vram = vram.value; changed(); });
     if (dx) dx.addEventListener('change', function () { sysreqState.dx = dx.value; changed(); });
     if (cpu) cpu.addEventListener('input', function () { sysreqState.cpu = cpu.value; changed(); });
     if (gpu) gpu.addEventListener('input', function () { sysreqState.gpu = gpu.value; changed(); });
     if (ramR) ramR.addEventListener('change', function () { sysreqState.rec.ram = ramR.value; changed(); });
-    if (storageR) storageR.addEventListener('change', function () { sysreqState.rec.storage = storageR.value; changed(); });
+    if (vramR) vramR.addEventListener('change', function () { sysreqState.rec.vram = vramR.value; changed(); });
     if (dxR) dxR.addEventListener('change', function () { sysreqState.rec.dx = dxR.value; changed(); });
     if (cpuR) cpuR.addEventListener('input', function () { sysreqState.rec.cpu = cpuR.value; changed(); });
     if (gpuR) gpuR.addEventListener('input', function () { sysreqState.rec.gpu = gpuR.value; changed(); });
@@ -16014,8 +16366,8 @@
   function applicableDeclKeys() {
     var isWin32 = (typeof effectiveWin32 === 'function') ? effectiveWin32() : ((typeof packages !== 'undefined') && packages.some(function (p) { return p.win32 && !p._pending; }));
     var keys = isWin32
-      ? ['genAi', 'accessibility', 'penInk', 'drivers']
-      : ['genAi', 'accessibility', 'penInk', 'externalCommerce', 'altDrives', 'oneDriveBackup'];
+      ? ['genAi', 'accessibility', 'drivers']
+      : ['genAi', 'accessibility', 'externalCommerce', 'altDrives', 'oneDriveBackup'];
     // Record & broadcast only applies to Xbox-family packages.
     if (typeof window.__hasXbox === 'function' && window.__hasXbox()) keys.push('broadcast');
     return keys;
@@ -17489,13 +17841,13 @@ function openPriceScheduleDialog() {
     const fShort = $('f-short');
     if (fShort && typeof makeInlineEditable === 'function') {
       fShort.value = L.shortDesc || '';
-      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 270, placeholder: 'Leave blank to auto-generate from your description', fallback: () => { const d = ((fDesc && fDesc.value) || '').trim(); return d ? deriveShort(d) : ''; } });
+      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 1000, placeholder: 'Leave blank to auto-generate from your description', fallback: () => { const d = ((fDesc && fDesc.value) || '').trim(); return d ? deriveShort(d) : ''; } });
       fShort.addEventListener('input', () => { L.shortDesc = (fShort.value || '').trim(); persistAdvanced(); ezRenderPreview(); });
     }
 
     // ---- Search terms / keywords (discoverability metadata, not on the PDP) ----
     const chipsWrap = $('adv-keywords'), kwInput = $('adv-keyword-input'), kwEasyChips = $('kw-easy-chips');
-    const kwSuggestWrap = $('kw-suggest'), kwSuggestChips = $('kw-suggest-chips'), kwAddedSection = $('kw-added-section');
+    const kwSuggestWrap = $('kw-suggest'), kwSuggestChips = $('kw-suggest-chips');
     // Keywords the AI proposed (auto-seeded from the description, or tapped from a suggestion chip)
     // carry a sparkle so it's clear which came from AI vs. the ones you typed yourself.
     const aiKw = new Set();
@@ -17529,7 +17881,8 @@ function openPriceScheduleDialog() {
     }
     function renderKwSuggest() {
       if (!kwSuggestWrap || !kwSuggestChips) return;
-      const sugg = suggestKeywords(6);
+      const full = L.keywords.length >= 7 || kwTotalWords() >= 21;   // no room → don't suggest more
+      const sugg = full ? [] : suggestKeywords(6);
       if (!sugg.length) { kwSuggestWrap.hidden = true; kwSuggestChips.innerHTML = ''; return; }
       kwSuggestWrap.hidden = false;
       kwSuggestChips.innerHTML = sugg.map(w => '<button type="button" class="ez-kw-chips__chip ez-kw-chips__chip--suggest" data-suggest="' + esc(w) + '"><iconify-icon icon="fluent:add-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon>' + esc(w) + '</button>').join('');
@@ -17545,11 +17898,31 @@ function openPriceScheduleDialog() {
           '<button type="button" data-i="' + i + '" aria-label="Remove ' + esc(kw) + '"><iconify-icon icon="fluent:dismiss-12-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button>' +
         '</span>'
       ).join('');
-      if (kwAddedSection) kwAddedSection.hidden = L.keywords.length === 0;
       renderKwSuggest();
       renderKwEasy();
+      updateKwInputState();
     }
-    function addKeyword(v, fromAI) { v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return; kwUserEdited = true; if (fromAI) { aiKw.add(v); } else { aiKw.delete(v); } L.keywords.push(v); persistAdvanced(); renderKeywords(); }
+    function kwWordCount(k) { return String(k).split(/\s+/).filter(Boolean).length; }
+    function kwTotalWords() { return L.keywords.reduce((n, k) => n + kwWordCount(k), 0); }
+    // At the limit, adding more is rejected — so disable the input and say why, instead of inviting input.
+    function updateKwInputState() {
+      if (!kwInput) return;
+      const atCount = L.keywords.length >= 7, atWords = kwTotalWords() >= 21, full = atCount || atWords;
+      kwInput.disabled = full;
+      kwInput.placeholder = atCount ? 'Keyword limit reached (7) — remove one to add another'
+        : atWords ? 'Word limit reached (21) — remove one to add another'
+        : 'Type a keyword, then press Enter';
+      const box = $('kw-box'); if (box) box.classList.toggle('is-full', full);
+    }
+    function addKeyword(v, fromAI) {
+      v = (v || '').trim(); if (!v || L.keywords.indexOf(v) >= 0) return;
+      if (L.keywords.length >= 7) { announce('You can add up to 7 keywords.'); return; }
+      const totalWords = L.keywords.reduce((n, k) => n + kwWordCount(k), 0);
+      if (totalWords + kwWordCount(v) > 21) { announce('Keywords can total at most 21 words across all keywords.'); return; }
+      kwUserEdited = true; if (fromAI) { aiKw.add(v); } else { aiKw.delete(v); } L.keywords.push(v); persistAdvanced(); renderKeywords();
+    }
+    const kwBox = $('kw-box');
+    if (kwBox && kwInput) kwBox.addEventListener('mousedown', (e) => { if (e.target === kwBox) { e.preventDefault(); kwInput.focus(); } });
     if (kwInput) {
       kwInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKeyword(kwInput.value); kwInput.value = ''; }
@@ -17602,14 +17975,22 @@ function openPriceScheduleDialog() {
       const body = featSection && featSection.querySelector('.ez-card-section__body');
       if (!body || body.querySelector('textarea')) return;
       const ta = document.createElement('textarea');
-      ta.className = 'live-edit-input'; ta.rows = 5; ta.value = L.features || ''; ta.placeholder = 'One feature per line';
+      ta.className = 'live-edit-input'; ta.rows = 5; ta.value = L.features || ''; ta.placeholder = 'One feature per line (up to 20)';
       ta.style.cssText = 'width:100%;background:transparent;border:0;outline:none;color:inherit;font:inherit;resize:vertical;';
       if (featList) featList.hidden = true;
       if (featAdd) featAdd.style.display = 'none';
-      body.appendChild(ta); ta.focus();
+      body.appendChild(ta);
+      const counter = document.createElement('div');
+      counter.className = 'ez-char-count';
+      const updCount = () => { const n = ta.value.split('\n').map(s => s.trim()).filter(Boolean).length; counter.textContent = n + ' / 20 highlights'; counter.classList.toggle('ez-char-count--max', n >= 20); };
+      ta.addEventListener('input', updCount); updCount();
+      body.appendChild(counter);
+      ta.focus();
       function done() {
-        L.features = ta.value || ''; persistAdvanced();
-        ta.remove();
+        const arr = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+        if (arr.length > 20) announce('Feature highlights are capped at 20 \u2014 kept the first 20.');
+        L.features = arr.slice(0, 20).join('\n'); persistAdvanced();
+        counter.remove(); ta.remove();
         if (featList) featList.hidden = false;
         if (featAdd) featAdd.style.display = '';
         renderFeatures();
@@ -17663,6 +18044,22 @@ function openPriceScheduleDialog() {
       };
       r.readAsDataURL(f);
     });
+    // Drag-and-drop: drop an image or video anywhere on the hero to set the cover directly.
+    if (typeof window.__wireFileDrop === 'function' && heroEl) window.__wireFileDrop(heroEl, {
+      hint: 'Drop an image or video',
+      onFiles: (files) => {
+        const f = Array.from(files).find(x => /^image\//.test(x.type) || /^video\//.test(x.type));
+        if (!f) return;
+        const set = (url, type) => { L.hero = { type: type, url: url }; persistAdvanced(); renderHeroMedia(); if (typeof updateGate === 'function') updateGate(); announce('Cover added.'); };
+        const rd = new FileReader();
+        rd.onload = () => {
+          if (/^video\//.test(f.type)) set(rd.result, 'video');
+          else if (typeof window.__fitImageToAspect === 'function') window.__fitImageToAspect(rd.result, 16 / 7).then(u => set(u, 'image'));
+          else set(rd.result, 'image');
+        };
+        rd.readAsDataURL(f);
+      }
+    });
     renderHeroMedia();
 
     // ---- System requirements (from the package; defaults otherwise) ----
@@ -17677,20 +18074,20 @@ function openPriceScheduleDialog() {
       // Package-derived facts (device family → "Available on", minimum OS, architecture) come straight
       // from the uploaded package and show automatically; the developer's minimums are appended.
       const facts = (typeof window.__pkgSysreqFacts === 'function') ? window.__pkgSysreqFacts() : { avail: '', os: '', arch: '' };
-      const CAP_LABEL = { touch: 'Touch screen', keyboard: 'Keyboard', mouse: 'Mouse', gamepad: 'Gamepad', microphone: 'Microphone', camera: 'Camera' };
+      const CAP_LABEL = { touch: 'Touch screen', mouse: 'Mouse', keyboard: 'Keyboard', camera: 'Camera', microphone: 'Microphone', bluetooth: 'Bluetooth', gamepad: 'Xbox controller or gamepad' };
       // Store-style peripheral values — one row each, "Integrated X" for built-in devices, matching the real PDP.
-      const CAP_VALUE = { touch: 'Integrated touch screen', keyboard: 'Integrated Keyboard', mouse: 'Integrated Mouse', gamepad: 'Gamepad', microphone: 'Integrated Microphone', camera: 'Integrated Camera' };
+      const CAP_VALUE = { touch: 'Integrated touch screen', mouse: 'Integrated Mouse', keyboard: 'Integrated Keyboard', camera: 'Integrated Camera', microphone: 'Integrated Microphone', bluetooth: 'Bluetooth', gamepad: 'Xbox controller or gamepad' };
       // Combine Minimum + Recommended into "min (Minimum), rec (Recommended)" like the real Store listing.
       const pair = (minV, recV) => { const p = []; if (minV) p.push(minV + ' (Minimum)'); if (recV) p.push(recV + ' (Recommended)'); return p.join(', '); };
       const rows = [];
       if (facts.avail) rows.push(['Available on', facts.avail]);
       if (facts.os) rows.push(['OS', facts.os]);
       if (facts.arch) rows.push(['Architecture', facts.arch]);
-      const dxRow = pair(sr.dx ? 'DirectX ' + sr.dx : '', rc.dx ? 'DirectX ' + rc.dx : ''); if (dxRow) rows.push(['DirectX', dxRow]);
       const ramRow = pair(sr.ram, rc.ram); if (ramRow) rows.push(['Memory', ramRow]);
+      const dxRow = pair(sr.dx ? 'DirectX ' + sr.dx : '', rc.dx ? 'DirectX ' + rc.dx : ''); if (dxRow) rows.push(['DirectX', dxRow]);
+      const vramRow = pair(sr.vram, rc.vram); if (vramRow) rows.push(['Dedicated GPU memory', vramRow]);
       const cpuRow = pair(sr.cpu, rc.cpu); if (cpuRow) rows.push(['Processor', cpuRow]);
       const gpuRow = pair(sr.gpu, rc.gpu); if (gpuRow) rows.push(['Graphics', gpuRow]);
-      const stoRow = pair(sr.storage, rc.storage); if (stoRow) rows.push(['Storage', stoRow]);
       // Peripherals appear as their own Store-style rows ("Mouse: Integrated Mouse") rather than one
       // combined line; a cap set for both columns gets (Minimum)/(Recommended), a min-only one shows plainly.
       Object.keys(CAP_LABEL).forEach(function (c) {
@@ -18047,12 +18444,13 @@ function openPriceScheduleDialog() {
         const tr = langTranslating.has(c);
         const done = localeDescFilled(c);
         const st = tr
-          ? '<span slot="end" class="lang-menu__st lang-menu__st--tr"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating\u2026</span>'
+          ? '<span class="lang-menu__st lang-menu__st--tr"><fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner>Translating\u2026</span>'
           : done
-            ? '<span slot="end" class="lang-menu__st lang-menu__st--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Complete</span>'
-            : '<span slot="end" class="lang-menu__st lang-menu__st--warn"><iconify-icon icon="fluent:warning-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Add description</span>';
+            ? '<span class="lang-menu__st lang-menu__st--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Complete</span>'
+            : '<span class="lang-menu__st lang-menu__st--warn"><iconify-icon icon="fluent:warning-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Add description</span>';
         return '<fluent-menu-item data-code="' + c + '"' + (c === L.activeLocale ? ' aria-checked="true"' : '') + '>' +
-          esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + st + '</fluent-menu-item>';
+          '<span class="lang-menu__wrap"><span class="lang-menu__name">' + esc(localeShortNameOf(c)) + (c === DEFAULT_LOCALE ? ' (default)' : '') + '</span>' + st + '</span>' +
+          '</fluent-menu-item>';
       }).join('');
       const manageEl = langMenuList.querySelector('[data-lang-manage]');
       if (manageEl) manageEl.addEventListener('click', () => openLangDialog());
@@ -18490,6 +18888,7 @@ function openPriceScheduleDialog() {
       renderLangSelector(); updateLockUI(); updateTranslatingBanner();
     };
     window.__langSync = function () { renderLangSelector(); updateLockUI(); updateTranslatingBanner(); };
+    window.__advRenderLangMenu = renderLangSelector;   // lightweight: refresh only the per-language menu status (no lock UI)
 
     renderLangSelector();
     updateLockUI();

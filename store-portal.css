@@ -193,4 +193,56 @@ a.ovx-hub__row { cursor: pointer; }
 a.ovx-hub__row:hover .ovx-hub__rowt, a.ovx-hub__row:hover .ovx-hub__rowchev { color: var(--brand-soft); }
 .ovx-hub__rowchev { flex: 0 0 auto; color: var(--text-3); }
 .ovx-hub__row .pill { flex: 0 0 auto; }
+/* ===== Action-first Overview: elevated "Needs attention" band + per-app health cards ===== */
+.ovx-focus { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); padding: 16px 18px; }
+.ovx-focus__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ovx-focus__head h3 { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; margin: 0; color: var(--text); }
+.ovx-focus__head h3 iconify-icon { color: var(--gold, #e0a23a); }
+.ovx-focus__count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--gold, #e0a23a) 22%, transparent); color: var(--text); font-size: 12px; font-weight: 700; }
+.ovx-focus__more { font-size: 12px; color: var(--text-3); margin-left: auto; }
+.ovx-focus__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.ovx-focus__card { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; border: 1px solid var(--border); border-left-width: 3px; border-radius: var(--r-md); background: color-mix(in srgb, var(--text) 3%, transparent); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .15s ease; }
+.ovx-focus__card:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--text) 6%, transparent); }
+.ovx-focus__card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ovx-focus__card--error { border-left-color: var(--danger, #e0697f); }
+.ovx-focus__card--warning { border-left-color: var(--gold, #e0a23a); }
+.ovx-focus__card--info { border-left-color: var(--brand); }
+.ovx-focus__ico { width: 34px; height: 34px; border-radius: 8px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+.ovx-focus__card--error .ovx-focus__ico { background: color-mix(in srgb, var(--danger, #e0697f) 15%, transparent); color: var(--danger, #e0697f); }
+.ovx-focus__card--warning .ovx-focus__ico { background: color-mix(in srgb, var(--gold, #e0a23a) 16%, transparent); color: var(--gold, #e0a23a); }
+.ovx-focus__card--info .ovx-focus__ico { background: var(--brand-tint); color: var(--brand-soft); }
+.ovx-focus__t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ovx-focus__t strong { font-size: 13.5px; color: var(--text); }
+.ovx-focus__t span { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovx-focus__chev { color: var(--text-3); flex: 0 0 auto; }
+.ovx-focus__card:hover .ovx-focus__chev, .ovx-focus__card:hover strong { color: var(--brand-soft); }
+.ovx-focus__clear { display: flex; align-items: center; gap: 12px; }
+.ovx-focus__clear > iconify-icon { color: var(--ok); flex: 0 0 auto; }
+.ovx-focus__clear strong { display: block; font-size: 15px; color: var(--text); }
+.ovx-focus__clear > span { display: flex; flex-direction: column; gap: 1px; }
+.ovx-focus__clear > span > span { font-size: 12.5px; color: var(--text-3); }
+.ovx-appgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.ovx-appcard { display: flex; flex-direction: column; gap: 10px; text-align: left; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-md); background: color-mix(in srgb, var(--text) 2.5%, transparent); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.ovx-appcard:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); box-shadow: 0 4px 14px rgba(0,0,0,.14); transform: translateY(-1px); }
+.ovx-appcard:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ovx-appcard__head { display: flex; align-items: center; gap: 10px; }
+.ovx-appcard__head .app-ico { width: 32px; height: 32px; border-radius: var(--r-sm); flex: 0 0 auto; font-size: 13px; }
+.ovx-appcard__name { min-width: 0; flex: 1; }
+.ovx-appcard__name strong { font-size: 14px; color: var(--text); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovx-appcard__head .pill { flex: 0 0 auto; }
+.ovx-appcard__stats { display: flex; gap: 16px; }
+.ovx-appcard__stat { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ovx-appcard__v { display: inline-flex; align-items: center; gap: 3px; font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+.ovx-appcard__v--warn { color: var(--gold, #e0a23a); }
+.ovx-appcard__star { color: var(--gold); flex: 0 0 auto; }
+.ovx-appcard__l { font-size: 11px; color: var(--text-3); }
+.ovx-appcard__trend { display: inline-flex; align-items: center; gap: 1px; font-size: 11px; font-weight: 700; }
+.ovx-appcard__trend--up { color: var(--ok); }
+.ovx-appcard__trend--down { color: var(--danger, #e0697f); }
+.ovx-appcard__action { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12.5px; font-weight: 600; color: var(--brand-soft); }
+.ovx-appcard__action > iconify-icon:first-child { color: var(--brand-soft); flex: 0 0 auto; }
+.ovx-appcard__action--warn, .ovx-appcard__action--warn > iconify-icon:first-child { color: var(--gold, #e0a23a); }
+.ovx-appcard__fchev { margin-left: auto; flex: 0 0 auto; color: var(--text-3); }
+.ovx-appcard:hover .ovx-appcard__fchev, .ovx-appcard:hover .ovx-appcard__name strong { color: var(--brand-soft); }
+.ovx-appcard__pre { font-size: 12.5px; color: var(--text-3); line-height: 1.45; }
 @media (max-width: 900px) { .ovx-metrics { grid-template-columns: 1fr; } .ovx-grid, .ovx-grid3 { grid-template-columns: 1fr; } .ovx-hub__grid { grid-template-columns: 1fr; } .ovx-hub__grp { border-left: 0; border-top: 1px solid var(--border); } .ovx-hub__grp:first-child { border-top: 0; } }
