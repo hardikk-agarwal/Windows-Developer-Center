@@ -1430,9 +1430,9 @@
   // Crash Health is available for every app; the Store analytics (acquisition,
   // usage, ratings) are LOCKED until the app is published to the Microsoft Store.
   var ANA_TABS = [
-    { key: "crashes",     label: "Crash",             icon: "fluent:bug-20-regular", free: true },
     { key: "acquisition", label: "Acquisition",       icon: "fluent:arrow-download-20-regular", store: true },
     { key: "usage",       label: "Usage",             icon: "fluent:pulse-20-regular", store: true },
+    { key: "crashes",     label: "Crash",             icon: "fluent:bug-20-regular", free: true },
     { key: "ratings",     label: "Ratings & reviews", icon: "fluent:star-20-regular", store: true }
   ];
   // Store-only analytics are LOCKED for apps not yet on the Microsoft Store (e.g. apps brought
