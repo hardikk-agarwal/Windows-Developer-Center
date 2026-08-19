@@ -4475,7 +4475,7 @@
         <div class="ez-rail__tabs">
           <button type="button" class="ez-rail__item" data-section="step-package">Package<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-listing">Store listing<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
-          <button type="button" class="ez-rail__item" data-section="step-rating">Content &amp; ratings<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+          <button type="button" class="ez-rail__item" data-section="step-rating">Ratings &amp; disclosures<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-reach">Reach &amp; price<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
         </div>
         <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="subtle" size="small">
@@ -4541,7 +4541,7 @@
           <span class="ez-step__num" id="num-package">1</span>
           <div>
             <h2 class="ez-step__title">Add your app package <span class="field-mark field-mark--req" aria-label="required">*</span></h2>
-            <p class="ez-step__sub">Add your app and we’ll read the details for you.</p>
+            <p class="ez-step__sub"> Upload your app package — this is what customers download from the Store. </p>
             <p class="ez-step__summary" id="sum-package"></p>
           </div>
           <fluent-button type="button" class="ez-add-pkg" id="add-more-pkg" appearance="secondary" hidden>
@@ -4558,15 +4558,15 @@
         <div class="v4-type" id="v4-type">
           <p class="v4-type__q">What are you publishing?</p>
           <fluent-tablist class="v4-type__tabs" aria-label="What are you publishing?" id="v4-type-seg" activeid="v4tab-msix">
-            <fluent-tab id="v4tab-msix" data-v4type="msix">MSIX<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About MSIX: Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall." data-tooltip="Best for most apps. Pick this if your app is packaged as MSIX or .appx — Microsoft hosts, signs and auto-updates it for you, with clean install and uninstall."></iconify-icon></fluent-tab>
-            <fluent-tab id="v4tab-win32" data-v4type="win32">EXE/MSI<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About EXE/MSI: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates."></iconify-icon></fluent-tab>
-            <fluent-tab id="v4tab-pwa" data-v4type="pwa">PWA<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About PWA: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip="Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-msix" data-v4type="msix">MSIX<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About EXE/MSI: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Modern Windows packaging with automatic updates, clean uninstall, and built-in security. It is the recommended option."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-win32" data-v4type="win32">EXE/MSI<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About EXE/MSI: Pick this if you already have a classic .exe or .msi installer. Bring your existing desktop app to the Store as-is — no repackaging, and you keep your own installer and updates." data-tooltip="Publish your existing .exe/.msi installer as-is."></iconify-icon></fluent-tab>
+            <fluent-tab id="v4tab-pwa" data-v4type="pwa">PWA<iconify-icon slot="end" class="seg__info" icon="fluent:info-16-regular" width="15" height="15" role="img" data-tooltip-placement="bottom" aria-label="About PWA: Pick this if your product is a website or PWA. We turn it into a signed, Store-ready app for you — the fastest way to reach Store customers with no native build." data-tooltip=" Bring your web app or website to the Store by simply providing a URL."></iconify-icon></fluent-tab>
           </fluent-tablist>
           <p class="v4-type__lock" id="v4-type-lock"><iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>Set by your package.</span></p>
         </div>
         <p class="manifest-identity-prompt adv-only" id="ez-pkg-identity-banner">
           <iconify-icon icon="fluent:document-bullet-list-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-          <span class="manifest-identity-prompt__text">Building an MSIX package? Get the identity details to add to your package, so it matches your Store listing.</span>
+          <span class="manifest-identity-prompt__text">Building an MSIX package? Get the identity details to create the Store ready package.</span>
           <span class="manifest-identity-prompt__actions">
             <button type="button" class="link-btn" id="build-guide-btn">How to build a package</button>
             <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
@@ -4937,8 +4937,8 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-rating">3</span>
           <div>
-            <h2 class="ez-step__title">Set your content &amp; ratings</h2>
-            <p class="ez-step__sub">Set your app’s age rating, then tell us what’s inside.</p>
+            <h2 class="ez-step__title">Get Age rating &amp; provide disclosures</h2>
+            <p class="ez-step__sub">Get your app’s age rating and disclose your app behavior.</p>
             <p class="ez-step__summary" id="sum-rating"></p>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
@@ -6693,7 +6693,7 @@
 
     <p class="lang-dialog__note">
       <iconify-icon icon="fluent:info-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Customers see your listing in their own language when available, otherwise your default. Adding a language copies your default listing&rsquo;s content as a starting point &mdash; translate and edit it anytime. Change your default with Set default.
+      Content from default listing is copied into every new listing you add, so you start with content already in place. You can edit it anytime.
     </p>
 
     <fluent-text-input id="lang-search" class="markets-dialog__search" placeholder="Search languages…">
@@ -9862,7 +9862,7 @@
   // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app is link-only.
   const V4_PKG_UI = {
     msix: { upload: true, url: false, uploadTitle: 'Upload your package' },
-    win32: { upload: true, url: true, uploadTitle: 'Upload your installer', urlTitle: 'Link to your installer', urlDesc: 'A hosted .exe or .msi — we’ll fetch it for you.', urlPlaceholder: 'https://example.com/setup.exe' },
+    win32: { upload: true, url: true, uploadTitle: 'Upload your installer', urlTitle: 'Link to your installer', urlDesc: 'Provide the link to the CDN where your binary is hosted.', urlPlaceholder: 'https://example.com/setup.exe' },
     pwa: { upload: false, url: true, urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
   };
   function applyV4PkgUI(type) {
