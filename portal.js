@@ -23,6 +23,11 @@
   var UNIFIED = (typeof window !== "undefined" && window.PORTAL_MODE === "unified");
   var STORE = ((typeof window !== "undefined" && window.PORTAL_MODE === "store") || UNIFIED);
   var KEY = UNIFIED ? "tdp.portal.unified.v1" : (STORE ? "tdp.portal.store.v1" : "tdp.portal.v5");
+  // Per-account persistence: each signed-in developer's apps/certs live under their OWN key, so leaving
+  // and returning to the portal restores THAT developer's work, and a brand-new account starts clean
+  // without disturbing anyone else's. CUR_KEY remembers who was active so a plain refresh resumes them.
+  var CUR_KEY = KEY + ".current";
+  function acctKey(email) { return email ? KEY + "::" + email : KEY; }
   var DEMO_MSA = { name: "Alex Taylor", email: "alex.taylor@outlook.com", initials: "AT" };
   var DEMO_MSA_NEW = { name: "Jordan Lee", email: "jordan.lee@outlook.com", initials: "JL" };
 
@@ -32,10 +37,34 @@
   var scanningCertId = null; // which cert's scan is in flight → spinner on that row + the certs page
 
   function load() {
-    try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.certs && s.apps) return s; } catch (e) {}
+    try {
+      var cur = localStorage.getItem(CUR_KEY) || "";
+      var s = JSON.parse(localStorage.getItem(acctKey(cur)));
+      if (s && s.certs && s.apps) return s;
+    } catch (e) {}
     return { signedIn: false, account: null, verified: false, certs: [], apps: [] };
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function save() {
+    try {
+      var email = (state.account && state.account.email) || "";
+      localStorage.setItem(CUR_KEY, (state.signedIn && email) ? email : "");
+      localStorage.setItem(acctKey(email), JSON.stringify(state));
+    } catch (e) {}
+  }
+  // A developer's saved apps/certs (for restoring on sign-in); null if they're brand new.
+  function loadAccount(email) {
+    try { var s = JSON.parse(localStorage.getItem(acctKey(email))); if (s && s.certs && s.apps) return s; } catch (e) {}
+    return null;
+  }
+  // Sign in a developer, restoring their per-account portal state (a clean slate if brand new).
+  function signInAs(acct) {
+    var saved = loadAccount(acct.email);
+    state.account = acct; state.signedIn = true;
+    state.certs = saved ? (saved.certs || []) : [];
+    state.apps = saved ? (saved.apps || []) : [];
+    state.verified = saved ? !!saved.verified : false;
+    save(); showApp();
+  }
 
   /* ---------------- helpers ---------------- */
   function $(id) { return document.getElementById(id); }
@@ -317,7 +346,7 @@
         '<p class="muted">Four formats to bring an app or game to the Store \u2014 most new apps use MSIX.</p></div></div>' +
       '<div class="fmtgrid">' +
         card({ icon: 'fluent:box-20-regular', name: 'MSIX', rec: true, tags: ['App', 'Game'], desc: 'The modern Windows app package (.msix) \u2014 the default for new apps.', benefits: ['Automatic updates', 'Free hosting &amp; signing', 'Clean install / uninstall'] }) +
-        card({ icon: 'fluent:desktop-20-regular', name: 'EXE/MSI', tags: ['App'], desc: 'Your existing .exe or .msi installer, published as-is.', benefits: ['Nothing to repackage', 'Full desktop access', 'Keep your installer'] }) +
+        card({ icon: 'fluent:desktop-20-regular', name: '.EXE/.MSI', tags: ['App'], desc: 'Your existing .exe or .msi installer, published as-is.', benefits: ['Nothing to repackage', 'Full desktop access', 'Keep your installer'] }) +
         card({ icon: 'fluent:globe-20-regular', name: 'PWA', tags: ['App', 'Game'], desc: 'Your website or web game, wrapped as an installable app.', benefits: ['Reuse your web code', 'No native build', 'Quick to publish'] }) +
         card({ icon: 'fluent:xbox-controller-20-regular', name: 'GDK', tags: ['Game'], desc: 'PC games built with the Game Development Kit.', benefits: ['Xbox services &amp; achievements', 'Best performance', 'Windows + Xbox reach'] }) +
       '</div>' +
@@ -704,7 +733,7 @@
     var link = function (label, href) { return '<a class="ovn-link" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(label) + '</a>'; };
     return '<section class="ovn-sec ovn-acct">' +
       '<div class="ovn-acct__row">' +
-        '<span class="ovn-acct__ava">' + esc(inits) + '</span>' +
+        '<fluent-avatar class="ovn-acct__ava" name="' + esc(name) + '" initials="' + esc(inits) + '" size="36" color="brand"></fluent-avatar>' +
         '<span class="ovn-acct__id"><strong>' + esc(name) + '</strong><span class="muted">Individual \u00b7 ' + pubId + '</span></span>' +
         '<span class="ovn-acct__chips">' + chips + '</span>' +
       '</div>' +
@@ -1055,7 +1084,7 @@
     var wStore = state.apps.filter(inStorePipeline);
     var wHtml = banner;
     if (wStore.length) {
-      var wNote = '<div class="disc-note"><iconify-icon icon="fluent:storefront-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+      var wNote = '<div class="disc-note"><iconify-icon icon="fluent:store-microsoft-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
         '<span><strong>In the Microsoft Store.</strong> Installs, crash health and ratings for your apps in the Store — select one to open its analytics.</span></div>';
       wHtml += '<div class="store-block">' + wNote + storeTableHTML(wStore) + '</div>';
     }
@@ -3179,6 +3208,56 @@
     });
     try { dlg.show(); } catch (e) {}
   }
+  // WDP arrivals land on Certificates — nudge them to compare the Store path vs. the direct-certificate
+  // path (their account already exists, so the Store is one click away). Closeable; either CTA is fine.
+  function showChoosePathDialog() {
+    var dlg = $("choosePathModal");
+    if (!dlg) { dlg = document.createElement("fluent-dialog"); dlg.id = "choosePathModal"; document.body.appendChild(dlg); }
+    dlg.setAttribute("aria-label", "Choose how to get started");
+    var chk = '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="17" height="17" aria-hidden="true"></iconify-icon>';
+    var li = function (t) { return '<li>' + chk + '<span>' + t + '</span></li>'; };
+    // Store is a superset of the direct path, so tell that story instead of a matrix: the direct card
+    // lists the shared baseline; the hero Store card leads with what it ADDS on top of it.
+    var storeList = ["Instant warning-free installs", "Reach 1B+ Windows devices", "Detailed app performance insights", "Automatic app updates &amp; restore", "In-app purchases &amp; worldwide payments"].map(li).join("");
+    var directList = ["Publisher identity &amp; recognition", "Warning-free install trust \u2014 builds fast", "Crash &amp; hang analytics", "Manage your certificate info in Windows"].map(li).join("");
+    dlg.innerHTML =
+      '<fluent-dialog-body class="cpx">' +
+        '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-cpx-close><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></fluent-button>' +
+        '<div slot="title" class="cpx-head">' +
+          '<span class="cpx-title">Choose how to get started</span>' +
+          '<span class="cpx-sub">Pick the path that fits how you build and ship. You can add the other anytime.</span>' +
+        '</div>' +
+        '<div class="cpx-paths">' +
+          '<section class="cpx-card cpx-card--hero">' +
+            '<span class="cpx-flag">Recommended</span>' +
+            '<span class="cpx-store-logo">' +
+              '<img class="cpx-store-logo__img cpx-store-logo__img--ondark" src="assets/store-logo-on-dark.svg" alt="" aria-hidden="true" />' +
+              '<img class="cpx-store-logo__img cpx-store-logo__img--onlight" src="assets/store-logo-on-light.svg" alt="" aria-hidden="true" />' +
+            '</span>' +
+            '<h3 class="cpx-card__title">Enroll via Store</h3>' +
+            '<p class="cpx-card__tag">Max reach, growth &amp; trust</p>' +
+            '<ul class="cpx-list">' + storeList + '</ul>' +
+            '<span class="cpx-plus"><iconify-icon icon="fluent:add-circle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>Everything in the direct path, too</span>' +
+            '<fluent-button class="cpx-card__cta" appearance="primary" data-cpx-store><iconify-icon slot="start" icon="fluent:rocket-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Publish app to Store</fluent-button>' +
+          '</section>' +
+          '<section class="cpx-card">' +
+            '<span class="cpx-card__ico"><iconify-icon icon="fluent:certificate-20-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+            '<h3 class="cpx-card__title">Enroll directly</h3>' +
+            '<p class="cpx-card__tag">Faster trust, analytics &amp; cert control</p>' +
+            '<ul class="cpx-list">' + directList + '</ul>' +
+            '<fluent-button class="cpx-card__cta" appearance="outline" data-cpx-direct><iconify-icon slot="start" icon="fluent:certificate-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Submit app certificates</fluent-button>' +
+          '</section>' +
+        '</div>' +
+        '<p class="cpx-note"><strong>Store apps are malware-scanned</strong> \u2014 trust is instant; <strong>declaring certificates</strong> builds reputation faster than not declaring.</p>' +
+      '</fluent-dialog-body>';
+    var close = function () { try { dlg.hide(); } catch (e) {} };
+    dlg.querySelectorAll("[data-cpx-close]").forEach(function (b) { b.addEventListener("click", close); });
+    var sBtn = dlg.querySelector("[data-cpx-store]");
+    if (sBtn) sBtn.addEventListener("click", function () { close(); openNewApp(); });
+    var dBtn = dlg.querySelector("[data-cpx-direct]");
+    if (dBtn) dBtn.addEventListener("click", function () { close(); openModal(); });
+    try { dlg.show(); } catch (e) {}
+  }
   // ===== TEMP DEMO (store portal, revert later) =========================================
   // Once an app is published in the Store portal we "recognize" the developer's code signing
   // certificate (the published app was a signed Win32 app) and surface their OTHER signed apps
@@ -3510,11 +3589,10 @@
     var t1 = $("msaTile");
     if (t1) t1.addEventListener("click", function () {
       if (UNIFIED) {
-        // Unified: clean landing — signed in with no certificate and no apps; the developer adds their own.
-        state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
-        state.certs = []; state.apps = [];
-        save(); showApp();
-        toast("Signed in as " + DEMO_MSA.email, true);
+        // Unified: sign in the returning developer and RESTORE their saved apps/certs (clean on first
+        // visit) — leaving and coming back never loses their work.
+        signInAs(DEMO_MSA);
+        toast(((state.apps.length || state.certs.length) ? "Welcome back, " + DEMO_MSA.name : "Signed in as " + DEMO_MSA.email), true);
         return;
       }
       if (STORE) {
@@ -3532,10 +3610,11 @@
     if (t2) t2.addEventListener("click", function () { seedStoreDemo(); location.href = "store-portal.html#apps"; });
     var t3 = $("msaTile3");
     if (t3) t3.addEventListener("click", function () {
-      state.signedIn = true; state.account = DEMO_MSA_NEW; state.verified = false;
-      state.certs = []; state.apps = [];   // fresh developer: no certificate, no apps
-      save(); showApp(); goView("certificates");
-      toast("Signed in as " + DEMO_MSA_NEW.email, true);
+      // A second developer, with their OWN saved state — brand new the first time (clean + onboarding).
+      // Land wherever the marketing entry pointed: showApp() routes to the hash the src-landing set
+      // (WDP → Certificates, Store → Overview), so DON'T force Certificates here.
+      signInAs(DEMO_MSA_NEW);
+      toast(((state.apps.length || state.certs.length) ? "Welcome back, " + DEMO_MSA_NEW.name : "Signed in as " + DEMO_MSA_NEW.email), true);
     });
     var other = $("msaOther");
     if (other) other.addEventListener("click", function () { toast("Demo build — use a listed account", true); });
@@ -3749,7 +3828,8 @@
     var _rs = $("resetState"); if (_rs) _rs.addEventListener("click", function (e) {
       e.preventDefault();
       if (confirm("Clear all certificates, apps, and verification state?")) {
-        localStorage.removeItem(KEY); state = load(); save(); renderAll(); showSignin();
+        try { for (var _i = localStorage.length - 1; _i >= 0; _i--) { var _k = localStorage.key(_i); if (_k && _k.indexOf(KEY) === 0) localStorage.removeItem(_k); } } catch (_e) {}
+        state = load(); save(); renderAll(); showSignin();
       }
     });
 
@@ -3822,7 +3902,17 @@
   }
 
   /* ---------------- View toggles + init ---------------- */
-  function showApp() { $("signin").hidden = true; renderAll(); showView((location.hash || "").slice(1)); }
+  function showApp() {
+    $("signin").hidden = true; renderAll(); showView((location.hash || "").slice(1));
+    // WDP arrivals on Certificates get the "choose your path" nudge once — but only on a fresh/empty
+    // portal; a returning developer with apps or certs already made their choice.
+    if (state.pendingChoosePath) {
+      delete state.pendingChoosePath;
+      var fresh = !(state.apps && state.apps.length) && !(state.certs && state.certs.length);
+      save();
+      if (fresh) setTimeout(showChoosePathDialog, 380);
+    }
+  }
   function showSignin() { $("signin").hidden = false; }
 
   wire();
@@ -3847,6 +3937,7 @@
   if (uniSignin && !uniCreate) {
     var uSignLand = uniSrc[1] === "wdp" ? "certificates" : "overview";
     state.signedIn = false; state.account = null;
+    if (uSignLand === "certificates") state.pendingChoosePath = true;
     if (history.replaceState) history.replaceState(null, "", location.pathname + "#" + uSignLand);
     save(); showSignin();
   }
@@ -3854,8 +3945,13 @@
     // Unified portal, arriving from a marketing page / signup: clean landing — signed in but with no
     // certificate and no apps. Adding a certificate later discovers the signed apps.
     var uLand = uniSrc[1] === "wdp" ? "certificates" : "overview";
-    state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
-    state.certs = []; state.apps = []; save();
+    var savedU = loadAccount(DEMO_MSA.email);   // restore the returning developer, or a clean slate if new
+    state.account = DEMO_MSA; state.signedIn = true;
+    state.certs = savedU ? (savedU.certs || []) : [];
+    state.apps = savedU ? (savedU.apps || []) : [];
+    state.verified = savedU ? !!savedU.verified : false;
+    if (uLand === "certificates") state.pendingChoosePath = true;
+    save();
     if (history.replaceState) history.replaceState(null, "", location.pathname + "#" + uLand);
     showApp();
   }

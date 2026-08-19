@@ -9682,8 +9682,9 @@
     'Windows.IoT': 'IoT', 'Windows.Team': 'Surface Hub', 'Windows.Universal': 'Desktop',
   };
   // Restricted capabilities require a written justification at certification review.
+  // runFullTrust is intentionally NOT listed — it's no longer treated as restricted (nearly every
+  // packaged desktop app declares it), so it needs no justification and is ignored when collected.
   const RESTRICTED_CAPABILITIES = {
-    runFullTrust:             { label: 'Run full trust',            description: 'Run desktop (Win32) code with full user trust. Required for apps that need filesystem or registry access outside the package container.' },
     allowElevation:           { label: 'Elevation',                 description: 'Lets your app request administrator privileges.' },
     documentsLibrary:         { label: 'Documents library',         description: 'Read and write files in the user\'s Documents folder.' },
     picturesLibrary:          { label: 'Pictures library',          description: 'Read and write files in the user\'s Pictures folder.' },
