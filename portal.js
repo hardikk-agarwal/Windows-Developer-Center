@@ -894,7 +894,7 @@
         ? '<div class="empty">' +
             '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>Not publishing to the Store?</strong>' +
-            '<p class="muted">Add your code signing certificate to get crash analytics and distribution for the apps you’ve signed — no Store listing needed.</p>' +
+            '<p class="muted">Add your code signing certificate to get crash analytics and SmartScreen reputation for the apps you’ve signed — no Store listing needed.</p>' +
             '<fluent-button appearance="outline" data-certmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>'
@@ -902,7 +902,7 @@
             '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>No certificates yet</strong>' +
             '<p class="muted">Add a code signing certificate by submitting a signed binary to confirm your publisher ' +
-              'identity and unlock crash analytics for the apps you sign.</p>' +
+              'identity, unlock crash analytics, and earn SmartScreen reputation for the apps you sign.</p>' +
             '<fluent-button appearance="primary" data-certmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>';
@@ -1011,9 +1011,9 @@
         // so the "verify ownership" prompt doesn't apply — always show the verified note here.
         var note = (dVerified || UNIFIED)
           ? '<div class="disc-note"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
-              '<span>Found from the <strong>code signing certificate</strong> of the app you just published — <strong>ownership verified</strong>. Crash analytics and distribution are unlocked.</span></div>'
+              '<span>Found from the <strong>code signing certificate</strong> of the app you just published — <strong>ownership verified</strong>. Crash analytics and SmartScreen reputation are unlocked.</span></div>'
           : '<div class="disc-note disc-note--verify"><iconify-icon icon="fluent:lock-closed-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
-              '<span><strong>Verify you own this certificate.</strong> These apps are signed by the same certificate as the app you just published. Download our verification file, sign it with that certificate, and upload it to unlock crash analytics &amp; distribution.</span>' +
+              '<span><strong>Verify you own this certificate.</strong> These apps are signed by the same certificate as the app you just published. Download our verification file, sign it with that certificate, and upload it to unlock crash analytics &amp; SmartScreen reputation.</span>' +
               '<fluent-button appearance="primary" size="small" data-openmodal>Verify ownership</fluent-button></div>';
         html += '<div class="disc-section">' + note + certGroupsHTML(below) + '</div>';
       }
@@ -1242,7 +1242,7 @@
     var byId = {}; ms.forEach(function (x) { if (x && x.id) byId[x.id] = x; });
     state.apps.forEach(function (a) { var m = byId[a.id]; if (m) { if (m.icon) a.icon = m.icon; if (m.packageType != null) a.packageType = m.packageType; } });
   }
-  // Store portal only: cert-discovered apps stay locked (no crash analytics / distribution) until the
+  // Store portal only: cert-discovered apps stay locked (no crash analytics / SmartScreen reputation) until the
   // developer proves they OWN the signing certificate by signing our verification file. WDP verifies
   // ownership through the Add-certificate modal already, so this gate never applies there.
   function storeLocked(a) {

@@ -89,7 +89,7 @@
 .apptable tr.approw--open:hover .row-chev { color: var(--text); }
 .iconbtn--danger:hover { color: var(--danger, #e0697f); }
 .btn-danger { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 16px;
-  border-radius: var(--r-md, 6px); border: 1px solid transparent; background: var(--danger, #c4314b); color: #fff;
+  border-radius: var(--r-md, 6px); border: 1px solid transparent; background: var(--danger-fill, #c50f1f); color: #fff;
   font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
 .btn-danger:hover { filter: brightness(1.1); }
 .btn-danger:active { filter: brightness(.92); }

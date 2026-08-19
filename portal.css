@@ -37,6 +37,7 @@
   --warn-bg: var(--colorStatusWarningBackground1, rgba(255,185,0,.14));
   --danger: var(--colorStatusDangerForeground1, #f0556b);
   --danger-bg: var(--colorStatusDangerBackground1, rgba(240,85,107,.14));
+  --danger-fill: var(--colorPaletteRedBackground3, #c50f1f);
   --gold: var(--colorPaletteMarigoldForeground3, #efb839);
 
   --sh-card: var(--shadow4, 0 1px 2px rgba(0,0,0,.5), 0 0 1px rgba(0,0,0,.4));
@@ -1248,8 +1249,8 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .cfx-list li strong { color: var(--text); font-weight: 600; }
 .cfx-note { color: var(--text-3); font-size: 13px; line-height: 1.5; margin: 8px 0 0; }
 /* Destructive confirm button — fluent-button paints its fill on the host, so recolor the host. */
-.cfx-danger { background: var(--danger) !important; border-color: var(--danger) !important; color: #fff !important; }
-.cfx-danger:hover { background: color-mix(in srgb, var(--danger) 88%, #000) !important; border-color: color-mix(in srgb, var(--danger) 88%, #000) !important; }
+.cfx-danger { background: var(--danger-fill) !important; border-color: var(--danger-fill) !important; color: #fff !important; }
+.cfx-danger:hover { background: color-mix(in srgb, var(--danger-fill) 88%, #000) !important; border-color: color-mix(in srgb, var(--danger-fill) 88%, #000) !important; }
 .cellspan { padding: 28px 16px !important; text-align: center; color: var(--text-3); }
 
 /* ---------- Status card: not-verified variant ---------- */
