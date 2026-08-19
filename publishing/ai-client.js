@@ -366,6 +366,60 @@ async function aiListingChat({ message, history, context }) {
 }
 
 // ---------------------------------------------------------------------------
+// General Help & Support assistant for the floating help widget.
+// Answers ANY developer question about the Windows Developer Center, suggests
+// natural follow-ups, and — when a human is warranted — flags offerTicket and
+// drafts a concise ticket. Structured output:
+//   { reply, suggestions[], offerTicket, ticketDraft:{subject,category,summary}|null }
+// ---------------------------------------------------------------------------
+const SUPPORT_CATS = ['account', 'publishing', 'certification', 'payout', 'analytics', 'certificates', 'policy', 'other'];
+
+async function aiSupportChat({ message, history, context }) {
+  const system = [
+    'You are the Help & Support assistant built into the Windows Developer Center — the unified home for Windows developers (what used to be split across Partner Center): Microsoft Store app publishing, code-signing certificates, and app analytics.',
+    'Help developers with ANYTHING: getting started, account setup and identity verification, publishing apps to the Microsoft Store (MSIX / MSI / EXE / PWA packages), the submission and certification process, age ratings (IARC), pricing and in-app purchases, markets and availability, payout and tax setup, code-signing certificates, SmartScreen reputation, crash & hang analytics, ratings & reviews, and Store policies.',
+    'Answer clearly, accurately, and concisely — usually 2 to 5 sentences. Plain text only: no Markdown, no headings, no bullet characters, no code fences, no HTML.',
+    'Ground your answer in the provided context (the page the developer is on) when relevant, but still answer general questions.',
+    'Set offerTicket=true when the request needs a human — billing or payout disputes, account access or sign-in problems, anything account-specific you cannot see, a suspected platform bug, or when the developer explicitly asks for a person. Otherwise offerTicket=false.',
+    'When offerTicket=true, provide ticketDraft with a short subject, the best-fitting category, and a one- to three-sentence summary of the issue drawn from the conversation. When offerTicket=false, set ticketDraft to null.',
+    'Always provide 2 or 3 short suggestions: the natural next questions THIS developer is likely to ask, phrased in first person as they would type them, each under about six words.',
+  ].join('\n');
+
+  const ctx = context ? ('Context:\n' + context + '\n\n') : '';
+  const hist = (history && history.length)
+    ? ('Recent conversation:\n' + history.map(h => (h.role === 'me' ? 'Developer' : 'Assistant') + ': ' + h.text).join('\n') + '\n\n')
+    : '';
+  const user = ctx + hist + 'Developer asks: ' + message;
+
+  const schema = {
+    name: 'support_chat',
+    schema: {
+      type: 'object',
+      properties: {
+        reply:       { type: 'string' },
+        suggestions: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+        offerTicket: { type: 'boolean' },
+        ticketDraft: {
+          type: ['object', 'null'],
+          properties: {
+            subject:  { type: 'string' },
+            category: { type: 'string', enum: SUPPORT_CATS },
+            summary:  { type: 'string' },
+          },
+          required: ['subject', 'category', 'summary'],
+          additionalProperties: false,
+        },
+      },
+      required: ['reply', 'suggestions', 'offerTicket', 'ticketDraft'],
+      additionalProperties: false,
+    },
+  };
+  // Snappy chat — low reasoning effort; generous token cap for the reasoning model's visible reply.
+  const text = await callResponses({ system, user, schema, maxOutputTokens: 2500, reasoningEffort: 'low' });
+  return JSON.parse(text);
+}
+
+// ---------------------------------------------------------------------------
 // Expose on window so the prototype's existing scripts can call into it.
 // ---------------------------------------------------------------------------
 window.AI = {
@@ -379,6 +433,7 @@ window.AI = {
   generatePrivacyPolicy: aiGeneratePrivacyPolicy,
   transformText:         aiTransformText,
   listingChat:           aiListingChat,
+  supportChat:           aiSupportChat,
 };
 
 // When there's no embedded browser key, ask the server whether it can proxy AI

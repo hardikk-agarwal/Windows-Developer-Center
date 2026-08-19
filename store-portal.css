@@ -272,6 +272,8 @@ button.ovn-row:focus-visible, a.ovn-row:focus-visible { outline: 2px solid var(-
 .ovn-row__main strong { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ovn-row__main span { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ovn-row .pill { flex: 0 0 auto; }
+.ovn-app__publish { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--brand-soft); white-space: nowrap; }
+button.ovn-row:hover .ovn-app__publish { color: var(--brand); }
 .ovn-row__chev { color: var(--text-4, var(--text-3)); flex: 0 0 auto; }
 button.ovn-row:hover strong, a.ovn-row:hover strong, button.ovn-row:hover .ovn-row__chev { color: var(--brand-soft); }
 /* Icons stay NEUTRAL (project standard: color lives in pills/badges/text, not icon chips); type reads from glyph + copy. */

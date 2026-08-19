@@ -54,20 +54,30 @@ function verifyFile(filePath) {
 const ICO_CS = `using System;using System.Drawing;using System.Runtime.InteropServices;public class Ico{[StructLayout(LayoutKind.Sequential,CharSet=CharSet.Auto)]struct SHFILEINFO{public IntPtr hIcon;public int iIcon;public uint dwAttributes;[MarshalAs(UnmanagedType.ByValTStr,SizeConst=260)]public string szDisplayName;[MarshalAs(UnmanagedType.ByValTStr,SizeConst=80)]public string szTypeName;}[DllImport("shell32.dll",CharSet=CharSet.Auto)]static extern IntPtr SHGetFileInfo(string p,uint a,ref SHFILEINFO s,uint c,uint f);[DllImport("shell32.dll",EntryPoint="#727")]static extern int SHGetImageList(int i,ref Guid r,out IImageList l);[ComImport,Guid("46EB5926-582E-4017-9FDF-E8998DAA0950"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IImageList{[PreserveSig]int Add(IntPtr a,IntPtr b,ref int c);[PreserveSig]int ReplaceIcon(int a,IntPtr b,ref int c);[PreserveSig]int SetOverlayImage(int a,int b);[PreserveSig]int Replace(int a,IntPtr b,IntPtr c);[PreserveSig]int AddMasked(IntPtr a,int b,ref int c);[PreserveSig]int Draw(ref IntPtr a);[PreserveSig]int Remove(int a);[PreserveSig]int GetIcon(int a,int b,ref IntPtr c);}public static Bitmap Get(string path){SHFILEINFO sh=new SHFILEINFO();SHGetFileInfo(path,(uint)0,ref sh,(uint)Marshal.SizeOf(sh),(uint)0x4000);Guid g=new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");IImageList il;SHGetImageList(4,ref g,out il);IntPtr h=IntPtr.Zero;il.GetIcon(sh.iIcon,1,ref h);return Icon.FromHandle(h).ToBitmap();}}`;
 const PS_APPS = [
   "$ErrorActionPreference='SilentlyContinue'",
+  // 1) Collect unique Start Menu .exe targets (fast; COM shortcut resolve, no signature yet).
+  "$sh=New-Object -ComObject WScript.Shell",
+  "$dirs=@((Join-Path $env:ProgramData 'Microsoft/Windows/Start Menu/Programs'),(Join-Path $env:AppData 'Microsoft/Windows/Start Menu/Programs'))",
+  "$skip='Telemetry|Language Preferences|Recording Manager|Uninstall|Readme|Read Me|Release Notes|Repair|Diagnostic|Compare|Documentation|Activation'",
+  "$seen=@{}; $targets=@()",
+  "foreach($d in $dirs){ Get-ChildItem -Path $d -Recurse -Filter *.lnk | ForEach-Object { $t=$sh.CreateShortcut($_.FullName).TargetPath; if($t -and $t.ToLower().EndsWith('.exe') -and ($_.BaseName -notmatch $skip) -and (Test-Path -LiteralPath $t) -and -not $seen[$t.ToLower()]){ $seen[$t.ToLower()]=$true; $targets += [pscustomobject]@{ name=$_.BaseName; path=$t } } } }",
+  // 2) Match by SIGNER cert thumbprint IN PARALLEL. CreateFromSignedFile reads the embedded
+  //    signer cert directly (no chain build / no revocation / no network) => ~10ms vs ~200ms+
+  //    for Get-AuthenticodeSignature. Discovery only needs \"who signed it\", not full trust validation.
+  "$tp=$env:TDP_THUMB",
+  "$matches=@($targets | ForEach-Object -ThrottleLimit 16 -Parallel { try{ $c=[System.Security.Cryptography.X509Certificates.X509Certificate]::CreateFromSignedFile($_.path); if($c -and $c.GetCertHashString().ToUpper() -eq $using:tp){ $_ } }catch{} })",
+  // 3) Icon (256px jumbo) + version info for the FEW matched exes only.
   "Add-Type -AssemblyName System.Drawing",
   "$cs = '" + ICO_CS + "'",
   "try{ Add-Type -TypeDefinition $cs -ReferencedAssemblies System.Drawing.Common -ErrorAction Stop }catch{}",
   "function IcoB64($p){ $b=$null; try{ $b=[Ico]::Get($p) }catch{ try{ $b=[System.Drawing.Icon]::ExtractAssociatedIcon($p).ToBitmap() }catch{} }; if($null -eq $b){ return '' }; try{ $m=New-Object IO.MemoryStream; $b.Save($m,[System.Drawing.Imaging.ImageFormat]::Png); $b.Dispose(); [Convert]::ToBase64String($m.ToArray()) }catch{ '' } }",
-  "$tp=$env:TDP_THUMB",
-  "$dirs=@((Join-Path $env:ProgramData 'Microsoft/Windows/Start Menu/Programs'),(Join-Path $env:AppData 'Microsoft/Windows/Start Menu/Programs'))",
-  "$sh=New-Object -ComObject WScript.Shell",
-  "$seen=@{}; $out=@()",
-  "$skip='Telemetry|Language Preferences|Recording Manager|Uninstall|Readme|Read Me|Release Notes|Repair|Diagnostic|Compare|Documentation|Activation'",
-  "foreach($d in $dirs){ Get-ChildItem -Path $d -Recurse -Filter *.lnk | ForEach-Object { $t=$sh.CreateShortcut($_.FullName).TargetPath; if($t -and $t.ToLower().EndsWith('.exe') -and ($_.BaseName -notmatch $skip) -and (Test-Path -LiteralPath $t) -and -not $seen[$t.ToLower()]){ $seen[$t.ToLower()]=$true; $s=Get-AuthenticodeSignature -LiteralPath $t; if($s.Status -eq 'Valid' -and $s.SignerCertificate -and $s.SignerCertificate.Thumbprint -eq $tp){ $fi=Get-Item -LiteralPath $t; $vi=$fi.VersionInfo; $out += [pscustomobject]@{ name=$_.BaseName; file=$fi.Name; version=$vi.ProductVersion; publisher=$vi.CompanyName; sizeKB=[math]::Round($fi.Length/1KB); icon=(IcoB64 $t); path=$t } } } } }",
+  "$out=@(); foreach($mm in $matches){ $fi=Get-Item -LiteralPath $mm.path; $vi=$fi.VersionInfo; $out += [pscustomobject]@{ name=$mm.name; file=$fi.Name; version=$vi.ProductVersion; publisher=$vi.CompanyName; sizeKB=[math]::Round($fi.Length/1KB); icon=(IcoB64 $mm.path); path=$mm.path } }",
   "$out | ConvertTo-Json -Compress"
 ].join("; ");
 
+var appsByCertCache = Object.create(null); // thumb -> { t, data }; 5-min TTL (the scan is expensive)
 function appsByCert(thumb) {
+  var hit = appsByCertCache[thumb];
+  if (hit && (Date.now() - hit.t) < 300000) return Promise.resolve(hit.data);
   return new Promise(function (resolve, reject) {
     execFile("pwsh", ["-NoProfile", "-NonInteractive", "-Command", PS_APPS],
       { env: Object.assign({}, process.env, { TDP_THUMB: thumb }), timeout: 45000, maxBuffer: 8 << 20 },
@@ -76,6 +86,7 @@ function appsByCert(thumb) {
         var data;
         try { data = JSON.parse((stdout || "").trim() || "[]"); } catch (e) { data = []; }
         if (!Array.isArray(data)) data = data ? [data] : [];
+        appsByCertCache[thumb] = { t: Date.now(), data: data };
         resolve(data);
       });
   });

@@ -28,6 +28,9 @@
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
 <script src="tdp-bridge.js?v=70" defer></script>
 <link rel="stylesheet" href="styles.css?v=2">
+<!-- Global AI Help & Support pill (shared with the developer portal) — floating, bottom-right. -->
+<link rel="stylesheet" href="../help-support.css?v=5">
+<script defer src="../help-support.js?v=3"></script>
 <style>
   /* The AI accent gradient, shared by every AI affordance (the Autofill button, the
      design-mode switch). Defined once here so the two stops aren't duplicated as raw hex. */
@@ -3873,8 +3876,10 @@
   .dash-toast { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 200; padding: 10px 16px; border-radius: 999px; background: var(--layer); border: 1px solid var(--stroke-2); box-shadow: 0 8px 24px rgba(0,0,0,.4); color: var(--fg-1); font-size: 14px; font-weight: 500; opacity: 1; pointer-events: none; animation: dashToastIn .18s var(--ease-out); }
   @keyframes dashToastIn { from { transform: translate(-50%, 10px); } to { transform: translate(-50%, 0); } }
 
-  /* Floating demo stage control — collapsed by default, out of the page flow (mirrors .cert-switch) */
-  .demo-fab { position: fixed; right: 20px; bottom: 20px; z-index: 120; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  /* Floating demo stage control — collapsed by default, out of the page flow (mirrors .cert-switch).
+     Sits just LEFT of the global Help pill (Help = right:22px, ~85px wide → left edge 107px from the
+     right), so the two bottom-right controls read as a pair. */
+  .demo-fab { position: fixed; right: 120px; left: auto; bottom: 22px; z-index: 120; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   .demo-fab[hidden] { display: none; }
   .demo-fab__toggle { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px dashed var(--stroke-2); border-radius: 999px; background: var(--layer); box-shadow: 0 8px 24px rgba(0,0,0,.35); color: var(--fg-2); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out); }
   .demo-fab__toggle:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); }

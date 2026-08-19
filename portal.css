@@ -347,7 +347,7 @@ fluent-message-bar[hidden] { display: none; }
 
 /* ---------- Apps ---------- */
 .apps { display: flex; flex-direction: column; gap: 16px; }
-.scan-banner { display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+.scan-banner { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 14px 16px;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md);
   color: var(--text-2); font-size: 14px; font-weight: 600; }
 .cert-scan { display: inline-flex; align-items: center; gap: 7px; color: var(--text-3); font-size: 13px; white-space: nowrap; }
@@ -1251,6 +1251,19 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 /* Destructive confirm button — fluent-button paints its fill on the host, so recolor the host. */
 .cfx-danger { background: var(--danger-fill) !important; border-color: var(--danger-fill) !important; color: #fff !important; }
 .cfx-danger:hover { background: color-mix(in srgb, var(--danger-fill) 88%, #000) !important; border-color: color-mix(in srgb, var(--danger-fill) 88%, #000) !important; }
+#discModal::part(dialog) { width: min(460px, 94vw); max-width: none; }
+.discdialog { width: 100%; }
+.disc-intro { color: var(--text-2); font-size: 13px; margin: 2px 0 12px; }
+.disc-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+.disc-app { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s ease; }
+.disc-app:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); }
+.disc-app .app-ico { width: 34px; height: 34px; border-radius: var(--r-sm); flex: 0 0 auto; font-size: 14px; }
+.disc-app__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.disc-app__t strong { font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.disc-app__t span { font-size: 12px; color: var(--text-3); }
+.disc-app__cta { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--brand-soft); }
+.disc-app__chev { flex: 0 0 auto; color: var(--text-3); }
+.disc-app:hover .disc-app__chev { color: var(--brand-soft); }
 .cellspan { padding: 28px 16px !important; text-align: center; color: var(--text-3); }
 
 /* ---------- Status card: not-verified variant ---------- */

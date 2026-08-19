@@ -577,6 +577,11 @@
     var nm = function (a) { return a.storeName || a.name || "Your app"; };
     var items = [];
     apps.forEach(function (a) {
+      if (isSignedOnly(a)) {   // cert-discovered: not a draft. It has crash analytics, so surface only a crash spike.
+        var scr = anaData(a).crashRate;
+        if (scr >= 5) items.push({ type: "warning", icon: "fluent:arrow-trending-lines-20-filled", title: "Crash rate needs a look", text: nm(a) + " is at " + scr.toFixed(2) + "%.", href: ana(a, "crashes") });
+        return;
+      }
       var k = appStatusKey(a);
       if (k === "rejected") items.push({ type: "error", icon: "fluent:error-circle-20-filled", title: "Resolve certification", text: nm(a) + " didn\u2019t pass \u2014 review and resubmit.", href: flow(a) });
       else if (k === "draft") items.push({ type: "info", icon: "fluent:document-edit-20-filled", title: "Finish your submission", text: nm(a) + " is still a draft.", href: flow(a) });
@@ -590,11 +595,12 @@
     });
     // Account / compliance items - Needs attention is cross-domain, not app-only (cert, agreement, payout).
     var acct = state.account || {};
+    var hasStorePipeline = apps.some(function (a) { return a.store || a.storeStatus; });
     if (!(state.certs && state.certs.length))
       items.push({ type: "warning", icon: "fluent:certificate-20-filled", title: "Set up a signing certificate", text: "Verify your identity to publish and unlock analytics.", href: "#certificates" });
     if (acct.agreementSigned === false)
       items.push({ type: "error", icon: "fluent:document-error-20-filled", title: "Sign the Developer Agreement", text: "Required before you can publish to the Store.", href: "https://learn.microsoft.com/legal/windows/agreements/app-developer-agreement", external: true });
-    if (acct.payoutSetup !== true)
+    if (acct.payoutSetup !== true && hasStorePipeline)   // payout/tax only matters once you're selling on the Store
       items.push({ type: "warning", icon: "fluent:money-20-filled", title: "Set up payout and tax", text: "Add your banking and tax details to get paid.", href: "https://partner.microsoft.com/dashboard/account/v3/payoutandtax/status", external: true });
     var rank = { error: 0, warning: 1, info: 2 };
     items.sort(function (x, y) { return (rank[x.type] == null ? 3 : rank[x.type]) - (rank[y.type] == null ? 3 : rank[y.type]); });
@@ -628,20 +634,28 @@
   }
   // "Your apps" \u2014 one flat row per app (icon + name + a one-line read + status); click opens the app.
   function ovnAppRowHTML(a) {
-    var k = appStatusKey(a), live = k === "live", nm = a.storeName || a.name, sub;
-    if (live) {
-      var ac = acqData(a), rd = ratingsData(a), an = anaData(a), bits = [fmtCompact(ac.instTotal) + " installs"];
-      if (rd && rd.total) bits.push(rd.avg.toFixed(1) + "\u2605");
-      if (an && an.crashRate != null) bits.push((100 - an.crashRate).toFixed(1) + "% crash-free");
-      sub = bits.join("   \u00b7   ");
+    var nm = a.storeName || a.name, sub, trail;
+    if (isSignedOnly(a)) {   // cert-discovered: show its crash-free health + a nudge to publish (NOT a Draft).
+      var san = anaData(a);
+      sub = (san && san.crashRate != null ? (100 - san.crashRate).toFixed(1) + "% crash-free" : "Signed app") + " \u00b7 not in the Store";
+      trail = '<span class="ovn-app__publish">Publish to Store</span>';
     } else {
-      sub = k === "rejected" ? "Didn\u2019t pass certification \u2014 review and resubmit."
-        : k === "in-review" ? "In certification \u2014 typically 24\u201348 hours." : "Finish your submission to publish.";
+      var k = appStatusKey(a);
+      if (k === "live") {
+        var ac = acqData(a), rd = ratingsData(a), an = anaData(a), bits = [fmtCompact(ac.instTotal) + " installs"];
+        if (rd && rd.total) bits.push(rd.avg.toFixed(1) + "\u2605");
+        if (an && an.crashRate != null) bits.push((100 - an.crashRate).toFixed(1) + "% crash-free");
+        sub = bits.join("   \u00b7   ");
+      } else {
+        sub = k === "rejected" ? "Didn\u2019t pass certification \u2014 review and resubmit."
+          : k === "in-review" ? "In certification \u2014 typically 24\u201348 hours." : "Finish your submission to publish.";
+      }
+      trail = ovxStatusPill(k);
     }
     return '<button type="button" class="ovn-row ovn-app" data-openapp="' + a.id + '">' +
       appIcoImg(a) +
       '<span class="ovn-row__main"><strong>' + esc(nm) + '</strong><span>' + esc(sub) + '</span></span>' +
-      ovxStatusPill(k) +
+      trail +
       '<iconify-icon class="ovn-row__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
     '</button>';
   }
@@ -916,7 +930,7 @@
   // Shown under the cert table while a discovery scan runs (adding a cert) — so the page clearly
   // signals "we're finding your signed apps" instead of silently populating the count later.
   function certScanBannerHTML() {
-    return '<div class="scan-banner"><span class="spinner"></span>Scanning your PC for apps signed with this certificate\u2026</div>';
+    return '<div class="scan-banner"><span class="spinner"></span>Finding apps signed with this certificate\u2026</div>';
   }
   // Discovery nudge under the cert table: certificates auto-populate the apps signed by them, so
   // point the developer at the crash analytics + apps that just appeared.
@@ -943,7 +957,7 @@
     var algo = c.thumbKind === "cert" ? "SHA-1" : "SHA-256";
     // While this cert's discovery scan is in flight, show a spinner where its app count will land.
     var appsCell = (scanning && c.id === scanningCertId)
-      ? '<span class="cert-scan"><span class="spinner spinner--xs"></span>Scanning\u2026</span>'
+      ? '<span class="cert-scan"><span class="spinner spinner--xs"></span>Finding\u2026</span>'
       : apps;
     return '<tr>' +
       '<td><div class="cell-main"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
@@ -985,7 +999,7 @@
       // TEMP DEMO (revert later): after a signed Win32 app is published we "recognize" its code signing
       // certificate and surface the developer's other signed apps in a separate WDP-style table below.
       var sbanner = scanning
-        ? '<div class="scan-banner"><span class="spinner"></span>Recognized your code signing certificate — scanning for your other signed apps…</div>'
+        ? '<div class="scan-banner"><span class="spinner"></span>Recognized your code signing certificate — finding your other apps signed with it…</div>'
         : "";
       // Split (shared with WDP): apps in the Store pipeline (Draft / In certification / Live) vs apps
       // still only found via the certificate.
@@ -1021,7 +1035,7 @@
       return;
     }
     var banner = scanning
-      ? '<div class="scan-banner"><span class="spinner"></span>Scanning installed apps signed by your certificate…</div>'
+      ? '<div class="scan-banner"><span class="spinner"></span>Finding apps signed with your certificate…</div>'
       : "";
     var sk = scanning ? appSkeletonHTML(3) : "";
     if (!state.apps.length) {
@@ -1110,6 +1124,8 @@
     return "draft";
   }
   function isDraftApp(a) { return appStatusKey(a) === "draft"; }
+  // Cert-discovered app not in the Store pipeline: signed + has crash analytics, but NOT a draft.
+  function isSignedOnly(a) { return (a.discovered || a.certId) && !a.store && !a.storeStatus; }
   function pkgFromFile(f) {
     if (!f) return null; f = String(f).toLowerCase();
     if (/\.(msix|msixbundle|msixupload|appx|appxbundle|appxupload)$/.test(f)) return "msix";
@@ -3029,8 +3045,8 @@
   async function discoverApps(thumb, certId) {
     if (!thumb) return;
     scanning = true; scanningCertId = certId; renderCerts(); renderApps();
-    toast("Scanning installed apps signed with this certificate…", true);
-    var added = 0, refreshed = 0;
+    toast("Finding apps signed with this certificate…", true);
+    var added = 0, refreshed = 0, newApps = [];
     try {
       var res = await fetch("/api/apps-by-cert?thumbprint=" + encodeURIComponent(thumb));
       if (res.ok) {
@@ -3042,11 +3058,12 @@
             if (a.icon && a.icon !== existing.icon) { existing.icon = a.icon; refreshed++; }
             return;
           }
-          state.apps.push({
+          var na = {
             id: uid(), name: a.name || a.file, file: a.file, size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
             icon: a.icon || null, signerThumb: thumb, signerSubject: null, trust: "Valid", certId: certId,
             sources: [], store: false, added: today(), discoveryKey: key, discovered: true
-          });
+          };
+          state.apps.push(na); newApps.push(na);
           added++;
         });
       }
@@ -3054,9 +3071,9 @@
     scanning = false; scanningCertId = null;
     if (added || refreshed) save();
     renderAll();
-    toast(added ? "Found " + added + " app" + (added > 1 ? "s" : "") + " signed by this certificate"
-                : refreshed ? "Refreshed " + refreshed + " app icon" + (refreshed > 1 ? "s" : "") + " in high resolution"
-                : "No other installed apps use this certificate", !added);
+    if (newApps.length) showDiscoveredDialog(newApps);
+    else toast(refreshed ? "Refreshed " + refreshed + " app icon" + (refreshed > 1 ? "s" : "") + " in high resolution"
+                         : "No other installed apps use this certificate", true);
   }
   function rescanApps() {
     var certs = state.certs.filter(function (c) { return c.thumbKind === "cert"; });
@@ -3123,6 +3140,44 @@
     var cbtn = dlg.querySelector("[data-cfx-confirm]");
     if (cbtn) cbtn.addEventListener("click", function () { close(); if (typeof opts.onConfirm === "function") opts.onConfirm(); });
     try { dlg.show(); } catch (e) { if (window.confirm(opts.title || "Are you sure?") && typeof opts.onConfirm === "function") opts.onConfirm(); }
+  }
+  // After a cert scan: a dialog listing the discovered apps. Each row opens that app's crash analytics; footer jumps to Apps.
+  function showDiscoveredDialog(apps) {
+    if (!apps || !apps.length) return;
+    var dlg = $("discModal");
+    if (!dlg) { dlg = document.createElement("fluent-dialog"); dlg.id = "discModal"; document.body.appendChild(dlg); }
+    dlg.setAttribute("aria-label", "Apps signed with this certificate");
+    var rows = apps.map(function (a) {
+      var an = anaData(a), cf = (an && an.crashRate != null) ? (100 - an.crashRate).toFixed(1) + "% crash-free" : "Crash analytics ready";
+      return '<button type="button" class="disc-app" data-disc-app="' + esc(a.id) + '">' +
+        appIcoImg(a) +
+        '<span class="disc-app__t"><strong>' + esc(a.storeName || a.name) + '</strong><span>' + esc(cf) + '</span></span>' +
+        '<span class="disc-app__cta">View crashes</span>' +
+        '<iconify-icon class="disc-app__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '</button>';
+    }).join("");
+    var n = apps.length;
+    dlg.innerHTML =
+      '<fluent-dialog-body class="discdialog">' +
+        '<span slot="title">Found ' + n + ' app' + (n === 1 ? "" : "s") + ' signed with your certificate</span>' +
+        '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-disc-close><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></fluent-button>' +
+        '<p class="disc-intro">Crash &amp; hang analytics are ready \u2014 open an app to see its crashes.</p>' +
+        '<div class="disc-list">' + rows + '</div>' +
+        '<fluent-button slot="action" appearance="outline" data-disc-close>Done</fluent-button>' +
+        '<fluent-button slot="action" appearance="primary" data-disc-apps>View all apps</fluent-button>' +
+      '</fluent-dialog-body>';
+    var close = function () { try { dlg.hide(); } catch (e) {} };
+    dlg.querySelectorAll("[data-disc-close]").forEach(function (b) { b.addEventListener("click", close); });
+    var av = dlg.querySelector("[data-disc-apps]");
+    if (av) av.addEventListener("click", function () { close(); goView("apps"); });
+    dlg.querySelectorAll("[data-disc-app]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        close();
+        analyticsAppId = b.getAttribute("data-disc-app"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null;
+        goView("analytics"); renderAnalytics();
+      });
+    });
+    try { dlg.show(); } catch (e) {}
   }
   // ===== TEMP DEMO (store portal, revert later) =========================================
   // Once an app is published in the Store portal we "recognize" the developer's code signing
@@ -3828,7 +3883,7 @@
       goView("analytics"); renderAnalytics();
     }
     // WDP path: arriving from signup with a freshly-added certificate → scan + populate its
-    // apps now, showing the portal's own "Scanning installed apps…" skeleton.
+    // apps now, showing the portal's own "Finding apps…" skeleton.
     if (!STORE && state.discoverCert && state.discoverCert.thumb) {
       var dc = state.discoverCert; delete state.discoverCert; save();
       discoverApps(dc.thumb, dc.certId);

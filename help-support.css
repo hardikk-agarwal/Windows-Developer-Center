@@ -1,0 +1,258 @@
+/* =====================================================================
+   Help & Support — floating AI assistant widget
+   Injected by help-support.js. Uses the portal's Fluent design tokens
+   (portal.css :root), so it adapts to light/dark automatically.
+   ===================================================================== */
+
+/* Self-contained token mapping (from the raw Fluent 2 tokens applied by setTheme), so the widget is
+   theme-adaptive on ANY host page — the portal (portal.css) or the publishing flow (styles.css) —
+   without depending on either page's own token names. Scoped to the widget so it never leaks out. */
+.hsup-fab, .hsup-panel {
+  --surface: var(--colorNeutralBackground1, #242424);
+  --surface-2: var(--colorNeutralBackground2, #2b2b2b);
+  --surface-3: var(--colorNeutralBackground3Hover, #333333);
+  --border: var(--colorNeutralStroke3, #3d3d3d);
+  --border-2: var(--colorNeutralStroke1, #3d3d3d);
+  --text: var(--colorNeutralForeground1, #ffffff);
+  --text-2: var(--colorNeutralForeground2, #c6cad6);
+  --text-3: var(--colorNeutralForeground3, #8b909e);
+  --text-4: var(--colorNeutralForeground4, #6b7080);
+  --brand: var(--colorBrandForeground1, #2899f5);
+  --brand-strong: var(--colorBrandBackground, #115EA3);
+  --brand-soft: var(--colorBrandForegroundLink, #4aa6ff);
+  --brand-tint: var(--colorBrandBackground2, rgba(40, 153, 245, .16));
+  --brand-tint-stroke: var(--colorBrandStroke2, rgba(40, 153, 245, .4));
+  --hover: var(--colorSubtleBackgroundHover, rgba(255, 255, 255, .08));
+  --ok: var(--colorStatusSuccessForeground1, #57c038);
+  --ok-bg: var(--colorStatusSuccessBackground1, rgba(75, 192, 56, .14));
+  --r-sm: var(--borderRadiusMedium, 4px);
+  --r-md: var(--borderRadiusLarge, 8px);
+  --r-lg: var(--borderRadiusXLarge, 12px);
+  --sh-pop: var(--shadow28, 0 14px 34px rgba(0, 0, 0, .55));
+  --dur-faster: var(--durationFaster, 100ms);
+  --dur-fast: var(--durationFast, 150ms);
+  --dur-normal: var(--durationNormal, 200ms);
+  --dur-gentle: var(--durationGentle, 250ms);
+  --ease-out: var(--curveDecelerateMin, cubic-bezier(0.33, 0, 0.1, 1));
+  --font: var(--fontFamilyBase, "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, Arial, sans-serif);
+  --mono: var(--fontFamilyMonospace, "Cascadia Code", "Consolas", ui-monospace, monospace);
+}
+
+/* ---- Floating launcher (pill) ------------------------------------- */
+.hsup-fab {
+  position: fixed; right: 22px; bottom: 22px; z-index: 900;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 15px 0 13px;
+  border: 1px solid var(--border-2, #3d3d3d); border-radius: 999px;
+  background: var(--surface, #242424);
+  color: var(--text, #fff); font: 600 13.5px/1 var(--font);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .26), 0 1px 3px rgba(0, 0, 0, .22);
+  transition: transform var(--dur-fast, 150ms) var(--ease-out), box-shadow var(--dur-fast, 150ms) ease, background var(--dur-fast, 150ms) ease;
+}
+.hsup-fab:hover { transform: translateY(-1px); background: var(--surface-2, #2b2b2b); box-shadow: 0 8px 20px rgba(0, 0, 0, .32), 0 1px 3px rgba(0, 0, 0, .24); }
+.hsup-fab:active { transform: translateY(0); }
+.hsup-fab:focus-visible { outline: 2px solid var(--brand, #2899f5); outline-offset: 2px; }
+.hsup-fab__ico { display: inline-flex; font-size: 18px; color: var(--text-2, #c6cad6); }
+.hsup-fab__label { white-space: nowrap; }
+.hsup-fab.is-hidden { transform: scale(.5); opacity: 0; pointer-events: none; }
+
+/* Subtle attention ping on first ever load */
+.hsup-fab__dot {
+  position: absolute; top: 2px; right: 4px; width: 10px; height: 10px;
+  background: var(--ok, #57c038); border: 2px solid var(--surface, #242424); border-radius: 50%;
+}
+.hsup-fab__dot[hidden] { display: none; }
+
+/* ---- Panel -------------------------------------------------------- */
+.hsup-panel {
+  position: fixed; right: 22px; bottom: 22px; z-index: 901;
+  width: 400px; max-width: calc(100vw - 32px);
+  height: min(646px, calc(100vh - 44px));
+  display: flex; flex-direction: column;
+  background: var(--surface, #242424);
+  border: 1px solid var(--border-2, #3d3d3d); border-radius: var(--r-lg, 12px);
+  box-shadow: var(--sh-pop, 0 14px 34px rgba(0, 0, 0, .55));
+  overflow: hidden; transform-origin: bottom right;
+}
+.hsup-panel[hidden] { display: none; }
+.hsup-panel.is-opening { animation: hsup-in var(--dur-gentle, 250ms) var(--ease-out); }
+@keyframes hsup-in { from { opacity: 0; transform: translateY(14px) scale(.95); } to { opacity: 1; transform: none; } }
+
+/* ---- Header (matches the app's Fluent flyouts: neutral surface + hairline divider) ---- */
+.hsup-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 11px;
+  padding: 13px 12px 13px 16px;
+  background: var(--surface, #242424); color: var(--text, #fff);
+  border-bottom: 1px solid var(--border, #3d3d3d);
+}
+.hsup-head__avatar {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 18px;
+  background: color-mix(in srgb, var(--brand, #2899f5) 18%, transparent); color: var(--brand, #2899f5);
+}
+.hsup-head__id { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.hsup-head__title { font-weight: 600; font-size: 16px; color: var(--text, #fff); }
+.hsup-head__sub { font-size: 12px; color: var(--text-3, #8b909e); display: inline-flex; align-items: center; gap: 6px; }
+.hsup-head__sub::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok, #57c038); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok, #57c038) 26%, transparent); }
+.hsup-head__actions { flex: 0 0 auto; display: inline-flex; gap: 2px; }
+.hsup-iconbtn {
+  width: 32px; height: 32px; border: 0; border-radius: var(--r-md, 8px); background: transparent;
+  color: var(--text-2, #c6cad6); cursor: pointer; display: grid; place-items: center; font-size: 20px;
+  transition: background var(--dur-faster, 100ms) ease, color var(--dur-faster, 100ms) ease;
+}
+.hsup-iconbtn:hover { background: var(--hover, rgba(255, 255, 255, .08)); color: var(--text, #fff); }
+.hsup-iconbtn:focus-visible { outline: 2px solid var(--brand, #2899f5); outline-offset: -2px; }
+
+/* ---- Body (scroll area) ------------------------------------------ */
+.hsup-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.hsup-body::-webkit-scrollbar { width: 10px; }
+.hsup-body::-webkit-scrollbar-thumb { background: var(--border-2, #3d3d3d); border: 3px solid var(--surface, #242424); border-radius: 999px; }
+.hsup-view { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.hsup-view[hidden] { display: none; }
+
+/* ---- Home: hero -------------------------------------------------- */
+.hsup-hero { display: flex; flex-direction: column; gap: 5px; }
+.hsup-hero h3 { font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+.hsup-hero p { color: var(--text-3, #8b909e); font-size: 13.5px; line-height: 1.5; }
+
+.hsup-sech { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3, #8b909e); margin-bottom: 2px; }
+
+/* Suggested starter chips */
+.hsup-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hsup-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 13px; border: 1px solid var(--border, #3d3d3d); border-radius: 999px;
+  background: var(--surface-2, #2b2b2b); color: var(--text, #fff);
+  font: 500 13px var(--font); cursor: pointer; text-align: left;
+  transition: border-color var(--dur-faster, 100ms) ease, background var(--dur-faster, 100ms) ease, transform var(--dur-faster, 100ms) ease;
+}
+.hsup-chip iconify-icon { color: var(--text-2, #c6cad6); font-size: 16px; flex: 0 0 auto; }
+.hsup-chip:hover { border-color: var(--brand-tint-stroke, rgba(40, 153, 245, .4)); background: var(--surface-3, #333); transform: translateY(-1px); }
+.hsup-chip:focus-visible { outline: 2px solid var(--brand, #2899f5); outline-offset: 2px; }
+
+/* Learn-more links */
+.hsup-learn { display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--border, #3d3d3d); border-radius: var(--r-md, 8px); overflow: hidden; }
+.hsup-learn a {
+  display: flex; align-items: center; gap: 11px; padding: 11px 13px;
+  color: var(--text, #fff); font-size: 13.5px; font-weight: 500;
+  background: var(--surface-2, #2b2b2b);
+  transition: background var(--dur-faster, 100ms) ease;
+}
+.hsup-learn a + a { border-top: 1px solid var(--border, #3d3d3d); }
+.hsup-learn a:hover { background: var(--surface-3, #333); }
+.hsup-learn a:focus-visible { outline: 2px solid var(--brand, #2899f5); outline-offset: -2px; }
+.hsup-learn__ico { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 17px; background: var(--surface-3, #333); color: var(--text-2, #c6cad6); }
+.hsup-learn__t { flex: 1 1 auto; min-width: 0; }
+.hsup-learn__ext { flex: 0 0 auto; color: var(--text-4, #6b7080); font-size: 15px; }
+
+/* Ticket CTA */
+.hsup-ticketcta {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 13px 14px; border: 1px dashed var(--border-2, #3d3d3d); border-radius: var(--r-md, 8px);
+  background: transparent; color: var(--text, #fff); cursor: pointer;
+  transition: border-color var(--dur-faster, 100ms) ease, background var(--dur-faster, 100ms) ease;
+}
+.hsup-ticketcta:hover { border-color: var(--brand-tint-stroke, rgba(40, 153, 245, .4)); background: var(--brand-tint, rgba(40, 153, 245, .16)); }
+.hsup-ticketcta:focus-visible { outline: 2px solid var(--brand, #2899f5); outline-offset: 2px; }
+.hsup-ticketcta__ico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 19px; background: var(--surface-3, #333); color: var(--text-2, #c6cad6); }
+.hsup-ticketcta:hover .hsup-ticketcta__ico { background: var(--brand, #2899f5); color: #fff; }
+.hsup-ticketcta__t { display: flex; flex-direction: column; gap: 1px; }
+.hsup-ticketcta__t strong { font-size: 14px; font-weight: 600; }
+.hsup-ticketcta__t span { font-size: 12px; color: var(--text-3, #8b909e); }
+.hsup-ticketcta__chev { margin-left: auto; color: var(--text-4, #6b7080); font-size: 18px; }
+
+/* ---- Chat thread ------------------------------------------------- */
+.hsup-view--chat { gap: 14px; }
+.hsup-thread { display: flex; flex-direction: column; gap: 12px; }
+.hsup-msg { display: flex; gap: 8px; align-items: flex-end; max-width: 100%; }
+.hsup-msg--me { flex-direction: row-reverse; }
+.hsup-msg__av { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; color: var(--brand, #2899f5); background: color-mix(in srgb, var(--brand, #2899f5) 18%, transparent); }
+.hsup-bubble {
+  max-width: 84%; padding: 10px 13px; border-radius: 15px;
+  font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.hsup-msg--ai .hsup-bubble { background: var(--surface-2, #2b2b2b); color: var(--text, #fff); border-bottom-left-radius: 5px; }
+.hsup-msg--me .hsup-bubble { background: var(--brand-strong, #115EA3); color: #fff; border-bottom-right-radius: 5px; }
+
+/* Typing indicator */
+.hsup-typing { display: inline-flex; gap: 4px; padding: 13px 14px; }
+.hsup-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--text-4, #6b7080); animation: hsup-blink 1.2s infinite ease-in-out both; }
+.hsup-typing span:nth-child(2) { animation-delay: .18s; }
+.hsup-typing span:nth-child(3) { animation-delay: .36s; }
+@keyframes hsup-blink { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+/* Inline "raise a ticket" affordance under an AI reply */
+.hsup-inlineticket {
+  display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
+  margin-left: 34px; padding: 7px 12px; border: 1px solid var(--brand-tint-stroke, rgba(40, 153, 245, .4)); border-radius: 999px;
+  background: var(--brand-tint, rgba(40, 153, 245, .16)); color: var(--brand-soft, #4aa6ff);
+  font: 600 12.5px var(--font); cursor: pointer;
+}
+.hsup-inlineticket:hover { background: color-mix(in srgb, var(--brand, #2899f5) 26%, transparent); }
+
+/* Follow-up suggestion chips (below thread) */
+.hsup-followups { display: flex; flex-wrap: wrap; gap: 7px; }
+.hsup-followups:empty { display: none; }
+.hsup-followup {
+  padding: 6px 12px; border: 1px solid var(--border, #3d3d3d); border-radius: 999px;
+  background: transparent; color: var(--brand-soft, #4aa6ff); font: 500 12.5px var(--font); cursor: pointer;
+  transition: background var(--dur-faster, 100ms) ease, border-color var(--dur-faster, 100ms) ease;
+}
+.hsup-followup:hover { background: var(--surface-2, #2b2b2b); border-color: var(--brand-tint-stroke, rgba(40, 153, 245, .4)); }
+
+/* ---- Ticket form -------------------------------------------------- */
+.hsup-view--ticket { gap: 13px; }
+.hsup-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 4px 6px 4px 4px; margin: -4px 0 0 -4px; border: 0; border-radius: 7px; background: transparent; color: var(--text-2, #c6cad6); font: 600 13px var(--font); cursor: pointer; }
+.hsup-back:hover { background: var(--hover, rgba(255, 255, 255, .08)); color: var(--text, #fff); }
+.hsup-ticket-h { display: flex; flex-direction: column; gap: 4px; }
+.hsup-ticket-h h3 { font-size: 17px; font-weight: 600; }
+.hsup-ticket-h p { font-size: 13px; color: var(--text-3, #8b909e); line-height: 1.5; }
+.hsup-ticket-form { display: flex; flex-direction: column; gap: 14px; }
+.hsup-field { display: flex; flex-direction: column; gap: 5px; }
+.hsup-field > label { font-size: 12.5px; font-weight: 600; color: var(--text-2, #c6cad6); }
+.hsup-field > label .hsup-opt { font-weight: 400; color: var(--text-4, #6b7080); }
+/* Fluent form controls fill the field (the visible box lives in the component's shadow ::part) */
+.hsup-field fluent-text-input, .hsup-field fluent-textarea, .hsup-field fluent-dropdown { display: block; width: 100%; }
+.hsup-field fluent-text-input::part(root), .hsup-field fluent-text-input::part(control),
+.hsup-field fluent-textarea::part(root), .hsup-field fluent-textarea::part(control),
+.hsup-field fluent-dropdown::part(control) { width: 100%; box-sizing: border-box; }
+#hsup-desc::part(control) { min-height: 92px; resize: vertical; }
+.hsup-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.hsup-ticket-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+/* Ticket success */
+.hsup-success { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 26px 18px; }
+.hsup-success__ring { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 32px; color: var(--ok, #57c038); background: var(--ok-bg, rgba(75, 192, 56, .14)); }
+.hsup-success h3 { font-size: 18px; font-weight: 600; }
+.hsup-success p { font-size: 13.5px; color: var(--text-2, #c6cad6); line-height: 1.55; max-width: 300px; }
+.hsup-success__ref { font: 600 13px var(--mono, monospace); color: var(--text, #fff); background: var(--surface-2, #2b2b2b); border: 1px solid var(--border, #3d3d3d); border-radius: 999px; padding: 5px 14px; letter-spacing: .04em; }
+
+/* ---- Composer ----------------------------------------------------- */
+.hsup-composer { flex: 0 0 auto; display: flex; align-items: flex-end; gap: 8px; padding: 12px 12px 8px; border-top: 1px solid var(--border, #3d3d3d); background: var(--surface, #242424); }
+.hsup-composer[hidden] { display: none; }
+.hsup-composer__in {
+  flex: 1 1 auto; resize: none; max-height: 120px; min-height: 24px;
+  border: 0; background: transparent; color: var(--text, #fff); font: 14px var(--font); line-height: 1.5;
+  padding: 8px 6px; outline: none;
+}
+.hsup-composer__in::placeholder { color: var(--text-4, #6b7080); }
+.hsup-send { flex: 0 0 auto; align-self: flex-end; }
+.hsup-foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 11px; background: var(--surface, #242424); }
+.hsup-foot span { font-size: 11px; color: var(--text-4, #6b7080); }
+.hsup-foot button { border: 0; background: transparent; color: var(--brand-soft, #4aa6ff); font: 600 12px var(--font); cursor: pointer; padding: 2px; }
+.hsup-foot button:hover { text-decoration: underline; }
+
+/* ---- Responsive --------------------------------------------------- */
+@media (max-width: 480px) {
+  .hsup-panel { right: 12px; left: 12px; bottom: 12px; width: auto; max-width: none; height: min(80vh, calc(100vh - 24px)); }
+  .hsup-fab { right: 14px; bottom: 14px; }
+  .hsup-fab__label { display: none; }
+  .hsup-fab { padding: 0; width: 40px; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hsup-panel.is-opening { animation: none; }
+  .hsup-fab, .hsup-chip { transition: none; }
+  .hsup-typing span { animation: none; opacity: .6; }
+}
