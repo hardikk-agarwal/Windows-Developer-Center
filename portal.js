@@ -3931,7 +3931,7 @@
     state.signedIn = true; state.account = DEMO_MSA; state.verified = false;
     state.certs = []; state.apps = storeDemoApps(); save(); seedWdpDemo();
   }
-  // Marketing "Go to the Windows Developer Center" (&signin=1) is a PUBLIC/anonymous entry point, so it
+  // Marketing "Go to your dashboard" (&signin=1) is a PUBLIC/anonymous entry point, so it
   // ALWAYS presents the MSA sign-in — even if a stale session is persisted (reset to signed-out first).
   // Scoped to the flag, so plain ?src landings (signup/publish/redirects) still auto-resume.
   if (uniSignin && !uniCreate) {
