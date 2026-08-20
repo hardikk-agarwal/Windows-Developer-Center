@@ -236,7 +236,9 @@
         ]]
       ];
       groups = RAIL_GROUPS.map(function (g) {
-        var rows = g[1].map(function (it) { return navItem(it[0], it[1], it[2]); }).join("");
+        var items = g[1].filter(function (it) { return !win32Skip(it[2]); });   // Win32 hides Store/MSIX-only capabilities
+        if (!items.length) return "";
+        var rows = items.map(function (it) { return navItem(it[0], it[1], it[2]); }).join("");
         return '<div class="app-rail__group"><span class="app-rail__ghdr">' + esc(g[0]) + '</span>' + rows + '</div>';
       }).join("");
     } else {
@@ -245,7 +247,7 @@
       // published (previewed in the Overview's "Once you're live" teaser), so it stays hidden, not greyed.
       groups = '<div class="app-rail__group">' +
         navItem("fluent:tag-multiple-20-regular", "Manage app names", "names") +
-        navItem("fluent:document-text-20-regular", "Package identity", "identity") +
+        (win32Skip("identity") ? "" : navItem("fluent:document-text-20-regular", "Package identity", "identity")) +
         '</div>';
     }
     host.innerHTML = back + idRow + '<div class="app-rail__sep"></div>' + overview + groups;
@@ -374,6 +376,11 @@
       if (a && (a.win32 === true || a.packageType === "win32")) return true;
     } catch (e) {}
     return false;
+  }
+  // Store/MSIX-only capabilities a Win32 (.exe/.msi) app never gets — hidden from the app hub
+  // (sidebar rail + recommended steps) for a Win32 app, whether published or still in certification.
+  function win32Skip(action) {
+    return certWin32() && (action === "flights" || action === "addons" || action === "experiments" || action === "identity" || action === "promo");
   }
   function reviewStatusCard() {
     var stages = certWin32()
@@ -798,6 +805,7 @@
       recs.push(["fluent:star-20-regular", "brand", "Ask for ratings & reviews", "Share your Store link so happy customers can rate you.", "share", null]);
       if (!P.addons) recs.push(["fluent:puzzle-piece-20-regular", "mon", "Add in-app products", "Offer add-ons or subscriptions.", "addons", null]);
     }
+    recs = recs.filter(function (r) { return !win32Skip(r[4]); });   // Win32 hides add-ons / experiments recs
     recs = recs.slice(0, 3);   // 3 across, one row — same layout as growing/established
     if (!recs.length) return "";
     var meta = "";
