@@ -3118,7 +3118,7 @@
      apps; Win32 (exe/msi/url) submissions don't support Store pricing, so they never see them. */
   /* Win32 (exe/msi/url) submissions can't be limited to a private group in the CURRENT product — only
      Public or Direct link. Hide the Private audience option for them in MVP; Vision keeps it available. */
-  #flow-wrap.is-mvp.has-win32-pkg [data-choice="audience"] [data-value="private"] { display: none !important; }
+  #flow-wrap.is-mvp.has-win32-pkg [data-choice="audience"] fluent-field:has(#aud-private) { display: none !important; }
   /* Sale pricing is an MSIX-only Store feature — hide it for Win32 submissions. */
   #flow-wrap.has-win32-pkg #price-sale-wrap { display: none !important; }
   .price-sales { display: flex; flex-direction: column; gap: var(--sp-6); }
