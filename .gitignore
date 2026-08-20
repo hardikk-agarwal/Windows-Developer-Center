@@ -16,9 +16,3 @@ test-packages/
 deploy/
 api/node_modules/
 *.zip
-
-# Node dependencies (Storybook + any tooling)
-node_modules/
-
-*storybook.log
-storybook-static
