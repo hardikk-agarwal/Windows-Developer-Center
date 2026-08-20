@@ -291,6 +291,11 @@ a { color: inherit; text-decoration: none; }
 .cmp__th--accent { border-left: none; border-top: 1.5px solid color-mix(in srgb, var(--brand) 38%, transparent); border-inline: 1.5px solid color-mix(in srgb, var(--brand) 38%, transparent);
   background: linear-gradient(180deg, rgba(40,153,245,.2), rgba(40,153,245,.05)); }
 .cmp__th--accent .cmp__chip { background: rgba(40,153,245,.2); border-color: rgba(40,153,245,.5); color: var(--brand-soft); }
+.cmp__th--accent .cmp__chip--logo { background: none; border: 0; }
+.cmp__chip--logo .cmp__logo { width: 38px; height: 38px; display: block; }
+.cmp__chip--logo .cmp__logo--onlight { display: none; }
+[data-theme="light"] .cmp__chip--logo .cmp__logo--ondark { display: none; }
+[data-theme="light"] .cmp__chip--logo .cmp__logo--onlight { display: block; }
 .cmp__th--accent .cmp__intent { color: rgba(255,255,255,.74); }
 .cmp__th--accent .cmp__price { color: var(--brand-soft); }
 .cmp__ribbon { position: absolute; top: 18px; right: 20px; padding: 4px 11px; border-radius: 999px; background: var(--brand-strong); color: #fff;
