@@ -26,7 +26,7 @@
 <!-- Shared certification-report issue data (flow timeline summary + standalone report page). -->
 <script src="cert-issues.js?v=3" defer></script>
 <!-- Bridge: sync this flow's submit back to the Windows Developer Program app table. -->
-<script src="tdp-bridge.js?v=71" defer></script>
+<script src="tdp-bridge.js?v=72" defer></script>
 <link rel="stylesheet" href="styles.css?v=2">
 <!-- Global AI Help & Support pill (shared with the developer portal) — floating, bottom-right. -->
 <link rel="stylesheet" href="../help-support.css?v=5">
@@ -4270,7 +4270,9 @@
     function readSet() { try { var a = JSON.parse(localStorage.getItem(READ_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
     function saveRead(ids) { try { localStorage.setItem(READ_KEY, JSON.stringify(ids)); } catch (e) {} }
     function items() {
-      var apps = (function () { try { var s = JSON.parse(localStorage.getItem('tdp.portal.unified.v1')); return (s && s.apps) || []; } catch (e) { return []; } })();
+      // Portal state is account-scoped ("<base>::<email>", active email in "<base>.current"); read THAT
+      // key, not the bare base, or the feed is empty for every signed-in developer.
+      var apps = (function () { try { var base = 'tdp.portal.unified.v1', cur = localStorage.getItem(base + '.current') || ''; var s = JSON.parse(localStorage.getItem(cur ? base + '::' + cur : base)); return (s && s.apps) || []; } catch (e) { return []; } })();
       var stat = function (id) { try { return JSON.parse(localStorage.getItem('tdp.appstats.' + id)); } catch (e) { return null; } };
       var nm = function (a) { return a.storeName || a.name || 'Your app'; };
       var live = function (a) { return a.store || a.storeStatus === 'published'; };

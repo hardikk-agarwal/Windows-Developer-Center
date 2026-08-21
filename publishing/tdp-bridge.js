@@ -11,21 +11,43 @@
   var id = new URLSearchParams(location.search).get("id");
   if (!id) return;
 
-  // Which portal launched this flow? Find the app in whichever portal state holds it and sync
-  // back to THAT one. The unified portal (developer-portal.html) is the current default; the
-  // store.v1 / v5 keys are legacy portals kept working for older entry points.
+  // Which portal launched this flow, and under which key does it hold this app? The portal persists
+  // each signed-in developer's state under an ACCOUNT-SCOPED key ("<base>::<email>"), remembering the
+  // active email in "<base>.current"; a brand-new/anonymous session uses the bare "<base>". We MUST
+  // read AND write the exact same key the portal reads, or a published result lands on a key the
+  // portal never looks at and the app is stuck showing "Draft". So resolve the key that actually holds
+  // this app: prefer each portal's ACTIVE account, then any other saved account, then the legacy bare key.
+  var BASE_KEYS = ["tdp.portal.unified.v1", "tdp.portal.store.v1", "tdp.portal.v5"];
+  function portalHasApp(k) {
+    try { var s = JSON.parse(localStorage.getItem(k)); return !!(s && Array.isArray(s.apps) && s.apps.some(function (a) { return a.id === id; })); }
+    catch (e) { return false; }
+  }
   var TDP_KEY = (function () {
-    var keys = ["tdp.portal.unified.v1", "tdp.portal.store.v1", "tdp.portal.v5"];
-    for (var i = 0; i < keys.length; i++) {
-      try {
-        var s = JSON.parse(localStorage.getItem(keys[i]));
-        if (s && Array.isArray(s.apps) && s.apps.some(function (a) { return a.id === id; })) return keys[i];
-      } catch (e) {}
-    }
-    return "tdp.portal.unified.v1";
+    var candidates = [], seen = {};
+    function add(k) { if (k && !seen[k]) { seen[k] = 1; candidates.push(k); } }
+    // 1) Each portal's currently-active account (what the live portal actually reads).
+    BASE_KEYS.forEach(function (base) {
+      var cur = ""; try { cur = localStorage.getItem(base + ".current") || ""; } catch (e) {}
+      if (cur) add(base + "::" + cur);
+    });
+    // 2) Any other saved account (stale ".current" pointer, or signed out since submit).
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var lk = localStorage.key(i);
+        if (lk && BASE_KEYS.some(function (base) { return lk.indexOf(base + "::") === 0; })) add(lk);
+      }
+    } catch (e) {}
+    // 3) Legacy bare keys (anonymous session, pre-account-scoping).
+    BASE_KEYS.forEach(add);
+    for (var j = 0; j < candidates.length; j++) if (portalHasApp(candidates[j])) return candidates[j];
+    // Not persisted under any known key yet — default to the unified portal's active account (or bare key).
+    var uc = ""; try { uc = localStorage.getItem("tdp.portal.unified.v1.current") || ""; } catch (e) {}
+    return uc ? "tdp.portal.unified.v1::" + uc : "tdp.portal.unified.v1";
   })();
-  var PORTAL_FILE = TDP_KEY === "tdp.portal.store.v1" ? "store-portal.html"
-    : TDP_KEY === "tdp.portal.v5" ? "portal.html"
+  // Which base portal owns TDP_KEY → which portal file "up to Apps" routes back to.
+  var TDP_BASE = BASE_KEYS.filter(function (base) { return TDP_KEY === base || TDP_KEY.indexOf(base + "::") === 0; })[0] || "tdp.portal.unified.v1";
+  var PORTAL_FILE = TDP_BASE === "tdp.portal.store.v1" ? "store-portal.html"
+    : TDP_BASE === "tdp.portal.v5" ? "portal.html"
     : "developer-portal.html";
   window.__portalFile = PORTAL_FILE;   // let the page's breadcrumb/back-arrow route "up to Apps" to the SAME portal the rail does
 
