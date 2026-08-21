@@ -14,7 +14,6 @@
 
   var LS_KEY = "msstore.help.v1";
   var TICKETS_KEY = "msstore.help.tickets.v1";
-  var SEEN_KEY = "msstore.help.seen.v1";
 
   // Suggested starter prompts shown on the home screen.
   var STARTERS = [
@@ -77,11 +76,9 @@
     fab.setAttribute("aria-haspopup", "dialog");
     fab.setAttribute("aria-expanded", "false");
     fab.setAttribute("aria-label", "Help and support");
-    var unseen = !localStorage.getItem(SEEN_KEY);
     fab.innerHTML =
       '<span class="hsup-fab__ico">' + ico("fluent:chat-help-20-regular", 18) + '</span>' +
-      '<span class="hsup-fab__label">Help</span>' +
-      '<span class="hsup-fab__dot"' + (unseen ? "" : " hidden") + '></span>';
+      '<span class="hsup-fab__label">Help</span>';
     fab.addEventListener("click", toggle);
 
     var panel = document.createElement("section");
@@ -95,7 +92,6 @@
     document.body.appendChild(panel);
 
     els.fab = fab;
-    els.dot = fab.querySelector(".hsup-fab__dot");
     els.panel = panel;
     els.body = panel.querySelector(".hsup-body");
     els.home = panel.querySelector(".hsup-view--home");
@@ -200,8 +196,6 @@
     setTimeout(function () { els.panel.classList.remove("is-opening"); }, 320);
     els.fab.classList.add("is-hidden");
     els.fab.setAttribute("aria-expanded", "true");
-    if (els.dot) els.dot.hidden = true;
-    try { localStorage.setItem(SEEN_KEY, "1"); } catch (e) {}
     // Restore chat if there's history, else home.
     if (state.messages.length) { renderThread(); showView("chat"); } else { showView("home"); }
     setTimeout(function () { els.input.focus(); }, 60);

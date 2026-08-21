@@ -35,6 +35,7 @@
   var pending = []; // files staged in the modal
   var scanning = false; // true while discovering installed apps by certificate
   var scanningCertId = null; // which cert's scan is in flight → spinner on that row + the certs page
+  var backendOffline = false; // no /api reachable (static host, e.g. GitHub Pages) → discovery uses demo apps
 
   function load() {
     try {
@@ -891,6 +892,7 @@
         // The submitted binary only PROVES the certificate — it is never itself
         // listed as an app. The Apps page is populated solely by discoverApps()
         // below: the real apps installed on this PC that use this certificate.
+        if (info.offline) backendOffline = true;   // no /api reachable → static host (e.g. GitHub Pages)
         var gc = getOrCreateCert(info, file); if (gc.created) newCerts++; accepted++; lastCert = gc.cert;
         gc.cert.verified = true;                          // a signed binary proves ownership of this certificate
       }
@@ -907,7 +909,8 @@
         toast(msg);
         // WDP auto-discovers the cert's other apps here. In the Store portal those apps are already
         // surfaced (locked) by discoverStoreApps(); this upload just verifies ownership to unlock them.
-        if ((!STORE || UNIFIED) && lastCert && lastCert.thumbKind === "cert") discoverApps(lastCert.thumb, lastCert.id);
+        // Trigger for offline/hash certs too — on a static host discoverApps seeds demo apps instead.
+        if ((!STORE || UNIFIED) && lastCert) discoverApps(lastCert.thumb, lastCert.id);
         return;
       }
       // Nothing accepted — surface the reasons in place (don't re-render the flow)
@@ -3069,6 +3072,18 @@
     state.certs.push(cert);
     return { cert: cert, created: true };
   }
+  // App discovery is a LOCAL-MACHINE scan (the backend enumerates Start-Menu apps signed by the
+  // cert). A static host (e.g. GitHub Pages) has no backend, so /api/apps-by-cert 404s and nothing
+  // is found. Fall back to representative demo apps so the "apps signed by your certificate"
+  // experience still works in a hosted demo. Stable paths → re-scans dedupe by discoveryKey.
+  function demoDiscoveredApps() {
+    return [
+      { name: "Contoso PDF Suite", file: "ContosoPdfSuite.exe", version: "3.2.1.0", path: "demo/ContosoPdfSuite.exe" },
+      { name: "Fabrikam Notes", file: "FabrikamNotes.exe", version: "1.8.0.0", path: "demo/FabrikamNotes.exe" },
+      { name: "Tailwind Media Player", file: "TailwindPlayer.exe", version: "2.4.3.0", path: "demo/TailwindPlayer.exe" },
+      { name: "Adventure Works Backup", file: "AdventureWorksBackup.exe", version: "5.1.2.0", path: "demo/AdventureWorksBackup.exe" }
+    ];
+  }
   // Find apps already running on this PC that are signed by the same certificate,
   // and add them automatically (one cert → all its apps).
   async function discoverApps(thumb, certId) {
@@ -3076,27 +3091,30 @@
     scanning = true; scanningCertId = certId; renderCerts(); renderApps();
     toast("Finding apps signed with this certificate…", true);
     var added = 0, refreshed = 0, newApps = [];
+    var list = null, offline = false;
     try {
       var res = await fetch("/api/apps-by-cert?thumbprint=" + encodeURIComponent(thumb));
-      if (res.ok) {
-        var list = await res.json();
-        if (Array.isArray(list)) list.forEach(function (a) {
-          var key = "p:" + (a.path || (a.file + a.sizeKB));
-          var existing = state.apps.filter(function (x) { return x.discoveryKey === key; })[0];
-          if (existing) { // re-scan refreshes the (now high-res) icon in place
-            if (a.icon && a.icon !== existing.icon) { existing.icon = a.icon; refreshed++; }
-            return;
-          }
-          var na = {
-            id: uid(), name: a.name || a.file, file: a.file, size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
-            icon: a.icon || null, signerThumb: thumb, signerSubject: null, trust: "Valid", certId: certId,
-            sources: [], store: false, added: today(), discoveryKey: key, discovered: true
-          };
-          state.apps.push(na); newApps.push(na);
-          added++;
-        });
+      if (res.ok) list = await res.json();
+      else if (res.status === 404) offline = true;        // endpoint absent → static host
+    } catch (e) { offline = true; }                       // unreachable / non-JSON SPA fallback
+    if (offline) backendOffline = true;
+    // Hosted/static demo (no backend to scan this PC): seed demo apps so discovery isn't a dead end.
+    if (!Array.isArray(list) && offline) list = demoDiscoveredApps();
+    if (Array.isArray(list)) list.forEach(function (a) {
+      var key = "p:" + (a.path || (a.file + a.sizeKB));
+      var existing = state.apps.filter(function (x) { return x.discoveryKey === key; })[0];
+      if (existing) { // re-scan refreshes the (now high-res) icon in place
+        if (a.icon && a.icon !== existing.icon) { existing.icon = a.icon; refreshed++; }
+        return;
       }
-    } catch (e) {}
+      var na = {
+        id: uid(), name: a.name || a.file, file: a.file, size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
+        icon: a.icon || null, signerThumb: thumb, signerSubject: null, trust: "Valid", certId: certId,
+        sources: [], store: false, added: today(), discoveryKey: key, discovered: true
+      };
+      state.apps.push(na); newApps.push(na);
+      added++;
+    });
     scanning = false; scanningCertId = null;
     if (added || refreshed) save();
     renderAll();
@@ -3105,7 +3123,7 @@
                          : "No other installed apps use this certificate", true);
   }
   function rescanApps() {
-    var certs = state.certs.filter(function (c) { return c.thumbKind === "cert"; });
+    var certs = state.certs.filter(function (c) { return !!c.thumb; });   // incl. offline hash certs (static host)
     if (!certs.length) { toast("Add a certificate first", true); return; }
     certs.forEach(function (c) { discoverApps(c.thumb, c.id); });
   }

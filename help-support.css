@@ -57,13 +57,6 @@
 .hsup-fab__label { white-space: nowrap; }
 .hsup-fab.is-hidden { transform: scale(.5); opacity: 0; pointer-events: none; }
 
-/* Subtle attention ping on first ever load */
-.hsup-fab__dot {
-  position: absolute; top: 2px; right: 4px; width: 10px; height: 10px;
-  background: var(--ok, #57c038); border: 2px solid var(--surface, #242424); border-radius: 50%;
-}
-.hsup-fab__dot[hidden] { display: none; }
-
 /* ---- Panel -------------------------------------------------------- */
 .hsup-panel {
   position: fixed; right: 22px; bottom: 22px; z-index: 901;
