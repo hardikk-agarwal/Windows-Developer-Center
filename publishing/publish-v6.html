@@ -782,11 +782,14 @@
   }
   .ez-store-hero-media[hidden] { display: none; }
   .ez-store-hero-media img, .ez-store-hero-media video { width: 100%; height: 100%; object-fit: cover; object-position: right center; display: block; }
+  /* Clicking the cover (when set) opens the edit dialog — standardized with the logo + screenshots. */
+  #flow-wrap:not(.is-review-mode) .ez-store-hero[data-has-media="true"] .ez-store-hero-media { pointer-events: auto; cursor: pointer; }
   .ez-store-hero[data-has-media="true"]::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.2); pointer-events: none; z-index: 0; }
   .ez-store-hero[data-has-media="true"]::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--layer) 0%, transparent 50%); pointer-events: none; z-index: 0; }
   .ez-store-hero[data-has-media="true"] > *:not(.ez-store-hero-media):not(.ez-hero-media__remove) { position: relative; z-index: 1; }
   .ez-store-hero[data-has-media="true"] .ez-store-hero__top,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__desc,
+  .ez-store-hero[data-has-media="true"] .ez-field--hero-short,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__cta,
   .ez-store-hero[data-has-media="true"] .ez-store-hero__iarc { max-width: 45%; }
   /* In-place "add hero" empty state (Advanced only) — sits exactly where the hero art renders
@@ -812,6 +815,18 @@
   .ez-store-features-empty iconify-icon { color: color-mix(in srgb, var(--brand) 70%, var(--fg-3)); flex: 0 0 auto; }
   #ez-features-section.is-empty .ez-store-features { display: none; }
   #ez-features-section.is-empty .ez-store-features-empty { display: inline-flex; }
+  /* Features editor: each highlight is an editable/removable row; add via the composer pinned above. */
+  .ez-live .ez-store-features--edit li { position: relative; padding-right: 28px; border-radius: var(--r-4); }
+  .ez-live .ez-store-features--edit li:hover { background: color-mix(in srgb, var(--fg-1) 5%, transparent); }
+  .ez-live .ez-store-features--edit .ez-feat-text { cursor: text; border-radius: 3px; padding: 0 3px; margin: 0 -3px; outline: none; transition: background var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+  .ez-live .ez-store-features--edit li:hover .ez-feat-text:not(.is-editing) { text-decoration: underline dotted color-mix(in srgb, var(--fg-3) 55%, transparent); text-underline-offset: 3px; }
+  .ez-live .ez-store-features--edit .ez-feat-text.is-editing { text-decoration: none; background: color-mix(in srgb, var(--fg-1) 7%, transparent); box-shadow: inset 0 -2px 0 var(--brand); }
+  .ez-live .ez-store-features--edit .ez-feat-text.is-editing ~ .ez-feat-del { display: none; }
+  .ez-feat-del { position: absolute; top: 50%; right: 2px; transform: translateY(-50%); width: 22px; height: 22px; border: 0; border-radius: 50%; background: transparent; color: var(--fg-3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .ez-live .ez-store-features--edit li:hover .ez-feat-del, .ez-feat-del:focus-visible { opacity: 1; }
+  .ez-feat-del:hover { background: color-mix(in srgb, var(--status-danger) 18%, transparent); color: var(--status-danger); }
+  .ez-feat-add { margin: 0 0 var(--sp-6); }
+  .ez-feat-count { margin: 0 0 var(--sp-10); }
   /* System requirements: shown ONLY in the read-only "Preview listing" (the dialog clone lives
      outside #step-listing) — always hidden in the inline editable listing. */
   #flow-wrap #step-listing #ez-sysreq-section { display: none !important; }
@@ -1722,11 +1737,13 @@
   .ez-store-hero__heading { min-width: 0; padding-top: 2px; }
   .ez-store-hero__name { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 600; color: #fff; margin: 0; letter-spacing: -.2px; word-break: break-word; }
   .ez-store-hero__publisher { display: inline-block; font-size: 14px; color: var(--store-link); margin: var(--sp-2) 0 0; }
+  /* Publisher isn't editable — hide it in the editor to save hero height; the read-only preview + review still show it. */
+  #flow-wrap:not(.is-review-mode) .ez-live .ez-store-hero__publisher { display: none; }
   .ez-store-hero__meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-6); margin: var(--sp-8) 0 0; font-size: 12px; color: rgba(255,255,255,.92); }
   /* Category: a plain blue link (matches the real Store + the read-only preview). Kept discoverable and
      obviously editable by the bookmark glyph + a persistent dashed underline; on hover the underline
      solidifies, the colour brightens, and a pencil appears so "click to change" is unmistakable. */
-  .ez-store-hero__cat { display: inline-flex; align-items: center; gap: var(--sp-6); color: var(--store-link); font-weight: var(--font-weight-semibold); border-bottom: 1.5px dashed color-mix(in srgb, var(--store-link) 45%, transparent); padding-bottom: 1px; }
+  .ez-store-hero__cat { display: inline-flex; align-items: center; gap: var(--sp-6); color: var(--store-link); font-weight: var(--font-weight-semibold); border-bottom: 1.5px solid transparent; padding-bottom: 1px; }
   #ez-pv-category.live-edit-target[data-empty-required="false"]:not(.live-edit--active)::before { content: ''; width: 12px; height: 12px; flex: none; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'/></svg>") center/contain no-repeat; mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'/></svg>") center/contain no-repeat; }
   #ez-pv-category.live-edit-target[data-empty-required="true"]:not(.live-edit--active) { font-style: normal; }
   .ez-live .ez-store-hero__cat.live-edit-target:hover { background: transparent; outline: none; border-bottom-style: solid; border-bottom-color: var(--store-link); color: color-mix(in srgb, var(--store-link) 80%, #fff); }
@@ -1754,10 +1771,16 @@
      always-on editing view. The Preview builder clones #ez-live and drops its id, so this
      rule hides the block in-place while the preview still renders it (zero state or badge). */
   #ez-live .ez-store-hero__iarc { display: none !important; }
+  /* Get / Share is a decorative PREVIEW of the customer listing (aria-hidden, non-interactive), not an
+     editable control. In the editor (#ez-live) MUTE it to a ghost, lowered-opacity element so it reads as
+     preview chrome and never masquerades as a real button. inherit/currentColor keeps it legible on both
+     the dark and light hero; the read-only Preview clone (drops #ez-live) keeps the real solid CTA. */
+  #ez-live .ez-store-hero__cta { opacity: .6; }
+  #ez-live .ez-store-cta { background: transparent; color: inherit; border-color: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 32%, transparent); }
   /* No divider under the hero (it fades in); a hairline only between sections. */
   /* Store-style content cards (Screenshots, Description) — mirror apps.microsoft.com PDP. */
   .ez-store-content { display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-16) var(--sp-20) var(--sp-24); }
-  .ez-card-section { background: color-mix(in srgb, var(--fg-1) 4%, var(--layer)); border: 1px solid var(--stroke-2); border-radius: var(--r-8); overflow: hidden; }
+  .ez-card-section { background: color-mix(in srgb, var(--fg-1) 8%, var(--layer)); border: 0; border-radius: var(--r-8); overflow: hidden; }
   .ez-card-section__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-20); border-bottom: 1px solid var(--stroke-2); }
   .ez-card-section__title { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--fg-1); margin: 0; }
   .ez-card-section__action { width: 28px; height: 28px; flex: 0 0 auto; border: 0; border-radius: var(--r-4); background: transparent; color: var(--fg-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
@@ -1878,12 +1901,18 @@
   #flow-wrap.is-review-mode .ez-pkg-chev,
   #flow-wrap.is-review-mode .ez-pv-shot-add,
   #flow-wrap.is-review-mode .ez-pv-shot__del,
+  #flow-wrap.is-review-mode .ez-pv-shot__edit,
   #flow-wrap.is-review-mode .ez-trailer-add-btn,
   #flow-wrap.is-review-mode .ez-hero-media__remove,
   #flow-wrap.is-review-mode .ez-hero-empty,
   #flow-wrap.is-review-mode .price-sale-item__remove { display: none !important; }
   /* No "required but empty" asterisks in read-only (you can't fill them here). */
   #flow-wrap.is-review-mode .live-edit-target::before { content: none !important; }
+  /* Read-only submission view: strip the always-on edit affordances (field cues, labeled pill, logo ring + pencil). */
+  #flow-wrap.is-review-mode .ez-live .live-edit-target { outline-color: transparent !important; background: transparent !important; cursor: default; }
+  #flow-wrap.is-review-mode .ez-live .live-edit-target::after { content: none !important; }
+  #flow-wrap.is-review-mode .ez-live #ez-pv-icon.has-img { outline-color: transparent !important; }
+  #flow-wrap.is-review-mode .ez-live #ez-pv-icon.has-img::after { opacity: 0 !important; }
   /* Package rows aren't expandable in review — drop the button affordance. */
   #flow-wrap.is-review-mode .ez-pkg-trow { cursor: default; }
 
@@ -2395,11 +2424,17 @@
   .ez-value-store { display: none; }
 
   /* ---- Live click-to-edit Store listing (ported from the full flow's Live layout) ---- */
-  .ez-live .live-edit-target { position: relative; cursor: pointer; transition: outline-color var(--dur-3) var(--ease-out), background-color var(--dur-3) var(--ease-out); outline: 1px dashed transparent; outline-offset: 4px; border-radius: var(--r-2); }
-  .ez-live .live-edit-target:hover { outline-color: color-mix(in srgb, var(--brand) 60%, transparent); background: color-mix(in srgb, var(--brand) 12%, transparent); }
-  .ez-live .live-edit-target:hover::after { content: ''; position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--brand) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/11px no-repeat; box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-bg) 35%, transparent); pointer-events: none; z-index: 5; }
+  /* Live click-to-edit fields — NO persistent box at rest (clean); a soft highlight + labeled pill on
+     hover names the action, and keyboard focus gets an outline for a11y. */
+  .ez-live .live-edit-target { position: relative; cursor: pointer; transition: background-color var(--dur-2) var(--ease-out), outline-color var(--dur-2) var(--ease-out); outline: 1.5px solid transparent; outline-offset: 4px; border-radius: var(--r-2); }
+  .ez-live .live-edit-target:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
+  .ez-live .live-edit-target:focus-visible { outline-color: color-mix(in srgb, var(--brand) 55%, transparent); background: color-mix(in srgb, var(--brand) 8%, transparent); }
+  /* The labeled edit pill (right side) reveals on hover/focus — spells out the exact action. Logo keeps
+     its own corner pencil, category keeps its editable-link style, so both are excluded here. */
+  .ez-live .live-edit-target:not(#ez-pv-icon):not(.ez-store-hero__cat)::after { content: attr(data-edit-label); position: absolute; top: 50%; right: 8px; transform: translateY(-50%) scale(.96); z-index: 6; height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; padding: 0 11px 0 25px; background: var(--brand) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") 9px center/12px no-repeat; color: #fff; font-size: 11.5px; font-weight: var(--font-weight-semibold); line-height: 24px; white-space: nowrap; border-radius: 999px; box-shadow: 0 2px 10px rgba(0,0,0,.4); opacity: 0; transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); pointer-events: none; }
+  .ez-live .live-edit-target:not(#ez-pv-icon):not(.ez-store-hero__cat):hover::after, .ez-live .live-edit-target:not(#ez-pv-icon):not(.ez-store-hero__cat):focus-visible::after { opacity: 1; transform: translateY(-50%) scale(1); }
   .ez-live .live-edit-target.live-edit--active { outline: 2px solid var(--brand); outline-offset: 2px; background: transparent; cursor: text; }
-  .ez-live .live-edit-target.live-edit--active::after { content: none; }
+  .ez-live .live-edit-target.live-edit--active::after { content: none !important; }
   /* Mandatory live-preview fields (name, description, category) flag themselves with a
      leading red "*" while still empty; it clears once filled (data-empty-required → false). */
   .ez-live .live-edit-target[data-required="true"][data-empty-required="true"]:not(#ez-pv-desc)::before { content: '* '; color: var(--status-danger); font-weight: 700; }
@@ -2407,6 +2442,39 @@
   .ez-live .live-edit-empty { font-style: italic; opacity: .85; }
   .ez-desc-error { margin: var(--sp-4) 0 0; font-size: 12px; color: var(--status-danger); }
   .ez-desc-error[hidden] { display: none; }
+  /* Direct-input listing fields (PDP-shaped form): transparent + a subtle underline so they blend
+     seamlessly into the card, auto-grow with content, and tuck the char counter into the bottom-right. */
+  .ez-field { position: relative; isolation: isolate; }
+  .ez-store-field { display: block; width: 100%; max-width: none; position: relative; z-index: 1; }
+  .ez-store-field::part(root) { position: relative; width: 100%; box-sizing: border-box; background: transparent; border: 0; border-bottom: 1px solid var(--colorNeutralStrokeAccessible, #adadad); border-radius: 0; padding: 0; min-height: 32px; transition: border-color var(--dur-2) var(--ease-out); }
+  .ez-store-field:hover::part(root) { border-bottom-color: var(--colorNeutralStroke1Hover, #d6d6d6); }
+  /* Match Fluent's native underline focus accent: a 2px brand line that scales in from the bottom. */
+  .ez-store-field::part(root)::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 0; border-bottom: 2px solid var(--brand); transform: scaleX(0); transform-origin: center; transition: transform var(--dur-2) var(--ease-out); pointer-events: none; }
+  .ez-store-field:focus-within::part(root)::after, .ez-store-field.is-focused::part(root)::after { transform: scaleX(1); }
+  .ez-store-field::part(control) { width: 100%; box-sizing: border-box; background: transparent; padding: 1px 0; font-size: 14px; line-height: 20px; min-height: 0; }
+  /* Single-line hero fields (short summary) use Fluent's NATIVE underline appearance — no custom border. */
+  .ez-store-input { display: block; width: 100%; max-width: none; }
+  .ez-store-input::part(root) { width: 100%; box-sizing: border-box; padding-left: 0; padding-right: 0; }
+  .ez-store-input::part(control) { width: 100%; box-sizing: border-box; padding-left: 0; padding-right: 0; font-size: 14px; line-height: 20px; }
+  /* Character-limit caption: Fluent-style muted text, right-aligned BELOW the field — revealed ONLY while the field is focused. */
+  .ez-field .ez-field__count { position: static; display: none; }
+  .ez-field:focus-within .ez-field__count { display: block; }
+  /* App name = native underlined fluent-text-input (appearance="underline") styled as the hero title.
+     Uses Fluent's OWN underline appearance (no custom border override) — only width + title typography. */
+  .ez-field--name { max-width: 480px; }
+  .ez-name-field { display: block; width: 100%; max-width: none; }
+  .ez-name-field::part(root) { width: 100%; box-sizing: border-box; padding-left: 0; padding-right: 0; }
+  .ez-name-field::part(control) { width: 100%; box-sizing: border-box; padding-left: 0; padding-right: 0; font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 600; letter-spacing: -.2px; color: #fff; }
+  [data-theme="light"] .ez-name-field::part(control) { color: var(--fg-1); }
+  .ez-name-avail { display: none; align-items: center; gap: var(--sp-6); margin: var(--sp-6) 0 0; font-size: 12.5px; }
+  .ez-name-avail.is-shown { display: flex; }
+  .ez-name-avail.is-ok { color: var(--status-success); }
+  .ez-name-avail.is-err { color: var(--status-danger); }
+  .ez-name-avail.is-checking { color: var(--fg-3); }
+  /* Short summary = fluent-textarea (Description field template) placed in the hero. */
+  .ez-field--hero-short { margin-top: var(--sp-16); }
+  /* Category = a direct Fluent dropdown in the hero meta (non-games). */
+  .ez-cat-field { display: inline-block; min-width: 190px; max-width: 100%; vertical-align: middle; }
   .ez-live .live-edit-input { font: inherit; color: inherit; background: transparent; border: 0; outline: none; padding: 0; margin: 0; width: 100%; box-sizing: border-box; resize: none; min-height: 1em; line-height: inherit; }
   /* Character/count meters shown on listing fields (description, short desc, what's new, features, keywords). */
   .ez-char-count { display: block; margin-top: var(--sp-4); font-size: 12px; color: var(--fg-3); text-align: right; font-variant-numeric: tabular-nums; }
@@ -2416,24 +2484,31 @@
   @keyframes live-save-flash { 0% { opacity: 0; transform: translateY(-50%) scale(.6); } 20% { opacity: 1; transform: translateY(-50%) scale(1); } 80% { opacity: 1; transform: translateY(-50%) scale(1); } 100% { opacity: 0; transform: translateY(-50%) scale(.9); } }
   .live-save-flash { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--status-success); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); pointer-events: none; animation: live-save-flash 1200ms ease forwards; z-index: 5; }
   #ez-pv-icon { border: 0; cursor: pointer; padding: 0; position: relative; }
-  #ez-pv-icon[data-empty-required="true"] { background: color-mix(in srgb, #fff 12%, transparent) !important; border: 2px dashed rgba(255,255,255,.5); }
+  #ez-pv-icon[data-empty-required="true"] { background: color-mix(in srgb, #fff 12%, transparent) !important; border: 2px dashed rgba(255,255,255,.55) !important; }
+  .ez-live #ez-pv-icon[data-empty-required="true"]:hover { border-color: rgba(255,255,255,.85) !important; }
   /* Logo is mandatory — a red "*" badge until one is supplied (matches the other required fields). */
   #ez-pv-icon[data-empty-required="true"]::after { content: '*'; position: absolute; top: -5px; right: -5px; color: var(--status-danger); font-weight: 700; font-size: 16px; line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
   /* Real logo shows directly — drop the placeholder tile's shadow/rounding box behind it. */
   #ez-pv-icon.has-img { box-shadow: none; border-radius: 0; }
   /* A real/auto-added logo (e.g. auto-filled from an MSIX package) still needs to read as EDITABLE:
      a persistent dashed ring (like the empty-logo tile); on hover it brightens and an edit pencil fades in. */
-  .ez-live #ez-pv-icon.has-img { outline: 2px dashed rgba(255,255,255,.5); outline-offset: 3px; }
+  .ez-live #ez-pv-icon.has-img { outline: 2px solid transparent; outline-offset: 3px; }
   .ez-live #ez-pv-icon.has-img:hover { outline-color: rgba(255,255,255,.9); }
-  .ez-live #ez-pv-icon.has-img::after { content: ''; position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--brand) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/11px no-repeat; box-shadow: 0 1px 4px rgba(0,0,0,.45); opacity: 0; transition: opacity var(--dur-3) var(--ease-out); pointer-events: none; }
-  .ez-live #ez-pv-icon.has-img:hover::after { opacity: 1; }
-  /* Screenshots in edit mode: thumbnails + add tile + hover-reveal delete */
+  /* Standardized media remove (X) button — shared by logo, screenshots, and hero cover. */
+  .ez-media-del { position: absolute; z-index: 5; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease; }
+  .ez-media-del:hover { background: rgba(196,43,28,.95); }
+  .ez-logo-wrap { position: relative; flex: 0 0 auto; }
+  .ez-logo-del { top: -8px; right: -8px; display: none; }
+  .ez-live #ez-pv-icon.has-img ~ .ez-logo-del { display: inline-flex; }
+  #flow-wrap.is-review-mode .ez-media-del { display: none !important; }
+  /* Screenshots in edit mode: thumbnails + add tile + always-visible edit/delete controls */
   .ez-store-shots--edit .ez-pv-shot { position: relative; }
   .ez-store-shots--edit .ez-pv-shot img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); display: block; background: var(--canvas-tint); }
   /* Optional per-screenshot caption input (editor) + the customer-facing lightbox that shows it. */
-  .ez-store-shots--edit .ez-pv-shot > img, .lpv-card .ez-pv-shot img { cursor: zoom-in; }
+  .ez-store-shots--edit .ez-pv-shot > img { cursor: pointer; }
+  .lpv-card .ez-pv-shot img { cursor: zoom-in; }
   /* Hover action on a screenshot tile: edit (re-crop + caption), sitting left of the remove button. */
-  .ez-pv-shot__edit { position: absolute; top: 6px; right: 36px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s ease, background .15s ease; }
+  .ez-pv-shot__edit { position: absolute; top: 6px; right: 36px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 1; transition: opacity .15s ease, background .15s ease; }
   .ez-pv-shot:hover .ez-pv-shot__edit, .ez-pv-shot__edit:focus-visible { opacity: 1; }
   .ez-pv-shot__edit:hover { background: var(--brand); }
   .shotlb { position: fixed; inset: 0; z-index: 4000; box-sizing: border-box; width: 100%; height: 100%; max-width: 100vw; max-height: 100vh; margin: 0; border: 0; padding: 48px; align-items: center; justify-content: center; background: rgba(0,0,0,.84); color: inherit; }
@@ -2451,7 +2526,7 @@
   .shotlb__nav[disabled] { opacity: .3; cursor: default; }
   .shotlb__nav--prev { left: 22px; }
   .shotlb__nav--next { right: 22px; }
-  .ez-pv-shot__del { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s ease; }
+  .ez-pv-shot__del { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; opacity: 1; transition: opacity .15s ease; }
   .ez-pv-shot:hover .ez-pv-shot__del, .ez-pv-shot__del:focus-visible { opacity: 1; }
   .ez-pv-shot__del:hover { background: rgba(196,43,28,.9); }
   .ez-pv-shot-add { aspect-ratio: 16/10; border: 2px dashed var(--stroke-1); border-radius: var(--r-8); background: transparent; color: var(--fg-3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); cursor: pointer; font: inherit; font-size: 12px; transition: border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
@@ -3148,6 +3223,7 @@
      the text must cap for Win32 as well (else the short description overlaps the placeholder). */
   #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__top,
   #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__desc,
+  #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-field--hero-short,
   #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__cta,
   #flow-wrap.is-wizard #step-listing.is-more .ez-store-hero:not([data-has-media]) .ez-store-hero__iarc { max-width: 48%; }
   /* Hero image + trailer are available for all package types including Win32. */
@@ -4694,7 +4770,7 @@
           <span class="ez-step__num" id="num-listing">2</span>
           <div>
             <h2 class="ez-step__title">Create your Store listing</h2>
-            <p class="ez-step__sub">Click any field to edit it inline. Preview shows the read-only page your customers see.</p>
+            <p class="ez-step__sub">Click any field to edit it inline. Preview listing shows the read-only page your customers see.</p>
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
           <div class="ez-step__headtools">
@@ -4757,16 +4833,25 @@
             </button>
             <input type="file" id="adv-hero-file" accept="image/*,video/mp4,video/webm" hidden />
             <div class="ez-store-hero__top">
-              <button type="button" class="ez-store-hero__icon" id="ez-pv-icon" title="Click to upload an app icon" aria-label="Upload app icon">A</button>
+              <div class="ez-logo-wrap">
+                <button type="button" class="ez-store-hero__icon" id="ez-pv-icon" title="Click to edit your logo" aria-label="App logo">A</button>
+                <button type="button" class="ez-media-del ez-logo-del" id="ez-logo-del" aria-label="Remove logo"><iconify-icon icon="fluent:dismiss-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></button>
+              </div>
               <div class="ez-store-hero__heading">
-                <h3 class="ez-store-hero__name" id="ez-pv-name">Your app</h3>
+                <div class="ez-field ez-field--name">
+                  <fluent-text-input class="ez-name-field" id="ez-pv-name" data-pv-field="name" appearance="underline" maxlength="50" placeholder="Your app name" aria-label="App name"></fluent-text-input>
+                  <span class="ez-name-avail" id="ez-pv-name-avail" aria-live="polite"></span>
+                </div>
                 <span class="ez-store-hero__publisher">Hardik Agarwal</span>
                 <div class="ez-store-hero__meta">
                   <span class="ez-store-hero__cat" id="ez-pv-category">Productivity</span>
                 </div>
               </div>
             </div>
-            <p class="ez-store-hero__desc live-edit-target" id="ez-pv-short">A short summary will appear here, created from your description.</p>
+            <div class="ez-field ez-field--hero-short">
+              <fluent-text-input class="ez-store-input" id="ez-pv-short" data-pv-field="short" appearance="underline" maxlength="1000" placeholder="A short summary of your app"></fluent-text-input>
+              <span class="ez-char-count ez-field__count" id="ez-short-count"></span>
+            </div>
             <!-- Get + Share CTA — decorative preview of the customer-facing listing (non-interactive). -->
             <div class="ez-store-hero__cta" aria-hidden="true">
               <button class="ez-store-cta ez-store-cta--primary" id="ez-pv-cta" type="button" tabindex="-1">Get</button>
@@ -4822,7 +4907,10 @@
                 </button>
               </div>
               <div class="ez-card-section__body">
-                <p class="ez-store-desc" id="ez-pv-desc">Your description appears here.</p>
+                <div class="ez-field">
+                  <fluent-textarea class="ez-store-field" id="ez-pv-desc" data-pv-field="desc" auto-resize rows="1" placeholder="What does your app do, and why is it useful?"></fluent-textarea>
+                  <span class="ez-char-count ez-field__count" id="ez-desc-count"></span>
+                </div>
                 <p class="ez-desc-error" id="ez-pv-desc-error" hidden></p>
               </div>
             </section>
@@ -4836,11 +4924,12 @@
                 </button>
               </div>
               <div class="ez-card-section__body">
-                <ul class="ez-store-features" id="ez-pv-features"></ul>
-                <button type="button" class="ez-store-features-empty" id="ez-features-add">
-                  <iconify-icon icon="fluent:add-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
-                  <span>Click to add feature highlights</span>
-                </button>
+                <!-- Add composer pinned at the TOP so it never shifts as highlights are added (quick-add pattern). -->
+                <div class="ez-feat-add" id="ez-features-add">
+                  <fluent-text-input class="ez-store-input ez-feat-input" id="feat-input" appearance="underline" placeholder="Add a feature highlight, then press Enter" maxlength="80"></fluent-text-input>
+                </div>
+                <div class="ez-char-count ez-feat-count" id="feat-count"></div>
+                <ul class="ez-store-features ez-store-features--edit" id="ez-pv-features"></ul>
               </div>
             </section>
 
@@ -4939,7 +5028,7 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-rating">3</span>
           <div>
-            <h2 class="ez-step__title">Get Age rating &amp; provide disclosures</h2>
+            <h2 class="ez-step__title">Set your content &amp; ratings</h2>
             <p class="ez-step__sub">Get your app’s age rating and disclose your app behavior.</p>
             <p class="ez-step__summary" id="sum-rating"></p>
           </div>
@@ -4967,14 +5056,14 @@
             </fluent-button>
           </div>
 
-          <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> to use it instead of the questionnaire.</p>
+          <p class="ez-iarc-id-line">Already certified by IARC? <button type="button" class="link-btn" id="iarc-id-open">Enter your IARC ID</button> instead.</p>
         </div>
 
         <!-- Disclosures follow the age rating; both cover what is inside the app. Package-type rows are toggled in JS. -->
         <div class="ez-substep">
           <h3 class="ez-substep__title">Disclosures</h3>
           <div class="declarations__group">
-            <p class="declarations__grouphead">About your app <span class="declarations__grouphint">Check anything that applies — you don’t need to select all of these.</span></p>
+            <p class="declarations__grouphead">About your app <span class="declarations__grouphint">Check anything that applies.</span></p>
             <ul class="declarations__list">
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-commerce">
@@ -5011,7 +5100,7 @@
             </ul>
           </div>
           <div class="declarations__group" id="decl-group-capabilities">
-            <p class="declarations__grouphead">Windows capabilities <span class="declarations__grouphint">On by default — turn off any you’d like to restrict.</span></p>
+            <p class="declarations__grouphead">Windows capabilities <span class="declarations__grouphint">On by default — turn off to restrict.</span></p>
             <ul class="declarations__list">
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-alt-drives" hidden>
@@ -7492,7 +7581,7 @@
   function refreshAppHeadIcon() {
     const icon = $('app-icon');
     if (!icon) return;
-    const real = userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? themedAppLogo(baseIcon) : null);
+    const real = logoRemoved ? null : (userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? themedAppLogo(baseIcon) : null));
     if (real) {
       icon.style.background = '';
       icon.style.color = '';
@@ -7665,8 +7754,8 @@
     // Drop editing-only controls so it reads as the finished, customer-facing listing.
     clone.querySelectorAll(
       '.ez-hero-media__remove, .ez-trailer-add-btn, input[type="file"], ' +
-      '.ez-pv-shot__del, .ez-pv-shot__edit, .ez-pv-shot-add, .ez-shots-arrow, ' +
-      '.ez-store-features-empty, .ez-whatsnew-empty, .ez-hero-empty, .ez-ai-chip'
+      '.ez-pv-shot__del, .ez-pv-shot__edit, .ez-pv-shot-add, .ez-shots-arrow, .ez-media-del, ' +
+      '.ez-store-features-empty, .ez-whatsnew-empty, .ez-hero-empty, .ez-ai-chip, .ez-char-count, .ez-name-avail, .ez-feat-add, .ez-feat-del'
     ).forEach(n => n.remove());
     // Neutralize the click-to-edit "Additional information" cells (privacy policy,
     // license terms, etc.). Unset "Add …" prompts are dropped (a customer sees nothing
@@ -7732,6 +7821,23 @@
     if (!(adv.listing.whatsNew || '').trim()) { const wn = clone.querySelector('.ez-whatsnew-sec'); if (wn) wn.remove(); }
     // Remove the click-to-edit hover affordance from text fields.
     clone.querySelectorAll('.live-edit-target').forEach(n => n.classList.remove('live-edit-target'));
+    // PDP-form direct inputs → rendered as read-only text in the customer preview.
+    var descTxt = (fDesc.value || '').trim();
+    var catV = fCategory.value || '';
+    var catOptEl = catV ? fCategory.querySelector('fluent-option[value="' + catV + '"]') : null;
+    var pvVals = {
+      name: { text: (fName.value || '').trim(), tag: 'h3', cls: 'ez-store-hero__name', empty: 'Your app' },
+      short: { text: ((adv.listing.shortDesc || '').trim() || (descTxt ? deriveShort(descTxt) : '')), tag: 'p', cls: 'ez-store-hero__desc', empty: '', dropWhenEmpty: true },
+      category: { text: (catOptEl ? catOptEl.textContent.trim() : ''), tag: 'span', cls: 'ez-store-hero__cat', empty: '', dropWhenEmpty: true },
+      desc: { text: descTxt, tag: 'p', cls: 'ez-store-desc', empty: 'No description provided.' }
+    };
+    clone.querySelectorAll('[data-pv-field]').forEach(function (inp) {
+      var m = pvVals[inp.dataset.pvField]; if (!m) { inp.remove(); return; }
+      if (!m.text && m.dropWhenEmpty) { inp.remove(); return; }
+      var el = document.createElement(m.tag); el.className = m.cls;
+      if (m.text) el.textContent = m.text; else { el.className += ' lpv-empty'; el.textContent = m.empty; }
+      inp.replaceWith(el);
+    });
     // The app-icon stays visible (it shows the uploaded icon) but is no longer an
     // upload control: drop it from tab order and the a11y tree so it isn't
     // announced as a dead "Upload app icon" button. The adjacent name conveys identity.
@@ -9604,6 +9710,7 @@
   const packageList = $('package-list');
   const packages = [];
   let pkgIconDataUrl = null;   // app icon pulled from the package manifest (for the live preview)
+  var logoRemoved = false;     // set when the user clears the logo via its X — overrides the base/package logo → placeholder
   // Base logo = the same logo shown in the portal Apps table, seeded on entry (app.baseLogo — a real
   // image if the app has one, else a faithful copy of the initials tile; app.icon is the legacy field).
   // It's what the header + live listing show on entry and revert to when a package is removed. A package
@@ -12945,10 +13052,6 @@
       const img = document.createElement('img'); img.src = url; img.alt = 'Screenshot ' + (i + 1); img.draggable = false;
       if (shotCap(url)) img.title = shotCap(url);
       w.appendChild(img);
-      const edit = document.createElement('button');
-      edit.type = 'button'; edit.className = 'ez-pv-shot__edit'; edit.setAttribute('aria-label', 'Edit screenshot & caption'); edit.title = 'Edit screenshot & caption'; edit.dataset.editI = i;
-      edit.innerHTML = '<iconify-icon icon="fluent:edit-16-regular" width="12" height="12"></iconify-icon>';
-      w.appendChild(edit);
       const del = document.createElement('button');
       del.type = 'button'; del.className = 'ez-pv-shot__del'; del.setAttribute('aria-label', 'Remove screenshot'); del.dataset.i = i;
       del.innerHTML = '<iconify-icon icon="fluent:dismiss-16-regular" width="12" height="12"></iconify-icon>';
@@ -12993,10 +13096,8 @@
     const add = e.target.closest('#shot-add');
     const trDel = e.target.closest('[data-trailer-del]');
     const trTile = e.target.closest('.ez-pv-shot--trailer[data-trailer-i]');
-    const ed = e.target.closest('.ez-pv-shot__edit');
     const rm = e.target.closest('.ez-pv-shot__del');
     if (add) { ssFile.click(); }
-    else if (ed) { editShot(parseInt(ed.dataset.editI, 10)); }
     else if (trDel) {
       const ti = parseInt(trDel.dataset.trailerDel, 10);
       const removed = adv.listing.trailers[ti];
@@ -13011,7 +13112,7 @@
     }
     else if (trTile) { playTrailer(trTile, adv.listing.trailers[parseInt(trTile.dataset.trailerI, 10)]); }
     else if (rm) { const ri = parseInt(rm.dataset.i, 10); const ru = state.shots[ri]; if (ru) setShotCap(ru, ''); state.shots.splice(ri, 1); renderShots(); if (typeof updateGate === 'function') updateGate(); }
-    else { const st = e.target.closest('.ez-pv-shot[data-shot-index]'); if (st && e.target.tagName === 'IMG') openShotLightbox(parseInt(st.dataset.shotIndex, 10)); }
+    else { const st = e.target.closest('.ez-pv-shot[data-shot-index]'); if (st && e.target.tagName === 'IMG' && !window.__reviewMode) editShot(parseInt(st.dataset.shotIndex, 10)); }
   });
 
   // Carousel nav — show prev/next only when the strip overflows; disable at the ends.
@@ -13405,7 +13506,7 @@
   }
   // Recompute the hero tint from the current icon (user upload wins over the package icon), then re-render.
   function refreshLogoHue() {
-    const real = userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? baseIcon : null);
+    const real = logoRemoved ? null : (userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? baseIcon : null));
     if (!real) {   // no real logo -> Fluent colorful placeholder; tint the hero to match its colour
       const nm = (typeof fName !== 'undefined' && fName && fName.value ? fName.value.trim() : '') || (app && app.name) || 'App';
       logoHue = fluentHueFor(nm); logoSat = 34; ezRenderPreview(); return;
@@ -13446,10 +13547,13 @@
     const hero = $('ez-hero');
     if (hero) { hero.style.setProperty('--ez-hue', hue); hero.style.setProperty('--ez-sat', sat + '%'); }
 
-    setLiveField('ez-pv-name', nameVal, 'Click to name your app', true);
+    // App name is a direct fluent-text-input now; mirror state → input only when it isn't focused
+    // (so header-dialog / AI / locale changes flow in without clobbering the caret).
+    const nameField = $('ez-pv-name');
+    if (nameField && document.activeElement !== nameField && (nameField.value || '') !== nameVal) nameField.value = nameVal;
 
     const iconEl = $('ez-pv-icon');
-    const realLogo = userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? themedAppLogo(baseIcon) : null);
+    const realLogo = logoRemoved ? null : (userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? themedAppLogo(baseIcon) : null));
     if (iconEl) {
       if (realLogo) {
         iconEl.style.background = '';
@@ -13471,15 +13575,33 @@
       }
     }
 
-    const catVal = fCategory.value;
-    const catOpt = catVal ? fCategory.querySelector('fluent-option[value="' + catVal + '"]') : null;
-    if (IS_GAME) setLiveField('ez-pv-category', selectedGenres.join(', '), 'Click to pick genres', true);
-    else setLiveField('ez-pv-category', catOpt ? catOpt.textContent.trim() : '', 'Click to pick a category', true);
+    if (IS_GAME) {
+      setLiveField('ez-pv-category', selectedGenres.join(', '), 'Click to pick genres', true);
+    } else {
+      // Category is a direct Fluent dropdown — sync its selection to the stored value
+      // (skip while its listbox is focused/open so we don't fight the user).
+      const catDd = $('ez-pv-category');
+      if (catDd && catDd.tagName === 'FLUENT-DROPDOWN' && typeof window.__syncCatDropdown === 'function' && document.activeElement !== catDd) window.__syncCatDropdown();
+    }
 
     const desc = (fDesc.value || '').trim();
     const ovShort = (adv.listing.shortDesc || '').trim();
-    setText('ez-pv-short', ovShort ? ovShort : (desc ? deriveShort(desc) : 'A short summary will appear here, created from your description.'));
-    setLiveField('ez-pv-desc', desc, 'Click to write your description', true);
+    // Short summary is a direct fluent-textarea: mirror the stored value in when unfocused (empty shows
+    // its placeholder), keep the char counter fresh. The auto-derived summary shows only in the preview.
+    const shortField = $('ez-pv-short');
+    if (shortField) {
+      if (document.activeElement !== shortField) { try { shortField.value = ovShort; } catch (e) {} }
+      const shn = (shortField.value || '').length, shc = $('ez-short-count');
+      if (shc) { shc.textContent = shn.toLocaleString('en-US') + ' / 1,000 characters'; shc.classList.toggle('ez-char-count--max', shn > 1000); }
+    }
+    // Description is a direct fluent-textarea input: mirror programmatic changes (locale / AI) into it
+    // when it isn't focused (so we never clobber the caret while typing), and keep its char count fresh.
+    const descField = $('ez-pv-desc');
+    if (descField) {
+      if (document.activeElement !== descField) { try { descField.value = desc; } catch (e) {} }
+      const dn = (faVal(descField) || '').length, dc = $('ez-desc-count');
+      if (dc) { dc.textContent = dn.toLocaleString('en-US') + ' / 10,000 characters'; dc.classList.toggle('ez-char-count--max', dn > 10000); }
+    }
 
     // Buy CTA: a Store-paid app shows its actual price (like the real listing); Win32 external-commerce
     // and free apps show "Get". Intl formats the currency symbol + grouping for the base currency.
@@ -13679,30 +13801,48 @@
   function makeCategoryEditable(sel, dropdown) {
     const el = document.querySelector(sel);
     if (!el || !dropdown) return;
-    el.classList.add('live-edit-target');
-    el.dataset.required = 'true';
-    el.setAttribute('tabindex', '0');
-    el.setAttribute('role', 'button');
-    const open = () => {
-      if (el.classList.contains('live-edit--active')) return;
-      if (IS_GAME) { openGenreDialog(); return; }
-      const doOpen = () => {
-        const options = [{ value: '', label: 'Pick a category' }];
-        dropdown.querySelectorAll('fluent-option').forEach(opt => options.push({ value: opt.getAttribute('value') || '', label: opt.textContent.trim() }));
-        openInlineDropdown(el, options, dropdown.value || '', (value) => {
-          dropdown.value = value;
-          dropdown.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      };
-      // Category is the same across every language; editable in any locale, but warn (once
-      // per session) that changing it here applies to all languages.
-      if (typeof window.__advLocaleLocked === 'function' && window.__advLocaleLocked() && typeof window.__advEnsureSharedEdit === 'function') {
-        window.__advEnsureSharedEdit(doOpen); return;
-      }
-      doOpen();
+    // Games pick GENRES (multi-select, up to 3) via a dialog — keep the slot a click-to-open target.
+    if (IS_GAME) {
+      el.classList.add('live-edit-target');
+      el.dataset.required = 'true';
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      const openG = () => { if (!el.classList.contains('live-edit--active')) openGenreDialog(); };
+      el.addEventListener('click', openG);
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openG(); } });
+      return;
+    }
+    // Non-games: a direct, always-visible Fluent dropdown that drives the hidden #f-category source.
+    // beta.133 dropdowns don't repaint their collapsed label on a POST-upgrade value change, so a
+    // programmatic sync (AI autofill / restore / locale) REBUILDS a fresh dropdown — a new element
+    // paints the selected option's label on first upgrade. User picks paint natively (no rebuild).
+    let dd = null, mountedVal = null;
+    function build(selectedValue) {
+      const nd = document.createElement('fluent-dropdown');
+      nd.id = 'ez-pv-category';
+      nd.className = 'ez-cat-field';
+      nd.setAttribute('data-pv-field', 'category');
+      nd.setAttribute('aria-label', 'Category');
+      const lb = document.createElement('fluent-listbox');
+      const mkOpt = (val, label) => { const o = document.createElement('fluent-option'); o.setAttribute('value', val); o.textContent = label; if (val === (selectedValue || '')) { o.setAttribute('selected', ''); o.selected = true; } lb.appendChild(o); };
+      mkOpt('', 'Choose a category');
+      dropdown.querySelectorAll('fluent-option').forEach(o => mkOpt(o.getAttribute('value') || '', o.textContent));
+      nd.appendChild(lb);
+      nd.addEventListener('change', () => { dropdown.value = nd.value || ''; mountedVal = nd.value || ''; dropdown.dispatchEvent(new Event('change', { bubbles: true })); });
+      return nd;
+    }
+    function mount(selectedValue) {
+      const nd = build(selectedValue);
+      if (dd && dd.parentNode) dd.replaceWith(nd); else el.replaceWith(nd);
+      dd = nd; mountedVal = selectedValue || '';
+    }
+    mount(dropdown.value || '');
+    // Rebuild only on a real programmatic change, and never while the dropdown is focused/open.
+    window.__syncCatDropdown = function () {
+      const v = dropdown.value || '';
+      if (!dd || document.activeElement === dd || mountedVal === v) return;
+      mount(v);
     };
-    el.addEventListener('click', open);
-    el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !el.classList.contains('live-edit--active')) { e.preventDefault(); open(); } });
   }
 
   function makeClickToUpload(sel, trigger) {
@@ -13718,6 +13858,7 @@
     var dlg = $('name-edit-dialog'), input = $('name-edit-input'), hint = $('name-edit-hint'), saveBtn = $('name-edit-save');
     function escN(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     var TAKEN = ['whatsapp', 'spotify', 'netflix', 'instagram', 'tiktok', 'facebook', 'microsoft word', 'powerpoint', 'photoshop'];
+    window.__nameTaken = function (v) { return TAKEN.indexOf(String(v || '').trim().toLowerCase()) >= 0; };
     var timer = null;
     function curName() { return (fName.value || '').trim(); }
     function setHint(cls, html, canSave) {
@@ -13761,17 +13902,55 @@
       headBtn.addEventListener('click', open);
       headBtn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     }
-    var pv = document.querySelector('#ez-pv-name');
-    if (pv) {
-      pv.classList.add('live-edit-target'); pv.dataset.required = 'true';
-      pv.setAttribute('role', 'button'); pv.setAttribute('tabindex', '0');
-      pv.addEventListener('click', open);
-      pv.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-    }
   })();
-  makeInlineEditable('#ez-pv-desc', fDesc, { required: true, multiline: true, rows: 6, maxLength: 10000, placeholder: 'What does your app do, and why is it useful?' });
+  // Description is a DIRECT fluent-textarea input (PDP-shaped form): typing flows to fDesc → syncDesc;
+  // ezRenderPreview mirrors programmatic changes (locale / AI) back in when it isn't focused.
+  (function () { var t = $('ez-pv-desc'); if (!t) return; try { t.autoResize = true; } catch (e) {} var setRows1 = function () { try { var ta = t.shadowRoot && t.shadowRoot.querySelector('textarea'); if (ta) ta.rows = 1; } catch (e) {} }; setRows1(); try { customElements.whenDefined('fluent-textarea').then(setRows1); } catch (e) {} t.addEventListener('input', function () { fDesc.value = faVal(t); syncDesc(); }); t.addEventListener('focusin', function () { t.classList.add('is-focused'); }); t.addEventListener('focusout', function () { t.classList.remove('is-focused'); }); })();
+  // App name is a DIRECT fluent-text-input (native appearance="underline"): typing flows to fName → syncName,
+  // with inline availability (reuses the name dialog's TAKEN list via window.__nameTaken).
+  (function () {
+    var t = $('ez-pv-name'); if (!t) return;
+    var avail = $('ez-pv-name-avail'), timer = null;
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function setAvail(cls, html) { if (avail) { avail.className = 'ez-name-avail is-shown' + (cls ? ' is-' + cls : ''); avail.innerHTML = html; } }
+    function clearAvail() { if (avail) { avail.className = 'ez-name-avail'; avail.innerHTML = ''; } }
+    function checkAvail() {
+      var v = (t.value || '').trim();
+      clearTimeout(timer);
+      if (!v) { clearAvail(); return; }
+      if (v.length < 2) { setAvail('err', 'Enter at least 2 characters.'); return; }
+      setAvail('checking', '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner> Checking availability&hellip;');
+      timer = setTimeout(function () {
+        if ((t.value || '').trim() !== v) return;
+        if (window.__nameTaken && window.__nameTaken(v)) setAvail('err', '&ldquo;' + esc(v) + '&rdquo; is already taken &mdash; try another name.');
+        else setAvail('ok', '<span class="verified-dot"></span> &ldquo;' + esc(v) + '&rdquo; is available');
+      }, 550);
+    }
+    t.addEventListener('input', function () { fName.value = (t.value || ''); syncName(); checkAvail(); });
+    t.addEventListener('focusout', clearAvail);
+  })();
   makeCategoryEditable('#ez-pv-category', fCategory);
-  makeClickToUpload('#ez-pv-icon', () => $('icon-file').click());
+  // Logo: standardized with screenshots + hero — click to edit (re-crop current, or pick a file if none), X to remove.
+  (function wireLogo() {
+    var icon = $('ez-pv-icon'), del = $('ez-logo-del');
+    function curLogo() { return logoRemoved ? null : (userIconDataUrl || pkgIconDataUrl || (baseIcon && !isGeneratedTile(baseIcon) ? themedAppLogo(baseIcon) : null)); }
+    if (icon) icon.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (window.__reviewMode) return;
+      var cur = curLogo();
+      if (!cur) { $('icon-file').click(); return; }
+      openImageEditDialog({
+        dataUrl: cur, aspect: IS_GAME ? 2 / 3 : 1, title: 'Edit logo',
+        onApply: function (dataUrl) { userIconDataUrl = dataUrl; logoRemoved = false; refreshLogoHue(); refreshAppHeadIcon(); announce('Logo updated.'); if (typeof updateGate === 'function') updateGate(); if (window.__scheduleFlowSave) window.__scheduleFlowSave(); }
+      });
+    });
+    if (del) del.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      userIconDataUrl = null; pkgIconDataUrl = null; logoRemoved = true;
+      refreshLogoHue(); refreshAppHeadIcon(); if (typeof ezRenderPreview === 'function') ezRenderPreview();
+      announce('Logo removed.'); if (typeof updateGate === 'function') updateGate(); if (window.__scheduleFlowSave) window.__scheduleFlowSave();
+    });
+  })();
 
   $('icon-file').addEventListener('change', (e) => {
     const f = e.target.files && e.target.files[0];
@@ -13784,6 +13963,7 @@
           title: 'Edit logo',
           onApply: (dataUrl) => {
             userIconDataUrl = dataUrl;
+            logoRemoved = false;
             refreshLogoHue();
             refreshAppHeadIcon();
             announce('Icon updated.');
@@ -15318,7 +15498,7 @@
       { k: 'copy', label: 'Copy link', icon: 'fluent:link-20-regular', color: '' }
     ];
     function shareName() { var h = document.getElementById('app-name'); var t = h && h.textContent ? h.textContent.trim() : ''; if (t && !/^loading/i.test(t)) return t; try { return appName(); } catch (e) { return 'This app'; } }
-    function shareCat() { var c = document.getElementById('ez-pv-category'); var t = c && c.textContent ? c.textContent.trim() : ''; return (t && !/click|pick|^category$/i.test(t)) ? t : 'Microsoft Store'; }
+    function shareCat() { var c = document.getElementById('ez-pv-category'); var t = ''; if (c) { if (c.tagName === 'FLUENT-DROPDOWN') { var o = c.querySelector('fluent-option[selected]') || (c.value ? c.querySelector('fluent-option[value="' + c.value + '"]') : null); t = o ? o.textContent.trim() : ''; } else t = c.textContent ? c.textContent.trim() : ''; } return (t && !/click|pick|choose|^category$/i.test(t)) ? t : 'Microsoft Store'; }
     function defaultMsg() { return 'Hey, my app "' + shareName() + '" is now available on the #MicrosoftStore! Download it today.'; }
     function copyText(t) { try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t)['catch'](function () {}); } catch (e) {} }
     function say(m) { try { if (typeof announce === 'function') announce(m); } catch (e) {} }
@@ -17896,10 +18076,10 @@ function openPriceScheduleDialog() {
 
     // ---- Short description (hero, click-to-edit; empty falls back to auto-derived) ----
     const fShort = $('f-short');
-    if (fShort && typeof makeInlineEditable === 'function') {
+    const pvShort = $('ez-pv-short');
+    if (fShort && pvShort) {
       fShort.value = L.shortDesc || '';
-      makeInlineEditable('#ez-pv-short', fShort, { multiline: true, maxLength: 1000, placeholder: 'Leave blank to auto-generate from your description', fallback: () => { const d = ((fDesc && fDesc.value) || '').trim(); return d ? deriveShort(d) : ''; } });
-      fShort.addEventListener('input', () => { L.shortDesc = (fShort.value || '').trim(); persistAdvanced(); ezRenderPreview(); });
+      pvShort.addEventListener('input', () => { fShort.value = (pvShort.value || ''); L.shortDesc = fShort.value.trim(); persistAdvanced(); ezRenderPreview(); });
     }
 
     // ---- Search terms / keywords (discoverability metadata, not on the PDP) ----
@@ -18019,44 +18199,69 @@ function openPriceScheduleDialog() {
     setPrivacyMode(getPrivacyMode(), false);
     if (typeof updatePrivacyChrome === 'function') updatePrivacyChrome();
 
-    // ---- Features (PDP section, click-to-edit; one per line) ----
-    const featSection = $('ez-features-section'), featList = $('ez-pv-features'), featAdd = $('ez-features-add');
+    // ---- Features (PDP section): add via input; each highlight edits in place (click) or removes (X) ----
+    const featSection = $('ez-features-section'), featList = $('ez-pv-features'), featInput = $('feat-input'), featAddBtn = $('feat-add-btn'), featCount = $('feat-count');
+    const FEAT_MAX = 20;
     function featuresArray() { return (L.features || '').split('\n').map(s => s.trim()).filter(Boolean); }
+    function saveFeatures(arr) { L.features = arr.slice(0, FEAT_MAX).join('\n'); persistAdvanced(); renderFeatures(); if (typeof updateGate === 'function') updateGate(); if (typeof ezRenderPreview === 'function') ezRenderPreview(); }
     function renderFeatures() {
       if (!featList) return;
       const arr = featuresArray();
-      featList.innerHTML = arr.map(f => '<li><iconify-icon icon="fluent:checkmark-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + esc(f) + '</span></li>').join('');
+      featList.innerHTML = arr.map((f, i) => '<li><iconify-icon icon="fluent:checkmark-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span class="ez-feat-text" data-feat-edit="' + i + '" title="Click to edit">' + esc(f) + '</span><button type="button" class="ez-feat-del" data-feat-del="' + i + '" aria-label="Remove feature"><iconify-icon icon="fluent:dismiss-16-regular" width="12" height="12"></iconify-icon></button></li>').join('');
       if (featSection) featSection.classList.toggle('is-empty', arr.length === 0);
+      const atMax = arr.length >= FEAT_MAX;
+      if (featInput) { featInput.disabled = atMax; featInput.placeholder = atMax ? ('Maximum of ' + FEAT_MAX + ' highlights reached') : 'Add a feature highlight, then press Enter'; }
+      if (featAddBtn) featAddBtn.disabled = atMax;
+      if (featCount) { featCount.textContent = arr.length + ' / ' + FEAT_MAX + ' highlights'; featCount.classList.toggle('ez-char-count--max', atMax); }
     }
-    function editFeatures() {
-      const body = featSection && featSection.querySelector('.ez-card-section__body');
-      if (!body || body.querySelector('textarea')) return;
-      const ta = document.createElement('textarea');
-      ta.className = 'live-edit-input'; ta.rows = 5; ta.value = L.features || ''; ta.placeholder = 'One feature per line (up to 20)';
-      ta.style.cssText = 'width:100%;background:transparent;border:0;outline:none;color:inherit;font:inherit;resize:vertical;';
-      if (featList) featList.hidden = true;
-      if (featAdd) featAdd.style.display = 'none';
-      body.appendChild(ta);
-      const counter = document.createElement('div');
-      counter.className = 'ez-char-count';
-      const updCount = () => { const n = ta.value.split('\n').map(s => s.trim()).filter(Boolean).length; counter.textContent = n + ' / 20 highlights'; counter.classList.toggle('ez-char-count--max', n >= 20); };
-      ta.addEventListener('input', updCount); updCount();
-      body.appendChild(counter);
-      ta.focus();
-      function done() {
-        const arr = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
-        if (arr.length > 20) announce('Feature highlights are capped at 20 \u2014 kept the first 20.');
-        L.features = arr.slice(0, 20).join('\n'); persistAdvanced();
-        counter.remove(); ta.remove();
-        if (featList) featList.hidden = false;
-        if (featAdd) featAdd.style.display = '';
-        renderFeatures();
-      }
-      ta.addEventListener('blur', done);
-      ta.addEventListener('keydown', (e) => { if (e.key === 'Escape') { ta.value = L.features || ''; ta.blur(); } });
+    function addFeature() {
+      if (!featInput) return;
+      const v = (featInput.value || '').trim();
+      if (!v) { try { featInput.focus(); } catch (e) {} return; }
+      const arr = featuresArray();
+      if (arr.length >= FEAT_MAX) { announce('Feature highlights are capped at ' + FEAT_MAX + '.'); return; }
+      if (arr.some(f => f.toLowerCase() === v.toLowerCase())) { announce('That highlight is already listed.'); featInput.value = ''; return; }
+      arr.push(v); saveFeatures(arr);
+      featInput.value = ''; try { featInput.focus(); } catch (e) {}
     }
-    if (featAdd) featAdd.addEventListener('click', editFeatures);
-    if (featList) featList.addEventListener('click', editFeatures);
+    // Edit a highlight IN PLACE (keeps its position): click text -> contenteditable; Enter/blur saves, Esc cancels.
+    function startInlineEdit(span) {
+      if (!span || span.getAttribute('contenteditable') === 'true') return;
+      const i = parseInt(span.dataset.featEdit, 10); const arr = featuresArray();
+      if (i < 0 || i >= arr.length) return;
+      span.dataset.orig = arr[i];
+      span.setAttribute('contenteditable', 'true'); span.spellcheck = false; span.classList.add('is-editing');
+      try { span.focus(); const r = document.createRange(); r.selectNodeContents(span); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+    }
+    function commitInlineEdit(span) {
+      if (!span || span.getAttribute('contenteditable') !== 'true') return;
+      const i = parseInt(span.dataset.featEdit, 10);
+      const cancelled = span.dataset.cancelled === '1';
+      span.removeAttribute('contenteditable'); span.spellcheck = true; span.classList.remove('is-editing'); delete span.dataset.cancelled;
+      const arr = featuresArray();
+      const v = (span.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      const orig = span.dataset.orig; delete span.dataset.orig;
+      if (cancelled || i < 0 || i >= arr.length || !v || v === orig) { renderFeatures(); return; }   // cancel / empty / unchanged -> keep original (use X to remove)
+      if (arr.some((f, idx) => idx !== i && f.toLowerCase() === v.toLowerCase())) { announce('That highlight is already listed.'); renderFeatures(); return; }
+      arr[i] = v; saveFeatures(arr);   // save at the SAME index — no reorder
+    }
+    if (featAddBtn) featAddBtn.addEventListener('click', addFeature);
+    if (featInput) featInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addFeature(); } });
+    if (featList) {
+      featList.addEventListener('click', (e) => {
+        const del = e.target.closest('[data-feat-del]'); const ed = e.target.closest('[data-feat-edit]');
+        if (del) { const arr = featuresArray(); arr.splice(parseInt(del.dataset.featDel, 10), 1); saveFeatures(arr); }
+        else if (ed && ed.getAttribute('contenteditable') !== 'true' && !window.__reviewMode) { startInlineEdit(ed); }
+      });
+      featList.addEventListener('keydown', (e) => {
+        const span = e.target.closest && e.target.closest('.ez-feat-text[contenteditable="true"]'); if (!span) return;
+        if (e.key === 'Enter') { e.preventDefault(); commitInlineEdit(span); }
+        else if (e.key === 'Escape') { e.preventDefault(); span.dataset.cancelled = '1'; commitInlineEdit(span); }
+      });
+      featList.addEventListener('focusout', (e) => {
+        const span = e.target.closest && e.target.closest('.ez-feat-text[contenteditable="true"]'); if (span) commitInlineEdit(span);
+      });
+    }
     renderFeatures();
     // Exposed for the adaptive AI assist (draft/enhance the Features field).
     window.__getFeatures = function () { return L.features || ''; };
@@ -18088,6 +18293,12 @@ function openPriceScheduleDialog() {
     // The "Add cover image or video" Fluent button opens the file picker.
     if (heroAdd) heroAdd.addEventListener('click', () => { heroFile && heroFile.click(); });
     if (heroDel) heroDel.addEventListener('click', (e) => { e.stopPropagation(); L.hero = null; persistAdvanced(); renderHeroMedia(); announce('Cover removed.'); });
+    // Click the cover image to re-crop it (standardized with the logo + screenshots). Videos aren't croppable.
+    if (heroMedia) heroMedia.addEventListener('click', (e) => {
+      if (window.__reviewMode || !L.hero || L.hero.type === 'video') return;
+      const url = L.hero.url || L.hero;
+      if (typeof openImageEditDialog === 'function') openImageEditDialog({ dataUrl: url, aspect: 16 / 7, title: 'Edit cover image', onApply: (dataUrl) => { L.hero = { type: 'image', url: dataUrl }; persistAdvanced(); renderHeroMedia(); announce('Cover updated.'); } });
+    });
     if (heroFile) heroFile.addEventListener('change', (e) => {
       const f = e.target.files && e.target.files[0]; e.target.value = '';
       if (!f) return;
