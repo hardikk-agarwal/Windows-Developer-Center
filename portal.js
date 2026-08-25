@@ -326,35 +326,187 @@
       (cta || '') + '</div></div>';
   }
 
-  // Store-only "What you can publish": four format cards (MSIX / Win32 / PWA / GDK) with App/Game tags,
-  // a one-liner, and key benefits; MSIX carries the single Recommended cue. CSS: .fmtgrid / .fmtcard.
+  // Store-only "What you can publish": a comparison-first table. Each format (MSIX / .EXE\u00b7.MSI / PWA /
+  // GDK) is a rich column header (icon + name + short descriptor + App/Game tags), and the rows below
+  // compare them at a glance. MSIX carries the single Recommended cue and a subtly tinted column.
+  // CSS: .fmttable-wrap / .fmttable(--lead) / .fmtt__*.
   function storeOnrampsHTML() {
-    function card(o) {
-      var bens = o.benefits.map(function (b) {
-        return '<li><iconify-icon icon="fluent:checkmark-circle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' + b + '</li>';
-      }).join('');
-      var tags = o.tags.map(function (t) { return '<span class="fmtcard__tag">' + t + '</span>'; }).join('');
-      return '<div class="fmtcard' + (o.rec ? ' fmtcard--rec' : '') + '">' +
-        '<span class="fmtcard__ico"><iconify-icon icon="' + o.icon + '" width="19" height="19" aria-hidden="true"></iconify-icon></span>' +
-        (o.rec ? '<span class="fmtcard__rec">Recommended</span>' : '') +
-        '<span class="fmtcard__name">' + o.name + '</span>' +
-        '<span class="fmtcard__tags">' + tags + '</span>' +
-        '<p class="fmtcard__desc">' + o.desc + '</p>' +
-        '<ul class="fmtcard__benefits">' + bens + '</ul>' +
+    var FMTS = [
+      { icon: 'fluent:box-20-regular', name: 'MSIX', rec: true,
+        desc: 'The modern Windows package \u2014 Microsoft handles signing, hosting, and updates for you.',
+        best: 'every Store benefit, least effort', tags: ['App', 'Game'] },
+      { icon: 'fluent:desktop-20-regular', name: 'EXE / MSI',
+        desc: 'Your existing installer, published as-is \u2014 you handle signing, hosting, and updates yourself.',
+        best: 'full control, more effort', tags: ['App'] },
+      { icon: 'fluent:globe-20-regular', name: 'PWA',
+        desc: 'Your website, packaged as MSIX \u2014 all the MSIX benefits, no native build.',
+        best: 'web apps', tags: ['App', 'Game'] },
+      { icon: 'fluent:xbox-controller-20-regular', name: 'GDK',
+        desc: 'PC and Xbox games built with the Game Development Kit.',
+        best: 'PC &amp; Xbox games', tags: ['Game'] }
+    ];
+    function fcard(f) {
+      return '<div class="pubcard' + (f.rec ? ' pubcard--rec' : '') + '">' +
+        '<div class="pubcard__head">' +
+          '<span class="pubcard__ico"><iconify-icon icon="' + f.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+          '<span class="pubcard__name">' + f.name + '</span>' +
+          (f.rec ? '<span class="pubcard__rec">Recommended</span>' : '') +
+        '</div>' +
+        '<p class="pubcard__desc">' + f.desc + '</p>' +
+        '<p class="pubcard__best"><span class="pubcard__best-k">Best for</span> ' + f.best + '</p>' +
+        '<div class="pubcard__tags">' + f.tags.map(function (t) { return '<span class="pubcard__tag">' + t + '</span>'; }).join('') + '</div>' +
       '</div>';
     }
     return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
-        '<p class="muted">Four formats to bring an app or game to the Store \u2014 most new apps use MSIX.</p></div></div>' +
-      '<div class="fmtgrid">' +
-        card({ icon: 'fluent:box-20-regular', name: 'MSIX', rec: true, tags: ['App', 'Game'], desc: 'The modern Windows app package (.msix) \u2014 the default for new apps.', benefits: ['Automatic updates', 'Free hosting &amp; signing', 'Clean install / uninstall'] }) +
-        card({ icon: 'fluent:desktop-20-regular', name: '.EXE/.MSI', tags: ['App'], desc: 'Your existing .exe or .msi installer, published as-is.', benefits: ['Nothing to repackage', 'Full desktop access', 'Keep your installer'] }) +
-        card({ icon: 'fluent:globe-20-regular', name: 'PWA', tags: ['App', 'Game'], desc: 'Your website or web game, wrapped as an installable app.', benefits: ['Reuse your web code', 'No native build', 'Quick to publish'] }) +
-        card({ icon: 'fluent:xbox-controller-20-regular', name: 'GDK', tags: ['Game'], desc: 'PC games built with the Game Development Kit.', benefits: ['Xbox services &amp; achievements', 'Best performance', 'Windows + Xbox reach'] }) +
+        '<p class="muted">Four formats bring an app or game to the Store \u2014 most new apps use MSIX.</p></div></div>' +
+      '<div class="pubgrid">' + FMTS.map(fcard).join('') + '</div>' +
+      '<div class="pubaid">' +
+        '<span class="pubaid__q">Not sure which one to pick?</span>' +
+        '<span class="pubaid__acts">' +
+          '<button type="button" class="pubaid__btn" data-fmthelp><iconify-icon icon="fluent:wand-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Help me choose</button>' +
+          '<button type="button" class="pubaid__btn" data-cmpopen><iconify-icon icon="fluent:table-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Compare all features</button>' +
+        '</span>' +
       '</div>' +
       '<div class="pkgs__foot">' +
         '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
           '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
       '</div>';
+  }
+
+  // Ambiguous "Add" (MSIX/PWA do both) — a small app/game menu anchored to the button, rendered in <body>
+  // (fixed-positioned) so the table's overflow-x clip doesn't crop it.
+  function closeFmtMenus() {
+    var m = document.getElementById("fmtmenu-live"); if (m && m.parentNode) m.parentNode.removeChild(m);
+    var ts = document.querySelectorAll("[data-addmenu]");
+    for (var i = 0; i < ts.length; i++) ts[i].setAttribute("aria-expanded", "false");
+  }
+  function toggleFmtMenu(btn) {
+    var open = document.getElementById("fmtmenu-live");
+    var same = open && open.getAttribute("data-for") === btn.getAttribute("data-addmenu");
+    closeFmtMenus();
+    if (same) return;   // clicking the same trigger closes it
+    var fmt = btn.getAttribute("data-addmenu");
+    var m = document.createElement("div");
+    m.id = "fmtmenu-live"; m.className = "fmtmenu"; m.setAttribute("data-for", fmt); m.setAttribute("role", "menu");
+    m.innerHTML =
+      '<button type="button" class="fmtmenu__item" role="menuitem" data-fmt="' + fmt + '" data-pt="app">As an app</button>' +
+      '<button type="button" class="fmtmenu__item" role="menuitem" data-fmt="' + fmt + '" data-pt="game">As a game</button>';
+    document.body.appendChild(m);
+    var r = btn.getBoundingClientRect();
+    var left = Math.max(8, Math.min(r.left + r.width / 2 - m.offsetWidth / 2, window.innerWidth - m.offsetWidth - 8));
+    m.style.top = (r.bottom + 4) + "px";
+    m.style.left = left + "px";
+    btn.setAttribute("aria-expanded", "true");
+  }
+
+  // "Help me choose" — a tiny questionnaire that recommends a format from what the developer wants.
+  var FMTW = {
+    start: { q: "What are you building?", opts: [
+      { icon: "fluent:apps-20-regular", title: "An app", set: { pt: "app" }, next: "appKind" },
+      { icon: "fluent:xbox-controller-20-regular", title: "A game", set: { pt: "game" }, next: "gameKind" }
+    ] },
+    appKind: { q: "What kind of app is it?", back: "start", opts: [
+      { icon: "fluent:globe-20-regular", title: "A website or web app", desc: "It runs in the browser today", result: "pwa" },
+      { icon: "fluent:desktop-20-regular", title: "A Windows desktop app", desc: "It runs natively on Windows", next: "appHandling" }
+    ] },
+    appHandling: { q: "Who should handle signing, hosting, updates & payments?", back: "appKind", opts: [
+      { icon: "fluent:sparkle-20-regular", title: "Let Microsoft handle it", desc: "Free code signing, hosting, automatic updates, and Store checkout", result: "msix" },
+      { icon: "fluent:wrench-20-regular", title: "I\u2019ll use my own", desc: "I have my code-signing certificate, hosting, and commerce", result: "win32" }
+    ] },
+    gameKind: { q: "How is your game built?", back: "start", opts: [
+      { icon: "fluent:xbox-controller-20-regular", title: "With the Game Development Kit (GDK) or for Xbox", result: "gdk" },
+      { icon: "fluent:box-20-regular", title: "A standard PC game", desc: "Built with a common engine or framework", result: "msix" },
+      { icon: "fluent:globe-20-regular", title: "A web-based game", desc: "It runs in the browser", result: "pwa" }
+    ] }
+  };
+  var FMTW_RESULT = {
+    msix: { name: "MSIX", rec: true, icon: "fluent:box-20-regular", why: "The modern Windows app package. Microsoft signs, hosts, and auto-updates it for free, and you get Store checkout, sales, and staged rollout." },
+    win32: { name: ".EXE / .MSI", icon: "fluent:desktop-20-regular", why: "Bring your existing installer to the Store as-is. You keep your own code signing, hosting, updates, and commerce." },
+    pwa: { name: "PWA", icon: "fluent:globe-20-regular", why: "Your website, packaged as MSIX (via PWABuilder). Microsoft signs, hosts, and updates it, with full Store checkout." },
+    gdk: { name: "GDK", icon: "fluent:xbox-controller-20-regular", why: "For PC and Xbox games built with the Game Development Kit. Reserved and managed in Partner Center." }
+  };
+  var fmtwState = { pt: "app" };
+  function openFormatHelp(opts) {
+    fmtwState = { pt: "app", reserve: !!(opts && opts.reserve), name: (opts && opts.name) || "" };
+    var ov = document.getElementById("fmthelpModal");
+    if (!ov) {
+      ov = document.createElement("div");
+      ov.id = "fmthelpModal"; ov.className = "fmthelp-modal";
+      ov.innerHTML = '<div class="fmthelp-modal__backdrop" data-fmthclose></div><div class="fmthelp-modal__card" role="dialog" aria-modal="true" aria-label="Help me choose a format"><div id="fmthelpBody"></div></div>';
+      document.body.appendChild(ov);
+    }
+    ov.hidden = false;
+    renderFmtHelp("start");
+  }
+  function closeFormatHelp() { var ov = document.getElementById("fmthelpModal"); if (ov) ov.hidden = true; }
+
+  // "Compare all features" — the Packaged (MSIX/PWA) vs Unpackaged (EXE/MSI) feature table, shown in a
+  // focused dialog (mirrors the Help-me-choose modal) so it reads as an overlay, not a dropdown. Rows
+  // from the official Store docs comparison.
+  var CMP_ROWS = [
+    ['Hosting', 'Complimentary, provided by Microsoft', 'You host it and cover the cost'],
+    ['Commerce &mdash; payments, in-app, subscriptions, licensing', 'Microsoft Store commerce, or your own/3P', 'Your own or 3P commerce platform'],
+    ['Code signing', 'Complimentary, provided by Microsoft', 'You sign with a CA certificate (Microsoft Trusted Root) and cover the cost'],
+    ['Automatic updates', 'The OS checks every 24 hours', 'Your app manages its own updates'],
+    ['S-Mode support', 'Supported', ''],
+    ['Publish as a private app', 'Available', ''],
+    ['Package flighting', 'Available', ''],
+    ['Windows integration &mdash; Share dialog, launch from the Store', 'Yes', ''],
+    ['Windows 11 backup &amp; restore', 'Auto-installs when a device is restored or migrated', 'Start-menu icons restore, but point to the Store page']
+  ];
+  function compareDialogHTML() {
+    var rows = CMP_ROWS.map(function (r) { return '<tr><th scope="row">' + r[0] + '</th><td class="cmp__pkg">' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('');
+    return '<div class="cmp-modal__head"><h3 class="cmp-modal__title">Compare formats</h3>' +
+        '<button type="button" class="fmtw__close" data-cmpclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+      '<div class="cmp-modal__scroll"><table class="cmp__table"><thead><tr>' +
+        '<th scope="col">Feature</th><th scope="col" class="cmp__hd--rec">Packaged &middot; MSIX &amp; PWA</th><th scope="col">Unpackaged &middot; EXE &amp; MSI</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="cmp__note">PWA publishes as MSIX, so it sits in the Packaged column. GDK games are packaged too (not an unpackaged installer) but publish through Partner Center.</p>';
+  }
+  function openCompare() {
+    var ov = document.getElementById("cmpModal");
+    if (!ov) {
+      ov = document.createElement("div");
+      ov.id = "cmpModal"; ov.className = "fmthelp-modal cmp-modal";
+      ov.innerHTML = '<div class="fmthelp-modal__backdrop" data-cmpclose></div><div class="fmthelp-modal__card cmp-modal__card" role="dialog" aria-modal="true" aria-label="Compare formats"><div id="cmpModalBody"></div></div>';
+      document.body.appendChild(ov);
+    }
+    var body = document.getElementById("cmpModalBody"); if (body) body.innerHTML = compareDialogHTML();
+    ov.hidden = false;
+  }
+  function closeCompare() { var ov = document.getElementById("cmpModal"); if (ov) ov.hidden = true; }
+  function renderFmtHelp(id) {
+    var body = document.getElementById("fmthelpBody"); if (!body) return;
+    if (FMTW_RESULT[id]) {
+      var r = FMTW_RESULT[id];
+      body.innerHTML =
+        '<div class="fmtw__head"><span class="fmtw__result-eyebrow">Recommended for you</span>' +
+          '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+        '<div class="fmtw__result"><span class="fmtw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
+          '<div><div class="fmtw__result-name">' + r.name + '</div>' + (r.rec ? '<span class="fmtw__result-rec">Most popular</span>' : '') + '</div></div>' +
+        '<p class="fmtw__result-why">' + r.why + '</p>' +
+        '<div class="fmtw__result-actions"><fluent-button appearance="primary" data-fmtw-add="' + id + '">Add ' + r.name + '</fluent-button>' +
+          '<button type="button" class="fmtw__restart" data-fmtw-back="start">Start over</button></div>';
+      return;
+    }
+    var step = FMTW[id]; if (!step) return;
+    var opts = step.opts.map(function (o, i) {
+      return '<button type="button" class="fmtw__opt" data-fmtw-opt="' + id + ':' + i + '">' +
+        '<span class="fmtw__opt-ico"><iconify-icon icon="' + o.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="fmtw__opt-txt"><span class="fmtw__opt-title">' + o.title + '</span>' + (o.desc ? '<span class="fmtw__opt-desc">' + o.desc + '</span>' : '') + '</span>' +
+        '<iconify-icon class="fmtw__opt-arrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    }).join('');
+    body.innerHTML =
+      '<div class="fmtw__head"><h3 class="fmtw__q">' + step.q + '</h3>' +
+        '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+      '<div class="fmtw__opts">' + opts + '</div>' +
+      '<div class="fmtw__foot">' + (step.back ? '<button type="button" class="fmtw__back" data-fmtw-back="' + step.back + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' : '') + '</div>';
+  }
+  function fmtwPick(id, idx) {
+    var step = FMTW[id]; if (!step) return;
+    var opt = step.opts[idx]; if (!opt) return;
+    if (opt.set) { for (var k in opt.set) fmtwState[k] = opt.set[k]; }
+    renderFmtHelp(opt.result || opt.next);
   }
 
   // Zero-state "Resources & support" — a row of card links (reuses the .pkg card) so onboarding ends
@@ -373,6 +525,84 @@
         res("fluent:shield-checkmark-20-regular", "Store Policies", "Know the requirements before you submit.", "https://learn.microsoft.com/windows/apps/publish/store-policies") +
         res("fluent:people-community-20-regular", "Community &amp; forums", "Ask questions and share feedback.", "https://techcommunity.microsoft.com/") +
         res("fluent:chat-help-20-regular", "Contact support", "Get help with your account or apps.", "https://support.microsoft.com/") +
+      '</div>';
+  }
+
+  // Zero-state hierarchy #2 \u2014 "What brings you here?": three task-oriented entry points into the SAME
+  // publishing experience. Real <button>s (a11y) wired to existing actions: data-newapp (fast add),
+  // data-scrollto (orientation), data-fmthelp (recommender).
+  function ovWhatBringsHTML() {
+    function card(icon, title, desc, cta, attrs) {
+      return '<button type="button" class="wbh" ' + attrs + '>' +
+        '<span class="wbh__ico"><iconify-icon icon="' + icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="wbh__t">' + title + '</span>' +
+        '<span class="wbh__d">' + desc + '</span>' +
+        '<span class="wbh__cta">' + cta + '<iconify-icon icon="fluent:arrow-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
+      '</button>';
+    }
+    return '<div class="block__head block__head--sub"><div><h2>What brings you here?</h2>' +
+        '<p class="muted">Choose the path that best matches where you are.</p></div></div>' +
+      '<div class="wbh-grid">' +
+        card('fluent:rocket-20-regular', 'I have an app ready', 'I already have an app and want to publish it to the Microsoft Store.', 'Get started', 'data-newapp') +
+        card('fluent:map-20-regular', 'I\u2019m new to Windows publishing', 'Guide me through the process from preparing my app to publishing it.', 'Show me how', 'data-scrollto="ovJourney"') +
+        card('fluent:wand-20-regular', 'I\u2019m not sure what I need', 'Answer a few questions and we\u2019ll recommend the best publishing path.', 'Help me choose', 'data-fmthelp') +
+      '</div>';
+  }
+
+  // Zero-state hierarchy #3 \u2014 "Your publishing journey": a scannable 4-step stepper (orientation, not a
+  // form) giving newcomers the mental model. Horizontal on desktop, vertical list on narrow.
+  function ovJourneyHTML() {
+    function step(n, title, desc) {
+      return '<li class="ovj__step"><span class="ovj__n">' + n + '</span>' +
+        '<span class="ovj__b"><span class="ovj__t">' + title + '</span>' +
+        '<span class="ovj__d">' + desc + '</span></span></li>';
+    }
+    return '<div class="block__head block__head--sub" id="ovJourney"><div><h2>Your publishing journey</h2></div></div>' +
+      '<ol class="ovj">' +
+        step('1', 'Choose your app format', 'Find the right publishing option for your app.') +
+        step('2', 'Create your Store listing', 'Add your app name, description, screenshots, age rating and other information.') +
+        step('3', 'Submit your app', 'Upload your package, configure pricing and availability, and submit for certification.') +
+        step('4', 'Publish', 'Once your app passes certification, publish it to the Microsoft Store.') +
+      '</ol>';
+  }
+
+  // Zero-state hierarchy #4 \u2014 "Common starting points": task-based on-ramps (plain language first, the
+  // format term still visible). Reuses the [data-addformat] handler (openNewApp preset) + [data-fmthelp].
+  function ovStartHTML() {
+    function opt(icon, title, desc, attrs) {
+      return '<button type="button" class="csp" ' + attrs + '>' +
+        '<span class="csp__ico"><iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="csp__b"><span class="csp__t">' + title + '</span>' +
+        '<span class="csp__d">' + desc + '</span></span>' +
+        '<iconify-icon class="csp__arrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    }
+    return '<div class="block__head block__head--sub"><div><h2>Common starting points</h2>' +
+        '<p class="muted">Start with what you already have.</p></div></div>' +
+      '<div class="csp-grid">' +
+        opt('fluent:desktop-20-regular', 'Existing EXE or MSI', 'Publish your existing Windows installer without rebuilding your app.', 'data-addformat="win32"') +
+        opt('fluent:box-20-regular', 'MSIX package', 'Publish an app that\u2019s already packaged for modern Windows.', 'data-addformat="msix"') +
+        opt('fluent:globe-20-regular', 'Web app', 'Bring your web app to the Microsoft Store as a PWA.', 'data-addformat="pwa"') +
+        opt('fluent:xbox-controller-20-regular', 'Game', 'Publish your Windows game using the Game Development Kit.', 'data-addformat="gdk"') +
+        opt('fluent:chat-help-20-regular', 'Not sure?', 'Tell us about your app and we\u2019ll recommend a format.', 'data-fmthelp') +
+      '</div>';
+  }
+
+  // Zero-state hierarchy #6 \u2014 "Need help getting started?": compact, quiet reference pills (not a
+  // dominant section). Real MS Learn destinations.
+  function ovHelpHTML() {
+    function lnk(icon, label, href) {
+      return '<a class="reslink" href="' + href + '" target="_blank" rel="noopener noreferrer">' +
+        '<iconify-icon class="reslink__ico" icon="' + icon + '" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+        '<span>' + label + '</span>' +
+        '<iconify-icon class="reslink__ext" icon="fluent:open-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></a>';
+    }
+    return '<div class="block__head block__head--sub"><div><h2>Need help getting started?</h2></div></div>' +
+      '<div class="reslinks">' +
+        lnk('fluent:shield-checkmark-20-regular', 'Publishing requirements', 'https://learn.microsoft.com/windows/apps/publish/store-policies') +
+        lnk('fluent:ribbon-20-regular', 'Certification requirements', 'https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/app-certification-process') +
+        lnk('fluent:options-20-regular', 'Choosing an app format', 'https://learn.microsoft.com/windows/apps/publish/') +
+        lnk('fluent:image-20-regular', 'Store listing guidance', 'https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/reserve-your-apps-name') +
+        lnk('fluent:book-open-20-regular', 'Publishing documentation', 'https://learn.microsoft.com/windows/apps/') +
       '</div>';
   }
 
@@ -752,7 +982,7 @@
     var el = $("overviewSummary");
     if (!el) return;
     if (STORE) {
-      if (!state.apps.length) {                          // fresh portal: one focused path — the hero's single CTA + what you can publish
+      if (!state.apps.length) {                          // fresh portal zero-state: hero + "What you can publish" format cards
         el.innerHTML = storeOnrampsHTML();
         return;
       }
@@ -3396,44 +3626,54 @@
     nm.value = (a.storeName || a.name).replace(/\.[^.]+$/, "");
     setDropdownValue($("pubLang"), a.storeLang || "en-US");
     if ($("pubType")) setDropdownValue($("pubType"), a.type || "app");
-    if ($("pubGameType")) setDropdownValue($("pubGameType"), "store");
-    syncGameChoice();
+    if ($("pubAppType")) setDropdownValue($("pubAppType"), a.pkgType || "msix");
+    syncPubChoice();
     var m = $("publishModal"); if (m && m.show) m.show();
     checkPubName();
     setTimeout(function () { try { nm.focus(); nm.select(); } catch (e) {} }, 40);
   }
   // "Create new app" — reserve a name for a brand-new app (not a discovered one).
-  function openNewApp() {
+  // opts (from a format column CTA): { type: 'app'|'game', pkgType: 'msix'|'win32'|'pwa'|'gdk' }.
+  function openNewApp(opts) {
+    opts = opts || {};
     publishId = null;
     if ($("pubTitle")) $("pubTitle").textContent = "Add a new app";
     resetPubSteps();
     $("pubName").value = "";
     setDropdownValue($("pubLang"), "en-US");
-    if ($("pubType")) setDropdownValue($("pubType"), "app");
-    if ($("pubGameType")) setDropdownValue($("pubGameType"), "store");
-    syncGameChoice();
+    if ($("pubType")) setDropdownValue($("pubType"), opts.type === "game" ? "game" : "app");
+    if ($("pubAppType")) setDropdownValue($("pubAppType"), opts.pkgType || "msix");
+    syncPubChoice();
     var m = $("publishModal"); if (m && m.show) m.show();
     checkPubName();
     setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
   }
   function closePublish() { var m = $("publishModal"); if (m && m.hide) m.hide(); }
-  // Reveal the game-type cards when "Game" is picked, and the Partner Center off-ramp when "GDK" is picked.
-  function syncGameChoice() {
-    // v3 fluent-radio doesn't reflect its checked state to a styleable attribute — mirror it so the selected dot fills.
+  // Reveal the right App-type options for the product (.EXE/.MSI app-only, GDK game-only) and the
+  // Partner Center off-ramp when GDK is picked.
+  function syncPubChoice() {
+    var isGame = $("pubType") && readDropdownValue($("pubType")) === "game";
+    var w32 = $("at-win32-field"); if (w32) w32.hidden = isGame;    // .EXE/.MSI is app-only
+    var gdkf = $("at-gdk-field"); if (gdkf) gdkf.hidden = !isGame;   // GDK is game-only
+    var fmt = $("pubAppType") ? readDropdownValue($("pubAppType")) : "msix";
+    if ((fmt === "win32" && isGame) || (fmt === "gdk" && !isGame)) { if ($("pubAppType")) setDropdownValue($("pubAppType"), "msix"); fmt = "msix"; }
+    var isGdk = fmt === "gdk";
+    var note = $("pubGdkNote"); if (note) note.hidden = !isGdk;
+    var hint = $("pubAppTypeHint");
+    if (hint) hint.textContent = (fmt === "unsure")
+      ? "No problem \u2014 you\u2019ll choose your format when you add your package. MSIX is recommended for most new apps."
+      : "You can change this later \u2014 it\u2019s set by the package you upload.";
+    var lf = $("pubLangField"); if (lf) lf.hidden = isGdk;   // GDK leaves for Partner Center, so language is moot
+    // v3 fluent-radio doesn't reflect checked to a styleable attribute — mirror it so the selected dot fills.
     var rr = document.querySelectorAll("#publishModal .pubchoice fluent-radio");
     for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute("checked", !!rr[i].checked);
-    var isGame = $("pubType") && readDropdownValue($("pubType")) === "game";
-    var isGdk = isGame && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk";
-    var gt = $("pubGameTypeField"); if (gt) gt.hidden = !isGame;
-    var note = $("pubGdkNote"); if (note) note.hidden = !isGdk;
-    var lf = $("pubLangField"); if (lf) lf.hidden = isGdk;   // GDK leaves for Partner Center, so language is moot
     updatePubCreate();
   }
   // "Add app" is enabled only for a valid name this flow can actually reserve (GDK is off-ramped).
   function updatePubCreate() {
     var btn = $("pubCreate"); if (!btn) return;
     var v = ($("pubName").value || "").trim();
-    var isGdk = $("pubType") && readDropdownValue($("pubType")) === "game" && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk";
+    var isGdk = $("pubAppType") && readDropdownValue($("pubAppType")) === "gdk";
     if (v.length >= 2 && !isGdk) btn.removeAttribute("disabled"); else btn.setAttribute("disabled", "");
   }
   function checkPubName() {
@@ -3447,7 +3687,8 @@
   function doCreateApp() {
     var name = ($("pubName").value || "").trim(); if (name.length < 2) return;
     // GDK titles are reserved in Partner Center, not here — the button is disabled, but guard anyway.
-    if ($("pubType") && readDropdownValue($("pubType")) === "game" && $("pubGameType") && readDropdownValue($("pubGameType")) === "gdk") return;
+    var fmt = $("pubAppType") ? readDropdownValue($("pubAppType")) : "msix";
+    if (fmt === "gdk") return;
     var a = publishId ? appById(publishId) : null;
     if (!a) {                                            // new app — added to the table right now
       var cert = state.certs.filter(function (c) { return c.trust === "Valid"; })[0] || state.certs[0] || null;
@@ -3459,6 +3700,7 @@
     a.storeName = name;
     a.storeLang = readDropdownValue($("pubLang")) || "en-US";
     if ($("pubType")) a.type = readDropdownValue($("pubType")) || "app";
+    a.pkgType = (fmt && fmt !== "unsure") ? fmt : null;   // seeds the flow's package step; can change later
     a.storeCreated = a.storeCreated || today();
     if (!a.store) a.storeStatus = "in-progress";        // reserved → entering the flow
     save(); renderApps();                               // persist + reflect the new row
@@ -3472,12 +3714,13 @@
   function wirePublish() {
     $("publishModal").addEventListener("click", function (e) {
       if (e.target.closest("[data-pubclose]")) { closePublish(); return; }
+      if (e.target.closest("[data-pubhelp]")) { var _pnm = $("pubName") ? $("pubName").value : ""; closePublish(); openFormatHelp({ reserve: true, name: _pnm }); return; }
     });
     $("publishModal").addEventListener("toggle", function (e) {
       if (e.detail && e.detail.newState === "closed") { publishId = null; resetPubSteps(); }
     });
-    if ($("pubType")) $("pubType").addEventListener("change", function () { setTimeout(syncGameChoice, 0); });
-    if ($("pubGameType")) $("pubGameType").addEventListener("change", function () { setTimeout(syncGameChoice, 0); });
+    if ($("pubType")) $("pubType").addEventListener("change", function () { setTimeout(syncPubChoice, 0); });
+    if ($("pubAppType")) $("pubAppType").addEventListener("change", function () { setTimeout(syncPubChoice, 0); });
     $("pubCreate").addEventListener("click", doCreateApp);
     var nm = $("pubName");
     nm.addEventListener("input", checkPubName);
@@ -3492,9 +3735,10 @@
     var ms; try { ms = JSON.parse(localStorage.getItem("msstore.apps")) || []; } catch (e) { ms = []; }
     if (!Array.isArray(ms)) ms = [];
     var mapped = {
-      id: a.id, name: a.storeName || a.name, type: "win32", subtype: null,
-      // `type` above is the PACKAGE family, so the App/Game choice from the reservation rides
-      // separately — the flow uses it to pre-answer the age questionnaire's first question.
+      // `type` is the PACKAGE family (msix / win32 / pwa) chosen when the app was reserved — the flow
+      // opens straight into that format's package step. The App/Game choice rides separately in
+      // `productKind` (used to pre-answer the age questionnaire's first question).
+      id: a.id, name: a.storeName || a.name, type: (["msix", "win32", "pwa"].indexOf(a.pkgType) >= 0 ? a.pkgType : "msix"), subtype: null,
       productKind: a.type === "game" ? "game" : "app",
       language: a.storeLang || "en-US",
       // published apps open straight to the live hub; only a freshly-submitted app is in-review
@@ -3697,6 +3941,25 @@
         if (STORE || state.verified) openModal(); else goView("overview"); return; }
       if (e.target.closest("[data-nav-marketing]")) { location.href = "wdp-marketing.html"; return; }
       if (e.target.closest("[data-newapp]")) { openNewApp(); return; }
+      if (e.target.closest("[data-fmthelp]")) { openFormatHelp(); return; }
+      if (e.target.closest("[data-cmpopen]")) { openCompare(); return; }
+      var _sc = e.target.closest("[data-scrollto]");
+      if (_sc) { var _st = document.getElementById(_sc.getAttribute("data-scrollto")); if (_st) _st.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+      var _fmtt = e.target.closest("[data-fmttoggle]");
+      if (_fmtt) {
+        var _tbl = _fmtt.closest(".fmttable");
+        if (_tbl) {
+          var _open = _tbl.classList.toggle("fmttable--open");
+          _fmtt.setAttribute("aria-expanded", _open ? "true" : "false");
+          var _tx = _fmtt.querySelector(".fmtt__toggle-txt");
+          if (_tx) _tx.textContent = _open ? "Hide comparison" : "Compare all features";
+        }
+        return;
+      }
+      var _addm = e.target.closest("[data-addmenu]");
+      if (_addm) { toggleFmtMenu(_addm); return; }
+      var _addf = e.target.closest("[data-addformat]");
+      if (_addf) { var _f = _addf.getAttribute("data-addformat"); openNewApp({ type: _f === "gdk" ? "game" : "app", pkgType: _f }); return; }
       if (e.target.closest("[data-rescan]")) { rescanApps(); return; }
       if (e.target.closest("[data-hero-dismiss]")) {
         try { localStorage.setItem("wdp.appsHero.dismissed", "1"); } catch (_) {}
@@ -3806,6 +4069,33 @@
         if (he) { downloadText(he.file + ".txt", "Symbol package: " + he.file + "\nVersion: " + he.ver + "\nUploaded by: " + he.by + " on " + he.date + "\nStatus: " + he.status + "\n\n(Demo placeholder \u2014 the original .zip would download here.)"); toast("Downloading " + he.file, true); } return; }
       var jump = e.target.closest("[data-jump]"); if (jump) { e.preventDefault(); goView(jump.getAttribute("data-jump")); }
     });
+
+    // Act on / dismiss the ambiguous-format app/game menu (rendered in <body>, outside .main).
+    document.addEventListener("click", function (e) {
+      if (e.target.closest("[data-fmthclose]")) {
+        var _cr = fmtwState.reserve, _cnm = fmtwState.name;
+        closeFormatHelp();
+        if (_cr) { openNewApp(); if (_cnm && $("pubName")) { $("pubName").value = _cnm; checkPubName(); } }   // came from the reserve dialog -> return to it, keep the name
+        return;
+      }
+      if (e.target.closest("[data-cmpclose]")) { closeCompare(); return; }
+      var _wo = e.target.closest("[data-fmtw-opt]");
+      if (_wo) { var p = _wo.getAttribute("data-fmtw-opt").split(":"); fmtwPick(p[0], +p[1]); return; }
+      var _wb = e.target.closest("[data-fmtw-back]");
+      if (_wb) { renderFmtHelp(_wb.getAttribute("data-fmtw-back")); return; }
+      var _wa = e.target.closest("[data-fmtw-add]");
+      if (_wa) {
+        var _waf = _wa.getAttribute("data-fmtw-add"), _rnm = fmtwState.reserve ? fmtwState.name : "";
+        closeFormatHelp();
+        openNewApp({ type: fmtwState.pt, pkgType: _waf });   // reopen the reserve dialog preset to the recommendation
+        if (_rnm && $("pubName")) { $("pubName").value = _rnm; checkPubName(); }   // keep the name they'd typed
+        return;
+      }
+      var _mi = e.target.closest(".fmtmenu__item");
+      if (_mi) { closeFmtMenus(); openNewApp({ type: _mi.getAttribute("data-pt"), pkgType: _mi.getAttribute("data-fmt") }); return; }
+      if (!e.target.closest("[data-addmenu]")) closeFmtMenus();
+    });
+    window.addEventListener("scroll", function () { if (document.getElementById("fmtmenu-live")) closeFmtMenus(); }, true);
 
     var _symD = $("symDialog"); if (_symD) _symD.addEventListener("click", function (e) {
       if (e.target.closest("[data-sym-close]")) { closeSymUploader(); return; }

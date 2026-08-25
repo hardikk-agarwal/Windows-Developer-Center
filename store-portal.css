@@ -34,28 +34,200 @@
   .gstep:not(:last-child)::after { display: none; }
 }
 
-/* Overview — "What you can publish": format cards for the toggled type (Apps or Games). Each is a
-   surface tile (icon + name + one-line desc); the recommended format wears a top-right "Recommended" pill. */
-/* "What you can publish": four format cards (MSIX / Win32 / PWA / GDK) with App/Game tags, a one-liner,
-   and key benefits. MSIX carries the single Recommended cue. */
-.fmtgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
-.fmtcard { position: relative; display: flex; flex-direction: column; padding: 16px; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); }
-.fmtcard__ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
-.fmtcard__rec { position: absolute; top: 14px; right: 14px; font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; background: rgba(40,153,245,.16); color: var(--brand-soft); }
-.fmtcard__name { margin-top: 12px; font-size: 16px; font-weight: 600; color: var(--text); }
-.fmtcard__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+/* Overview — "What you can publish": a comparison-first table. Each format (MSIX / .EXE·.MSI / PWA / GDK)
+   is a rich column header (icon + name + short descriptor + App/Game tags); the rows below compare them
+   at a glance. MSIX carries the single Recommended cue and a subtly tinted column. */
+.fmttable-wrap { overflow-x: auto; margin-top: 16px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); }
+.fmttable { width: 100%; min-width: 720px; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+.fmttable th, .fmttable td { text-align: left; padding: 14px 18px; vertical-align: middle; }
+.fmttable thead th { vertical-align: top; padding-top: 22px; padding-bottom: 18px; }
+.fmttable tbody th, .fmttable tbody td { border-top: 1px solid var(--border); }
+.fmttable tbody th { width: 1%; font-size: 12.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.fmttable tbody td { color: var(--text-2); }
+.fmttable .fmt-good { color: var(--text); }
+.fmttable .fmt-handle { color: var(--gold, #e0a23a); }
+.fmttable .fmt-note { color: var(--brand-soft); }
+.fmttable th.fmtt__corner { width: 1%; vertical-align: middle; font-size: 13px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.fmtt__fmt { position: relative; min-width: 178px; }
+.fmtt__ico { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
+.fmtt__rec { position: absolute; top: 16px; right: 16px; font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 22%, transparent); color: var(--brand-soft); }
+.fmtt__name { display: block; margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--text); }
+.fmtt__desc { display: block; margin-top: 4px; font-size: 11.5px; font-weight: 400; line-height: 16px; color: var(--text-3); }
+.fmtt__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+/* Recommended (MSIX) column — a full-height spotlight band: opaque tint + brand side rails (box-shadow so
+   they survive the table layout), flush to the card's top & bottom edges, no internal row dividers. */
+.fmttable--lead thead th.fmtt__fmt--rec,
+.fmttable--lead tbody td:nth-child(2),
+.fmttable--lead tfoot td:nth-child(2) { background: color-mix(in srgb, var(--brand) 12%, var(--surface)); }
+.fmttable--lead .fmtt__fmt--rec .fmtt__ico { background: color-mix(in srgb, var(--brand) 24%, transparent); color: var(--brand-soft); }
+.fmttable--lead thead th.fmtt__fmt--rec { box-shadow: inset 1px 0 0 var(--brand-tint-stroke), inset -1px 0 0 var(--brand-tint-stroke); }
+.fmttable--lead tbody td:nth-child(2) { border-top-color: transparent; box-shadow: inset 1px 0 0 var(--brand-tint-stroke), inset -1px 0 0 var(--brand-tint-stroke); }
+.fmttable--lead tfoot td:nth-child(2) { box-shadow: inset 1px 0 0 var(--brand-tint-stroke), inset -1px 0 0 var(--brand-tint-stroke); }
 .fmtcard__tag { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); }
-.fmtcard__desc { margin: 10px 0 0; font-size: 12.5px; line-height: 17px; color: var(--text-3); }
-.fmtcard__benefits { list-style: none; margin: 14px 0 0; padding: 14px 0 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-.fmtcard__benefits li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 16px; color: var(--text-2); }
-.fmtcard__benefits iconify-icon { flex: none; color: var(--brand-soft); margin-top: 1px; }
-@media (max-width: 980px) { .fmtgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .fmtgrid { grid-template-columns: 1fr; } }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.fmthelp { display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; font-size: 12.5px; line-height: 18px; color: var(--text-3); }
+.fmthelp iconify-icon { flex: none; margin-top: 1px; color: var(--text-3); }
+.fmthelp b { color: var(--text-2); font-weight: 600; }
+.fmthelp a { color: var(--brand-soft); text-decoration: none; font-weight: 600; }
+.fmthelp a:hover { text-decoration: underline; }
+/* Actionable "Add {format}" CTA row under the "What you can publish" comparison. */
+.fmtt__cta-row td { padding-top: 20px; padding-bottom: 22px; text-align: center; }
+.fmtt__cta-lbl { white-space: nowrap; }
+.fmtt__cta iconify-icon { margin-inline-start: 2px; opacity: .8; }
+/* Collapsible comparison — collapsed by default (App type row + Add buttons only); the toggle in the
+   labels column reveals the .fmtt__compare rows. The band column stays continuous through the toggle row. */
+.fmtt__compare { display: none; }
+.fmttable--open .fmtt__compare { display: table-row-group; }
+.fmtt__corner-lbl { display: block; }
+.fmtt__toggle { display: inline-flex; align-items: center; gap: 6px; appearance: none; border: 0; background: transparent; margin: 16px 0 0; padding: 2px 0; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--brand-soft); cursor: pointer; white-space: nowrap; }
+.fmtt__toggle:hover { text-decoration: underline; }
+.fmtt__toggle-chev { transition: transform .15s ease; }
+.fmttable--open .fmtt__toggle-chev { transform: rotate(180deg); }
+/* Collapsed: pull the Add buttons up under the cards so each format reads as one compact unit (no hollow gap). */
+.fmttable:not(.fmttable--open) thead th { padding-bottom: 10px; }
+.fmttable:not(.fmttable--open) .fmtt__cta-row td { padding-top: 8px; padding-bottom: 16px; }
+
+/* Overview zero-state — "What you can publish" format cards: icon + name + one-line description +
+   benefit bullets + App/Game tags. MSIX = the single Recommended (tinted) card. */
+.pubgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.pubcard { display: flex; flex-direction: column; padding: 18px 18px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); }
+.pubcard__head { display: flex; align-items: center; gap: 11px; }
+.pubcard__ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
+.pubcard__name { font-size: 15px; font-weight: 600; color: var(--text); }
+.pubcard__rec { margin-left: auto; font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 22%, transparent); color: var(--brand-soft); }
+.pubcard__desc { margin: 14px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+.pubcard__best { margin: 12px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--text); }
+.pubcard__best-k { color: var(--text-3); font-weight: 600; }
+.pubcard__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 16px; }
+.pubcard__tag { font-size: 10.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); }
+.pubhelp { display: inline-flex; align-items: center; gap: 6px; appearance: none; border: 0; background: transparent; padding: 0; margin: 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--brand-soft); cursor: pointer; }
+.pubhelp:hover { text-decoration: underline; }
+.pubhelp:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 4px; }
+.pubhelp-row { margin-top: 10px; }
+/* Reserve dialog ("Add a new app") — roomier vertical rhythm between fields + label→control. */
+.pubdialog .field { gap: 8px; margin-bottom: 20px; }
+@media (max-width: 1000px) { .pubgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .pubgrid { grid-template-columns: 1fr; } }
+
+/* ===== Overview zero-state — guided hierarchy: hero → what brings you here → journey → starting points → compare → help ===== */
+.ovhero { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 20px 24px; border-radius: var(--r-lg); border: 1px solid var(--brand-tint-stroke); background: var(--brand-tint); }
+.ovhero__text { flex: 1 1 320px; min-width: 0; }
+.ovhero__text h2 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -.01em; color: var(--text); }
+.ovhero__text p { margin: 0; max-width: 640px; font-size: 13.5px; line-height: 1.5; color: var(--text-2); }
+.ovhero__actions { display: flex; align-items: center; gap: 10px; flex: none; flex-wrap: wrap; }
+/* What brings you here — 3 entry-point cards */
+.wbh-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.wbh { display: flex; flex-direction: column; align-items: flex-start; text-align: left; appearance: none; font: inherit; cursor: pointer; padding: 18px 18px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-card); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.wbh:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); box-shadow: 0 4px 14px rgba(0, 0, 0, .16); transform: translateY(-1px); }
+.wbh:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.wbh__ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--brand-tint); color: var(--brand-soft); margin-bottom: 14px; }
+.wbh__t { font-size: 15px; font-weight: 600; color: var(--text); }
+.wbh__d { margin-top: 6px; font-size: 12.5px; line-height: 1.5; color: var(--text-3); flex: 1; }
+.wbh__cta { display: inline-flex; align-items: center; gap: 5px; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--brand-soft); }
+.wbh__cta iconify-icon { transition: transform .15s ease; }
+.wbh:hover .wbh__cta iconify-icon { transform: translateX(2px); }
+/* Publishing journey — a scannable stepper */
+.ovj { display: flex; list-style: none; padding: 0; margin: 18px 0 0; }
+.ovj__step { flex: 1 1 0; position: relative; display: flex; flex-direction: column; padding-right: 22px; }
+.ovj__step:last-child { padding-right: 0; }
+.ovj__step:not(:last-child)::after { content: ""; position: absolute; top: 15px; left: 40px; right: 8px; height: 2px; background: var(--border); }
+.ovj__n { position: relative; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: var(--brand-tint); border: 1px solid var(--brand-tint-stroke); color: var(--brand-soft); font-size: 14px; font-weight: 700; }
+.ovj__b { display: flex; flex-direction: column; gap: 3px; margin-top: 13px; }
+.ovj__t { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.ovj__d { font-size: 12px; line-height: 1.45; color: var(--text-3); }
+/* Common starting points — task on-ramps */
+.csp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 16px; }
+.csp { display: flex; align-items: center; gap: 14px; text-align: left; appearance: none; font: inherit; cursor: pointer; padding: 13px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); transition: border-color .15s ease, background .15s ease; }
+.csp:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); background: color-mix(in srgb, var(--brand) 4%, var(--surface)); }
+.csp:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.csp__ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
+.csp__b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.csp__t { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.csp__d { font-size: 12px; line-height: 1.45; color: var(--text-3); }
+.csp__arrow { flex: none; color: var(--text-3); transition: color .15s ease; }
+.csp:hover .csp__arrow { color: var(--brand-soft); }
+/* Need help — quiet reference pills */
+.reslinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.reslink { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; text-decoration: none; color: var(--text-2); font-size: 12.5px; font-weight: 500; transition: border-color .15s ease, color .15s ease; }
+.reslink:hover { border-color: var(--brand-soft); color: var(--text); }
+.reslink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.reslink__ico { color: var(--brand-soft); }
+.reslink__ext { color: var(--text-4); }
+@media (max-width: 860px) {
+  .wbh-grid { grid-template-columns: 1fr; }
+  .ovj { flex-direction: column; }
+  .ovj__step { flex-direction: row; align-items: flex-start; gap: 14px; padding: 0 0 20px; }
+  .ovj__step:last-child { padding-bottom: 0; }
+  .ovj__step:not(:last-child)::after { top: 32px; bottom: 4px; left: 14px; right: auto; width: 2px; height: auto; }
+  .ovj__b { margin-top: 4px; }
+  .ovhero { flex-direction: column; align-items: flex-start; }
+  .ovhero__actions { width: 100%; }
+}
+/* App/game menu on the both-capable (MSIX/PWA) Add buttons — rendered in <body>, JS positions it fixed. */
+.fmtmenu { position: fixed; z-index: 60; min-width: 148px; padding: 4px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 10px 28px rgba(0, 0, 0, .32); }
+.fmtmenu__item { display: block; width: 100%; text-align: left; appearance: none; border: 0; background: transparent; padding: 8px 12px; border-radius: 6px; font: inherit; font-size: 13px; color: var(--text); cursor: pointer; }
+.fmtmenu__item:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+/* "Help me choose" guide bar + recommender wizard modal. */
+.fmtguide { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--brand-tint-stroke, var(--border)); background: var(--brand-tint, color-mix(in srgb, var(--brand) 8%, transparent)); }
+.fmtguide__ico { flex: none; color: var(--brand-soft); }
+.fmtguide__txt { flex: 1; min-width: 0; font-size: 13px; color: var(--text-2); }
+.fmtguide__btn { flex: none; }
+@media (max-width: 620px) { .fmtguide { flex-wrap: wrap; } .fmtguide__txt { flex-basis: 100%; } }
+.fmthelp-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.fmthelp-modal[hidden] { display: none; }
+.fmthelp-modal__backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
+.fmthelp-modal__card { position: relative; width: min(460px, 100%); max-height: 88vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 64px rgba(0, 0, 0, .5); padding: 22px 22px 20px; }
+.fmtw__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.fmtw__q { margin: 0; font-size: 17px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.fmtw__close { flex: none; appearance: none; border: 0; background: transparent; color: var(--text-3); cursor: pointer; padding: 2px; border-radius: 6px; display: inline-flex; }
+.fmtw__close:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+.fmtw__opts { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.fmtw__opt { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; appearance: none; padding: 14px 15px; border-radius: 10px; border: 1px solid var(--border); background: color-mix(in srgb, var(--text) 3%, transparent); color: var(--text); font: inherit; cursor: pointer; transition: border-color .12s ease, background .12s ease; }
+.fmtw__opt:hover { border-color: var(--brand-soft); background: var(--brand-tint, color-mix(in srgb, var(--brand) 8%, transparent)); }
+.fmtw__opt-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); }
+.fmtw__opt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fmtw__opt-title { font-size: 14px; font-weight: 600; }
+.fmtw__opt-desc { font-size: 12px; color: var(--text-3); line-height: 1.35; }
+.fmtw__opt-arrow { flex: none; color: var(--text-3); }
+.fmtw__foot { display: flex; align-items: center; margin-top: 16px; min-height: 22px; }
+.fmtw__back { appearance: none; border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
+.fmtw__back:hover { color: var(--text); }
+.fmtw__result-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--brand-soft); }
+.fmtw__result { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+.fmtw__result-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 12px; background: var(--brand-tint, color-mix(in srgb, var(--brand) 10%, transparent)); color: var(--brand-soft); }
+.fmtw__result-name { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; }
+.fmtw__result-rec { display: inline-block; margin-top: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--brand-soft); }
+.fmtw__result-why { margin: 16px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--text-2); }
+.fmtw__result-actions { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+.fmtw__restart { appearance: none; border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; cursor: pointer; }
+.fmtw__restart:hover { color: var(--text); text-decoration: underline; }
 .pkgs__more { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 2px; padding: 2px 0;
   font-size: 12px; font-weight: 600; color: var(--brand-soft); text-decoration: none; }
 .pkgs__more:hover { text-decoration: underline; }
 .pkgs__foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 18px; }
 .pkgs__foot .pkgs__more { margin: 0; }
+
+/* On-demand "Compare all features" — a disclosure below the format cards holding the full
+   Packaged-vs-Unpackaged detail. Cards stay the hero; this is the depth layer. */
+.pubaid { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 16px; }
+.pubaid__q { font-size: 13px; color: var(--text-2); }
+.pubaid__acts { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pubaid__btn { display: inline-flex; align-items: center; gap: 6px; appearance: none; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; }
+.pubaid__btn:hover { border-color: var(--brand); color: var(--brand-soft); }
+.pubaid__btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.cmp-modal__card { width: min(720px, 100%); }
+.cmp-modal__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.cmp-modal__title { margin: 0; font-size: 16px; font-weight: 700; color: var(--text); }
+.cmp-modal__scroll { overflow-x: auto; }
+.cmp__table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+.cmp__table th, .cmp__table td { text-align: left; padding: 11px 14px; vertical-align: top; line-height: 1.45; }
+.cmp__table thead th { font-weight: 700; color: var(--text); border-bottom: 1px solid var(--border); padding-top: 14px; }
+.cmp__table thead th:first-child { width: 32%; }
+.cmp__hd--rec { color: var(--brand-soft); }
+.cmp__table tbody th { font-weight: 600; color: var(--text-2); }
+.cmp__table tbody td { color: var(--text-2); }
+.cmp__table tbody tr:not(:first-child) th, .cmp__table tbody tr:not(:first-child) td { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+.cmp__note { margin: 12px 0 0; font-size: 12px; color: var(--text-3); }
 
 /* Overview — "Come prepared" Copilot on-ramp: what to bring in a .zip so Copilot can draft the whole submission. */
 .prep { display: flex; gap: 14px; align-items: flex-start; margin: 20px 0 22px; padding: 16px 18px;

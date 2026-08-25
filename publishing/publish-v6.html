@@ -390,6 +390,40 @@
      bits below without needing the file. A real package locks the choice. */
   .v4-type { margin: 0 0 var(--sp-16); }
   .v4-type__q { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
+  /* Chooser retired: the package format rides from the reserve step + switches via the left-rail dropdown. */
+  #v4-type { display: none !important; }
+  .wz-pkgtype { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
+  .wz-pkgtype__btn { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 2px 6px 2px 0; margin: 0; font: inherit; color: var(--fg-2); cursor: pointer; border-radius: var(--r-4); }
+  .wz-pkgtype__btn:hover { color: var(--fg-1); }
+  .wz-pkgtype__btn:hover .wz-pkgtype__editico { color: var(--brand); }
+  .wz-pkgtype__btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .wz-pkgtype__val { font-size: 13px; font-weight: var(--font-weight-semibold); }
+  .wz-pkgtype__editico { color: var(--fg-3); transition: color 120ms ease; }
+  .wz-pkgtype__lock { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--fg-3); }
+  #flow-wrap:not(.is-wizard) #wz-pkgtype { display: none !important; }   /* the switcher belongs to the wizard rail */
+
+  /* Change-app-type dialog: pick a type (short pros/cons) and preview what switching changes. */
+  .atd__lead { font-size: 14px; color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.45; }
+  .atd__opts { display: flex; flex-direction: column; gap: var(--sp-10); }
+  .atd-opt { display: flex; flex-direction: column; gap: var(--sp-6); text-align: left; padding: var(--sp-14) var(--sp-16); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); cursor: pointer; font: inherit; transition: border-color 120ms ease, background 120ms ease; }
+  .atd-opt:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); }
+  .atd-opt.is-sel { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); background: color-mix(in srgb, var(--brand) 5%, var(--layer)); }
+  .atd-opt:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .atd-opt__head { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
+  .atd-opt__name { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .atd-opt__badge { font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+  .atd-opt__badge--rec { color: #fff; background: #2da44e; }
+  .atd-opt__badge--cur { color: var(--fg-2); background: var(--subtle); border: 1px solid var(--stroke-2); }
+  .atd-opt__desc { font-size: 13px; color: var(--fg-2); line-height: 1.45; }
+  .atd-opt__list { list-style: none; margin: var(--sp-4) 0 0; padding: 0; display: grid; gap: 4px; }
+  .atd-opt__list li { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  .atd-opt__list .atd-pro iconify-icon { color: #2da44e; flex: 0 0 auto; margin-top: 1px; }
+  .atd-opt__list .atd-con iconify-icon { color: #e5484d; flex: 0 0 auto; margin-top: 1px; }
+  .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-8); background: var(--subtle); border: 1px solid var(--stroke-2); }
+  .atd__impact-lead { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
+  .atd__impact-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-6); }
+  .atd__impact-list li { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  .atd__impact-list li iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
   .v4-type .seg { display: flex; width: 100%; max-width: 520px; }
   .v4-type .seg__opt { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-6); text-align: center; }
   .v4-type .seg__info { flex: 0 0 auto; margin-inline-start: var(--sp-4); color: currentColor; opacity: .5; cursor: help; transition: opacity var(--dur-2) var(--ease-out); }
@@ -4030,6 +4064,15 @@
   #flow-wrap.wz-v2 .ez-apphead__icon { width: 44px; height: 44px; font-size: 16px; border-radius: var(--r-12); }
   #flow-wrap.wz-v2.is-wizard .ez-title { font-size: 16px; line-height: 22px; }
   #flow-wrap.wz-v2.is-wizard .ez-apphead__meta { margin-top: var(--sp-4); }
+  /* Left-rail identity, stacked: app name, then the editable app type, then the Draft state.
+     Name wraps freely (min-width:0 + overflow-wrap) so any length is safe in the narrow rail. */
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { align-items: flex-start; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__icon { width: 56px; height: 56px; font-size: 20px; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__namebtn { order: 0; min-width: 0; max-width: 100%; margin: 0; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { order: 1; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { order: 2; margin: 0; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-title { min-width: 0; overflow-wrap: anywhere; }
 
   /* --- Vertical stepper --- */
   #flow-wrap.wz-v2.is-wizard .wz-steps {
@@ -4454,6 +4497,8 @@
                 <iconify-icon icon="fluent:open-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>
               </button>
             </div>
+            <!-- App type: the reserved package format; switch anytime, a real package locks it. -->
+            <div id="wz-pkgtype" class="wz-pkgtype"></div>
           </div>
         </div>
         <div class="ez-mode" role="group" aria-label="Publishing mode">
@@ -7184,6 +7229,25 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
+<!-- Change-app-type dialog: choose the package type (short pros/cons), see which is current, and
+     preview what switching changes before committing. Opened from the left-rail app-type edit. -->
+<fluent-dialog id="apptype-dialog" modal-type="modal" aria-labelledby="apptype-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="apptype-dialog-title">Change app type</span>
+    <fluent-button slot="title-action" appearance="subtle" data-apptype-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="atd__lead">How your app is packaged decides what the Store can do for you. Pick the option that fits your app.</p>
+    <div class="atd__opts" id="atd-opts" role="radiogroup" aria-label="App type"></div>
+    <div class="atd__impact" id="atd-impact" hidden>
+      <p class="atd__impact-lead" id="atd-impact-lead"></p>
+      <ul class="atd__impact-list" id="atd-impact-list"></ul>
+    </div>
+    <fluent-button slot="action" appearance="secondary" data-apptype-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="atd-confirm" disabled>Switch app type</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
 <!-- Submit-for-review dialog: disclosures for both modes; Advanced adds publishing + cert notes. -->
 <fluent-dialog id="submit-dialog" modal-type="modal" aria-labelledby="submit-dialog-title">
   <fluent-dialog-body>
@@ -9769,6 +9833,13 @@
   // fluent-textarea (beta.133) doesn't mirror the typed value onto the host .value property — the
   // real text lives in the shadow <textarea>. Read THAT (host .value is a fallback for other controls).
   function faVal(el) { if (!el) return ''; const s = el.shadowRoot && el.shadowRoot.querySelector('textarea'); return (s ? s.value : el.value) || ''; }
+  // Fluent beta doesn't reliably reflect a programmatic .value onto the internal input/textarea (what the
+  // user sees), and faVal reads that internal control — so set both, keeping the host + display in sync.
+  function faSet(el, val) {
+    if (!el) return; val = (val == null) ? '' : String(val);
+    try { if (el.value !== val) el.value = val; } catch (e) {}
+    try { const s = el.shadowRoot && el.shadowRoot.querySelector('textarea, input'); if (s && s.value !== val) s.value = val; } catch (e) {}
+  }
   function detectVersion(name) {
     const m = name.match(/(\d+\.\d+\.\d+(?:\.\d+)?)/);
     return m ? m[1] : '';
@@ -9960,20 +10031,23 @@
     if (p.kind === 'pwa' || p.fromPwa) return 'pwa';   // a PWA is a Web app, never MSIX
     return 'msix';
   }
-  // ---- "What are you publishing?" type chooser (ported from V5) --------------------------
-  // Pick MSIX app / Desktop installer / Web app up front; a real package locks the choice.
-  let v4Type = 'msix';  // 'msix' | 'win32' | 'pwa'
+  // ---- App-type (package format) -----------------------------------------------------------
+  // Seeded from the format chosen when the app was reserved (`app.type`, written by openPublishFlow):
+  // MSIX / EXE-MSI / PWA. The developer can still switch it from the left-rail dropdown; a real
+  // package locks it. (restoreFlowData overrides this with the saved value on return visits.)
+  let v4Type = (function () { const _t = app && app.type; return (['msix', 'win32', 'pwa'].indexOf(_t) >= 0 && !(_t === 'win32' && IS_GAME)) ? _t : 'msix'; })();  // 'msix' | 'win32' | 'pwa'
   const V4_TYPE_LABEL = { msix: 'MSIX', win32: 'EXE/MSI', pwa: 'PWA' };
   // System requirements (optional, its own card below the Package step): the developer's stated
   // MINIMUM. Nothing pre-selected; providing any value surfaces it in the listing + drives the warning.
   // Minimum requirements live at the top level (back-compat); `rec` holds the optional Recommended set.
   let sysreqState = { ram: '', vram: '', dx: '', cpu: '', gpu: '', caps: [], rec: { ram: '', vram: '', dx: '', cpu: '', gpu: '', caps: [] } };
   // How the package step's add methods adapt per type: MSIX = upload only (packaged extensions),
-  // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app is link-only.
+  // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app offers upload (a packaged
+  // MSIX, e.g. from PWABuilder) OR a link to the live website.
   const V4_PKG_UI = {
     msix: { upload: true, url: false, uploadTitle: 'Upload your package' },
     win32: { upload: true, url: true, uploadTitle: 'Upload your installer', urlTitle: 'Link to your installer', urlDesc: 'Provide the link to the CDN where your binary is hosted.', urlPlaceholder: 'https://example.com/setup.exe' },
-    pwa: { upload: false, url: true, urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
+    pwa: { upload: true, url: true, uploadTitle: 'Upload your package', urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
   };
   function applyV4PkgUI(type) {
     let cfg = V4_PKG_UI[type] || V4_PKG_UI.msix;
@@ -10039,7 +10113,97 @@
     wrap.classList.toggle('is-locked', !!locked);
     const lock = document.getElementById('v4-type-lock');
     if (lock) { const s = lock.querySelector('span'); if (s) s.textContent = 'Set by your package — ' + (V4_TYPE_LABEL[shown] || shown) + '.'; }
+    renderPkgTypeRail();
   }
+  // Package format shown in the left rail (under the app name) as plain text + an edit affordance;
+  // clicking it opens the Change-app-type dialog. A real uploaded package locks the type (no edit).
+  function renderPkgTypeRail() {
+    const host = document.getElementById('wz-pkgtype'); if (!host) return;
+    const locked = (typeof lockedPkgType === 'function') ? lockedPkgType() : null;
+    const label = V4_TYPE_LABEL[locked || v4Type] || (locked || v4Type);
+    if (locked) {
+      host.innerHTML = '<span class="wz-pkgtype__val">' + label + '</span>' +
+        '<span class="wz-pkgtype__lock" title="Set by your uploaded package"><iconify-icon icon="fluent:lock-closed-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Set by your package</span>';
+      return;
+    }
+    host.innerHTML = '<button type="button" class="wz-pkgtype__btn" data-apptype-edit title="Change app type" aria-label="Change app type \u2014 currently ' + label + '">' +
+      '<span class="wz-pkgtype__val">' + label + '</span>' +
+      '<iconify-icon class="wz-pkgtype__editico" icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+      '</button>';
+  }
+  // Change-app-type dialog: each type with a short case (pros/cons), the current one flagged, and a
+  // live preview of what switching changes (reuses typeChangeImpact for the MSIX<->Win32 boundary).
+  const APPTYPE_INFO = {
+    msix: { label: 'MSIX', rec: true, desc: 'The modern Windows package \u2014 Microsoft signs, hosts, and updates it for you.',
+      pros: ['Automatic updates & clean uninstall', 'Free code signing & hosting', 'Store checkout, sales & add-ons'], cons: [] },
+    win32: { label: 'EXE / MSI', desc: 'Your existing installer, published to the Store as-is.',
+      pros: ['Publish without repackaging', 'Keep full control of updates & commerce'], cons: ['No Microsoft signing, hosting, or Store checkout'] },
+    pwa: { label: 'PWA', desc: 'Your website or web app, packaged as MSIX.',
+      pros: ['Reuse your existing web code', 'All the benefits of MSIX packaging'], cons: [] }
+  };
+  let _atdPick = null;
+  function appTypeDlg() { return document.getElementById('apptype-dialog'); }
+  function openAppTypeDialog() {
+    if ((typeof lockedPkgType === 'function') && lockedPkgType()) return;   // a real package fixes the type
+    _atdPick = v4Type;
+    renderAppTypeOpts(); renderAppTypeImpact();
+    const dlg = appTypeDlg(); if (!dlg) return;
+    try { if (typeof dlg.show === 'function') dlg.show(); } catch (e) {}
+    try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
+  }
+  function closeAppTypeDialog() {
+    const dlg = appTypeDlg(); if (!dlg) return;
+    try { if (typeof dlg.hide === 'function') dlg.hide(); } catch (e) {}
+    try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {}
+  }
+  function renderAppTypeOpts() {
+    const wrap = document.getElementById('atd-opts'); if (!wrap) return;
+    const types = ['msix', 'win32', 'pwa'].filter(t => !(t === 'win32' && IS_GAME));
+    const li = (arr, cls, ico) => (arr || []).map(x => '<li class="' + cls + '"><iconify-icon icon="' + ico + '" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + x + '</span></li>').join('');
+    wrap.innerHTML = types.map(t => {
+      const info = APPTYPE_INFO[t], isCur = t === v4Type, isSel = t === _atdPick;
+      const badges = (info.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
+        (isCur ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
+      return '<button type="button" class="atd-opt' + (isSel ? ' is-sel' : '') + '" role="radio" aria-checked="' + (isSel ? 'true' : 'false') + '" data-atd-opt="' + t + '">' +
+        '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badges + '</span>' +
+        '<span class="atd-opt__desc">' + info.desc + '</span>' +
+        '<ul class="atd-opt__list">' + li(info.pros, 'atd-pro', 'fluent:checkmark-16-filled') + li(info.cons, 'atd-con', 'fluent:dismiss-16-filled') + '</ul>' +
+        '</button>';
+    }).join('');
+  }
+  function selectAppType(t) { _atdPick = t; renderAppTypeOpts(); renderAppTypeImpact(); }
+  function renderAppTypeImpact() {
+    const panel = document.getElementById('atd-impact'), lead = document.getElementById('atd-impact-lead'),
+      list = document.getElementById('atd-impact-list'), btn = document.getElementById('atd-confirm');
+    const changed = _atdPick && _atdPick !== v4Type, targetLabel = V4_TYPE_LABEL[_atdPick] || _atdPick;
+    if (btn) { btn.toggleAttribute('disabled', !changed); btn.textContent = changed ? ('Switch to ' + targetLabel) : 'Switch app type'; }
+    if (!panel) return;
+    if (!changed) { panel.hidden = true; return; }
+    panel.hidden = false;
+    const lines = (typeof typeChangeImpact === 'function') ? typeChangeImpact(_atdPick === 'win32') : [];
+    if (lines.length) {
+      if (lead) lead.textContent = 'Switching to ' + targetLabel + ' will:';
+      if (list) list.innerHTML = lines.map(l => '<li><iconify-icon icon="fluent:arrow-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + l + '</span></li>').join('');
+    } else {
+      if (lead) lead.textContent = 'Nothing you\u2019ve already filled in will change.';
+      if (list) list.innerHTML = '';
+    }
+  }
+  function confirmAppTypeChange() {
+    const t = _atdPick; closeAppTypeDialog();
+    if (!t || t === v4Type) return;
+    try { setV4Type(t); } catch (e) { v4Type = t; }
+    try { renderPkgTypeRail(); } catch (e) {}
+  }
+  (function wireAppTypeDialog() {
+    document.addEventListener('click', e => { if (e.target.closest('[data-apptype-edit]')) { e.preventDefault(); openAppTypeDialog(); } });
+    const dlg = appTypeDlg(); if (!dlg) return;
+    dlg.addEventListener('click', e => {
+      if (e.target.closest('[data-apptype-close]')) { closeAppTypeDialog(); return; }
+      const opt = e.target.closest('[data-atd-opt]'); if (opt) { selectAppType(opt.getAttribute('data-atd-opt')); return; }
+      if (e.target.closest('#atd-confirm')) { confirmAppTypeChange(); return; }
+    });
+  })();
   let _pkgTypeConfirm = null, _pkgTypeCancel = null;
   // The things that work differently across the MSIX↔Win32 boundary — only warn about what's actually set.
   function typeChangeImpact(toWin32) {
@@ -13590,7 +13754,7 @@
     // its placeholder), keep the char counter fresh. The auto-derived summary shows only in the preview.
     const shortField = $('ez-pv-short');
     if (shortField) {
-      if (document.activeElement !== shortField) { try { shortField.value = ovShort; } catch (e) {} }
+      if (document.activeElement !== shortField) faSet(shortField, ovShort);
       const shn = (shortField.value || '').length, shc = $('ez-short-count');
       if (shc) { shc.textContent = shn.toLocaleString('en-US') + ' / 1,000 characters'; shc.classList.toggle('ez-char-count--max', shn > 1000); }
     }
@@ -13598,7 +13762,7 @@
     // when it isn't focused (so we never clobber the caret while typing), and keep its char count fresh.
     const descField = $('ez-pv-desc');
     if (descField) {
-      if (document.activeElement !== descField) { try { descField.value = desc; } catch (e) {} }
+      if (document.activeElement !== descField) faSet(descField, desc);
       const dn = (faVal(descField) || '').length, dc = $('ez-desc-count');
       if (dc) { dc.textContent = dn.toLocaleString('en-US') + ' / 10,000 characters'; dc.classList.toggle('ez-char-count--max', dn > 10000); }
     }

@@ -12,8 +12,8 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=128" />
-  <link rel="stylesheet" href="store-portal.css?v=123" />
+  <link rel="stylesheet" href="portal.css?v=130" />
+  <link rel="stylesheet" href="store-portal.css?v=161" />
   <link rel="stylesheet" href="help-support.css?v=6" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -299,19 +299,35 @@
         </fluent-radio-group>
       </div>
 
-      <!-- Shown when Game is chosen: standard (MSIX/PWA, publishes here) vs GDK (Partner Center). -->
-      <div class="field" id="pubGameTypeField" hidden>
-        <label class="field__label" id="pubGameTypeLabel">Game type</label>
-        <fluent-radio-group id="pubGameType" class="pubchoice" orientation="horizontal" aria-labelledby="pubGameTypeLabel" value="store">
+      <!-- App type = package format. Options track Product type (.EXE/.MSI app-only, GDK game-only).
+           Not a hard commitment — it seeds the flow's package step and can change later. GDK off-ramps below. -->
+      <div class="field" id="pubAppTypeField">
+        <div class="field__labelrow">
+          <label class="field__label" id="pubAppTypeLabel">App type</label>
+          <span class="field__info" id="pubAppTypeInfo" tabindex="0" aria-label="About app type">
+            <iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
+          </span>
+        </div>
+        <fluent-tooltip anchor="pubAppTypeInfo" positioning="after">You can change this later — it’s set by the package you upload.</fluent-tooltip>
+        <fluent-radio-group id="pubAppType" class="pubchoice" orientation="horizontal" aria-labelledby="pubAppTypeLabel" value="msix">
           <fluent-field label-position="after">
-            <label slot="label" for="gt-store">MSIX or PWA game</label>
-            <fluent-radio id="gt-store" slot="input" value="store" checked></fluent-radio>
+            <label slot="label" for="at-msix">MSIX</label>
+            <fluent-radio id="at-msix" slot="input" value="msix" checked></fluent-radio>
+          </fluent-field>
+          <fluent-field label-position="after" id="at-win32-field">
+            <label slot="label" for="at-win32">EXE/MSI</label>
+            <fluent-radio id="at-win32" slot="input" value="win32"></fluent-radio>
           </fluent-field>
           <fluent-field label-position="after">
-            <label slot="label" for="gt-gdk">GDK game</label>
-            <fluent-radio id="gt-gdk" slot="input" value="gdk"></fluent-radio>
+            <label slot="label" for="at-pwa">PWA</label>
+            <fluent-radio id="at-pwa" slot="input" value="pwa"></fluent-radio>
+          </fluent-field>
+          <fluent-field label-position="after" id="at-gdk-field" hidden>
+            <label slot="label" for="at-gdk">GDK</label>
+            <fluent-radio id="at-gdk" slot="input" value="gdk"></fluent-radio>
           </fluent-field>
         </fluent-radio-group>
+        <div class="pubhelp-row"><button type="button" class="pubhelp" data-pubhelp><iconify-icon icon="fluent:wand-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Help me choose my format</button></div>
       </div>
 
       <!-- Shown when GDK is chosen: this flow reserves MSIX/PWA only → send GDK to Partner Center.
@@ -418,7 +434,7 @@
        Certificates + Analytics experiences, one storage key, all apps in one table. -->
   <script>window.PORTAL_MODE = "unified";</script>
   <script type="module" src="theme-fluent.js?v=64"></script>
-  <script src="portal.js?v=186"></script>
+  <script src="portal.js?v=210"></script>
   <!-- AI Help & Support widget (floating, bottom-right). ai-config.js is local/gitignored; ai-client.js
        falls back to the same-origin /api/ai proxy, and help-support.js falls back to a local responder. -->
   <script src="publishing/ai-config.js"></script>

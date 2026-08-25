@@ -256,9 +256,12 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-3); 
 [data-theme="light"] .status-card__illo { filter: drop-shadow(0 10px 22px rgba(15,60,120,.16)); }
 
 /* Hero status card — CTA on the right, metrics as a centered strip below (shared by both portals) */
-.status-card--hero { display: block; }
+.status-card--hero { display: block; padding: 20px 28px; }   /* compact hero */
 .status-card--hero .status-card__top { display: grid; grid-template-columns: auto 1fr auto; gap: 28px; align-items: center; }
+.status-card--hero .status-card__illo { width: 64px; height: 64px; }
+.status-card--hero .status-card__body h2 { margin: 0 0 4px; }
 .status-card--hero .status-card__action { flex: none; }
+.status-card--hero .status-card__body .muted { max-width: none; }   /* fill the body column: one line when it fits, reflow by width otherwise */
 .status-card--hero .status-card__metrics { display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
   margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
 .status-card--hero .status-card__metrics .metric { align-items: center; padding: 0 30px; }
