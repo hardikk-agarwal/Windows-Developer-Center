@@ -1236,6 +1236,13 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .empty .muted { max-width: 420px; }
 .empty .btn { margin-top: 8px; }
 .empty__cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+.certs-note { display: flex; align-items: flex-start; gap: 9px; margin: 0 0 18px; padding: 11px 14px; border-radius: var(--r-lg); background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; color: var(--text-2); line-height: 1.45; }
+.certs-note > span { flex: 1 1 auto; min-width: 0; }
+.certs-note iconify-icon { color: var(--brand-soft); flex: none; margin-top: 1px; }
+.certs-note strong { color: var(--text); font-weight: 600; }
+.certs-note__x { flex: none; appearance: none; border: 0; background: transparent; color: var(--text-3); cursor: pointer; padding: 1px; margin: -1px -2px 0 2px; display: inline-flex; border-radius: 4px; }
+.certs-note__x:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+.certs-note__x iconify-icon { color: currentColor; margin-top: 0; }
 .certfound { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 15px 18px; border-radius: var(--r-lg);
   background: var(--surface); border: 1px solid var(--brand-tint-stroke); }
 .certfound__ico { display: inline-flex; color: var(--ok); flex: none; }

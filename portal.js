@@ -330,7 +330,7 @@
   // GDK) is a rich column header (icon + name + short descriptor + App/Game tags), and the rows below
   // compare them at a glance. MSIX carries the single Recommended cue and a subtly tinted column.
   // CSS: .fmttable-wrap / .fmttable(--lead) / .fmtt__*.
-  function storeOnrampsHTML() {
+  function storeOnrampsBodyHTML() {
     var FMTS = [
       { icon: 'fluent:box-20-regular', name: 'MSIX', rec: true,
         desc: 'The modern Windows package \u2014 Microsoft handles signing, hosting, and updates for you.',
@@ -357,9 +357,7 @@
         '<div class="pubcard__tags">' + f.tags.map(function (t) { return '<span class="pubcard__tag">' + t + '</span>'; }).join('') + '</div>' +
       '</div>';
     }
-    return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
-        '<p class="muted">Four formats bring an app or game to the Store \u2014 most new apps use MSIX.</p></div></div>' +
-      '<div class="pubgrid">' + FMTS.map(fcard).join('') + '</div>' +
+    return '<div class="pubgrid">' + FMTS.map(fcard).join('') + '</div>' +
       '<div class="pubaid">' +
         '<span class="pubaid__q">Not sure which one to pick?</span>' +
         '<span class="pubaid__acts">' +
@@ -371,6 +369,23 @@
         '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
           '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
       '</div>';
+  }
+  var STORE_ONRAMPS_SUB = 'Four formats bring an app or game to the Store \u2014 most new apps use MSIX.';
+  // Zero-state hero: full section with the "What you can publish" heading.
+  function storeOnrampsHTML() {
+    return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
+        '<p class="muted">' + STORE_ONRAMPS_SUB + '</p></div></div>' + storeOnrampsBodyHTML();
+  }
+  // Has-apps: the same content collapsed into an accordion below the dashboard.
+  function storeOnrampsAccordionHTML() {
+    return '<details class="whatpub">' +
+      '<summary class="whatpub__summary">' +
+        '<span class="whatpub__head"><span class="whatpub__title">What you can publish</span>' +
+          '<span class="whatpub__sub">' + STORE_ONRAMPS_SUB + '</span></span>' +
+        '<iconify-icon class="whatpub__chev" icon="fluent:chevron-down-16-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+      '</summary>' +
+      '<div class="whatpub__body">' + storeOnrampsBodyHTML() + '</div>' +
+    '</details>';
   }
 
   // Ambiguous "Add" (MSIX/PWA do both) — a small app/game menu anchored to the button, rendered in <body>
@@ -402,21 +417,21 @@
   // "Help me choose" — a tiny questionnaire that recommends a format from what the developer wants.
   var FMTW = {
     start: { q: "What are you building?", opts: [
-      { icon: "fluent:apps-20-regular", title: "An app", set: { pt: "app" }, next: "appKind" },
-      { icon: "fluent:xbox-controller-20-regular", title: "A game", set: { pt: "game" }, next: "gameKind" }
+      { icon: "fluent:apps-20-regular", title: "An app", chip: "App", set: { pt: "app" }, next: "appKind" },
+      { icon: "fluent:xbox-controller-20-regular", title: "A game", chip: "Game", set: { pt: "game" }, next: "gameKind" }
     ] },
-    appKind: { q: "What kind of app is it?", back: "start", opts: [
-      { icon: "fluent:globe-20-regular", title: "A website or web app", desc: "It runs in the browser today", result: "pwa" },
-      { icon: "fluent:desktop-20-regular", title: "A Windows desktop app", desc: "It runs natively on Windows", next: "appHandling" }
+    appKind: { q: "What kind of app is it?", opts: [
+      { icon: "fluent:desktop-20-regular", title: "A Windows desktop app", desc: "It runs natively on Windows", chip: "Desktop app", next: "appHandling" },
+      { icon: "fluent:globe-20-regular", title: "A website or web app", desc: "It runs in the browser today", chip: "Web app", result: "pwa" }
     ] },
-    appHandling: { q: "Who should handle signing, hosting, updates & payments?", back: "appKind", opts: [
-      { icon: "fluent:sparkle-20-regular", title: "Let Microsoft handle it", desc: "Free code signing, hosting, automatic updates, and Store checkout", result: "msix" },
-      { icon: "fluent:wrench-20-regular", title: "I\u2019ll use my own", desc: "I have my code-signing certificate, hosting, and commerce", result: "win32" }
+    appHandling: { q: "Who should handle signing, hosting, updates & payments?", opts: [
+      { icon: "fluent:sparkle-20-regular", title: "Let Microsoft handle it", desc: "Free code signing, hosting, automatic updates, and Store checkout", chip: "Microsoft-managed", result: "msix" },
+      { icon: "fluent:wrench-20-regular", title: "I\u2019ll use my own", desc: "I have my code-signing certificate, hosting, and commerce", chip: "Self-managed", result: "win32" }
     ] },
-    gameKind: { q: "How is your game built?", back: "start", opts: [
-      { icon: "fluent:xbox-controller-20-regular", title: "With the Game Development Kit (GDK) or for Xbox", result: "gdk" },
-      { icon: "fluent:box-20-regular", title: "A standard PC game", desc: "Built with a common engine or framework", result: "msix" },
-      { icon: "fluent:globe-20-regular", title: "A web-based game", desc: "It runs in the browser", result: "pwa" }
+    gameKind: { q: "How is your game built?", opts: [
+      { icon: "fluent:xbox-controller-20-regular", title: "With the Game Development Kit (GDK) or for Xbox", chip: "GDK / Xbox", result: "gdk" },
+      { icon: "fluent:box-20-regular", title: "A standard PC game", desc: "Built with a common engine or framework", chip: "PC game", result: "msix" },
+      { icon: "fluent:globe-20-regular", title: "A web-based game", desc: "It runs in the browser", chip: "Web game", result: "pwa" }
     ] }
   };
   var FMTW_RESULT = {
@@ -427,7 +442,7 @@
   };
   var fmtwState = { pt: "app" };
   function openFormatHelp(opts) {
-    fmtwState = { pt: "app", reserve: !!(opts && opts.reserve), name: (opts && opts.name) || "" };
+    fmtwState = { pt: "app", reserve: !!(opts && opts.reserve), name: (opts && opts.name) || "", path: [] };
     var ov = document.getElementById("fmthelpModal");
     if (!ov) {
       ov = document.createElement("div");
@@ -475,21 +490,42 @@
     ov.hidden = false;
   }
   function closeCompare() { var ov = document.getElementById("cmpModal"); if (ov) ov.hidden = true; }
+  function fmtwDepth(id) {
+    if (!id || FMTW_RESULT[id]) return 0;
+    var step = FMTW[id]; if (!step) return 0;
+    var m = 0;
+    for (var i = 0; i < step.opts.length; i++) { var d = fmtwDepth(step.opts[i].next || step.opts[i].result); if (d > m) m = d; }
+    return 1 + m;
+  }
+  function fmtwBar(pct) {
+    return '<div class="fmtw__bar-row"><div class="fmtw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>' +
+      '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>';
+  }
+  function fmtwCrumbs() {
+    var p = fmtwState.path || [];
+    if (!p.length) return '';
+    return '<div class="fmtw__crumbs">' + p.map(function (c, i) {
+      return (i ? '<iconify-icon class="fmtw__crumb-arrow" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' : '') +
+        '<button type="button" class="fmtw__crumb" data-fmtw-jump="' + i + '" aria-label="Change this answer: ' + c.chip + '">' + c.chip + '</button>';
+    }).join('') + '</div>';
+  }
   function renderFmtHelp(id) {
     var body = document.getElementById("fmthelpBody"); if (!body) return;
     if (FMTW_RESULT[id]) {
       var r = FMTW_RESULT[id];
       body.innerHTML =
-        '<div class="fmtw__head"><span class="fmtw__result-eyebrow">Recommended for you</span>' +
-          '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+        fmtwBar(100) + fmtwCrumbs() +
+        '<span class="fmtw__result-eyebrow">Recommended for you</span>' +
         '<div class="fmtw__result"><span class="fmtw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
           '<div><div class="fmtw__result-name">' + r.name + '</div>' + (r.rec ? '<span class="fmtw__result-rec">Most popular</span>' : '') + '</div></div>' +
         '<p class="fmtw__result-why">' + r.why + '</p>' +
         '<div class="fmtw__result-actions"><fluent-button appearance="primary" data-fmtw-add="' + id + '">Add ' + r.name + '</fluent-button>' +
-          '<button type="button" class="fmtw__restart" data-fmtw-back="start">Start over</button></div>';
+          '<button type="button" class="fmtw__restart" data-fmtw-jump="0">Start over</button></div>';
       return;
     }
     var step = FMTW[id]; if (!step) return;
+    var pathLen = (fmtwState.path || []).length;
+    var pct = Math.round(pathLen / (pathLen + fmtwDepth(id)) * 100);
     var opts = step.opts.map(function (o, i) {
       return '<button type="button" class="fmtw__opt" data-fmtw-opt="' + id + ':' + i + '">' +
         '<span class="fmtw__opt-ico"><iconify-icon icon="' + o.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
@@ -497,14 +533,16 @@
         '<iconify-icon class="fmtw__opt-arrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
     }).join('');
     body.innerHTML =
-      '<div class="fmtw__head"><h3 class="fmtw__q">' + step.q + '</h3>' +
-        '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+      fmtwBar(pct) + fmtwCrumbs() +
+      '<h3 class="fmtw__q">' + step.q + '</h3>' +
       '<div class="fmtw__opts">' + opts + '</div>' +
-      '<div class="fmtw__foot">' + (step.back ? '<button type="button" class="fmtw__back" data-fmtw-back="' + step.back + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' : '') + '</div>';
+      '<div class="fmtw__foot">' + (pathLen ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + (pathLen - 1) + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' : '') + '</div>';
   }
   function fmtwPick(id, idx) {
     var step = FMTW[id]; if (!step) return;
     var opt = step.opts[idx]; if (!opt) return;
+    if (!fmtwState.path) fmtwState.path = [];
+    fmtwState.path.push({ step: id, chip: opt.chip || opt.title });
     if (opt.set) { for (var k in opt.set) fmtwState[k] = opt.set[k]; }
     renderFmtHelp(opt.result || opt.next);
   }
@@ -986,7 +1024,7 @@
         el.innerHTML = storeOnrampsHTML();
         return;
       }
-      el.innerHTML = unifiedDashHTML();
+      el.innerHTML = storeOnrampsAccordionHTML() + unifiedDashHTML();
       return;
     }
     if (!state.verified) {
@@ -1160,21 +1198,29 @@
     renderList();
   }
 
+  // Certs auto-populate from EXE/MSI (Win32) apps published to the Store — set that expectation up front.
+  function certAutoNoteHTML() {
+    try { if (localStorage.getItem("wdp.certNote.dismissed") === "1") return ""; } catch (_) {}
+    return '<div class="certs-note"><iconify-icon icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+      '<span>Code-signing certificates from <strong>EXE / MSI</strong> apps you publish to the Microsoft Store appear here automatically \u2014 no need to add them yourself.</span>' +
+      '<button type="button" class="certs-note__x" data-certnote-dismiss aria-label="Dismiss"><iconify-icon icon="fluent:dismiss-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button></div>';
+  }
   function renderCerts() {
     var wrap = $("certsList");
     if (!wrap) return;
     // The empty-state card carries its own "Add certificate" CTA — hide the redundant header button until a cert exists.
     var addBtn = $("certAddBtn"); if (addBtn) addBtn.hidden = !state.certs.length;
     if (!state.certs.length) {
+      var autoNote = STORE ? certAutoNoteHTML() : "";   // EXE/MSI Store apps' certs land here automatically
       wrap.innerHTML = (STORE && !UNIFIED)
-        ? '<div class="empty">' +
+        ? autoNote + '<div class="empty">' +
             '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>Not publishing to the Store?</strong>' +
             '<p class="muted">Add your code signing certificate to get crash analytics and SmartScreen reputation for the apps you’ve signed — no Store listing needed.</p>' +
             '<fluent-button appearance="outline" data-certmodal>' +
               '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
           '</div>'
-        : '<div class="empty">' +
+        : autoNote + '<div class="empty">' +
             '<img data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
             '<strong>No certificates yet</strong>' +
             '<p class="muted">Add a code signing certificate by submitting a signed binary to confirm your publisher ' +
@@ -1395,10 +1441,11 @@
     return null;
   }
   // App "type" = what you're publishing: Game (from the App/Game reservation), else the package family
-  // (MSIX / Desktop / Web) from the flow (a.packageType) or the installer's file extension.
+  // (MSIX / Desktop / Web) from the added package (a.packageType), the format reserved up front
+  // (a.pkgType), or the installer's file extension.
   function appTypeMeta(a) {
     if (a.type === "game" || a.productKind === "game") return { key: "game", label: "Game", icon: "fluent:xbox-controller-20-regular" };
-    var pk = a.packageType || pkgFromFile(a.file);
+    var pk = a.packageType || a.pkgType || pkgFromFile(a.file);
     if (pk === "msix") return { key: "msix", label: "MSIX app", icon: "fluent:box-20-regular" };
     if (pk === "pwa") return { key: "pwa", label: "Web app", icon: "fluent:globe-20-regular" };
     if (pk === "win32") return { key: "win32", label: "Desktop app", icon: "fluent:desktop-20-regular" };
@@ -3965,6 +4012,10 @@
         try { localStorage.setItem("wdp.appsHero.dismissed", "1"); } catch (_) {}
         var hb = $("appsHero"); if (hb) hb.hidden = true; return;
       }
+      if (e.target.closest("[data-certnote-dismiss]")) {
+        try { localStorage.setItem("wdp.certNote.dismissed", "1"); } catch (_) {}
+        var _cn = e.target.closest(".certs-note"); if (_cn && _cn.parentNode) _cn.parentNode.removeChild(_cn); return;
+      }
       var rep = e.target.closest("[data-report]");
       if (rep) { location.href = "publishing/cert-report.html?id=" + encodeURIComponent(rep.getAttribute("data-report")); return; }
       var ms = e.target.closest("[data-sources]");
@@ -4081,8 +4132,15 @@
       if (e.target.closest("[data-cmpclose]")) { closeCompare(); return; }
       var _wo = e.target.closest("[data-fmtw-opt]");
       if (_wo) { var p = _wo.getAttribute("data-fmtw-opt").split(":"); fmtwPick(p[0], +p[1]); return; }
-      var _wb = e.target.closest("[data-fmtw-back]");
-      if (_wb) { renderFmtHelp(_wb.getAttribute("data-fmtw-back")); return; }
+      var _wj = e.target.closest("[data-fmtw-jump]");
+      if (_wj) {
+        var _ji = +_wj.getAttribute("data-fmtw-jump");
+        var _pp = fmtwState.path || [];
+        var _tgt = (_pp[_ji] && _pp[_ji].step) || "start";
+        fmtwState.path = _pp.slice(0, _ji);
+        renderFmtHelp(_tgt);
+        return;
+      }
       var _wa = e.target.closest("[data-fmtw-add]");
       if (_wa) {
         var _waf = _wa.getAttribute("data-fmtw-add"), _rnm = fmtwState.reserve ? fmtwState.name : "";

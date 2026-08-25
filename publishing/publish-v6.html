@@ -403,27 +403,29 @@
   #flow-wrap:not(.is-wizard) #wz-pkgtype { display: none !important; }   /* the switcher belongs to the wizard rail */
 
   /* Change-app-type dialog: pick a type (short pros/cons) and preview what switching changes. */
-  .atd__lead { font-size: 14px; color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.45; }
-  .atd__opts { display: flex; flex-direction: column; gap: var(--sp-10); }
-  .atd-opt { display: flex; flex-direction: column; gap: var(--sp-6); text-align: left; padding: var(--sp-14) var(--sp-16); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-8); cursor: pointer; font: inherit; transition: border-color 120ms ease, background 120ms ease; }
-  .atd-opt:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--stroke-2)); }
-  .atd-opt.is-sel { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); background: color-mix(in srgb, var(--brand) 5%, var(--layer)); }
-  .atd-opt:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .atd-opt__head { display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
-  .atd-opt__name { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
-  .atd-opt__badge { font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
-  .atd-opt__badge--rec { color: #fff; background: #2da44e; }
-  .atd-opt__badge--cur { color: var(--fg-2); background: var(--subtle); border: 1px solid var(--stroke-2); }
+  .atd__lead { font-size: 13.5px; color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.5; }
+  .atd__opts { display: flex; flex-direction: column; gap: var(--sp-8); }
+  .atd-opt { display: flex; align-items: flex-start; gap: var(--sp-12); text-align: left; padding: 15px 18px; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); cursor: pointer; font: inherit; }
+  .atd-opt:hover { border-color: var(--stroke-3); background: var(--subtle); }
+  .atd-opt.is-sel { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
+  .atd-opt:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .atd-opt__radio { flex: none; margin-top: 1px; }
+  .atd-opt__ico { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: var(--r-12); background: var(--subtle); color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--stroke-2); }
+  .atd-opt.is-sel .atd-opt__ico { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--fg-1); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 26%, transparent); }
+  .atd-opt__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .atd-opt__head { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; }
+  .atd-opt__name { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); letter-spacing: -.005em; }
+  .atd-opt__badge { font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; line-height: 1.6; }
+  .atd-opt__badge--rec { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); }
+  .atd-opt__badge--cur { color: var(--fg-3); background: transparent; border: 1px solid var(--stroke-3); }
   .atd-opt__desc { font-size: 13px; color: var(--fg-2); line-height: 1.45; }
-  .atd-opt__list { list-style: none; margin: var(--sp-4) 0 0; padding: 0; display: grid; gap: 4px; }
-  .atd-opt__list li { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
-  .atd-opt__list .atd-pro iconify-icon { color: #2da44e; flex: 0 0 auto; margin-top: 1px; }
-  .atd-opt__list .atd-con iconify-icon { color: #e5484d; flex: 0 0 auto; margin-top: 1px; }
-  .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-8); background: var(--subtle); border: 1px solid var(--stroke-2); }
+  .atd-opt__best { margin-top: 3px; font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
+  .atd-opt__best-k { color: var(--fg-3); font-weight: var(--font-weight-semibold); }
+  .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); background: var(--subtle); border: 1px solid var(--stroke-2); }
   .atd__impact-lead { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
   .atd__impact-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-6); }
   .atd__impact-list li { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
-  .atd__impact-list li iconify-icon { color: var(--brand); flex: 0 0 auto; margin-top: 1px; }
+  .atd__impact-list li iconify-icon { color: var(--fg-3); flex: 0 0 auto; margin-top: 1px; }
   .v4-type .seg { display: flex; width: 100%; max-width: 520px; }
   .v4-type .seg__opt { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-6); text-align: center; }
   .v4-type .seg__info { flex: 0 0 auto; margin-inline-start: var(--sp-4); color: currentColor; opacity: .5; cursor: help; transition: opacity var(--dur-2) var(--ease-out); }
@@ -2747,6 +2749,23 @@
     min-width: 100%;
     box-sizing: border-box;
   }
+  .markets-dialog__presets {
+    display: flex; flex-wrap: wrap; gap: var(--sp-6);
+    margin: 0 0 var(--sp-4);
+  }
+  .markets-preset {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--stroke-2); background: var(--layer);
+    color: var(--fg-2); font: inherit; font-size: var(--font-size-base-200);
+    font-weight: var(--font-weight-semibold); cursor: pointer;
+  }
+  .markets-preset:hover { border-color: var(--stroke-3); color: var(--fg-1); }
+  .markets-preset iconify-icon { color: var(--fg-3); flex: none; }
+  .markets-preset.is-on { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .markets-preset.is-on iconify-icon { color: var(--brand); }
+  .markets-preset.is-part { color: var(--fg-1); }
+  .markets-preset.is-part iconify-icon { color: var(--fg-2); }
   #markets-dialog .markets-dialog__toolbar {
     display: flex; align-items: center; justify-content: space-between;
     gap: var(--sp-12);
@@ -3152,6 +3171,10 @@
   #price-sale-dialog .price-sale-fields > .field { margin-bottom: var(--sp-12); }
   #price-sale-dialog #price-sale-type, #price-sale-dialog #price-sale-markets-mode { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); }
   #price-schedule-dialog #price-schedule-tz { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4) var(--sp-16); min-height: 32px; }
+  #price-schedule-dialog .price-schedule-scope-empty { display: flex; align-items: flex-start; gap: var(--sp-6); margin: var(--sp-8) 0 0; font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
+  #price-schedule-dialog .price-schedule-scope-empty iconify-icon { color: var(--fg-3); flex: none; margin-top: 1px; }
+  #price-schedule-dialog .price-schedule-scope-link { appearance: none; border: 0; background: transparent; padding: 0; margin: 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  #price-schedule-dialog .price-schedule-scope-link:hover { text-decoration: underline; }
   #price-sale-dialog .price-sale-amount-row { display: flex; align-items: center; gap: var(--sp-8); }
   #price-sale-dialog .price-sale-amount-row fluent-dropdown { width: auto; flex: 0 0 auto; min-width: 92px; }
   #price-sale-dialog .price-sale-amount-row fluent-text-input { flex: 1 1 auto; }
@@ -4064,15 +4087,20 @@
   #flow-wrap.wz-v2 .ez-apphead__icon { width: 44px; height: 44px; font-size: 16px; border-radius: var(--r-12); }
   #flow-wrap.wz-v2.is-wizard .ez-title { font-size: 16px; line-height: 22px; }
   #flow-wrap.wz-v2.is-wizard .ez-apphead__meta { margin-top: var(--sp-4); }
-  /* Left-rail identity, stacked: app name, then the editable app type, then the Draft state.
+  /* Left-rail identity: [icon | name + Draft] on the top row, then the editable app type as its own
+     full-width row at the banner's LEFT edge (under the icon). Grid areas keep the type row flush left.
      Name wraps freely (min-width:0 + overflow-wrap) so any length is safe in the narrow rail. */
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { align-items: flex-start; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__icon { width: 56px; height: 56px; font-size: 20px; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__namebtn { order: 0; min-width: 0; max-width: 100%; margin: 0; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { order: 1; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { order: 2; margin: 0; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon text" "type type"; align-items: start; column-gap: var(--sp-12); row-gap: var(--sp-10); }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__icon { grid-area: icon; width: 56px; height: 56px; font-size: 20px; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { grid-area: text; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__namebtn { min-width: 0; max-width: 100%; margin: 0; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { margin: 0; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { grid-area: type; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-title { min-width: 0; overflow-wrap: anywhere; }
+  /* App type as a foot-of-identity row: value on the left, Change link on the right edge. */
+  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__btn { width: 100%; justify-content: space-between; gap: var(--sp-8); padding: 2px 0; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__change { font-size: 12px; font-weight: var(--font-weight-semibold); color: var(--brand); flex: 0 0 auto; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__btn:hover .wz-pkgtype__change { text-decoration: underline; }
 
   /* --- Vertical stepper --- */
   #flow-wrap.wz-v2.is-wizard .wz-steps {
@@ -4497,9 +4525,9 @@
                 <iconify-icon icon="fluent:open-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>
               </button>
             </div>
-            <!-- App type: the reserved package format; switch anytime, a real package locks it. -->
-            <div id="wz-pkgtype" class="wz-pkgtype"></div>
           </div>
+          <!-- App type: the reserved package format; switch anytime, a real package locks it. -->
+          <div id="wz-pkgtype" class="wz-pkgtype"></div>
         </div>
         <div class="ez-mode" role="group" aria-label="Publishing mode">
           <button type="button" class="ez-mode__opt ez-mode__opt--active" data-mode="easy" aria-pressed="true" title="Only the required fields">
@@ -6208,6 +6236,8 @@
       <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
     </fluent-text-input>
 
+    <div class="markets-dialog__presets" id="markets-presets" aria-label="Quick-select by region"></div>
+
     <div class="markets-dialog__toolbar">
       <span id="markets-selected-count">0 selected</span>
       <div class="markets-dialog__toolbar-actions">
@@ -6406,9 +6436,13 @@
       </div>
     </div>
 
-    <div class="field" id="price-schedule-scope-field" hidden style="margin-top: var(--sp-12);">
+    <div class="field" id="price-schedule-scope-field" style="margin-top: var(--sp-12);">
       <label for="price-schedule-scope" class="field__label">Applies to</label>
       <fluent-dropdown id="price-schedule-scope"><fluent-listbox></fluent-listbox></fluent-dropdown>
+      <p class="price-schedule-scope-empty" id="price-schedule-scope-empty" hidden>
+        <iconify-icon icon="fluent:globe-20-regular" width="15" height="15" aria-hidden="true"></iconify-icon>
+        <span>All markets. <button type="button" class="price-schedule-scope-link" data-schedule-new-group>Create a market group</button> to schedule a change for specific markets.</span>
+      </p>
     </div>
 
     <p class="price-schedule-preview" id="price-schedule-preview">Pick a date and price to preview the change.</p>
@@ -6453,6 +6487,7 @@
         <fluent-text-input id="price-group-markets-search" class="markets-dialog__search" placeholder="Search markets…">
           <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
         </fluent-text-input>
+        <div class="markets-dialog__presets" id="price-group-presets" aria-label="Quick-select by region"></div>
         <div class="markets-dialog__toolbar">
           <span id="price-group-markets-count">0 selected</span>
           <div class="markets-dialog__toolbar-actions">
@@ -6763,33 +6798,40 @@
     </fluent-button>
 
     <p class="build-guide__intro">
-      Package your app as an <strong>MSIX</strong> (.msix / .msixbundle) and drop it in the box above. Already have a <strong>.exe / .msi</strong> installer? Bring it as-is, or convert it to MSIX after upload. To build an MSIX, pick how:
+      Build an <strong>MSIX</strong> package and drop it in the box above — or bring an <strong>.exe / .msi</strong> installer as-is.
     </p>
 
     <div class="build-guide__tabs" role="tablist" aria-label="Choose how you build">
-      <button type="button" class="build-guide__tab is-active" role="tab" aria-selected="true" id="bg-tab-vscode" data-bg-tab="vscode">VS Code</button>
+      <button type="button" class="build-guide__tab is-active" role="tab" aria-selected="true" id="bg-tab-vs" data-bg-tab="vs">Visual Studio</button>
+      <button type="button" class="build-guide__tab" role="tab" aria-selected="false" id="bg-tab-vscode" data-bg-tab="vscode">VS Code</button>
       <button type="button" class="build-guide__tab" role="tab" aria-selected="false" id="bg-tab-other" data-bg-tab="other">Other</button>
     </div>
 
-    <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-vscode" data-bg-panel="vscode">
+    <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-vs" data-bg-panel="vs">
+      <p class="build-guide__panelintro">The easiest path — Visual Studio fills in your package identity for you.</p>
       <ol class="build-guide__steps">
-        <li><span><strong>Install the Windows SDK.</strong> It gives you <code>makeappx</code> and <code>signtool</code>.</span></li>
-        <li><span><strong>Set your identity.</strong> In <code>AppxManifest.xml</code>, match the Name and Publisher to your reservation.</span></li>
-        <li><span><strong>Build.</strong><code class="build-guide__cmd">makeappx pack /d YourAppFolder /p App.msix</code></span></li>
-        <li><span><strong>Sign.</strong><code class="build-guide__cmd">signtool sign /fd SHA256 /a /f cert.pfx App.msix</code></span></li>
-        <li><span><strong>Upload</strong> the signed <code>App.msix</code> in the box above.</span></li>
+        <li><span><strong>Add a packaging project.</strong> A <strong>Windows Application Packaging Project</strong> (install the MSIX Packaging Tools workload first).</span></li>
+        <li><span><strong>Associate with the Store.</strong> <strong>Publish → Associate App with the Store</strong> signs you in and fills your identity automatically.</span></li>
+        <li><span><strong>Create App Packages.</strong> <strong>Publish → Create App Packages</strong> builds your <code>.msix</code>.</span></li>
+        <li><span><strong>Upload</strong> it in the box above.</span></li>
+      </ol>
+      <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/msix/desktop/desktop-to-uwp-packaging-dot-net" target="_blank" rel="noopener">Full walkthrough <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
+    </div>
+
+    <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-vscode" data-bg-panel="vscode" hidden>
+      <p class="build-guide__panelintro">Build from the command line — you set the identity yourself.</p>
+      <ol class="build-guide__steps">
+        <li><span><strong>Install the Windows SDK</strong> for <code>makeappx</code>.</span></li>
+        <li><span><strong>Set identity</strong> in <code>AppxManifest.xml</code> to match your reservation. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span></li>
+        <li><span><strong>Build.</strong><code class="build-guide__cmd">makeappx pack /d YourApp /p App.msix</code></span></li>
+        <li><span><strong>Upload</strong> <code>App.msix</code> above — signing is optional, the Store re-signs.</span></li>
       </ol>
       <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/win32/appxpkg/make-appx-package--makeappx-exe-" target="_blank" rel="noopener">Full walkthrough <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
     </div>
 
     <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-other" data-bg-panel="other" hidden>
-      <p class="build-guide__panelintro">Prefer a GUI, or already have an installer? These also produce a valid MSIX.</p>
+      <p class="build-guide__panelintro">Prefer a GUI, or already have an installer? These also output MSIX.</p>
       <ul class="build-guide__tools">
-        <li>
-          <div class="build-guide__toolname">Visual Studio</div>
-          <p class="build-guide__tooldesc">Add a <strong>Windows Application Packaging Project</strong>, then <strong>Publish → Create App Packages</strong>. Your identity fills in automatically.</p>
-          <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/msix/desktop/desktop-to-uwp-packaging-dot-net" target="_blank" rel="noopener">Guide <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
-        </li>
         <li>
           <div class="build-guide__toolname">MSIX Packaging Tool</div>
           <p class="build-guide__tooldesc">Repackage an existing <strong>.exe / .msi</strong> installer into MSIX.</p>
@@ -6797,14 +6839,14 @@
         </li>
         <li>
           <div class="build-guide__toolname">Advanced Installer &amp; others</div>
-          <p class="build-guide__tooldesc">Most installer tools can output MSIX — set the package Name and Publisher to match your reservation.</p>
+          <p class="build-guide__tooldesc">Most installer tools can export MSIX directly.</p>
         </li>
       </ul>
     </div>
 
     <p class="build-guide__note">
       <iconify-icon icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-      <span>Your package's <strong>Name</strong> and <strong>Publisher</strong> must match your Store reservation exactly, or the upload is rejected. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span>
+      <span>Your package <strong>Name</strong> and <strong>Publisher</strong> must match your reservation, or the upload is rejected. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span>
     </p>
 
     <a slot="action" class="build-guide__learn" href="https://learn.microsoft.com/windows/msix/overview" target="_blank" rel="noopener">
@@ -7237,8 +7279,8 @@
     <fluent-button slot="title-action" appearance="subtle" data-apptype-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <p class="atd__lead">How your app is packaged decides what the Store can do for you. Pick the option that fits your app.</p>
-    <div class="atd__opts" id="atd-opts" role="radiogroup" aria-label="App type"></div>
+    <p class="atd__lead">How you package your app decides what the Store can do for it — pick the best fit.</p>
+    <fluent-radio-group class="atd__opts" id="atd-opts" orientation="vertical" aria-label="App type"></fluent-radio-group>
     <div class="atd__impact" id="atd-impact" hidden>
       <p class="atd__impact-lead" id="atd-impact-lead"></p>
       <ul class="atd__impact-list" id="atd-impact-list"></ul>
@@ -8152,7 +8194,16 @@
     const guideDlg = $('build-guide-dialog');
     const guideBtn = $('build-guide-btn');
     if (guideBtn && guideDlg) {
-      const openGuide = () => { try { guideDlg.show(); } catch (e) {} };
+      const openGuide = () => {
+        // Always open on the recommended (first = Visual Studio) tab.
+        const first = guideDlg.querySelector('[data-bg-tab]');
+        if (first) {
+          const key = first.getAttribute('data-bg-tab');
+          guideDlg.querySelectorAll('[data-bg-tab]').forEach(x => { const on = x === first; x.classList.toggle('is-active', on); x.setAttribute('aria-selected', on ? 'true' : 'false'); });
+          guideDlg.querySelectorAll('[data-bg-panel]').forEach(p => { p.hidden = p.getAttribute('data-bg-panel') !== key; });
+        }
+        try { guideDlg.show(); } catch (e) {}
+      };
       const closeGuide = () => { try { guideDlg.hide(); } catch (e) {} };
       guideBtn.addEventListener('click', openGuide);
       guideDlg.querySelectorAll('[data-build-guide-close]').forEach(el => el.addEventListener('click', closeGuide));
@@ -10128,18 +10179,21 @@
     }
     host.innerHTML = '<button type="button" class="wz-pkgtype__btn" data-apptype-edit title="Change app type" aria-label="Change app type \u2014 currently ' + label + '">' +
       '<span class="wz-pkgtype__val">' + label + '</span>' +
-      '<iconify-icon class="wz-pkgtype__editico" icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' +
+      '<span class="wz-pkgtype__change">Change</span>' +
       '</button>';
   }
   // Change-app-type dialog: each type with a short case (pros/cons), the current one flagged, and a
   // live preview of what switching changes (reuses typeChangeImpact for the MSIX<->Win32 boundary).
   const APPTYPE_INFO = {
-    msix: { label: 'MSIX', rec: true, desc: 'The modern Windows package \u2014 Microsoft signs, hosts, and updates it for you.',
-      pros: ['Automatic updates & clean uninstall', 'Free code signing & hosting', 'Store checkout, sales & add-ons'], cons: [] },
-    win32: { label: 'EXE / MSI', desc: 'Your existing installer, published to the Store as-is.',
-      pros: ['Publish without repackaging', 'Keep full control of updates & commerce'], cons: ['No Microsoft signing, hosting, or Store checkout'] },
-    pwa: { label: 'PWA', desc: 'Your website or web app, packaged as MSIX.',
-      pros: ['Reuse your existing web code', 'All the benefits of MSIX packaging'], cons: [] }
+    msix: { label: 'MSIX', icon: 'fluent:box-20-regular', rec: true,
+      desc: 'The modern Windows package \u2014 Microsoft handles signing, hosting, and updates for you.',
+      best: 'every Store benefit, least effort' },
+    win32: { label: 'EXE / MSI', icon: 'fluent:desktop-20-regular',
+      desc: 'Your existing installer, published as-is \u2014 you handle signing, hosting, and updates yourself.',
+      best: 'full control, more effort' },
+    pwa: { label: 'PWA', icon: 'fluent:globe-20-regular',
+      desc: 'Your website, packaged as MSIX \u2014 all the MSIX benefits, no native build.',
+      best: 'web apps' }
   };
   let _atdPick = null;
   function appTypeDlg() { return document.getElementById('apptype-dialog'); }
@@ -10159,19 +10213,33 @@
   function renderAppTypeOpts() {
     const wrap = document.getElementById('atd-opts'); if (!wrap) return;
     const types = ['msix', 'win32', 'pwa'].filter(t => !(t === 'win32' && IS_GAME));
-    const li = (arr, cls, ico) => (arr || []).map(x => '<li class="' + cls + '"><iconify-icon icon="' + ico + '" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + x + '</span></li>').join('');
     wrap.innerHTML = types.map(t => {
       const info = APPTYPE_INFO[t], isCur = t === v4Type, isSel = t === _atdPick;
       const badges = (info.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
         (isCur ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
-      return '<button type="button" class="atd-opt' + (isSel ? ' is-sel' : '') + '" role="radio" aria-checked="' + (isSel ? 'true' : 'false') + '" data-atd-opt="' + t + '">' +
-        '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badges + '</span>' +
-        '<span class="atd-opt__desc">' + info.desc + '</span>' +
-        '<ul class="atd-opt__list">' + li(info.pros, 'atd-pro', 'fluent:checkmark-16-filled') + li(info.cons, 'atd-con', 'fluent:dismiss-16-filled') + '</ul>' +
-        '</button>';
+      return '<label class="atd-opt' + (isSel ? ' is-sel' : '') + '" for="atd-r-' + t + '" data-atd-opt="' + t + '">' +
+        '<fluent-radio class="atd-opt__radio" id="atd-r-' + t + '" value="' + t + '"' + (isSel ? ' checked' : '') + '></fluent-radio>' +
+        '<span class="atd-opt__ico"><iconify-icon icon="' + info.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="atd-opt__body">' +
+          '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badges + '</span>' +
+          '<span class="atd-opt__desc">' + info.desc + '</span>' +
+          '<span class="atd-opt__best"><span class="atd-opt__best-k">Best for</span> ' + info.best + '</span>' +
+        '</span>' +
+        '</label>';
     }).join('');
+    // mirror [checked] onto .checked so the dot fills (this build doesn't flip :state(checked) on .checked)
+    wrap.querySelectorAll('fluent-radio').forEach(r => { r.checked = r.hasAttribute('checked'); });
   }
-  function selectAppType(t) { _atdPick = t; renderAppTypeOpts(); renderAppTypeImpact(); }
+  function selectAppType(t) {
+    _atdPick = t;
+    const wrap = document.getElementById('atd-opts');
+    if (wrap) wrap.querySelectorAll('.atd-opt').forEach(f => {
+      const r = f.querySelector('fluent-radio'), on = !!(r && r.getAttribute('value') === t);
+      f.classList.toggle('is-sel', on);
+      if (r) { r.checked = on; r.toggleAttribute('checked', on); }
+    });
+    renderAppTypeImpact();
+  }
   function renderAppTypeImpact() {
     const panel = document.getElementById('atd-impact'), lead = document.getElementById('atd-impact-lead'),
       list = document.getElementById('atd-impact-list'), btn = document.getElementById('atd-confirm');
@@ -10202,6 +10270,10 @@
       if (e.target.closest('[data-apptype-close]')) { closeAppTypeDialog(); return; }
       const opt = e.target.closest('[data-atd-opt]'); if (opt) { selectAppType(opt.getAttribute('data-atd-opt')); return; }
       if (e.target.closest('#atd-confirm')) { confirmAppTypeChange(); return; }
+    });
+    dlg.addEventListener('change', e => {
+      const wrap = e.target.closest && e.target.closest('#atd-opts');
+      if (wrap) { const r = e.target.closest('fluent-radio'); if (r) selectAppType(r.getAttribute('value')); }
     });
   })();
   let _pkgTypeConfirm = null, _pkgTypeCancel = null;
@@ -16925,6 +16997,18 @@
     // Expose a code → name lookup so the reach chips can render market names.
     window.MARKET_NAME = ALL_MARKETS.reduce((acc, m) => { acc[m.code] = m.name; return acc; }, {});
 
+    // Predefined region presets so a developer can select a whole region (e.g. Europe) in one tap
+    // instead of ticking ~240 markets. Shared with the market-group picker via window.MKT_REGIONS.
+    const MKT_REGIONS = [
+      { name: 'Europe', codes: ['AD','AL','AT','AX','BA','BE','BG','CH','CY','CZ','DE','DK','EE','ES','FI','FO','FR','GB','GE','GG','GI','GR','HR','HU','IE','IM','IS','IT','JE','LI','LT','LU','LV','MC','MD','ME','MK','MT','NL','NO','PL','PT','RO','RS','SE','SI','SK','SM','UA','VA'] },
+      { name: 'North America', codes: ['US','CA','MX'] },
+      { name: 'Latin America', codes: ['AR','AG','BB','BO','BR','BS','BZ','CL','CO','CR','DM','DO','EC','GD','GT','GY','HN','HT','JM','KN','LC','NI','PA','PE','PR','PY','SR','SV','TT','UY','VC','VE'] },
+      { name: 'Asia Pacific', codes: ['AF','BD','BN','BT','CN','HK','ID','IN','JP','KG','KH','KR','KZ','LA','LK','MM','MN','MO','MV','MY','NP','PH','PK','SG','TH','TJ','TL','TM','TW','UZ','VN'] },
+      { name: 'Middle East & Africa', codes: ['AE','AO','BH','BW','CD','CI','CM','DZ','EG','ET','GH','IL','IQ','JO','KE','KW','LB','LY','MA','MU','MZ','NA','NG','OM','PS','QA','RW','SA','SN','TN','TR','TZ','UG','YE','ZA','ZM','ZW'] },
+      { name: 'Oceania', codes: ['AS','AU','CK','FJ','FM','GU','KI','MH','MP','NC','NR','NZ','PF','PG','PW','SB','TO','TV','VU','WS'] },
+    ];
+    window.MKT_REGIONS = MKT_REGIONS;
+
     // Internal selection (keyed by CODE) + snapshot taken on open for Cancel.
     const selectedMarkets = new Set();
     let marketsDraft = null;
@@ -16961,6 +17045,7 @@
           if (cb.checked) selectedMarkets.add(code);
           else selectedMarkets.delete(code);
           updateMarketsCount();
+          renderMarketsPresets();
         });
       });
     }
@@ -16968,6 +17053,35 @@
     function updateMarketsCount() {
       if (marketsCountEl) marketsCountEl.textContent = `${selectedMarkets.size} of ${ALL_MARKETS.length} selected`;
     }
+
+    const marketsPresetsEl = $('markets-presets');
+    function mktRegionAvail(region) { return region.codes.filter(c => window.MARKET_NAME[c]); }
+    function mktRegionState(region) {
+      const av = mktRegionAvail(region); if (!av.length) return 'none';
+      const n = av.filter(c => selectedMarkets.has(c)).length;
+      return n === 0 ? 'none' : (n === av.length ? 'all' : 'some');
+    }
+    function renderMarketsPresets() {
+      if (!marketsPresetsEl) return;
+      marketsPresetsEl.innerHTML = MKT_REGIONS.map((r, i) => {
+        const st = mktRegionState(r);
+        const ico = st === 'all' ? 'fluent:checkmark-circle-16-filled' : (st === 'some' ? 'fluent:subtract-circle-16-filled' : 'fluent:add-circle-16-regular');
+        return `<button type="button" class="markets-preset${st === 'all' ? ' is-on' : st === 'some' ? ' is-part' : ''}" data-mkt-region="${i}" aria-pressed="${st === 'all'}"><iconify-icon icon="${ico}" width="15" height="15" aria-hidden="true"></iconify-icon>${r.name}</button>`;
+      }).join('');
+    }
+    function toggleMktRegion(i) {
+      const r = MKT_REGIONS[i]; if (!r) return;
+      const av = mktRegionAvail(r);
+      if (mktRegionState(r) === 'all') av.forEach(c => selectedMarkets.delete(c));
+      else av.forEach(c => selectedMarkets.add(c));
+      renderMarketsList(marketsSearch ? marketsSearch.value : '');
+      renderMarketsPresets();
+      updateMarketsCount();
+    }
+    marketsPresetsEl && marketsPresetsEl.addEventListener('click', e => {
+      const b = e.target.closest('[data-mkt-region]'); if (!b) return;
+      toggleMktRegion(+b.getAttribute('data-mkt-region'));
+    });
 
     function openMarketsDialog() {
       if (!marketsDialog) return;
@@ -16978,6 +17092,7 @@
       marketsDraft = new Set(selectedMarkets); // snapshot for Cancel/X
       if (marketsSearch) marketsSearch.value = '';
       renderMarketsList('');
+      renderMarketsPresets();
       updateMarketsCount();
       try { if (typeof marketsDialog.show === 'function') marketsDialog.show(); } catch (e) {}
       setTimeout(() => { try { marketsSearch && marketsSearch.focus(); } catch (e) {} }, 50);
@@ -17000,11 +17115,13 @@
     marketsSelectAllBtn && marketsSelectAllBtn.addEventListener('click', () => {
       ALL_MARKETS.forEach(m => selectedMarkets.add(m.code));
       renderMarketsList(marketsSearch ? marketsSearch.value : '');
+      renderMarketsPresets();
       updateMarketsCount();
     });
     marketsClearAllBtn && marketsClearAllBtn.addEventListener('click', () => {
       selectedMarkets.clear();
       renderMarketsList(marketsSearch ? marketsSearch.value : '');
+      renderMarketsPresets();
       updateMarketsCount();
     });
     marketsConfirmBtn && marketsConfirmBtn.addEventListener('click', () => {
@@ -17564,11 +17681,12 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   const gEsc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
   function priceGroupsArr() { return (adv && adv.price && Array.isArray(adv.price.groups)) ? adv.price.groups : []; }
   function populateScheduleScope(scope) {
-    const dd = $('price-schedule-scope'), field = $('price-schedule-scope-field');
+    const dd = $('price-schedule-scope'), field = $('price-schedule-scope-field'), empty = $('price-schedule-scope-empty');
     if (!dd || !field) return;
     const groups = priceGroupsArr();
-    if (!groups.length) { field.hidden = true; return; }
-    field.hidden = false;
+    field.hidden = false;   // "Applies to" is always shown so the all-markets/group choice is discoverable
+    if (!groups.length) { dd.hidden = true; if (empty) empty.hidden = false; return; }
+    dd.hidden = false; if (empty) empty.hidden = true;
     const lb = dd.querySelector('fluent-listbox') || dd;
     const cur = (scope && scope.mode === 'group' && scope.groupId && groups.some(g => g.id === scope.groupId)) ? scope.groupId : 'all';
     const opts = [{ v: 'all', t: 'All markets' }].concat(groups.map(g => ({ v: g.id, t: g.name })));
@@ -17576,8 +17694,8 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     try { dd.value = cur; } catch (e) {}
   }
   function scheduleScopeValue() {
-    const dd = $('price-schedule-scope'), field = $('price-schedule-scope-field');
-    if (!dd || !field || field.hidden) return { mode: 'all' };
+    const dd = $('price-schedule-scope');
+    if (!dd || dd.hidden) return { mode: 'all' };
     const v = dd.value || 'all';
     return v === 'all' ? { mode: 'all' } : { mode: 'group', groupId: v };
   }
@@ -17655,6 +17773,11 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   priceScheduleTime?.addEventListener('input', syncScheduleSaveEnabled);
   priceScheduleTz?.addEventListener('change', renderSchedulePreview);
   $('price-schedule-scope')?.addEventListener('change', renderSchedulePreview);
+  $('price-schedule-scope-empty')?.addEventListener('click', e => {
+    if (!e.target.closest('[data-schedule-new-group]')) return;
+    closePriceScheduleDialog();
+    try { window.openPriceGroupDialog && window.openPriceGroupDialog(); } catch (e2) {}
+  });
 
   priceScheduleSave?.addEventListener('click', () => {
     const date = priceScheduleDate?.value;
@@ -17994,7 +18117,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
       cb.addEventListener('change', () => {
         const code = cb.getAttribute('data-group-market');
         if (cb.checked) groupMarketsSel.add(code); else groupMarketsSel.delete(code);
-        updateGroupMarketsCount(); syncGroupSaveEnabled();
+        updateGroupMarketsCount(); renderGroupPresets(); syncGroupSaveEnabled();
       });
     });
   }
@@ -18003,7 +18126,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     const seg = $('price-group-markets-mode');
     if (seg) seg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === groupMarketsMode; r.checked = on; r.toggleAttribute('checked', on); });
     if (priceGroupMarketsPick) priceGroupMarketsPick.hidden = groupMarketsMode !== 'choose';
-    if (groupMarketsMode === 'choose') { renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); }
+    if (groupMarketsMode === 'choose') { renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); renderGroupPresets(); updateGroupMarketsCount(); }
     if (sync) syncGroupSaveEnabled();
   }
   function groupCustomOn() { return !!(priceGroupCustomToggle && priceGroupCustomToggle.checked); }
@@ -18093,8 +18216,27 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   priceGroupCustomToggle?.addEventListener('change', () => { const on = priceGroupCustomToggle.checked; if (priceGroupPriceRow) priceGroupPriceRow.hidden = !on; groupPriceHint(on); syncGroupSaveEnabled(); });
   $('price-group-markets-mode')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'choose'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setGroupMarketsMode(v, true); });
   priceGroupMarketsSearch?.addEventListener('input', e => renderGroupMarketsList(e.target.value));
-  $('price-group-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => groupMarketsSel.add(m.code)); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
-  $('price-group-markets-clear')?.addEventListener('click', () => { groupMarketsSel.clear(); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
+  $('price-group-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => groupMarketsSel.add(m.code)); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); renderGroupPresets(); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
+  $('price-group-markets-clear')?.addEventListener('click', () => { groupMarketsSel.clear(); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); renderGroupPresets(); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
+  function pgRegionAvail(r) { return r.codes.filter(c => (window.MARKET_NAME || {})[c]); }
+  function pgRegionState(r) { const av = pgRegionAvail(r); if (!av.length) return 'none'; const n = av.filter(c => groupMarketsSel.has(c)).length; return n === 0 ? 'none' : (n === av.length ? 'all' : 'some'); }
+  function renderGroupPresets() {
+    const el = $('price-group-presets'); if (!el) return;
+    el.innerHTML = (window.MKT_REGIONS || []).map((r, i) => {
+      const st = pgRegionState(r);
+      const ico = st === 'all' ? 'fluent:checkmark-circle-16-filled' : (st === 'some' ? 'fluent:subtract-circle-16-filled' : 'fluent:add-circle-16-regular');
+      return '<button type="button" class="markets-preset' + (st === 'all' ? ' is-on' : st === 'some' ? ' is-part' : '') + '" data-pg-region="' + i + '" aria-pressed="' + (st === 'all') + '"><iconify-icon icon="' + ico + '" width="15" height="15" aria-hidden="true"></iconify-icon>' + r.name + '</button>';
+    }).join('');
+  }
+  function toggleGroupRegion(i) {
+    const r = (window.MKT_REGIONS || [])[i]; if (!r) return;
+    const av = pgRegionAvail(r);
+    if (pgRegionState(r) === 'all') av.forEach(c => groupMarketsSel.delete(c));
+    else av.forEach(c => groupMarketsSel.add(c));
+    renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : '');
+    renderGroupPresets(); updateGroupMarketsCount(); syncGroupSaveEnabled();
+  }
+  $('price-group-presets')?.addEventListener('click', e => { const b = e.target.closest('[data-pg-region]'); if (b) toggleGroupRegion(+b.getAttribute('data-pg-region')); });
   priceGroupDialog?.querySelectorAll('[data-price-group-close]').forEach(el => el.addEventListener('click', () => closePriceGroupDialog()));
   priceGroupSave?.addEventListener('click', () => {
     if (!groupValid()) return;
