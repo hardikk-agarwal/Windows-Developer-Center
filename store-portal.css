@@ -187,8 +187,9 @@
 .fmthelp-modal[hidden] { display: none; }
 .fmthelp-modal__backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
 .fmthelp-modal__card { position: relative; width: min(460px, 100%); max-height: 88vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 64px rgba(0, 0, 0, .5); padding: 22px 22px 20px; }
-.fmtw__bar-row { display: flex; align-items: center; gap: 14px; }
-.fmtw__progress { flex: 1; height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
+.fmtw__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.fmtw__title { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+.fmtw__progress { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
 .fmtw__progress > span { display: block; height: 100%; background: var(--text-2); border-radius: 999px; }
 .fmtw__close { flex: none; appearance: none; border: 0; background: transparent; color: var(--text-3); cursor: pointer; padding: 2px; border-radius: 6px; display: inline-flex; }
 .fmtw__close:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
@@ -516,6 +517,48 @@ a.ovn-chip:hover { filter: brightness(1.08); }
 .ovn-link:hover { color: var(--brand-soft); text-decoration: underline; }
 @media (max-width: 900px) { .ovn-2col { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .ovn-acct__chips { margin-left: 0; width: 100%; } }
+/* Overview analytics layout: full-width chart (metric + app dropdowns) then 50/50 apps | cert/account. */
+.ovn-chartpanel { padding: 18px 20px 16px; }
+.ovn-chartpanel__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.ovn-chartpanel__head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+.ovn-chartpanel__ctrls { display: inline-flex; align-items: center; gap: 8px; }
+.ovn-chartpanel__ctrls fluent-dropdown { min-width: 132px; }
+.ovn-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.ovn-grid2 > .apanel { padding: 16px 18px; }
+.ovn-grid2 .apanel__head { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.ovn-grid2 .apanel__head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+.ovn-grid2 .apanel__head .ovn-sec__link { margin-left: auto; }
+.ovn-appspanel .apanel__body { display: flex; flex-direction: column; gap: 14px; }
+.ovn-mini__cap { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--text-2); margin: 0 0 6px; }
+.ovn-mini__n { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--text) 8%, transparent); font-size: 11px; color: var(--text-2); }
+.ovn-mini .table-wrap { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
+.ovn-mini__tbl { width: 100%; border-collapse: collapse; }
+.ovn-mini__tbl td { padding: 8px 11px; border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); font-size: 13px; vertical-align: middle; }
+.ovn-mini__tbl tr:first-child td { border-top: 0; }
+.ovn-mini__row { cursor: pointer; transition: background .12s ease; }
+.ovn-mini__row:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+.ovn-mini__app { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.ovn-mini__app .app-ico { width: 26px; height: 26px; border-radius: var(--r-sm); flex: 0 0 auto; font-size: 11px; }
+.ovn-mini__app > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text); }
+.ovn-mini__status { white-space: nowrap; }
+.ovn-mini__metric { text-align: right; color: var(--text-3); font-size: 12px; white-space: nowrap; }
+.ovn-cert { display: flex; align-items: center; gap: 12px; }
+.ovn-cert .cert-ico { width: 40px; height: 40px; border-radius: var(--r-md); flex: 0 0 auto; font-size: 13px; }
+.ovn-cert__id { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ovn-cert__kicker { font-size: 11px; color: var(--text-3); }
+.ovn-cert__id strong { font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovn-cert__thumb { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); }
+.ovn-cert__note { margin: 13px 0 0; font-size: 12.5px; line-height: 1.45; }
+.ovn-actrow { display: flex; align-items: flex-start; gap: 11px; padding: 11px 2px; text-decoration: none; color: inherit; }
+.ovn-actrow + .ovn-actrow { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+a.ovn-actrow { cursor: pointer; }
+a.ovn-actrow:hover strong { color: var(--brand-soft); }
+.ovn-actrow__ico { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text-2); }
+.ovn-actrow__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ovn-actrow__t strong { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.ovn-actrow__t span { font-size: 12px; color: var(--text-3); }
+.ovn-empty { padding: 8px 2px; font-size: 13px; }
+@media (max-width: 900px) { .ovn-grid2 { grid-template-columns: 1fr; } }
 
 /* ===== "Choose how to get started" dialog — WDP arrivals on Certificates ============= */
 #choosePathModal::part(control), #choosePathModal::part(dialog) { width: min(720px, 94vw); max-width: none; max-height: 92vh; overflow: auto; }

@@ -371,7 +371,7 @@
         '<div class="pubcard__head">' +
           '<span class="pubcard__ico"><iconify-icon icon="' + f.icon + '" width="23" height="23" aria-hidden="true"></iconify-icon></span>' +
           '<h3 class="pubcard__name"><button type="button" class="pubcard__hit" data-addformat="' + f.id + '">' + f.name + '</button></h3>' +
-          (f.rec ? '<fluent-badge class="pubcard__rec" appearance="tint" color="brand" size="small">Recommended</fluent-badge>' : '') +
+          (f.rec ? '<span class="pill pill--info pill--sm pubcard__rec">Recommended</span>' : '') +
         '</div>' +
         '<p class="pubcard__desc">' + f.desc + '</p>' +
         '<ul class="pubcard__list">' + f.points.map(function (p) { return '<li><iconify-icon class="pubcard__mk" icon="fluent:checkmark-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + p + '</span></li>'; }).join('') + '</ul>' +
@@ -534,8 +534,9 @@
     return 1 + m;
   }
   function fmtwBar(pct) {
-    return '<div class="fmtw__bar-row"><div class="fmtw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>' +
-      '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>';
+    return '<div class="fmtw__head"><h2 class="fmtw__title">Help me choose</h2>' +
+      '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+      '<div class="fmtw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>';
   }
   function fmtwCrumbs() {
     var p = fmtwState.path || [];
@@ -892,17 +893,120 @@
     '</section>';
   }
   // Flat overview: every section is ONE light container of flat rows — no cards nested inside cards.
+  // Overview chart state: which metric + which app (or "__all__" for a per-app comparison line chart).
+  var ovMetric = "installs", ovChartApp = "__all__";
+  var OVN_METRICS = [["installs", "Installs"], ["crashes", "Crashes"], ["rating", "Ratings"]];
   function unifiedDashHTML() {
     var apps = (state.apps || []).slice().sort(function (a, b) {
       return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (statusRank(a) - statusRank(b));
     });
-    // At-a-glance metric strip -> per-app performance charts -> full-width your-apps list -> account.
+    var liveApps = anaLiveApps();
+    if (!liveApps.length) return '<div class="ovn">' + ovnAppsHTML(apps) + ovnAccountHTML() + '</div>';   // no analytics yet
+    // Full-width performance chart (metric + app dropdowns) -> 50/50: apps tables | certificate or account.
     return '<div class="ovn">' +
-      ovnStatsHTML() +
-      ovnPerfHTML(apps) +
-      ovnAppsHTML(apps) +
-      ovnAccountHTML() +
+      ovnChartHTML(liveApps) +
+      '<div class="ovn-grid2">' + ovnAppsPanelHTML(apps) + ovnSidePanelHTML() + '</div>' +
     '</div>';
+  }
+  // One app's series for the selected metric (installs / crashes-per-day / avg rating) + its day labels.
+  function ovnMetricData(a) {
+    if (ovMetric === "crashes") { var d = anaData(a).hits; return { vals: d.series[0].values.map(function (c, k) { return c + d.series[1].values[k] + d.series[2].values[k]; }), labels: d.labels }; }
+    if (ovMetric === "rating") { var r = ratingsData(a); return { vals: r.avgSeries, labels: r.labels }; }
+    var q = acqData(a); return { vals: q.inst, labels: q.labels };
+  }
+  function ovnChartHTML(liveApps) {
+    var metricSel = '<fluent-dropdown id="ovnMetricSel" appearance="outline" aria-label="Metric"><fluent-listbox>' +
+      OVN_METRICS.map(function (m) { return '<fluent-option value="' + m[0] + '"' + (ovMetric === m[0] ? " selected" : "") + '>' + m[1] + '</fluent-option>'; }).join("") + '</fluent-listbox></fluent-dropdown>';
+    var appOpts = '<fluent-option value="__all__"' + (ovChartApp === "__all__" ? " selected" : "") + '>All apps</fluent-option>' +
+      liveApps.map(function (a) { return '<fluent-option value="' + esc(a.id) + '"' + (ovChartApp === a.id ? " selected" : "") + '>' + esc(a.name) + '</fluent-option>'; }).join("");
+    var appSel = '<fluent-dropdown id="ovnAppSel" appearance="outline" aria-label="App"><fluent-listbox>' + appOpts + '</fluent-listbox></fluent-dropdown>';
+    return '<section class="apanel ovn-chartpanel" id="ovnChart">' +
+      '<header class="apanel__head ovn-chartpanel__head"><h3>App performance</h3>' +
+        '<div class="ovn-chartpanel__ctrls">' + metricSel + appSel + '</div></header>' +
+      '<div class="apanel__body" id="ovnChartBody">' + ovnChartBodyHTML(liveApps) + '</div></section>';
+  }
+  function ovnChartBodyHTML(liveApps) {
+    var yopt = ovMetric === "rating" ? { yMin: 0, yMax: 5, fmt: function (v) { return v.toFixed(1); } } : {};
+    var o, k;
+    if (ovChartApp === "__all__") {
+      var series = liveApps.map(function (a, i) { return { name: a.name, color: anaAppColor(i), values: ovnMetricData(a).vals }; });
+      o = { series: series, labels: ovnMetricData(liveApps[0]).labels, h: 280 };
+      for (k in yopt) o[k] = yopt[k];
+      return chartLine(o) + legendDots(series);
+    }
+    var app = appById(ovChartApp) || liveApps[0], md = ovnMetricData(app);
+    var color = ovMetric === "crashes" ? "var(--magenta)" : ovMetric === "rating" ? "#f7b955" : "var(--brand)";
+    o = { series: [{ name: app.name, color: color, values: md.vals }], labels: md.labels, h: 280, area: true };
+    for (k in yopt) o[k] = yopt[k];
+    return chartLine(o);
+  }
+  function wireOvnChart() {
+    var mSel = document.getElementById("ovnMetricSel"), aSel = document.getElementById("ovnAppSel");
+    var rerender = function () { var body = document.getElementById("ovnChartBody"); if (!body) return; body.innerHTML = ovnChartBodyHTML(anaLiveApps()); sizeCharts(body); observeCharts(body); };
+    if (mSel) mSel.addEventListener("change", function () { if (mSel.value) { ovMetric = mSel.value; rerender(); } });
+    if (aSel) aSel.addEventListener("change", function () { if (aSel.value) { ovChartApp = aSel.value; rerender(); } });
+  }
+  // Left of the 50/50 row: compact Store / Not-in-Store app tables (rows open the app).
+  function ovnAppsPanelHTML(apps) {
+    var above = apps.filter(inStorePipeline), below = apps.filter(isSignedOnly), html = "";
+    if (above.length) html += ovnMiniTableHTML("Microsoft Store", above, false);
+    if (below.length) html += ovnMiniTableHTML("Not in the Store", below, true);
+    return '<section class="apanel ovn-appspanel"><header class="apanel__head"><h3>Your apps</h3>' +
+      '<a class="ovn-sec__link" href="#apps" data-jump="apps">See all</a></header>' +
+      '<div class="apanel__body">' + (html || '<p class="muted ovn-empty">No apps yet.</p>') + '</div></section>';
+  }
+  function ovnMiniTableHTML(title, list, signed) {
+    var rows = list.map(function (a) {
+      var status, metric;
+      if (signed) {
+        var cr = anaData(a).crashRate;
+        status = '<span class="pill pill--ghost pill--sm">Not in Store</span>';
+        metric = cr != null ? (100 - cr).toFixed(1) + "% crash-free" : "";
+      } else {
+        var kk = appStatusKey(a);
+        status = ovxStatusPill(kk);
+        metric = kk === "live" ? fmtCompact(acqData(a).instTotal) + " installs" : "";
+      }
+      return '<tr class="ovn-mini__row" data-openapp="' + a.id + '" title="Open ' + esc(a.storeName || a.name) + '">' +
+        '<td class="ovn-mini__app">' + appIcoImg(a) + '<span>' + esc(a.storeName || a.name) + '</span></td>' +
+        '<td class="ovn-mini__status">' + status + '</td>' +
+        '<td class="ovn-mini__metric">' + metric + '</td></tr>';
+    }).join("");
+    return '<div class="ovn-mini"><div class="ovn-mini__cap">' + esc(title) + ' <span class="ovn-mini__n">' + list.length + '</span></div>' +
+      '<div class="table-wrap"><table class="ovn-mini__tbl"><tbody>' + rows + '</tbody></table></div></div>';
+  }
+  // Right of the 50/50 row: the signing certificate when present, else account actions.
+  function ovnSidePanelHTML() {
+    return (state.certs && state.certs.length) ? ovnCertPanelHTML(state.certs) : ovnAccountPanelHTML();
+  }
+  function ovnCertPanelHTML(certs) {
+    var cards = certs.map(function (c) {
+      var pill = c.trust === "Valid"
+        ? '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Active</span>'
+        : '<span class="pill pill--warn pill--sm">Self-signed</span>';
+      return '<div class="ovn-cert"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
+        '<div class="ovn-cert__id"><span class="ovn-cert__kicker">Signing certificate</span><strong>' + esc(c.label) + '</strong>' +
+          '<span class="ovn-cert__thumb">' + fmtThumb(c.thumb) + '</span></div>' + pill + '</div>';
+    }).join("");
+    var n = state.apps.filter(function (a) { return a.certId; }).length;
+    var sub = n ? '<p class="ovn-cert__note muted">Signing ' + n + ' app' + (n === 1 ? "" : "s") + ' \u00b7 crash analytics &amp; SmartScreen reputation unlocked.</p>' : "";
+    return '<section class="apanel ovn-sidepanel"><header class="apanel__head"><h3>Certificate</h3>' +
+      '<a class="ovn-sec__link" href="#certificates" data-jump="certificates">Manage</a></header>' +
+      '<div class="apanel__body">' + cards + sub + '</div></section>';
+  }
+  function ovnAccountPanelHTML() {
+    var acct = state.account || {}, items = [];
+    if (!(state.certs && state.certs.length)) items.push(["fluent:certificate-20-regular", "Add a signing certificate", "Verify identity to publish &amp; unlock analytics.", "#certificates", "certificates"]);
+    if (acct.agreementSigned === false) items.push(["fluent:document-20-regular", "Sign the Developer Agreement", "Required before publishing to the Store.", "", ""]);
+    if (acct.payoutSetup !== true) items.push(["fluent:money-20-regular", "Set up payout &amp; tax", "Add banking &amp; tax details to get paid.", "", ""]);
+    var rows = items.length ? items.map(function (it) {
+      var tag = it[3] ? "a" : "div";
+      return '<' + tag + ' class="ovn-actrow"' + (it[3] ? ' href="' + it[3] + '" data-jump="' + it[4] + '"' : "") + '>' +
+        '<span class="ovn-actrow__ico"><iconify-icon icon="' + it[0] + '" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="ovn-actrow__t"><strong>' + it[1] + '</strong><span>' + it[2] + '</span></span></' + tag + '>';
+    }).join("") : '<p class="muted ovn-empty">You\u2019re all set \u2014 nothing needs attention.</p>';
+    return '<section class="apanel ovn-sidepanel"><header class="apanel__head"><h3>Account</h3></header>' +
+      '<div class="apanel__body">' + rows + '</div></section>';
   }
   // Overview "at a glance": quick structural facts only — apps (Store + signed) and certificates. Per-app
   // health lives in the "Your apps" list below (accumulated analytics averages proved to be noise).
@@ -1125,7 +1229,7 @@
       }
       el.innerHTML = storeOnrampsAccordionHTML() + unifiedDashHTML();
       wirePubTabs(el);
-      sizeCharts(el); observeCharts(el);
+      sizeCharts(el); observeCharts(el); wireOvnChart();
       return;
     }
     if (!state.verified) {
@@ -2021,6 +2125,23 @@
         if (cm) t.code = "0x" + cm[1].toUpperCase();
       }
     })();
+    (function () {   // a real app has symbolized crashes too — move a few lower page-1 rows onto a resolved build so the
+      // table shows a realistic Resolved / Unresolved / Stack-pending mix (top new-build regressions stay Unresolved).
+      if (msix) return;
+      var rvs = versions.filter(function (v) { return v.sym === "resolved"; });
+      var rv = rvs.filter(function (v) { return !v.stacksPending; })[0] || rvs[0];
+      if (!rv) return;
+      var topN = Math.min(6, failures.length), have = 0, i;
+      for (i = 0; i < topN; i++) if (failures[i].resolved) have++;
+      for (i = topN - 1; i >= 0 && have < 3; i--) {
+        var rf = failures[i];
+        if (rf.resolved || rf.isNew || rf.reprocessing) continue;   // keep the new-build regressions + stack-pending rows
+        var unres = 0, j; for (j = 0; j < topN; j++) if (!failures[j].resolved && !failures[j].reprocessing) unres++;
+        if (unres <= 1) break;   // always leave at least one Unresolved row for the "upload symbols" story
+        var rfn = STACK_FNS[(rnd() * STACK_FNS.length) | 0];
+        rf.ver = rv.ver; rf.resolved = true; rf.reprocessing = false; rf.fn = rfn; rf.name = base + "!" + rfn; have++;
+      }
+    })();
     // Symbol upload history (per-app audit trail, visible to the whole team).
     var users = ["alex@contoso.com", "priya@contoso.com", "sam@fabrikam.com"], hist = [], hn = 3 + ((rnd() * 3) | 0);
     for (var hh = 0; hh < hn; hh++) {
@@ -2545,11 +2666,21 @@
     function sum(a) { return a.reduce(function (m, v) { return m + v; }, 0); }
     var cr = sum(series[0].values), hg = sum(series[1].values), mem = sum(series[2].values);
     var ps = Math.max(0, n - 2 * days), pe = n - days;
-    function psum(a) { return a.slice(ps, pe).reduce(function (m, v) { return m + v; }, 0) || 1; }
-    function dp(c, p) { return +(((c - p) / p) * 100).toFixed(1); }
+    // Period-over-period when a real prior window exists (e.g. the 7-day range); otherwise fall back to
+    // within-window momentum (recent half vs earlier half) — a full 30-day window over 28 days of retained
+    // data leaves no prior period, which otherwise blows the delta up to millions of %.
+    var havePrev = (pe - ps) >= Math.max(3, Math.floor(days / 2));
+    function delta(vals) {
+      var c, p;
+      if (havePrev) { c = sum(tail(vals)); p = vals.slice(ps, pe).reduce(function (m, v) { return m + v; }, 0); }
+      else { var w = tail(vals), h = Math.max(1, Math.floor(w.length / 2)), e = w.length - h;
+        p = w.slice(0, e).reduce(function (m, v) { return m + v; }, 0) / e;
+        c = w.slice(e).reduce(function (m, v) { return m + v; }, 0) / h; }
+      return p > 0 ? +(((c - p) / p) * 100).toFixed(1) : 0;
+    }
+    var totFull = full.series[0].values.map(function (v, i) { return v + full.series[1].values[i] + full.series[2].values[i]; });
     return { days: days, labels: tail(full.labels), series: series, total: cr + hg + mem, crashes: cr, hangs: hg, mem: mem,
-      dTotal: dp(cr + hg + mem, psum(full.series[0].values) + psum(full.series[1].values) + psum(full.series[2].values)),
-      dCrash: dp(cr, psum(full.series[0].values)), dHang: dp(hg, psum(full.series[1].values)), dMem: dp(mem, psum(full.series[2].values)) };
+      dTotal: delta(totFull), dCrash: delta(full.series[0].values), dHang: delta(full.series[1].values), dMem: delta(full.series[2].values) };
   }
   function applyCustomRange(from, to) {
     if (!from || !to) { anaCustom = { days: 14, from: from, to: to }; return; }
@@ -2637,7 +2768,7 @@
       ? '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:box-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Packaged app</span>' +
         '<h3>Stack traces resolve automatically</h3>' +
         '<p><strong>' + esc(app.name) + '</strong> ships as an MSIX package, so its symbols are already inside \u2014 nothing to upload. Every crash shows a fully resolved stack trace from the first report.</p></div>'
-      : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
+      : '<div class="ca-zero__nudge"><span class="ca-zero__tag">Do this first</span>' +
         '<h3>Upload your symbols to make crashes actionable</h3>' +
         '<p>Symbols turn raw crash data into readable stack traces with function names and line numbers. They apply to new crashes reported from now on, so upload <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now to make upcoming crashes actionable.</p>' +
         '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
@@ -2738,7 +2869,7 @@
     function sortTh(label, k, num) { var on = anaSort.key === k; return '<th class="' + (num === false ? "" : "num ") + 'th-sort" data-anasort="' + k + '" role="button" tabindex="0" aria-label="Sort by ' + label + '">' + label + (on ? ' <span class="th-arrow">' + (anaSort.dir === "asc" ? "\u25B2" : "\u25BC") + '</span>' : "") + '</th>'; }
     var rows = list.slice(pg * per, pg * per + per).map(function (f) {
       return '<tr class="failrow" data-failure="' + f.id + '" tabindex="0" role="button" aria-label="View ' + esc(f.name) + '">' +
-        '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
+        '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<span class="pill pill--ok pill--sm newbadge">New</span>' : "") + '</td>' +
         '<td>' + ftypePill(f.type) + '</td><td><span class="mono">' + esc(f.ver) + '</span></td>' +
         (msix ? "" : '<td>' + (f.resolved ? '<span class="pill pill--ok pill--sm">Resolved</span>' : f.reprocessing ? '<span class="pill pill--info pill--sm symjump" data-sym-jump="' + esc(f.ver) + '" title="Symbols resolved \u2014 this crash\u2019s stack is still attaching (up to ~10h). We\u2019ll email you.">Stack pending</span>' : '<span class="pill pill--warn pill--sm symjump" data-sym-jump="' + esc(f.ver) + '" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</span>') + '</td>') +
         '<td class="num" title="' + fmtComma(f.hits) + ' hits">' + fmtCompact(f.hits) + '</td><td class="num" title="' + fmtComma(f.devices) + ' devices">' + fmtCompact(f.devices) + '</td></tr>';
@@ -2947,7 +3078,7 @@
     var ctx = anchorHTML;
     var dumpBtn = '<span class="stkdl"><fluent-button appearance="outline" size="small" data-dl-menu aria-haspopup="true" aria-expanded="false"><iconify-icon slot="start" icon="fluent:arrow-download-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Download<iconify-icon slot="end" icon="fluent:chevron-down-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></fluent-button><div class="stkdl__menu" role="menu" hidden><button type="button" class="stkdl__item" role="menuitem" data-dl-stack="' + f.id + '"><iconify-icon icon="fluent:document-bullet-list-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Stack trace (.txt)</button>' + (occ ? '<button type="button" class="stkdl__item" role="menuitem" data-dl-dump="' + esc(occ.id) + '"><iconify-icon icon="fluent:folder-zip-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Crash dump (.cab)</button>' : "") + '</div></span>';
     if (f.resolved) {
-      return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="success">' + (msix ? "Full stack trace" : "Symbols resolved") + '</fluent-badge>' +
+      return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span class="pill pill--ok pill--sm">' + (msix ? "Full stack trace" : "Symbols resolved") + '</span>' +
         '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
         '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-crashai="' + f.id + '"><iconify-icon slot="start" icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Explain this crash</fluent-button>' + dumpBtn +
         '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button></span></header>' +
@@ -2955,7 +3086,7 @@
         '<div class="crashai" id="crashai-' + f.id + '" hidden>' + crashInsightHTML(app, f, parts, env, occ) + '</div></div></div></section>';
     }
     if (f.reprocessing) {
-      return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="brand">Stack pending</fluent-badge>' +
+      return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span class="pill pill--info pill--sm">Stack pending</span>' +
         '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
         '<span class="stk__actions">' + dumpBtn +
         '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button></span></header>' +
@@ -2963,7 +3094,7 @@
         '<div class="stk__reproc"><iconify-icon class="stk__reproc-ico" icon="fluent:arrow-sync-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><div><strong>Symbols resolved \u2014 attaching this crash\u2019s stack.</strong> <strong>' + esc(f.ver) + '</strong> passed validation, so its symbols are in; existing crashes take up to <strong>~10 hours</strong> to show stacks and we\u2019ll email you when they\u2019re ready \u2014 no need to re-upload. Frames below stay raw until then, and a crash that doesn\u2019t recur may remain unresolved. <button class="stk__link" data-sym-jump="' + esc(f.ver) + '">View symbol status</button></div></div>' +
         ctx + bodyHTML + '</div></div></section>';
     }
-    return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>' +
+    return '<section class="apanel"><header class="apanel__head stk__phead"><h3>Stack trace</h3><iconify-icon class="apanel__i" icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span class="pill pill--warn pill--sm">Symbols not available</span>' +
       '<span class="muted stk__excn">' + esc(f.code) + ' \u00b7 ' + esc(f.type) + '</span>' +
       '<span class="stk__actions"><fluent-button appearance="outline" size="small" data-sym-manage="' + esc(f.ver) + '"><iconify-icon slot="start" icon="fluent:folder-zip-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Manage symbols</fluent-button>' + dumpBtn +
       '<fluent-button appearance="outline" size="small" data-copy-stack="' + f.id + '"><iconify-icon slot="start" icon="fluent:copy-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Copy</fluent-button></span></header>' +
@@ -2971,8 +3102,8 @@
       '<p class="stk__hint muted">No symbols for <strong>' + esc(f.ver) + '</strong>, so these frames are raw offsets. Uploading resolves <strong>future</strong> crashes \u2014 <button class="stk__link" data-sym-manage="' + esc(f.ver) + '">Manage symbols for ' + esc(f.ver) + '</button>.</p></div></div></section>';
   }
   function occStackHTML(app, f, occ) {
-    var badge = isMsix(app) ? '<fluent-badge appearance="outline" color="success">Full stack trace</fluent-badge>'
-      : f.resolved ? '<fluent-badge appearance="outline" color="success">Symbols resolved</fluent-badge>' : '<fluent-badge appearance="outline" color="warning">Symbols not available</fluent-badge>';
+    var badge = isMsix(app) ? '<span class="pill pill--ok pill--sm">Full stack trace</span>'
+      : f.resolved ? '<span class="pill pill--ok pill--sm">Symbols resolved</span>' : '<span class="pill pill--warn pill--sm">Symbols not available</span>';
     var sb = stackBody(app, f);
     var det = failureDetail(app, f);
     var env = det && det.log ? { os: topShare(det.log, "os"), dev: topShare(det.log, "dev") } : null;
@@ -3137,11 +3268,6 @@
   function anaLiveApps() { return (state.apps || []).filter(function (a) { return a.store || a.discovered; }); }
   function anaZeros(n) { var a = [], i; for (i = 0; i < n; i++) a.push(0); return a; }
   function anaAddInto(dst, src) { for (var i = 0; i < src.length; i++) dst[i] += (src[i] || 0); return dst; }
-  function anaAllBannerHTML() {
-    var apps = anaLiveApps(), names = apps.map(function (a) { return esc(a.name); }).join(", ");
-    return '<div class="ana-allbar"><iconify-icon icon="fluent:apps-list-24-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
-      '<span><strong>All apps</strong> \u00b7 combined analytics across ' + apps.length + ' apps <span class="muted">(' + names + ')</span></span></div>';
-  }
   function acqDataAll() {
     var apps = anaLiveApps(); if (apps.length < 2) return acqData(apps[0] || state.apps[0]);
     var ds = apps.map(acqData), base = ds[0], days = base.labels.length, i;
@@ -3326,7 +3452,7 @@
       : anaTab === "usage" ? usageTab(app)
       : anaTab === "ratings" ? ratingsTab(app)
       : crashTab(app);
-    panelEl.innerHTML = anaTabsHTML(app) + '<div class="anabody">' + (allMode ? anaAllBannerHTML() : "") + body + '</div>';
+    panelEl.innerHTML = anaTabsHTML(app) + '<div class="anabody">' + body + '</div>';
     sizeCharts(panelEl); observeCharts(panelEl);
     // In the "new app / no data" crash zero state there's nothing to filter, so hide the version/date/Filters
     // toolbar (the app picker stays). The latency state keeps filters so the date range can still be changed.

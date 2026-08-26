@@ -4148,7 +4148,7 @@
   #flow-wrap.wz-v2.is-wizard .ez-apphead__meta { margin-top: var(--sp-4); }
   /* Left-rail identity: [icon | name+type | status] — name (read-only) over the app type, with the Draft
      status pill parked top-right so it doesn't crowd the identity. Name wraps freely in the narrow rail. */
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icon text meta"; align-items: start; column-gap: var(--sp-12); }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icon text meta"; align-items: center; column-gap: var(--sp-12); }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__icon { grid-area: icon; width: 56px; height: 56px; font-size: 20px; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { grid-area: text; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { grid-area: meta; margin: 0; justify-self: end; align-self: start; }
@@ -10317,7 +10317,7 @@
     const label = V4_TYPE_LABEL[locked || v4Type] || (locked || v4Type);
     host.innerHTML = '<span class="wz-pkgtype__val">' + label + '</span>' +
       (locked
-        ? '<iconify-icon class="wz-pkgtype__lockico" icon="fluent:lock-closed-16-regular" width="12" height="12" title="Set by your uploaded package" aria-hidden="true"></iconify-icon>'
+        ? ''
         : '<button type="button" class="wz-pkgtype__edit" data-apptype-edit aria-label="Change package type" title="Change package type"><iconify-icon icon="fluent:edit-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></button>');
   }
   // Change-app-type dialog: each type with a short case (pros/cons), the current one flagged, and a
