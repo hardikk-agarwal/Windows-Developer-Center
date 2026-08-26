@@ -1720,7 +1720,7 @@
   var symSort = { key: "ver", dir: "desc" };
   var anaLogPage = 0, anaLogQuery = "";
   // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
-  var anaRange = "7d", anaCustom = null, symUp = null, anaFilters = {};
+  var anaRange = "30d", anaCustom = null, symUp = null, anaFilters = {};
   var SYM_STATES = {
     resolved:    { label: "Resolved",       cls: "ok",   ico: "fluent:checkmark-circle-16-filled" },
     processing:  { label: "Validating",     cls: "info", ico: "fluent:arrow-sync-16-filled" },
@@ -1927,6 +1927,7 @@
       var host = hosts[i], spec = anaCharts[+host.getAttribute("data-chart")]; if (!spec) continue;
       host.innerHTML = drawChart(spec, Math.max(320, Math.round(host.clientWidth || 840)));
     }
+    wireCharts(root);   // attach hover tooltips after line charts are (re)drawn
   }
   function observeCharts(root) {
     if (!root || typeof ResizeObserver === "undefined") return;
@@ -1967,7 +1968,47 @@
       var rpts = o.right.values.map(function (v, i) { return X(i).toFixed(1) + "," + R(v).toFixed(1); }).join(" ");
       paths += '<polyline points="' + rpts + '" fill="none" stroke="' + o.right.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
     }
-    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img"><defs><linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--brand)" stop-opacity=".26"/><stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/></linearGradient></defs>' + grid + ylab + rlab + paths + xlab + '</svg>';
+    var guide = '<line class="chart-guide" x1="0" y1="' + pt + '" x2="0" y2="' + (pt + ih) + '" style="display:none"/>';
+    var marks = o.series.map(function (s) { return '<circle class="chart-mk" r="4" fill="' + s.color + '" style="display:none"/>'; }).join("");
+    if (o.right) marks += '<circle class="chart-mk" r="4" fill="' + o.right.color + '" style="display:none"/>';
+    var cdata = { W: W, pl: pl, pt: pt, iw: iw, ih: ih, n: n, mn: mn, span: span, labels: o.labels || [], series: o.series.map(function (s) { return { name: s.name, color: s.color, values: s.values }; }), right: o.right ? { name: o.right.name || "Rate", color: o.right.color, values: o.right.values, rmn: rmn, rspan: rspan } : null };
+    var svgOut = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img"><defs><linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--brand)" stop-opacity=".26"/><stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/></linearGradient></defs>' + grid + ylab + rlab + paths + xlab + guide + marks + '</svg>';
+    return '<div class="chartwrap" data-chart="' + esc(JSON.stringify(cdata)) + '">' + svgOut + '<div class="chart-tip" hidden></div></div>';
+  }
+  function wireCharts(root) {
+    var wraps = (root || document).querySelectorAll(".chartwrap");
+    Array.prototype.forEach.call(wraps, function (wrap) {
+      if (wrap.__wired) return; wrap.__wired = true;
+      var svg = wrap.querySelector("svg.chart"), tip = wrap.querySelector(".chart-tip"), guide = wrap.querySelector(".chart-guide"), mks = wrap.querySelectorAll(".chart-mk"), data;
+      try { data = JSON.parse(wrap.getAttribute("data-chart")); } catch (e) { return; }
+      if (!data || !data.series || !data.series.length || !svg) return;
+      function X(i) { return data.pl + (data.n <= 1 ? 0 : data.iw * i / (data.n - 1)); }
+      function Y(v, right) { return right ? (data.pt + data.ih - data.ih * ((v - data.right.rmn) / data.right.rspan)) : (data.pt + data.ih - data.ih * ((v - data.mn) / data.span)); }
+      wrap.addEventListener("mousemove", function (e) {
+        var rect = svg.getBoundingClientRect(); if (!rect.width) return;
+        var i = Math.round(((e.clientX - rect.left) / rect.width * data.W - data.pl) / data.iw * (data.n - 1));
+        i = Math.max(0, Math.min(data.n - 1, i));
+        var x = X(i);
+        guide.setAttribute("x1", x); guide.setAttribute("x2", x); guide.style.display = "";
+        var all = data.series.slice(); if (data.right) all.push(data.right);
+        var rows = "";
+        all.forEach(function (s, si) {
+          var right = !!data.right && si === data.series.length, mk = mks[si], val = s.values[i];
+          if (mk) { mk.setAttribute("cx", x.toFixed(1)); mk.setAttribute("cy", Y(val, right).toFixed(1)); mk.style.display = ""; }
+          rows += '<div class="chart-tip__row"><span class="chart-tip__dot" style="background:' + s.color + '"></span>' + esc(s.name || "") + ' <strong>' + fmtCompact(val) + '</strong></div>';
+        });
+        tip.innerHTML = '<div class="chart-tip__t">' + esc("" + (data.labels[i] != null ? data.labels[i] : "")) + '</div>' + rows;
+        tip.hidden = false;
+        var wr = wrap.getBoundingClientRect(), px = e.clientX - wr.left, py = e.clientY - wr.top, tw = tip.offsetWidth, th = tip.offsetHeight;
+        var left = px + 16; if (left + tw > wr.width) left = px - tw - 16; if (left < 4) left = 4;
+        var top = py - th - 14; if (top < 4) top = py + 20;
+        tip.style.left = left + "px"; tip.style.top = top + "px";
+      });
+      wrap.addEventListener("mouseleave", function () {
+        tip.hidden = true; guide.style.display = "none";
+        Array.prototype.forEach.call(mks, function (m) { m.style.display = "none"; });
+      });
+    });
   }
   function chartBars(o) { return registerChart("bars", o); }
   function drawBars(o, W) {
@@ -2383,7 +2424,8 @@
     if (!from || !to) { anaCustom = { days: 14, from: from, to: to }; return; }
     var a = new Date(from), b = new Date(to), days = Math.max(1, Math.round((b - a) / 864e5) + 1);
     var todayISO = new Date().toISOString().slice(0, 10);
-    anaCustom = { days: Math.min(30, days), from: from, to: to, tooRecent: from === todayISO && to === todayISO };
+    // Crash/health data is retained for 30 days only — cap the range; the filter bar shows why.
+    anaCustom = { days: Math.min(30, days), from: from, to: to, capped: days > 30, tooRecent: from === todayISO && to === todayISO };
   }
   function deltaPill(delta) {   // fewer failures (down) = good
     if (delta == null || !isFinite(delta) || delta === 0) return '<span class="delta delta--flat">\u2014</span>';
@@ -2406,7 +2448,8 @@
     var custom = anaRange === "custom" ? '<span class="cacustom"><input type="date" class="cadate" id="caFrom"' + (anaCustom && anaCustom.from ? ' value="' + anaCustom.from + '"' : "") + '><span class="muted">to</span><input type="date" class="cadate" id="caTo"' + (anaCustom && anaCustom.to ? ' value="' + anaCustom.to + '"' : "") + '><fluent-button size="small" appearance="primary" data-ca-apply="1">Apply</fluent-button></span>' : "";
     var fc = filterCount(), savedOn = anaSaveFilters, filtersBtn = '<fluent-button id="anaFiltersBtn" class="ca-filtersbtn' + (savedOn ? ' is-saved' : '') + '" appearance="outline" data-ca-filters="1"' + (savedOn ? ' title="Filter settings saved for future sessions"' : '') + '><iconify-icon slot="start" icon="' + (savedOn ? 'fluent:filter-16-filled' : 'fluent:filter-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon>Filters' + (fc ? '<fluent-counter-badge slot="end" count="' + fc + '" appearance="filled" color="brand" size="small"></fluent-counter-badge>' : "") + '</fluent-button>';
     if (analyticsAppId === "__all__") filtersBtn = "";
-    return anaQuickFiltersHTML() + '<span class="anafb__end">' + dateSel + custom + filtersBtn + '</span>';
+    var capNote = (anaRange === "custom" && anaCustom && anaCustom.capped) ? '<span class="cacap" role="status"><iconify-icon icon="fluent:info-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>Please select a date range within the last 30 days \u2014 crash data isn\u2019t kept beyond 30 days for privacy &amp; compliance.</span>' : "";
+    return anaQuickFiltersHTML() + '<span class="anafb__end">' + dateSel + custom + filtersBtn + capNote + '</span>';
   }
   // Quick filters surfaced outside the drawer. Only cross-tab dimensions (version, market,
   // device) so the toolbar stays identical across every analytics tab; tab-specific filters
@@ -2463,14 +2506,14 @@
       ? '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:box-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Packaged app</span>' +
         '<h3>Stack traces resolve automatically</h3>' +
         '<p><strong>' + esc(app.name) + '</strong> ships as an MSIX package, so its symbols are already inside \u2014 nothing to upload. Every crash shows a fully resolved stack trace from the first report.</p></div>'
-      : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:pin-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
-        '<h3>Upload your symbols before the first crash</h3>' +
-        '<p>Symbols turn raw crash data into readable stack traces with function names and line numbers \u2014 but only for crashes <strong>after</strong> you upload them. Add <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now so your first crash is actionable.</p>' +
+      : '<div class="ca-zero__nudge"><span class="ca-zero__tag"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Do this first</span>' +
+        '<h3>Upload your symbols to make crashes actionable</h3>' +
+        '<p>Symbols turn raw crash data into readable stack traces with function names and line numbers. They apply to new crashes reported from now on, so upload <strong>' + esc(app.name) + '</strong>\u2019s symbol package (.zip) now to make upcoming crashes actionable.</p>' +
         '<div class="ca-zero__cta"><fluent-button appearance="primary" data-ca-upload="1"><iconify-icon slot="start" icon="fluent:arrow-upload-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>Upload symbols</fluent-button>' +
         '<fluent-link href="https://learn.microsoft.com/windows/win32/debug/symbol-files" target="_blank" rel="noopener noreferrer">How to get symbols \u2192</fluent-link></div></div>';
     return '<div class="ca-zero"><div class="ca-zero__hero"><img class="ca-zero__art" data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
       '<h2>We\u2019re getting ' + esc(app.name) + '\u2019s crash data ready</h2>' +
-      '<p class="muted">We\u2019ve detected <strong>' + esc(app.name) + '</strong> and started collecting its crash and hang reports. New data takes about <strong>4 hours</strong> to process \u2014 and for a brand-new app, reports also begin once it reaches about <strong>100 devices</strong>. Check back shortly.</p></div>' +
+      '<p class="muted">We\u2019ve detected <strong>' + esc(app.name) + '</strong> and started collecting its crash and hang reports. New data takes about <strong>4 hours</strong> to process \u2014 and for a brand-new app, reports also begin once it reaches about <strong>100 devices</strong>. We\u2019ll email you once your reports are ready \u2014 you can also check back here.</p></div>' +
       nudge + '</div>';
   }
   function latencyZeroHTML() {
@@ -2479,7 +2522,7 @@
       '<p class="muted">Crash data lands with about 4 hours of delay, so the most recent hours are still being collected. Check back shortly or pick a range that ends earlier to see results.</p></div></div>';
   }
   function demoSwitchHTML() {
-    var states = [["live", "Live data"], ["newapp", "New app (no data)"]];
+    var states = [["live", "Live data"], ["newapp", "No data yet"]];
     return '<div class="demoswitch" role="group" aria-label="Demo state"><span class="demoswitch__label"><iconify-icon icon="fluent:beaker-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Demo</span>' +
       states.map(function (s) { return '<button class="demoswitch__b' + (anaDemoState === s[0] ? " is-on" : "") + '" data-demostate="' + s[0] + '">' + s[1] + '</button>'; }).join("") + '</div>';
   }
