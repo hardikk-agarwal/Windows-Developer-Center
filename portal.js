@@ -2775,7 +2775,7 @@
         '<fluent-link href="https://learn.microsoft.com/windows/win32/debug/symbol-files" target="_blank" rel="noopener noreferrer">How to get symbols \u2192</fluent-link></div></div>';
     return '<div class="ca-zero"><div class="ca-zero__hero"><img class="ca-zero__art" data-theme-image="shield-checkmark" src="assets/shield-checkmark.png" alt="" />' +
       '<h2>We\u2019re getting ' + esc(app.name) + '\u2019s crash data ready</h2>' +
-      '<p class="muted">We\u2019ve detected <strong>' + esc(app.name) + '</strong> and started collecting its crash and hang reports. New data takes about <strong>4 hours</strong> to process \u2014 and for a brand-new app, reports also begin once it reaches about <strong>100 devices</strong>. We\u2019ll email you once your reports are ready \u2014 you can also check back here.</p></div>' +
+      '<p class="muted">We\u2019re processing <strong>' + esc(app.name) + '</strong>\u2019s data \u2014 it\u2019s generally ready in about <strong>4 hours</strong>. We\u2019ll email you once your reports are ready \u2014 you can also check back here.</p></div>' +
       nudge + '</div>';
   }
   function latencyZeroHTML() {
