@@ -370,6 +370,14 @@ fluent-message-bar[hidden] { display: none; }
 .disc-section { margin-top: 22px; }
 /* WDP: keep the "In the Microsoft Store" banner tight to the store table it introduces */
 .store-block .disc-note { margin-bottom: 8px; }
+/* Apps page — Store vs not-in-Store split as Fluent tabs (shown only when both kinds exist). */
+.apps-tabs { margin: 2px 0 18px; }
+.apps-tabs fluent-tab { white-space: nowrap; }
+.apps-tab__lbl { display: inline-flex; align-items: center; }
+.apps-tab__n { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 7px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 11px; font-weight: 600; }
+.apps-panels[data-tab="store"] .apps-panel[data-appspanel="signed"],
+.apps-panels[data-tab="signed"] .apps-panel[data-appspanel="store"] { display: none; }
+.apps-panel .disc-section { margin-top: 0; }
 .appcard--sk { display: flex; align-items: center; gap: 16px; }
 .sk { background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%);
   background-size: 400% 100%; animation: sk 1.4s ease infinite; border-radius: var(--r-sm); }
@@ -886,7 +894,7 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 #occDialog::part(dialog) { width: min(820px, 94vw); max-width: min(820px, 94vw); }
 
 .ai-insight { display: flex; align-items: center; gap: 14px; padding: 15px 18px; border-radius: var(--r-lg);
-  background: var(--surface); border: 1px solid var(--brand-tint-stroke); }
+  background: var(--surface); }
 .ai-insight__badge { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 12px; font-weight: 700;
   color: var(--brand-soft); text-transform: uppercase; letter-spacing: .05em; }
 .ai-insight__text { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-2); flex: 1; min-width: 0; }

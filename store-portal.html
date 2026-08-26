@@ -22,8 +22,8 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=89" />
-  <link rel="stylesheet" href="store-portal.css?v=142" />
+  <link rel="stylesheet" href="portal.css?v=93" />
+  <link rel="stylesheet" href="store-portal.css?v=150" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
@@ -106,7 +106,7 @@
         <div class="block__head">
           <div>
             <h2>Apps</h2>
-            <p class="muted">Create and publish your apps to the Microsoft Store.</p>
+            <p class="muted">Add and manage your Microsoft Store apps, plus other apps signed with your certificate.</p>
           </div>
           <span style="display:flex; gap:10px;">
             <fluent-button id="createAppBtn" appearance="primary" data-newapp>
@@ -404,6 +404,6 @@
   <!-- One engine, two doors: the Store portal is portal.js personalised for the Store path. -->
   <script>window.PORTAL_MODE = "store";</script>
   <script type="module" src="theme-fluent.js?v=64"></script>
-  <script src="portal.js?v=163"></script>
+  <script src="portal.js?v=175"></script>
 </body>
 </html>

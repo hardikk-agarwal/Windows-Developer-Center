@@ -409,24 +409,23 @@
   .atd-opt { display: flex; flex-direction: column; gap: var(--sp-8); text-align: left; padding: var(--sp-14); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); cursor: pointer; font: inherit; height: 100%; }
   .atd-opt:hover { border-color: var(--stroke-3); background: var(--subtle); }
   .atd-opt.is-sel { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
-  .atd-opt:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+  /* Focus follows selection in this radiogroup, so reuse the one brand ring — no detached 2nd outline. */
+  .atd-opt:focus-within { outline: none; border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
   .atd-opt__top { display: flex; align-items: center; justify-content: space-between; }
   .atd-opt__radio { flex: none; }
-  .atd-opt__ico { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r-12); background: var(--subtle); color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--stroke-2); }
+  .atd-opt__ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-8); background: var(--subtle); color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--stroke-2); }
   .atd-opt.is-sel .atd-opt__ico { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--fg-1); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 26%, transparent); }
   .atd-opt__head { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; }
   .atd-opt__name { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); letter-spacing: -.005em; }
   .atd-opt__badge { font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; line-height: 1.6; }
   .atd-opt__badge--rec { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); }
   .atd-opt__badge--cur { color: var(--fg-3); background: transparent; border: 1px solid var(--stroke-3); }
-  .atd-opt__desc { font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
-  .atd-opt__feats { list-style: none; margin: var(--sp-4) 0 0; padding: var(--sp-10) 0 0; border-top: 1px solid var(--stroke-3); display: grid; gap: var(--sp-6); }
-  .atd-opt__feat { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: var(--fg-2); line-height: 1.3; }
-  .atd-opt__feat iconify-icon { flex: 0 0 auto; margin-top: 1px; color: var(--brand); }
+  .atd-opt__desc { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
+  .atd-opt__feats { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-6); }
+  .atd-opt__feat { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12px; color: var(--fg-2); line-height: 1.35; }
+  .atd-opt__feat iconify-icon { flex: 0 0 auto; margin-top: 1px; color: var(--status-success); }
   .atd-opt__feat.is-no { color: var(--fg-3); }
   .atd-opt__feat.is-no iconify-icon { color: var(--fg-3); }
-  .atd-opt__best { margin-top: auto; padding-top: var(--sp-8); font-size: 12px; color: var(--fg-2); line-height: 1.35; }
-  .atd-opt__best-k { color: var(--fg-3); font-weight: var(--font-weight-semibold); }
   .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); background: var(--subtle); border: 1px solid var(--stroke-2); }
   .atd__impact-lead { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
   .atd__impact-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-6); }
@@ -983,12 +982,12 @@
   .ez-pv-shot--trailer video { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--r-8); display: block; background: var(--canvas-tint); }
   .ez-pv-shot__badge { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,.65); color: #fff; padding: 2px var(--sp-6); border-radius: var(--r-2); font-size: 10px; display: inline-flex; align-items: center; gap: 3px; backdrop-filter: blur(4px); }
   .ez-pv-shot__play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; display: inline-flex; align-items: center; justify-content: center; pointer-events: none; }
-  /* Carousel: circular arrows overlaid on the strip, revealed on hover. */
+  /* Carousel: circular arrows overlaid on the strip. Shown whenever the strip overflows (JS toggles
+     [hidden] per direction from scroll position) — not gated behind hover, so they stay discoverable. */
   .ez-shots-wrap { position: relative; }
-  .ez-shots-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; border: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; z-index: 3; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .ez-shots-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; border: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; z-index: 3; backdrop-filter: blur(4px); transition: background var(--dur-2) var(--ease-out); }
   .ez-shots-arrow[hidden] { display: none; }
-  .ez-shots-wrap:hover .ez-shots-arrow { opacity: 1; pointer-events: auto; }
-  .ez-shots-arrow:focus-visible { opacity: 1; pointer-events: auto; outline: 2px solid var(--brand); outline-offset: 2px; }
+  .ez-shots-arrow:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .ez-shots-arrow:hover { background: rgba(0,0,0,.78); }
   .ez-shots-arrow--left { left: var(--sp-8); }
   .ez-shots-arrow--right { right: var(--sp-8); }
@@ -1817,8 +1816,10 @@
      editable control. In the editor (#ez-live) MUTE it to a ghost, lowered-opacity element so it reads as
      preview chrome and never masquerades as a real button. inherit/currentColor keeps it legible on both
      the dark and light hero; the read-only Preview clone (drops #ez-live) keeps the real solid CTA. */
-  #ez-live .ez-store-hero__cta { opacity: .6; }
-  #ez-live .ez-store-cta { background: transparent; color: inherit; border-color: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 32%, transparent); }
+  /* Get / Share is a decorative preview of the customer CTA (aria-hidden, non-interactive) — not an
+     editable control. The read-only Preview shows the real buttons, so hide them in the editor; use
+     visibility (not display) to reserve their height so the edit and preview heroes stay the same size. */
+  #ez-live .ez-store-hero__cta { visibility: hidden; }
   /* No divider under the hero (it fades in); a hairline only between sections. */
   /* Store-style content cards (Screenshots, Description) — mirror apps.microsoft.com PDP. */
   .ez-store-content { display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-16) var(--sp-20) var(--sp-24); }
@@ -2504,6 +2505,9 @@
   /* App name = native underlined fluent-text-input (appearance="underline") styled as the hero title.
      Uses Fluent's OWN underline appearance (no custom border override) — only width + title typography. */
   .ez-field--name { max-width: 480px; }
+  /* The name is the hero title, not a stacked form field — drop the generic .ez-field 16px bottom
+     margin so name / publisher / category stack tightly against the logo (matches the real Store). */
+  .ez-store-hero__heading .ez-field--name { margin-bottom: 0; }
   .ez-name-field { display: block; width: 100%; max-width: none; }
   .ez-name-field::part(root) { width: 100%; box-sizing: border-box; padding-left: 0; padding-right: 0; }
   .ez-name-field::part(control) { width: 100%; box-sizing: border-box; padding-left: 0; padding-right: 0; font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 600; letter-spacing: -.2px; color: #fff; }
@@ -2513,8 +2517,10 @@
   .ez-name-avail.is-ok { color: var(--status-success); }
   .ez-name-avail.is-err { color: var(--status-danger); }
   .ez-name-avail.is-checking { color: var(--fg-3); }
-  /* Short summary = fluent-textarea (Description field template) placed in the hero. */
+  /* Short summary = fluent-textarea (Description field template) placed in the hero; auto-grows but is
+     capped to ~3 lines so a long summary scrolls instead of blowing out the hero banner. */
   .ez-field--hero-short { margin-top: var(--sp-16); }
+  .ez-field--hero-short .ez-store-field--hero::part(control) { max-height: 64px; overflow-y: auto; }
   /* Category = a direct Fluent dropdown in the hero meta (non-games). */
   .ez-cat-field { display: inline-block; min-width: 190px; max-width: 100%; vertical-align: middle; }
   .ez-live .live-edit-input { font: inherit; color: inherit; background: transparent; border: 0; outline: none; padding: 0; margin: 0; width: 100%; box-sizing: border-box; resize: none; min-height: 1em; line-height: inherit; }
@@ -2588,6 +2594,34 @@
   }
   /* The wizard step card uses --sp-32 padding, so the live PDP must break out by that much to reach the card edges. */
   #flow-wrap.is-wizard #step-listing .ez-store-card.ez-live { margin: var(--sp-8) calc(var(--sp-32) * -1) calc(var(--sp-32) * -1); }
+
+  /* ---- Inline listing Preview (read-only, edge-to-edge) + empty-state Autofill kickstart ---- */
+  #ez-live-preview { display: none; }
+  #ez-live-preview.is-shown { display: block; }
+  #step-listing #ez-live-preview { margin: var(--sp-8) calc(var(--sp-24) * -1) calc(var(--sp-24) * -1); }
+  #flow-wrap.is-wizard #step-listing #ez-live-preview { margin: var(--sp-8) calc(var(--sp-32) * -1) calc(var(--sp-32) * -1); }
+  #ez-live-preview .lpv-card { border-left: 0; border-right: 0; border-bottom: 0; border-radius: 0; }
+  #flow-wrap.is-wizard #step-listing #ez-live-preview .lpv-card { border-bottom-left-radius: var(--r-16); border-bottom-right-radius: var(--r-16); }
+  #step-listing.is-listing-preview .ez-store-card.ez-live { display: none; }
+  /* Read-only preview hero matches the real Store PDP: the short description shows IN FULL (drop the
+     editor's 2-line clamp) and fills its column instead of the doubled 48%×48% width, with a tighter
+     gap under the title block. */
+  .lpv-card .ez-store-hero__desc { -webkit-line-clamp: unset; display: block; overflow: visible; }
+  #flow-wrap #step-listing #ez-live-preview .lpv-card .ez-store-hero__desc { max-width: 100%; margin-top: 0; }
+  #flow-wrap #step-listing #ez-live-preview .lpv-card .ez-field--hero-short { margin-top: var(--sp-8); }
+  /* Empty-state kickstart card. */
+  /* Slim, edge-to-edge AI kickstart strip above the listing card (bleeds to the card edges like the
+     hero); a light-touch accelerator, not a chunky brand card. */
+  .listing-kickstart { display: flex; align-items: center; gap: var(--sp-10); margin: var(--sp-12) calc(var(--sp-24) * -1) var(--sp-8); padding: var(--sp-8) var(--sp-24); border: 0; border-top: 1px solid var(--stroke-3); border-bottom: 1px solid var(--stroke-3); border-radius: 0; background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
+  #flow-wrap.is-wizard .listing-kickstart { margin-inline: calc(var(--sp-32) * -1); padding-inline: var(--sp-32); }
+  .listing-kickstart[hidden] { display: none; }
+  .listing-kickstart__spark { flex: 0 0 auto; color: var(--brand); }
+  .listing-kickstart__text { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 13px; color: var(--fg-2); line-height: 1.45; }
+  .listing-kickstart__text strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  /* Lightweight blue "link" action — brand-coloured transparent button (icon already brand). */
+  .listing-kickstart__cta { flex: 0 0 auto; min-width: 0 !important; padding-inline: var(--sp-6) !important; color: var(--brand) !important; }
+  .listing-kickstart__cta:hover { color: var(--brand) !important; text-decoration: underline; }
+  .listing-kickstart__cta iconify-icon { color: var(--brand); }
 
   /* ---- IARC age-rating questionnaire (in the rating dialog) ---- */
   .iarc-badge { background: #fff; color: #000; border-radius: 2px; padding: var(--sp-4) var(--sp-8); display: inline-flex; flex-direction: column; align-items: center; line-height: 1; border: 1px solid rgba(0,0,0,.15); flex: 0 0 auto; }
@@ -3696,6 +3730,25 @@
   #name-edit-dialog .name-edit__hint { display: flex; align-items: center; gap: var(--sp-6); margin-top: var(--sp-8); min-height: 18px; }
   #name-edit-dialog .name-edit__hint--ok { color: var(--status-success); }
   #name-edit-dialog .name-edit__hint--err { color: var(--status-danger); }
+  /* Package type: a compact selector inside the App details dialog (full comparison one link away). */
+  #name-edit-dialog .apd-typehead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-8); margin-top: var(--sp-20); }
+  #name-edit-dialog .apd-compare { border: 0; background: none; padding: 0; margin: 0; font: inherit; font-size: 12px; font-weight: var(--font-weight-semibold); color: var(--brand); cursor: pointer; }
+  #name-edit-dialog .apd-compare:hover { text-decoration: underline; }
+  #name-edit-dialog .apd-compare:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-2); }
+  #name-edit-dialog .apd-types { display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-20); margin-top: var(--sp-10); }
+  #name-edit-dialog .apd-opt { display: flex; align-items: center; gap: var(--sp-8); margin: 0; cursor: pointer; }
+  #name-edit-dialog .apd-opt[hidden] { display: none; }
+  #name-edit-dialog .apd-opt span { font-size: 13px; color: var(--fg-1); }
+  #name-edit-dialog .apd-typelock { display: flex; align-items: center; gap: var(--sp-6); margin: var(--sp-8) 0 0; font-size: 12.5px; color: var(--fg-3); }
+  #name-edit-dialog .apd-typelock[hidden] { display: none; }
+  #name-edit-dialog .apd-typelock iconify-icon { color: var(--fg-3); }
+  #name-edit-dialog .apd-impact { margin-top: var(--sp-12); padding: var(--sp-10) var(--sp-12); border-radius: var(--r-8); background: var(--subtle); border: 1px solid var(--stroke-2); }
+  #name-edit-dialog .apd-impact[hidden] { display: none; }
+  #name-edit-dialog .apd-impact__lead { margin: 0 0 var(--sp-6); font-size: 12.5px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  #name-edit-dialog .apd-impact__list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-4); }
+  #name-edit-dialog .apd-impact__list li { display: flex; gap: var(--sp-6); font-size: 12px; color: var(--fg-2); line-height: 1.4; }
+  #name-edit-dialog .apd-impact__list li iconify-icon { flex: 0 0 auto; color: var(--fg-3); margin-top: 2px; }
+  #name-edit-dialog .apd-kind { margin: var(--sp-16) 0 0; font-size: 12px; color: var(--fg-3); }
   /* Real app icon shows directly — drop the placeholder gradient box behind it. */
   #app-icon.tdp-has-icon { background: none; box-shadow: none; border-radius: 0; overflow: visible; }
 
@@ -4073,7 +4126,7 @@
   #flow-wrap.wz-v2.is-wizard { max-width: 1360px; }
 
   /* Two-column grid: compact sticky rail + a wide content column. */
-  .wz-v2 .wz-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--sp-24); align-items: start; }
+  .wz-v2 .wz-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: var(--sp-24); align-items: start; }
 
   /* --- Left rail: reflow the Mica band into a vertical card --- */
   #flow-wrap.wz-v2.is-wizard .wz-banner {
@@ -4093,20 +4146,20 @@
   #flow-wrap.wz-v2 .ez-apphead__icon { width: 44px; height: 44px; font-size: 16px; border-radius: var(--r-12); }
   #flow-wrap.wz-v2.is-wizard .ez-title { font-size: 16px; line-height: 22px; }
   #flow-wrap.wz-v2.is-wizard .ez-apphead__meta { margin-top: var(--sp-4); }
-  /* Left-rail identity: [icon | name + Draft] on the top row, then the editable app type as its own
-     full-width row at the banner's LEFT edge (under the icon). Grid areas keep the type row flush left.
-     Name wraps freely (min-width:0 + overflow-wrap) so any length is safe in the narrow rail. */
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon text" "type type"; align-items: start; column-gap: var(--sp-12); row-gap: var(--sp-10); }
+  /* Left-rail identity: [icon | name+type | status] — name (read-only) over the app type, with the Draft
+     status pill parked top-right so it doesn't crowd the identity. Name wraps freely in the narrow rail. */
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icon text meta"; align-items: start; column-gap: var(--sp-12); }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__icon { grid-area: icon; width: 56px; height: 56px; font-size: 20px; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { grid-area: text; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__namebtn { min-width: 0; max-width: 100%; margin: 0; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { margin: 0; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { grid-area: type; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { grid-area: meta; margin: 0; justify-self: end; align-self: start; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-title { min-width: 0; overflow-wrap: anywhere; }
-  /* App type as a foot-of-identity row: value on the left, Change link on the right edge. */
-  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__btn { width: 100%; justify-content: space-between; gap: var(--sp-8); padding: 2px 0; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__change { font-size: 12px; font-weight: var(--font-weight-semibold); color: var(--brand); flex: 0 0 auto; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__btn:hover .wz-pkgtype__change { text-decoration: underline; }
+  /* App type + a pencil that changes ONLY the package type (opens the Change app type comparison). */
+  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { display: flex; align-items: center; gap: 5px; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__val { min-width: 0; font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__lockico { flex: 0 0 auto; color: var(--fg-3); }
+  .wz-pkgtype__edit { flex: 0 0 auto; display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: var(--r-4); background: transparent; color: var(--fg-3); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
+  .wz-pkgtype__edit:hover { background: var(--subtle); color: var(--fg-1); }
+  .wz-pkgtype__edit:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
 
   /* --- Vertical stepper --- */
   #flow-wrap.wz-v2.is-wizard .wz-steps {
@@ -4129,11 +4182,12 @@
   }
   #flow-wrap.wz-v2.is-wizard .wz-stepind__dot iconify-icon { width: 20px; height: 20px; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind__label { font-size: 14px; font-weight: 600; line-height: 18px; }
-  /* States (icon colour + a subtle current-row tint). */
+  /* States: Fluent 2 selected-nav treatment — a leading brand accent bar + a soft brand-tinted row,
+     with the section glyph in brand. Non-current glyphs stay muted; a section's completion now reads
+     from the trailing green check, so the left glyph no longer carries a status colour. */
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; border-radius: var(--r-full); background: var(--brand); }
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current .wz-stepind__dot { color: var(--brand); }
-  #flow-wrap.wz-v2.is-wizard .wz-stepind.is-done .wz-stepind__dot { color: var(--status-success); }
-  #flow-wrap.wz-v2.is-wizard .wz-stepind.is-progress .wz-stepind__dot { color: var(--status-warning); }
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-locked { opacity: .55; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind:not(.is-locked):hover { background: color-mix(in srgb, var(--fg-1) 6%, transparent); }
   /* UPDATE FLOW: reframe the stepper as CHANGED vs UNCHANGED, not done vs todo. Everything is already
@@ -4152,8 +4206,8 @@
   #flow-wrap.wz-v2.is-wizard .wz-banner__action { align-items: stretch; margin: calc(-1 * var(--sp-8)) 0 0; padding-top: 0; }
   #flow-wrap.wz-v2 .wz-banner__action fluent-button { width: 100%; }
   #flow-wrap.wz-v2 .wz-banner__action fluent-button::part(control) { width: 100%; }
-  #flow-wrap.wz-v2.is-wizard .wz-preview-btn { width: 100%; }
-  #flow-wrap.wz-v2.is-wizard .wz-preview-btn::part(control) { width: 100%; }
+  /* Preview lives inline in the Store listing step (its Preview toggle), so the rail no longer needs its own button. */
+  #flow-wrap.is-wizard .wz-preview-btn { display: none; }
 
   /* Submitted (in-review / published): collapse the grid and turn the left rail into a full-width
      APP HEADER CARD on top — app identity on the left + a contextual action on the right (Withdraw
@@ -4255,6 +4309,18 @@
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge { margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; line-height: 1; color: var(--fg-2); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current .wz-stepind__badge { color: var(--brand); }
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--review { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--brand); }
+  /* Trailing status glyphs: a green ✓ once the section is complete (wins even on the current row), a
+     muted lock while it's gated. */
+  #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current .wz-stepind__badge--done,
+  #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--done { color: var(--status-success); }
+  #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--locked { color: var(--fg-3); }
+  #flow-wrap.wz-v2.is-wizard .wz-stepind__badge iconify-icon { display: block; }
+  /* Determinate progress ring (right slot): a muted track + a brand arc filled to the section's
+     done/total ratio (--p set inline in updateWzChrome). Starts at 12 o'clock (svg rotated -90deg). */
+  #flow-wrap.wz-v2.is-wizard .wz-ring, #flow-wrap.wz-v2.is-wizard .wz-ring svg { display: block; width: 16px; height: 16px; }
+  #flow-wrap.wz-v2.is-wizard .wz-ring svg { transform: rotate(-90deg); }
+  #flow-wrap.wz-v2.is-wizard .wz-ring__trk { fill: none; stroke: color-mix(in srgb, var(--fg-3) 28%, transparent); stroke-width: 2; }
+  #flow-wrap.wz-v2.is-wizard .wz-ring__fill { fill: none; stroke: var(--brand); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 43.98; stroke-dashoffset: calc(43.98 * (1 - var(--p, 0))); transition: stroke-dashoffset var(--dur-2) var(--ease-out); }
   .wz-mini { position: fixed; z-index: 200; width: 268px; max-width: 84vw; padding: var(--sp-8); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); box-shadow: var(--shadow-16); color: var(--fg-2); animation: wzMiniIn 120ms var(--ease-out); }
   .wz-mini[hidden] { display: none; }
   @keyframes wzMiniIn { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
@@ -4520,20 +4586,18 @@
         <div class="ez-apphead">
           <div class="ez-apphead__icon" id="app-icon">A</div>
           <div class="ez-apphead__text">
-            <div class="ez-apphead__namebtn" id="app-name-btn" role="button" tabindex="0" title="Edit app name" aria-label="Edit app name">
-              <h1 class="ez-title" id="app-name">Loading…</h1>
-              <iconify-icon class="ez-apphead__nameedit" icon="fluent:edit-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>
-            </div>
-            <div class="ez-apphead__meta">
-              <span class="status-pill status-pill--draft" id="app-status">Draft</span>
-              <button type="button" class="ez-apphead__storelink" id="app-storelink" hidden title="Open your live listing in the Microsoft Store">
-                View in Store
-                <iconify-icon icon="fluent:open-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>
-              </button>
-            </div>
+            <h1 class="ez-title" id="app-name">Loading…</h1>
+            <!-- App type: read-only value + a pencil that changes ONLY the package type (the name is fixed). JS fills it. -->
+            <div id="wz-pkgtype" class="wz-pkgtype"></div>
           </div>
-          <!-- App type: the reserved package format; switch anytime, a real package locks it. -->
-          <div id="wz-pkgtype" class="wz-pkgtype"></div>
+          <!-- App status parked top-right so it doesn't crowd the name/type identity. -->
+          <div class="ez-apphead__meta">
+            <span class="status-pill status-pill--draft" id="app-status">Draft</span>
+            <button type="button" class="ez-apphead__storelink" id="app-storelink" hidden title="Open your live listing in the Microsoft Store">
+              View in Store
+              <iconify-icon icon="fluent:open-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>
+            </button>
+          </div>
         </div>
         <div class="ez-mode" role="group" aria-label="Publishing mode">
           <button type="button" class="ez-mode__opt ez-mode__opt--active" data-mode="easy" aria-pressed="true" title="Only the required fields">
@@ -4849,7 +4913,7 @@
           <span class="ez-step__num" id="num-listing">2</span>
           <div>
             <h2 class="ez-step__title">Create your Store listing</h2>
-            <p class="ez-step__sub">Click any field to edit it inline. Preview listing shows the read-only page your customers see.</p>
+            <p class="ez-step__sub">Click any field to edit it inline, then Preview to see the read-only page customers will see.</p>
             <p class="ez-step__summary" id="sum-listing"></p>
           </div>
           <div class="ez-step__headtools">
@@ -4864,9 +4928,9 @@
                 <fluent-menu-list id="lang-menu-list"></fluent-menu-list>
               </fluent-menu>
             </div>
-            <fluent-button id="ai-autofill-open" class="ez-step__action ez-ai-btn">
-              <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
-              Autofill with AI
+            <fluent-button id="listing-preview-toggle" class="ez-step__action" appearance="primary" aria-pressed="false" title="Preview the read-only listing customers will see">
+              <iconify-icon slot="start" icon="fluent:eye-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+              <span id="listing-preview-toggle-label">Preview</span>
             </fluent-button>
           </div>
           <iconify-icon class="ez-step__expand" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
@@ -4898,6 +4962,20 @@
           </fluent-dropdown>
         </div>
 
+        <!-- Empty-state kickstart: the fastest way to fill a blank listing; recedes once there's copy.
+             Holds the (relocated) Autofill-with-AI action, loudest exactly when it's most useful. -->
+        <div class="listing-kickstart" id="listing-kickstart" hidden>
+          <iconify-icon class="listing-kickstart__spark" icon="fluent:sparkle-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon>
+          <p class="listing-kickstart__text"><strong>Start with a draft</strong> — autofill your listing from a short prompt, then refine anything inline.</p>
+          <fluent-button id="ai-autofill-open" class="listing-kickstart__cta" appearance="transparent">
+            <iconify-icon slot="start" icon="fluent:sparkle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon>
+            Autofill with AI
+          </fluent-button>
+        </div>
+
+        <!-- Inline read-only Preview mounts here (edge-to-edge), replacing the editor while previewing. -->
+        <div id="ez-live-preview" aria-live="polite"></div>
+
         <div class="ez-store-card ez-live" id="ez-live">
           <div class="ez-store-hero" id="ez-hero">
             <!-- Hero art (image/video) — right-side masked banner, exactly as variant B's live listing. -->
@@ -4928,7 +5006,7 @@
               </div>
             </div>
             <div class="ez-field ez-field--hero-short">
-              <fluent-text-input class="ez-store-input" id="ez-pv-short" data-pv-field="short" appearance="underline" maxlength="1000" placeholder="A short summary of your app"></fluent-text-input>
+              <fluent-textarea class="ez-store-field ez-store-field--hero" id="ez-pv-short" data-pv-field="short" auto-resize rows="1" maxlength="1000" placeholder="A short summary of your app" aria-label="Short summary"></fluent-textarea>
               <span class="ez-char-count ez-field__count" id="ez-short-count"></span>
             </div>
             <!-- Get + Share CTA — decorative preview of the customer-facing listing (non-interactive). -->
@@ -5680,22 +5758,39 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
-<!-- Edit app name — the reserved product identity (availability-checked), shared with the listing. -->
+<!-- Edit app details — name (availability-checked) + package type; the App/Game kind is fixed. -->
 <fluent-dialog id="name-edit-dialog" modal-type="modal" aria-labelledby="name-edit-title">
   <fluent-dialog-body>
     <span slot="title" id="name-edit-title">
       <iconify-icon icon="fluent:rename-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;"></iconify-icon>
-      Edit app name
+      App details
     </span>
     <fluent-button slot="title-action" appearance="subtle" data-name-edit-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <p class="name-edit__intro">This is your app&rsquo;s name everywhere in the Store &mdash; changing it also updates your Store listing. New names are checked for availability.</p>
+    <p class="name-edit__intro">Your app&rsquo;s name and package type. The name shows across the Store and is checked for availability; the type decides what the Store can do for your app.</p>
     <label class="name-edit__label" for="name-edit-input">App name</label>
     <fluent-text-input id="name-edit-input" maxlength="50" placeholder="Your app name"></fluent-text-input>
     <p class="ez-extra-field__hint name-edit__hint" id="name-edit-hint"></p>
+
+    <div class="apd-typehead">
+      <span class="name-edit__label" id="apd-type-label">Package type</span>
+      <button type="button" class="apd-compare" data-apptype-edit>Compare types</button>
+    </div>
+    <fluent-radio-group class="apd-types" id="apd-types" orientation="horizontal" aria-labelledby="apd-type-label">
+      <label class="apd-opt" for="apd-r-msix"><fluent-radio id="apd-r-msix" value="msix"></fluent-radio><span>MSIX</span></label>
+      <label class="apd-opt" for="apd-r-win32"><fluent-radio id="apd-r-win32" value="win32"></fluent-radio><span>EXE / MSI</span></label>
+      <label class="apd-opt" for="apd-r-pwa"><fluent-radio id="apd-r-pwa" value="pwa"></fluent-radio><span>PWA</span></label>
+    </fluent-radio-group>
+    <p class="apd-typelock" id="apd-typelock" hidden><iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> <span id="apd-typelock-text">Set by your uploaded package.</span></p>
+    <div class="apd-impact" id="apd-impact" hidden>
+      <p class="apd-impact__lead" id="apd-impact-lead"></p>
+      <ul class="apd-impact__list" id="apd-impact-list"></ul>
+    </div>
+    <p class="apd-kind" id="apd-kind">This is an <strong id="apd-kind-val">app</strong> — set when you reserved the name, and can’t change.</p>
+
     <fluent-button slot="action" appearance="secondary" data-name-edit-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="name-edit-save" disabled>Save name</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="name-edit-save" disabled>Save</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -8009,6 +8104,36 @@
   }
   if ($('ez-preview-open')) $('ez-preview-open').addEventListener('click', openListingPreview);
   if ($('wz-preview-open')) $('wz-preview-open').addEventListener('click', openListingPreview);
+
+  // ---- Inline listing Preview: flip the editor card into the read-only PDP in place (edge-to-edge),
+  // reusing the SAME clone as the dialog. The header "Preview" button toggles it; the kickstart hides. ----
+  let _inlinePreviewOn = false;
+  function rebuildInlineListingPreview() {
+    if (!_inlinePreviewOn) return;
+    const host = $('ez-live-preview'); if (!host) return;
+    const node = buildListingPreviewNode();
+    host.innerHTML = ''; if (node) host.appendChild(node);
+  }
+  function setInlineListingPreview(on) {
+    on = !!on;
+    const host = $('ez-live-preview'), section = $('step-listing'),
+      btn = $('listing-preview-toggle'), label = $('listing-preview-toggle-label');
+    if (!host || !section) return;
+    _inlinePreviewOn = on;
+    if (on) { rebuildInlineListingPreview(); host.classList.add('is-shown'); section.classList.add('is-listing-preview'); }
+    else { host.classList.remove('is-shown'); host.innerHTML = ''; section.classList.remove('is-listing-preview'); }
+    if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (label) label.textContent = on ? 'Edit' : 'Preview';
+    const ico = btn && btn.querySelector('iconify-icon'); if (ico) ico.setAttribute('icon', on ? 'fluent:edit-20-regular' : 'fluent:eye-20-regular');
+    updateListingKickstart();
+  }
+  // Empty-state Autofill kickstart: show only on a blank listing (no copy yet) and never while previewing.
+  function updateListingKickstart() {
+    const ks = $('listing-kickstart'); if (!ks) return;
+    const hasCopy = !!((fDesc && fDesc.value || '').trim()) || !!((adv.listing.shortDesc || '').trim());
+    ks.hidden = _inlinePreviewOn || hasCopy;
+  }
+  if ($('listing-preview-toggle')) $('listing-preview-toggle').addEventListener('click', () => setInlineListingPreview(!_inlinePreviewOn));
   // Show more / less for the System requirements card inside the preview (the body is re-cloned each open).
   if (listingPreviewBody) listingPreviewBody.addEventListener('click', function (e) {
     var shot = e.target.closest && e.target.closest('.ez-pv-shot[data-shot-index]');
@@ -8584,6 +8709,8 @@
     const prevStep = WZ_STEPS[wzIndex];
     wzIndex = Math.max(0, Math.min(WZ_STEPS.length - 1, i));
     const cur = WZ_STEPS[wzIndex];
+    // Leaving the listing step exits its inline preview, so you return to editing (not a read-only view).
+    if (cur !== 'step-listing' && typeof setInlineListingPreview === 'function') setInlineListingPreview(false);
     // Flag blank disclosures only once the developer has seen Compliance and moved on — never on load.
     if (prevStep === 'step-rating' && cur !== 'step-rating' && typeof disclosuresAnswered === 'function' && !disclosuresAnswered()) declFlagged = true;
     if (typeof syncDeclFlag === 'function') syncDeclFlag();
@@ -8641,24 +8768,34 @@
       // Guidance: locked tabs explain the prerequisite on hover (and on click, below).
       if (locked) el.setAttribute('title', 'Add your app package first to unlock this section.');
       else el.removeAttribute('title');
-      // Status indicator: lock when gated; otherwise empty ○ / half ◐ / green ✓ by progress.
-      const icon = locked ? 'fluent:lock-closed-16-regular'
-        : status === 'complete' ? 'fluent:checkmark-circle-20-filled'
-        : status === 'in-progress' ? 'fluent:circle-half-fill-20-regular'
-        : 'fluent:circle-20-regular';
+      // LEFT indicator: the section's own glyph (box / slide-text / shield / tag), tinted by state in
+      // CSS. It's static per step, so write it once — re-rendering the icon on every gate refresh
+      // would make it flicker.
       const dot = el.querySelector('.wz-stepind__dot');
-      if (dot) dot.innerHTML = '<iconify-icon icon="' + icon + '" width="18" height="18" aria-hidden="true"></iconify-icon>';
-      // Trailing indicator: a count of what's still to do, or "Review" for a section that's valid on
-      // defaults (Reach & price) but not yet opened. Done sections show just the check — no trailing text.
-      const leftN = (locked || updUnchanged(id)) ? 0 : ckSection(id).filter(it => ckRequired(it) && !ckDone(it)).length;
-      // In an update the live app is already valid — "Review" doesn't apply; lead with changed/unchanged instead.
+      const semIcon = el.dataset.icon || 'fluent:circle-20-regular';
+      if (dot && dot.dataset.icon !== semIcon) { dot.dataset.icon = semIcon; dot.innerHTML = '<iconify-icon icon="' + semIcon + '" width="20" height="20" aria-hidden="true"></iconify-icon>'; }
+      // RIGHT (trailing) indicator shows each section's progress AT A GLANCE: a determinate ring that
+      // fills as its required items complete, snapping to a green ✓ when done. A lock marks a gated
+      // section; "Review" flags one valid on defaults but not yet opened (Reach & price). The exact
+      // count rides in the tooltip + the checklist. Update flows are already all-valid, so suppress the
+      // green checks and let the "Updated" pill mark the sections that actually changed.
+      const reqItems = (locked || updUnchanged(id)) ? [] : ckSection(id).filter(it => ckRequired(it));
+      const total = reqItems.length, doneCount = reqItems.filter(it => ckDone(it)).length, leftN = total - doneCount;
       const needsReview = !locked && !inUpdateFlow && leftN === 0 && status !== 'complete';
       const isChanged = inUpdateFlow && !locked && updateChangedSet.has(id);
+      const badgeMode = locked ? 'locked' : (!inUpdateFlow && status === 'complete') ? 'done' : leftN > 0 ? 'ring' : needsReview ? 'review' : '';
+      // The ring replaces the visible number, so the precise count moves to the tooltip.
+      if (badgeMode === 'ring') el.setAttribute('title', doneCount + ' of ' + total + ' done');
       let badge = el.querySelector('.wz-stepind__badge');
-      if (leftN > 0 || needsReview) {
+      if (badgeMode) {
         if (!badge) { badge = document.createElement('span'); badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
-        badge.className = 'wz-stepind__badge' + (needsReview ? ' wz-stepind__badge--review' : '');
-        badge.textContent = needsReview ? 'Review' : leftN + ' left';
+        const frac = total > 0 ? Math.max(0, Math.min(1, doneCount / total)) : 0;
+        const content = badgeMode === 'done' ? '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>'
+          : badgeMode === 'locked' ? '<iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>'
+          : badgeMode === 'review' ? 'Review'
+          : '<span class="wz-ring" style="--p:' + frac.toFixed(3) + '"><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="wz-ring__trk" cx="8" cy="8" r="7"></circle><circle class="wz-ring__fill" cx="8" cy="8" r="7"></circle></svg></span>';
+        badge.className = 'wz-stepind__badge' + (badgeMode === 'review' ? ' wz-stepind__badge--review' : badgeMode === 'done' ? ' wz-stepind__badge--done' : badgeMode === 'locked' ? ' wz-stepind__badge--locked' : ' wz-stepind__badge--ring');
+        if (badge.dataset.sig !== badgeMode + content) { badge.dataset.sig = badgeMode + content; badge.innerHTML = content; }
       } else if (badge) { badge.remove(); }
       // The badge + status icon are aria-hidden decoration, so carry the same status in the button's name.
       const a11yStatus = locked ? 'locked' : leftN > 0 ? (leftN + (leftN === 1 ? ' item left' : ' items left')) : isChanged ? 'updated' : needsReview ? 'review' : status === 'complete' ? 'done' : 'not started';
@@ -10172,37 +10309,29 @@
     if (lock) { const s = lock.querySelector('span'); if (s) s.textContent = 'Set by your package — ' + (V4_TYPE_LABEL[shown] || shown) + '.'; }
     renderPkgTypeRail();
   }
-  // Package format shown in the left rail (under the app name) as plain text + an edit affordance;
-  // clicking it opens the Change-app-type dialog. A real uploaded package locks the type (no edit).
+  // Package format shown as read-only text under the app name, with a pencil to change ONLY the type
+  // (opens the Change app type comparison). A muted lock replaces the pencil when a real package fixes it.
   function renderPkgTypeRail() {
     const host = document.getElementById('wz-pkgtype'); if (!host) return;
     const locked = (typeof lockedPkgType === 'function') ? lockedPkgType() : null;
     const label = V4_TYPE_LABEL[locked || v4Type] || (locked || v4Type);
-    if (locked) {
-      host.innerHTML = '<span class="wz-pkgtype__val">' + label + '</span>' +
-        '<span class="wz-pkgtype__lock" title="Set by your uploaded package"><iconify-icon icon="fluent:lock-closed-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon>Set by your package</span>';
-      return;
-    }
-    host.innerHTML = '<button type="button" class="wz-pkgtype__btn" data-apptype-edit title="Change app type" aria-label="Change app type \u2014 currently ' + label + '">' +
-      '<span class="wz-pkgtype__val">' + label + '</span>' +
-      '<span class="wz-pkgtype__change">Change</span>' +
-      '</button>';
+    host.innerHTML = '<span class="wz-pkgtype__val">' + label + '</span>' +
+      (locked
+        ? '<iconify-icon class="wz-pkgtype__lockico" icon="fluent:lock-closed-16-regular" width="12" height="12" title="Set by your uploaded package" aria-hidden="true"></iconify-icon>'
+        : '<button type="button" class="wz-pkgtype__edit" data-apptype-edit aria-label="Change package type" title="Change package type"><iconify-icon icon="fluent:edit-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></button>');
   }
   // Change-app-type dialog: each type with a short case (pros/cons), the current one flagged, and a
   // live preview of what switching changes (reuses typeChangeImpact for the MSIX<->Win32 boundary).
   const APPTYPE_INFO = {
     msix: { label: 'MSIX', icon: 'fluent:box-20-regular', rec: true,
       desc: 'The easiest, most capable path to the Store.',
-      best: 'every Store benefit, least effort',
-      feats: [{ ok: 1, t: 'Free code signing' }, { ok: 1, t: 'Free hosting and delivery' }, { ok: 1, t: 'Automatic updates' }, { ok: 1, t: 'S-Mode, private apps, flighting' }] },
+      feats: [{ ok: 1, t: 'Free code signing, hosting & delivery' }, { ok: 1, t: 'Automatic updates, S-Mode, private apps & flighting' }] },
     win32: { label: 'EXE / MSI', icon: 'fluent:desktop-20-regular',
       desc: 'Publish your existing installer as-is.',
-      best: 'keeping your existing installer as-is',
-      feats: [{ ok: 0, t: 'You buy a CA certificate' }, { ok: 0, t: 'You host it and pay' }, { ok: 0, t: 'You build your own updates' }, { ok: 0, t: 'No S-Mode, private apps or flighting' }] },
+      feats: [{ ok: 0, t: 'You buy a CA certificate and pay to host it' }, { ok: 0, t: 'Build your own updates; no S-Mode, private apps or flighting' }] },
     pwa: { label: 'PWA', icon: 'fluent:globe-20-regular',
       desc: 'Your website, packaged as MSIX.',
-      best: 'web apps',
-      feats: [{ ok: 1, t: 'Free code signing' }, { ok: 1, t: 'Free hosting and delivery' }, { ok: 1, t: 'Automatic updates' }, { ok: 1, t: 'S-Mode, private apps, flighting' }] }
+      feats: [{ ok: 1, t: 'Same Store benefits as MSIX' }] }
   };
   let _atdPick = null;
   function appTypeDlg() { return document.getElementById('apptype-dialog'); }
@@ -10235,7 +10364,6 @@
         '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badges + '</span>' +
         '<span class="atd-opt__desc">' + info.desc + '</span>' +
         '<ul class="atd-opt__feats">' + feats + '</ul>' +
-        '<span class="atd-opt__best"><span class="atd-opt__best-k">Best for</span> ' + info.best + '</span>' +
         '</label>';
     }).join('');
     // mirror [checked] onto .checked so the dot fills (this build doesn't flip :state(checked) on .checked)
@@ -10273,6 +10401,7 @@
     if (!t || t === v4Type) return;
     try { setV4Type(t); } catch (e) { v4Type = t; }
     try { renderPkgTypeRail(); } catch (e) {}
+    try { if (window.__apdSyncType) window.__apdSyncType(); } catch (e) {}   // keep the App details radios in sync
   }
   (function wireAppTypeDialog() {
     document.addEventListener('click', e => { if (e.target.closest('[data-apptype-edit]')) { e.preventDefault(); openAppTypeDialog(); } });
@@ -10293,20 +10422,18 @@
     if (toWin32 === effectiveWin32()) return [];
     const paid = adv.price.mode === 'paid';
     const priv = adv.audience.mode === 'private';
-    const cover = !!adv.listing.hero;
-    const trailer = !!(adv.listing.trailers && adv.listing.trailers.length);
     const lines = [];
     // Only the concrete changes to THIS submission — each type's nature/benefits are on the cards above.
+    // (Cover image + trailer work on every package type, incl. Win32, so switching never affects them.)
     if (toWin32) {
       lines.push(paid
         ? 'Your Store price and any sales won’t apply.'
         : 'Store pricing, sales, and free trials won’t be available.');
       if (priv) lines.push('Your private-group audience switches to Public.');
-      if (cover || trailer) lines.push('Your cover image and trailer stop showing.');
       lines.push('You’ll add a license terms link before you can submit.');
     } else {
       lines.push('Store pricing, sales, and free trials become available.');
-      lines.push('You can add a cover image, trailer, and a private-group audience.');
+      lines.push('You can set a private-group audience.');
       lines.push('The license terms link is no longer required.');
     }
     return lines;
@@ -13408,6 +13535,10 @@
     if (next) next.addEventListener('click', () => animateScroll(strip.scrollLeft + page()));
     strip.addEventListener('scroll', updateShotsNav, { passive: true });
     window.addEventListener('resize', updateShotsNav);
+    // The listing step is display:none until active, so the strip has no width (and no measurable
+    // overflow) until then. Observe size changes so the arrows appear the moment it becomes visible —
+    // without waiting for a scroll or window resize.
+    if (typeof ResizeObserver === 'function') { try { new ResizeObserver(updateShotsNav).observe(strip); } catch (e) {} }
   })();
 
   // Drag-to-reorder screenshots.
@@ -13838,7 +13969,7 @@
     const shortField = $('ez-pv-short');
     if (shortField) {
       if (document.activeElement !== shortField) faSet(shortField, ovShort);
-      const shn = (shortField.value || '').length, shc = $('ez-short-count');
+      const shn = (faVal(shortField) || '').length, shc = $('ez-short-count');
       if (shc) { shc.textContent = shn.toLocaleString('en-US') + ' / 1,000 characters'; shc.classList.toggle('ez-char-count--max', shn > 1000); }
     }
     // Description is a direct fluent-textarea input: mirror programmatic changes (locale / AI) into it
@@ -13849,6 +13980,9 @@
       const dn = (faVal(descField) || '').length, dc = $('ez-desc-count');
       if (dc) { dc.textContent = dn.toLocaleString('en-US') + ' / 10,000 characters'; dc.classList.toggle('ez-char-count--max', dn > 10000); }
     }
+    // Keep the empty-state kickstart + inline preview in sync with the latest listing copy.
+    if (typeof updateListingKickstart === 'function') updateListingKickstart();
+    if (typeof rebuildInlineListingPreview === 'function') rebuildInlineListingPreview();
 
     // Buy CTA: a Store-paid app shows its actual price (like the real listing); Win32 external-commerce
     // and free apps show "Get". Intl formats the currency symbol + grouping for the base currency.
@@ -14103,56 +14237,111 @@
   // Store, so it's edited through one dialog (from the header AND the listing preview), never inline.
   (function nameEdit() {
     var dlg = $('name-edit-dialog'), input = $('name-edit-input'), hint = $('name-edit-hint'), saveBtn = $('name-edit-save');
+    var typeGroup = $('apd-types'), typeLock = $('apd-typelock'), typeLockText = $('apd-typelock-text');
+    var apdImpact = $('apd-impact'), apdImpactLead = $('apd-impact-lead'), apdImpactList = $('apd-impact-list'), apdKindVal = $('apd-kind-val');
     function escN(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     var TAKEN = ['whatsapp', 'spotify', 'netflix', 'instagram', 'tiktok', 'facebook', 'microsoft word', 'powerpoint', 'photoshop'];
     window.__nameTaken = function (v) { return TAKEN.indexOf(String(v || '').trim().toLowerCase()) >= 0; };
-    var timer = null;
+    var timer = null, nameState = 'current', _apdType = null;
     function curName() { return (fName.value || '').trim(); }
-    function setHint(cls, html, canSave) {
+    function typeLocked() { return (typeof lockedPkgType === 'function') ? lockedPkgType() : null; }
+    function typeChanged() { return !!_apdType && _apdType !== v4Type && !typeLocked(); }
+    function setHint(cls, html) {
       if (hint) { hint.className = 'ez-extra-field__hint name-edit__hint' + (cls ? ' name-edit__hint--' + cls : ''); hint.innerHTML = html; }
-      if (saveBtn) { if (canSave) saveBtn.removeAttribute('disabled'); else saveBtn.setAttribute('disabled', ''); }
+    }
+    function refreshSave() {
+      var nameValid = (nameState === 'current' || nameState === 'available');
+      var enable = nameValid && (nameState === 'available' || typeChanged());
+      if (saveBtn) { if (enable) saveBtn.removeAttribute('disabled'); else saveBtn.setAttribute('disabled', ''); }
     }
     function check() {
       var v = (input.value || '').trim();
-      if (v.length < 2) { setHint('', 'Enter at least 2 characters.', false); return; }
-      if (v.toLowerCase() === curName().toLowerCase()) { setHint('ok', '<span class="verified-dot"></span> This is your current name.', false); return; }
-      setHint('', '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner> Checking availability&hellip;', false);
+      if (v.length < 2) { nameState = 'short'; setHint('', 'Enter at least 2 characters.'); refreshSave(); return; }
+      if (v.toLowerCase() === curName().toLowerCase()) { nameState = 'current'; setHint('ok', '<span class="verified-dot"></span> This is your current name.'); refreshSave(); return; }
+      nameState = 'checking'; setHint('', '<fluent-spinner size="tiny" aria-hidden="true"></fluent-spinner> Checking availability&hellip;'); refreshSave();
       clearTimeout(timer);
       timer = setTimeout(function () {
         if ((input.value || '').trim() !== v) return;
-        if (TAKEN.indexOf(v.toLowerCase()) >= 0) setHint('err', '&ldquo;' + escN(v) + '&rdquo; is already taken &mdash; try another name.', false);
-        else setHint('ok', '<span class="verified-dot"></span> &ldquo;' + escN(v) + '&rdquo; is available', true);
+        if (TAKEN.indexOf(v.toLowerCase()) >= 0) { nameState = 'taken'; setHint('err', '&ldquo;' + escN(v) + '&rdquo; is already taken &mdash; try another name.'); }
+        else { nameState = 'available'; setHint('ok', '<span class="verified-dot"></span> &ldquo;' + escN(v) + '&rdquo; is available'); }
+        refreshSave();
       }, 550);
     }
+    // --- Package type: compact selector inside the App details dialog ---
+    function renderApdImpact() {
+      if (!apdImpact) return;
+      if (!typeChanged()) { apdImpact.hidden = true; if (apdImpactList) apdImpactList.innerHTML = ''; return; }
+      var lines = (typeof typeChangeImpact === 'function') ? typeChangeImpact(_apdType === 'win32') : [];
+      apdImpact.hidden = false;
+      if (apdImpactLead) apdImpactLead.textContent = 'Switching to ' + (V4_TYPE_LABEL[_apdType] || _apdType) + ':';
+      if (apdImpactList) apdImpactList.innerHTML = (lines.length ? lines : ['Same Store benefits either way \u2014 nothing you\u2019ve set changes.']).map(function (l) { return '<li><iconify-icon icon="fluent:arrow-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon><span>' + l + '</span></li>'; }).join('');
+    }
+    function syncTypeUI() {
+      _apdType = v4Type;
+      var locked = typeLocked();
+      if (typeGroup) {
+        typeGroup.style.display = locked ? 'none' : '';
+        typeGroup.querySelectorAll('fluent-radio').forEach(function (r) {
+          var val = r.getAttribute('value');
+          var opt = r.closest('.apd-opt') || r; opt.hidden = (val === 'win32' && IS_GAME);
+          var on = (val === v4Type); r.checked = on; r.toggleAttribute('checked', on);
+        });
+        try { typeGroup.value = v4Type; } catch (e) {}
+      }
+      if (typeLock) typeLock.hidden = !locked;
+      if (locked && typeLockText) typeLockText.textContent = (V4_TYPE_LABEL[locked] || locked) + ' \u2014 set by your uploaded package.';
+      if (apdKindVal) apdKindVal.textContent = IS_GAME ? 'game' : 'app';
+      renderApdImpact();
+    }
+    window.__apdSyncType = syncTypeUI;   // let the full comparison re-sync these radios after a switch
     function open() {
       if (!dlg || !input) return;
       input.value = curName();
-      setHint('ok', '<span class="verified-dot"></span> This is your current name.', false);
+      nameState = 'current';
+      setHint('ok', '<span class="verified-dot"></span> This is your current name.');
+      syncTypeUI();
+      refreshSave();
       try { dlg.show(); } catch (e) {}
       setTimeout(function () { try { input.focus(); if (input.select) input.select(); } catch (e) {} }, 50);
     }
     function close() { try { dlg.hide(); } catch (e) {} }
-    window.__openNameEdit = open;
+    window.__openNameEdit = open; window.__openAppDetails = open;
     window.__setAppName = function (v) { try { fName.value = v; if (typeof syncName === 'function') syncName(); } catch (e) {} };
     if (input) input.addEventListener('input', check);
+    if (typeGroup) typeGroup.addEventListener('change', function (e) {
+      if (typeLocked()) return;
+      var r = e.target && e.target.closest && e.target.closest('fluent-radio');
+      var val = r ? r.getAttribute('value') : typeGroup.value; if (!val) return;
+      _apdType = val;
+      // This Fluent build paints the filled dot from the `checked` attribute, so move it across all radios.
+      typeGroup.querySelectorAll('fluent-radio').forEach(function (rr) {
+        var on = rr.getAttribute('value') === val; rr.checked = on; rr.toggleAttribute('checked', on);
+      });
+      renderApdImpact(); refreshSave();
+    });
     if (dlg) dlg.querySelectorAll('[data-name-edit-close]').forEach(function (el) { el.addEventListener('click', close); });
     if (saveBtn) saveBtn.addEventListener('click', function () {
       if (saveBtn.hasAttribute('disabled')) return;
-      var v = (input.value || '').trim(); if (v.length < 2) return;
-      fName.value = v;
-      if (typeof syncName === 'function') syncName();
-      if (typeof announce === 'function') announce('App name updated to ' + v + '.');
+      var v = (input.value || '').trim();
+      var nameChg = nameState === 'available' && v.length >= 2, typeChg = typeChanged();
+      if (nameChg) { fName.value = v; if (typeof syncName === 'function') syncName(); }
+      if (typeChg) { try { setV4Type(_apdType); } catch (e) {} try { renderPkgTypeRail(); } catch (e) {} }
+      if (typeof announce === 'function') {
+        if (nameChg && typeChg) announce('App name and package type updated.');
+        else if (nameChg) announce('App name updated to ' + v + '.');
+        else if (typeChg) announce('Package type changed to ' + (V4_TYPE_LABEL[_apdType] || _apdType) + '.');
+      }
       close();
     });
-    var headBtn = $('app-name-btn');
-    if (headBtn) {
-      headBtn.addEventListener('click', open);
-      headBtn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-    }
+    var editBtn = $('app-edit-btn');
+    if (editBtn) editBtn.addEventListener('click', open);
   })();
   // Description is a DIRECT fluent-textarea input (PDP-shaped form): typing flows to fDesc → syncDesc;
   // ezRenderPreview mirrors programmatic changes (locale / AI) back in when it isn't focused.
   (function () { var t = $('ez-pv-desc'); if (!t) return; try { t.autoResize = true; } catch (e) {} var setRows1 = function () { try { var ta = t.shadowRoot && t.shadowRoot.querySelector('textarea'); if (ta) ta.rows = 1; } catch (e) {} }; setRows1(); try { customElements.whenDefined('fluent-textarea').then(setRows1); } catch (e) {} t.addEventListener('input', function () { fDesc.value = faVal(t); syncDesc(); }); t.addEventListener('focusin', function () { t.classList.add('is-focused'); }); t.addEventListener('focusout', function () { t.classList.remove('is-focused'); }); })();
+  // Short summary is also a DIRECT fluent-textarea (auto-grows like Description); its input-to-model
+  // wiring sits with the advanced fields, so here we just enable auto-resize + the underline focus state.
+  (function () { var t = $('ez-pv-short'); if (!t) return; try { t.autoResize = true; } catch (e) {} var setRows1 = function () { try { var ta = t.shadowRoot && t.shadowRoot.querySelector('textarea'); if (ta) ta.rows = 1; } catch (e) {} }; setRows1(); try { customElements.whenDefined('fluent-textarea').then(setRows1); } catch (e) {} t.addEventListener('focusin', function () { t.classList.add('is-focused'); }); t.addEventListener('focusout', function () { t.classList.remove('is-focused'); }); })();
   // App name is a DIRECT fluent-text-input (native appearance="underline"): typing flows to fName → syncName,
   // with inline availability (reuses the name dialog's TAKEN list via window.__nameTaken).
   (function () {
@@ -17035,9 +17224,13 @@
     function renderMarketsList(filter) {
       if (!marketsList) return;
       const q = (filter || '').trim().toLowerCase();
-      const filtered = q
+      const base = q
         ? ALL_MARKETS.filter(m => m.name.toLowerCase().includes(q))
-        : ALL_MARKETS;
+        : ALL_MARKETS.slice();
+      // Selected markets float to the top (stable sort keeps each group alphabetical) so a whole
+      // region/group's markets stay visible together instead of scattered behind the scroll.
+      const filtered = base.sort((a, b) =>
+        (selectedMarkets.has(a.code) ? 0 : 1) - (selectedMarkets.has(b.code) ? 0 : 1));
       if (!filtered.length) {
         marketsList.innerHTML = `<div class="markets-dialog__empty">No markets match "${q}".</div>`;
         return;
@@ -18396,7 +18589,7 @@ function openPriceScheduleDialog() {
     const pvShort = $('ez-pv-short');
     if (fShort && pvShort) {
       fShort.value = L.shortDesc || '';
-      pvShort.addEventListener('input', () => { fShort.value = (pvShort.value || ''); L.shortDesc = fShort.value.trim(); persistAdvanced(); ezRenderPreview(); });
+      pvShort.addEventListener('input', () => { fShort.value = faVal(pvShort); L.shortDesc = fShort.value.trim(); persistAdvanced(); ezRenderPreview(); });
     }
 
     // ---- Search terms / keywords (discoverability metadata, not on the PDP) ----

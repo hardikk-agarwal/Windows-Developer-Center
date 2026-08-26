@@ -331,43 +331,64 @@
   // compare them at a glance. MSIX carries the single Recommended cue and a subtly tinted column.
   // CSS: .fmttable-wrap / .fmttable(--lead) / .fmtt__*.
   function storeOnrampsBodyHTML() {
+    // App vs Game is a tab filter: each card is flagged data-app / data-game and the active tab hides the
+    // rest. Every format shows a 1–2 line summary + a few bulleted points; MSIX is the single Recommended card.
     var FMTS = [
-      { icon: 'fluent:box-20-regular', name: 'MSIX', rec: true,
-        desc: 'The modern Windows package \u2014 Microsoft handles signing, hosting, and updates for you.',
-        best: 'every Store benefit, least effort', tags: ['App', 'Game'] },
-      { icon: 'fluent:desktop-20-regular', name: 'EXE / MSI',
-        desc: 'Your existing installer, published as-is \u2014 you handle signing, hosting, and updates yourself.',
-        best: 'full control, more effort', tags: ['App'] },
-      { icon: 'fluent:globe-20-regular', name: 'PWA',
-        desc: 'Your website, packaged as MSIX \u2014 all the MSIX benefits, no native build.',
-        best: 'web apps', tags: ['App', 'Game'] },
-      { icon: 'fluent:xbox-controller-20-regular', name: 'GDK',
+      { id: 'msix', icon: 'fluent:box-20-filled', name: 'MSIX', rec: true, app: true, game: true,
+        desc: 'Modern Windows packaging format \u2014 bring any app packaged as MSIX.',
+        points: [
+          'Code signing &amp; hosting managed and paid by Microsoft',
+          'Use Microsoft or your own / third-party commerce for paid apps',
+          'Software updates managed by Microsoft',
+          'Advanced features \u2014 package flighting, private app distribution'
+        ] },
+      { id: 'win32', icon: 'fluent:desktop-20-filled', name: 'EXE / MSI', app: true,
+        desc: 'Publish your .exe or .msi installer as-is.',
+        points: [
+          'Code signing &amp; hosting managed and paid by you',
+          'Use your own or third-party commerce for paid apps',
+          'Software updates managed by you'
+        ] },
+      { id: 'pwa', icon: 'fluent:globe-20-filled', name: 'PWA', app: true, game: true,
+        desc: 'Publish your web app by providing a URL or an MSIX package.',
+        points: [
+          'All the benefits of MSIX packaging',
+          'No native build needed',
+          'Quick to publish \u2014 just provide your web app URL'
+        ] },
+      { id: 'gdk', icon: 'fluent:xbox-controller-20-filled', name: 'GDK', game: true,
         desc: 'PC and Xbox games built with the Game Development Kit.',
-        best: 'PC &amp; Xbox games', tags: ['Game'] }
+        points: [
+          'Built for PC and Xbox consoles',
+          'Xbox services, achievements &amp; multiplayer',
+          'Reserved and managed in Partner Center'
+        ] }
     ];
+    // Whole card is clickable: the name button carries data-addformat (handled on .main) and an ::after
+    // overlay that spans the card, so a click anywhere opens the reserve dialog preset to this format.
     function fcard(f) {
-      return '<div class="pubcard' + (f.rec ? ' pubcard--rec' : '') + '">' +
+      return '<article class="pubcard' + (f.rec ? ' pubcard--rec' : '') + '"' + (f.app ? ' data-app' : '') + (f.game ? ' data-game' : '') + '>' +
         '<div class="pubcard__head">' +
-          '<span class="pubcard__ico"><iconify-icon icon="' + f.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
-          '<span class="pubcard__name">' + f.name + '</span>' +
-          (f.rec ? '<span class="pubcard__rec">Recommended</span>' : '') +
+          '<span class="pubcard__ico"><iconify-icon icon="' + f.icon + '" width="23" height="23" aria-hidden="true"></iconify-icon></span>' +
+          '<h3 class="pubcard__name"><button type="button" class="pubcard__hit" data-addformat="' + f.id + '">' + f.name + '</button></h3>' +
+          (f.rec ? '<fluent-badge class="pubcard__rec" appearance="tint" color="brand" size="small">Recommended</fluent-badge>' : '') +
         '</div>' +
         '<p class="pubcard__desc">' + f.desc + '</p>' +
-        '<p class="pubcard__best"><span class="pubcard__best-k">Best for</span> ' + f.best + '</p>' +
-        '<div class="pubcard__tags">' + f.tags.map(function (t) { return '<span class="pubcard__tag">' + t + '</span>'; }).join('') + '</div>' +
-      '</div>';
+        '<ul class="pubcard__list">' + f.points.map(function (p) { return '<li><iconify-icon class="pubcard__mk" icon="fluent:checkmark-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + p + '</span></li>'; }).join('') + '</ul>' +
+        '<span class="pubcard__go" aria-hidden="true"><iconify-icon icon="fluent:arrow-right-16-regular" width="18" height="18"></iconify-icon></span>' +
+      '</article>';
     }
-    return '<div class="pubgrid">' + FMTS.map(fcard).join('') + '</div>' +
+    return '<fluent-tablist id="pubtabs" class="pubtabs" activeid="pubtab-app" aria-label="Publish an app or a game">' +
+        '<fluent-tab id="pubtab-app"><iconify-icon slot="start" icon="fluent:apps-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>App</fluent-tab>' +
+        '<fluent-tab id="pubtab-game"><iconify-icon slot="start" icon="fluent:xbox-controller-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Game</fluent-tab>' +
+      '</fluent-tablist>' +
+      '<div class="pubgrid" id="pubgrid" data-tab="app">' + FMTS.map(fcard).join('') + '</div>' +
       '<div class="pubaid">' +
         '<span class="pubaid__q">Not sure which one to pick?</span>' +
         '<span class="pubaid__acts">' +
-          '<button type="button" class="pubaid__btn" data-fmthelp><iconify-icon icon="fluent:wand-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Help me choose</button>' +
-          '<button type="button" class="pubaid__btn" data-cmpopen><iconify-icon icon="fluent:table-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Compare all features</button>' +
+          '<button type="button" class="pubaid__link" data-fmthelp><iconify-icon icon="fluent:wand-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Help me choose</button>' +
+          '<a class="pubaid__link" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer" aria-label="Learn more about publishing to the Store">Learn more<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
         '</span>' +
-      '</div>' +
-      '<div class="pkgs__foot">' +
-        '<a class="pkgs__more" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to the Store' +
-          '<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>' +
       '</div>';
   }
   var STORE_ONRAMPS_SUB = 'Four formats bring an app or game to the Store \u2014 most new apps use MSIX.';
@@ -386,6 +407,21 @@
       '</summary>' +
       '<div class="whatpub__body">' + storeOnrampsBodyHTML() + '</div>' +
     '</details>';
+  }
+
+  // Wire the App/Game tabs: on tab change (click or keyboard) mirror the active id onto the grid so its
+  // data-tab filter shows only the matching format cards. Re-run per render since innerHTML is replaced.
+  function wirePubTabs(root) {
+    var host = root || document;
+    var tabs = host.querySelector('#pubtabs'), grid = host.querySelector('#pubgrid');
+    if (!tabs || !grid) return;
+    var sync = function () {
+      var id = tabs.activeid || tabs.getAttribute('activeid') || 'pubtab-app';
+      grid.setAttribute('data-tab', id === 'pubtab-game' ? 'game' : 'app');
+    };
+    tabs.addEventListener('change', sync);
+    tabs.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('fluent-tab')) setTimeout(sync, 0); });
+    sync();
   }
 
   // Ambiguous "Add" (MSIX/PWA do both) — a small app/game menu anchored to the button, rendered in <body>
@@ -860,12 +896,74 @@
     var apps = (state.apps || []).slice().sort(function (a, b) {
       return ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (statusRank(a) - statusRank(b));
     });
-    // 2-col (your apps | needs-attention rail) -> full-width account. Recent activity dropped: it duplicated
-    // Needs attention (same crash/review/draft events).
+    // At-a-glance metric strip -> per-app performance charts -> full-width your-apps list -> account.
     return '<div class="ovn">' +
-      '<div class="ovn-2col">' + ovnAppsHTML(apps) + ovnAttnHTML() + '</div>' +
+      ovnStatsHTML() +
+      ovnPerfHTML(apps) +
+      ovnAppsHTML(apps) +
       ovnAccountHTML() +
     '</div>';
+  }
+  // Overview "at a glance": quick structural facts only — apps (Store + signed) and certificates. Per-app
+  // health lives in the "Your apps" list below (accumulated analytics averages proved to be noise).
+  function ovnStatsHTML() {
+    var apps = state.apps || [];
+    if (!apps.length) return "";
+    var pipeline = apps.filter(inStorePipeline);
+    var live = apps.filter(function (a) { return appStatusKey(a) === "live"; });
+    var signed = apps.filter(isSignedOnly);
+    var certN = (state.certs || []).length;
+    function stat(icon, val, label, sub, href, jump) {
+      var tag = href ? "a" : "div";
+      var attr = href ? ' href="' + esc(href) + '"' + (jump ? ' data-jump="' + jump + '"' : "") : "";
+      return '<' + tag + ' class="ovn-stat' + (href ? " ovn-stat--link" : "") + '"' + attr + '>' +
+        '<span class="ovn-stat__ico"><iconify-icon icon="' + icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="ovn-stat__b"><span class="ovn-stat__val">' + val + '</span>' +
+          '<span class="ovn-stat__label">' + esc(label) + '</span>' +
+          (sub ? '<span class="ovn-stat__sub">' + esc(sub) + '</span>' : "") + '</span>' +
+      '</' + tag + '>';
+    }
+    var cards = [];
+    var appParts = [];
+    if (live.length) appParts.push(live.length + " in Store");
+    var inProgress = pipeline.length - live.length;
+    if (inProgress) appParts.push(inProgress + " in progress");
+    if (signed.length) appParts.push(signed.length + " signed");
+    cards.push(stat("fluent:apps-20-regular", apps.length, "App" + (apps.length === 1 ? "" : "s"), appParts.slice(0, 2).join(" \u00b7 "), "#apps", "apps"));
+    if (certN) cards.push(stat("fluent:certificate-20-regular", certN, "Certificate" + (certN === 1 ? "" : "s"), "active", "#certificates", "certificates"));
+    return '<div class="ovn-stats">' + cards.join("") + '</div>';
+  }
+  // Per-app performance: one line per in-Store app on Installs / Avg rating / Crashes + a shared legend,
+  // so you can glance at each app's trend and compare across apps. Reuses the Analytics chart engine.
+  function ovnPerfHTML(apps) {
+    var live = (apps || []).filter(function (a) { return a.store; });   // installs / ratings / crash telemetry come from the Store
+    if (!live.length) return "";
+    live = live.slice(0, ANA_APP_COLORS.length);
+    var acq = live.map(acqData), rat = live.map(ratingsData), ana = live.map(anaData);
+    function series(pick) { return live.map(function (a, i) { return { name: a.name, color: anaAppColor(i), values: pick(i) }; }); }
+    var instS = series(function (i) { return acq[i].inst; });
+    var ratS = series(function (i) { return rat[i].avgSeries; });
+    var crashS = series(function (i) { var s = ana[i].hits.series; return s[0].values.map(function (c, k) { return c + s[1].values[k] + s[2].values[k]; }); });
+    var legend = '<div class="ovn-perf__legend">' + live.map(function (a, i) {
+      return '<span class="ovn-perf__leg"><span class="ovn-perf__leg-dot" style="background:' + anaAppColor(i) + '"></span>' + esc(a.name) + '</span>';
+    }).join("") + '</div>';
+    function card(title, chart) {
+      return '<div class="ovn-perf__card"><div class="ovn-perf__ctitle"><strong>' + esc(title) + '</strong></div>' + chart + '</div>';
+    }
+    var H = 168;
+    var cInst = chartLine({ series: instS, labels: acq[0].labels, h: H });
+    var cRat = chartLine({ series: ratS, labels: rat[0].labels, h: H, yMin: 0, yMax: 5, fmt: function (v) { return v.toFixed(1); } });
+    var cCrash = chartLine({ series: crashS, labels: ana[0].hits.labels, h: H });
+    return '<section class="ovn-sec ovn-perf">' +
+      '<div class="ovn-sec__head"><h3>How your Store apps are performing</h3>' +
+        '<a class="ovn-sec__link" href="#analytics" data-jump="analytics">Open analytics</a></div>' +
+      legend +
+      '<div class="ovn-perf__grid">' +
+        card("Installs", cInst) +
+        card("Avg rating", cRat) +
+        card("Crashes", cCrash) +
+      '</div>' +
+    '</section>';
   }
   // "Needs attention" items derived from each app's state (rejected / draft / in-review / crash / reviews).
   function ovnAttnItems() {
@@ -1022,9 +1120,12 @@
     if (STORE) {
       if (!state.apps.length) {                          // fresh portal zero-state: hero + "What you can publish" format cards
         el.innerHTML = storeOnrampsHTML();
+        wirePubTabs(el);
         return;
       }
       el.innerHTML = storeOnrampsAccordionHTML() + unifiedDashHTML();
+      wirePubTabs(el);
+      sizeCharts(el); observeCharts(el);
       return;
     }
     if (!state.verified) {
@@ -1324,22 +1425,31 @@
         '</div>';
         return;
       }
-      var html = "";
-      if (above.length) html += storeTableHTML(above);
-      html += sbanner;
+      var storePanel = above.length ? storeTableHTML(above) : "";
+      var signedPanel = "";
       if (below.length) {
         var dCert = certById(below[0].certId), dVerified = dCert && dCert.verified === true;
         // Unified adds certs by proving ownership (uploading a signed binary) and never locks these apps,
         // so the "verify ownership" prompt doesn't apply — always show the verified note here.
         var note = (dVerified || UNIFIED)
           ? '<div class="disc-note"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
-              '<span>Found from the <strong>code signing certificate</strong> of the app you just published — <strong>ownership verified</strong>. Crash analytics and SmartScreen reputation are unlocked.</span></div>'
+              '<span>Signed with your <strong>code signing certificate</strong> but not in the Store \u2014 <strong>ownership verified</strong>, so crash analytics and SmartScreen reputation are unlocked.</span></div>'
           : '<div class="disc-note disc-note--verify"><iconify-icon icon="fluent:lock-closed-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
               '<span><strong>Verify you own this certificate.</strong> These apps are signed by the same certificate as the app you just published. Download our verification file, sign it with that certificate, and upload it to unlock crash analytics &amp; SmartScreen reputation.</span>' +
               '<fluent-button appearance="primary" size="small" data-openmodal>Verify ownership</fluent-button></div>';
-        html += '<div class="disc-section">' + note + certGroupsHTML(below) + '</div>';
+        signedPanel = '<div class="disc-section">' + note + certGroupsHTML(below) + '</div>';
       }
-      wrap.innerHTML = html;
+      // Both kinds present → Fluent tabs give a clear Store / not-in-Store split; otherwise show the one list.
+      if (above.length && below.length) {
+        wrap.innerHTML = sbanner + appsTabsHTML(above.length, below.length) +
+          '<div class="apps-panels" data-tab="' + (appsActiveTab === "signed" ? "signed" : "store") + '">' +
+            '<div class="apps-panel" data-appspanel="store">' + storePanel + '</div>' +
+            '<div class="apps-panel" data-appspanel="signed">' + signedPanel + '</div>' +
+          '</div>';
+        wireAppsTabs();
+      } else {
+        wrap.innerHTML = storePanel + sbanner + signedPanel;
+      }
       return;
     }
     var banner = scanning
@@ -1421,9 +1531,30 @@
     });
     return groups.map(certGroupHTML).join("");
   }
+  // Store vs not-in-Store split as Fluent tabs (only when both kinds exist). Panels toggle via CSS; the
+  // active tab persists across re-renders (pin / hide / search) through appsActiveTab.
+  function appsTabsHTML(storeN, signedN) {
+    var act = appsActiveTab === "signed" ? "apps-tab-signed" : "apps-tab-store";
+    return '<fluent-tablist id="apps-tabs" class="apps-tabs" activeid="' + act + '" aria-label="Microsoft Store apps and apps not in the Store">' +
+      '<fluent-tab id="apps-tab-store"><span class="apps-tab__lbl">Microsoft Store<span class="apps-tab__n">' + storeN + '</span></span></fluent-tab>' +
+      '<fluent-tab id="apps-tab-signed"><span class="apps-tab__lbl">Not in the Store<span class="apps-tab__n">' + signedN + '</span></span></fluent-tab>' +
+    '</fluent-tablist>';
+  }
+  function wireAppsTabs() {
+    var tabs = document.getElementById("apps-tabs"), panels = document.querySelector("#appsList .apps-panels");
+    if (!tabs || !panels) return;
+    var sync = function () {
+      var id = tabs.activeid || tabs.getAttribute("activeid") || "apps-tab-store";
+      appsActiveTab = id === "apps-tab-signed" ? "signed" : "store";
+      panels.setAttribute("data-tab", appsActiveTab);
+    };
+    tabs.addEventListener("change", sync);
+    tabs.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("fluent-tab")) setTimeout(sync, 0); });
+    sync();
+  }
   // ---- Apps list controls: search / type + status filters / sortable columns / pin-to-top / hide.
   //      pinned + hidden persist on the app object; search/filter/sort are per-session view state. ----
-  var appsSearch = "", appsTypeFilter = "all", appsStatusFilter = "all", appsShowHidden = false;
+  var appsSearch = "", appsTypeFilter = "all", appsStatusFilter = "all", appsShowHidden = false, appsActiveTab = "store";
   var appsSort = { key: "", dir: "asc" };
   function appStatusKey(a) {
     if (a.store || a.storeStatus === "published") return "live";
@@ -2455,7 +2586,7 @@
       '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-failure="' + t.id + '"><iconify-icon slot="start" icon="fluent:bug-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Investigate failure</fluent-button>' +
       '<button class="ai-insight__x" data-ai-dismiss="1" aria-label="Dismiss insight" title="Dismiss"><iconify-icon icon="fluent:dismiss-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button></div>';
   }
-  function symPill(st) { var m = SYM_STATES[st] || SYM_STATES.notuploaded, cm = { ok: "success", info: "brand", idle: "warning", warn: "danger" }; return '<fluent-badge appearance="outline" color="' + (cm[m.cls] || "subtle") + '">' + m.label + '</fluent-badge>'; }
+  function symPill(st) { var m = SYM_STATES[st] || SYM_STATES.notuploaded, cm = { ok: "ok", info: "info", idle: "warn", warn: "danger" }; return '<span class="pill pill--' + (cm[m.cls] || "ghost") + ' pill--sm">' + m.label + '</span>'; }
   function ftypePill(t) { return '<span class="ftype-txt">' + esc(t) + '</span>'; }
   function zeroStateHTML(app) {
     var msix = isMsix(app);
@@ -2566,7 +2697,7 @@
       return '<tr class="failrow" data-failure="' + f.id + '" tabindex="0" role="button" aria-label="View ' + esc(f.name) + '">' +
         '<td><span class="faillink">' + esc(f.name) + '</span>' + (f.isNew ? '<fluent-badge class="newbadge" appearance="outline" color="success">New</fluent-badge>' : "") + '</td>' +
         '<td>' + ftypePill(f.type) + '</td><td><span class="mono">' + esc(f.ver) + '</span></td>' +
-        (msix ? "" : '<td>' + (f.resolved ? '<fluent-badge appearance="outline" color="success">Resolved</fluent-badge>' : f.reprocessing ? '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="brand" title="Symbols resolved \u2014 this crash\u2019s stack is still attaching (up to ~10h). We\u2019ll email you.">Stack pending</fluent-badge>' : '<fluent-badge class="symjump" data-sym-jump="' + esc(f.ver) + '" appearance="outline" color="warning" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</fluent-badge>') + '</td>') +
+        (msix ? "" : '<td>' + (f.resolved ? '<span class="pill pill--ok pill--sm">Resolved</span>' : f.reprocessing ? '<span class="pill pill--info pill--sm symjump" data-sym-jump="' + esc(f.ver) + '" title="Symbols resolved \u2014 this crash\u2019s stack is still attaching (up to ~10h). We\u2019ll email you.">Stack pending</span>' : '<span class="pill pill--warn pill--sm symjump" data-sym-jump="' + esc(f.ver) + '" title="Manage symbols for ' + esc(f.ver) + '">Unresolved</span>') + '</td>') +
         '<td class="num" title="' + fmtComma(f.hits) + ' hits">' + fmtCompact(f.hits) + '</td><td class="num" title="' + fmtComma(f.devices) + ' devices">' + fmtCompact(f.devices) + '</td></tr>';
     }).join("");
     if (!list.length) rows = '<tr><td colspan="' + (msix ? 5 : 6) + '" class="cellspan">No failures match your search or filters.</td></tr>';
@@ -4006,7 +4137,12 @@
       var _addm = e.target.closest("[data-addmenu]");
       if (_addm) { toggleFmtMenu(_addm); return; }
       var _addf = e.target.closest("[data-addformat]");
-      if (_addf) { var _f = _addf.getAttribute("data-addformat"); openNewApp({ type: _f === "gdk" ? "game" : "app", pkgType: _f }); return; }
+      if (_addf) {
+        var _f = _addf.getAttribute("data-addformat");
+        var _grid = _addf.closest("#pubgrid");   // format cards follow the App/Game tab; onramp options don't
+        var _pt = _f === "gdk" ? "game" : (_f === "win32" ? "app" : (_grid && _grid.getAttribute("data-tab") === "game" ? "game" : "app"));
+        openNewApp({ type: _pt, pkgType: _f }); return;
+      }
       if (e.target.closest("[data-rescan]")) { rescanApps(); return; }
       if (e.target.closest("[data-hero-dismiss]")) {
         try { localStorage.setItem("wdp.appsHero.dismissed", "1"); } catch (_) {}
