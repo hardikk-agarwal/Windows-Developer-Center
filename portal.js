@@ -298,8 +298,11 @@
         '<div class="ovx-hero">' +
           '<div class="ovx-hero__text"><h2>Welcome back' + (firstName ? ", " + esc(firstName) : "") + '</h2>' +
             '<p>' + bits.join(" \u00b7 ") + '</p></div>' +
-          '<fluent-button appearance="primary" data-newapp>' +
-            '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
+          '<div class="ovx-hero__actions">' +
+            '<button type="button" class="ovx-hero__whatpub" data-whatpub><iconify-icon icon="fluent:book-open-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>What you can publish</button>' +
+            '<fluent-button appearance="primary" data-newapp>' +
+              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
+          '</div>' +
         '</div>';
       return;
     }
@@ -331,58 +334,54 @@
   // compare them at a glance. MSIX carries the single Recommended cue and a subtly tinted column.
   // CSS: .fmttable-wrap / .fmttable(--lead) / .fmtt__*.
   function storeOnrampsBodyHTML() {
-    // App vs Game is a tab filter: each card is flagged data-app / data-game and the active tab hides the
-    // rest. Every format shows a 1–2 line summary + a few bulleted points; MSIX is the single Recommended card.
+    // App vs Game is a tab filter: each format carries per-context (app / game) copy so the active tab
+    // reads correctly. A format renders one card per context it supports; MSIX (App) is the single
+    // Recommended card. Card layout: icon tile + selection dot, title + badge, summary, checks, "Best for".
     var FMTS = [
-      { id: 'msix', icon: 'fluent:box-20-filled', name: 'MSIX', rec: true, app: true, game: true,
-        desc: 'Modern Windows packaging format \u2014 bring any app packaged as MSIX.',
-        points: [
-          'Code signing &amp; hosting managed and paid by Microsoft',
-          'Use Microsoft or your own / third-party commerce for paid apps',
-          'Software updates managed by Microsoft',
-          'Advanced features \u2014 package flighting, private app distribution'
-        ] },
-      { id: 'win32', icon: 'fluent:desktop-20-filled', name: 'EXE / MSI', app: true,
-        desc: 'Publish your .exe or .msi installer as-is.',
-        points: [
-          'Code signing &amp; hosting managed and paid by you',
-          'Use your own or third-party commerce for paid apps',
-          'Software updates managed by you'
-        ] },
-      { id: 'pwa', icon: 'fluent:globe-20-filled', name: 'PWA', app: true, game: true,
-        desc: 'Publish your web app by providing a URL or an MSIX package.',
-        points: [
-          'All the benefits of MSIX packaging',
-          'No native build needed',
-          'Quick to publish \u2014 just provide your web app URL'
-        ] },
-      { id: 'gdk', icon: 'fluent:xbox-controller-20-filled', name: 'GDK', game: true,
-        desc: 'PC and Xbox games built with the Game Development Kit.',
-        points: [
-          'Built for PC and Xbox consoles',
-          'Xbox services, achievements &amp; multiplayer',
-          'Reserved and managed in Partner Center'
-        ] }
+      { id: 'msix', icon: 'fluent:box-20-filled',
+        app: { rec: true, desc: 'Publish any app packaged as MSIX.', best: 'Best for publishing new apps',
+          points: ['Free code signing &amp; binary hosting', 'Commerce options: MS Store, Own, 3p', 'Automatic updates', 'Supports S-Mode, private apps, flighting'] },
+        game: { desc: 'Publish UWP game packaged as MSIX.', best: 'Best for publishing casual games',
+          points: ['Free code signing &amp; binary hosting', 'Commerce options: MS Store, Own, 3p', 'Automatic updates'] } },
+      { id: 'win32', icon: 'fluent:desktop-20-filled',
+        app: { desc: 'Publish your existing .msi/.exe installer as-is.', best: 'Best for publishing apps that you distribute yourself today',
+          points: ['You manage &amp; pay for code signing &amp; binary hosting', 'Commerce options: Own, 3p', 'You manage app updates'] } },
+      { id: 'pwa', icon: 'fluent:globe-20-filled',
+        app: { desc: 'Publish your web app.', best: 'Best for publishing web apps',
+          points: ['Simply provide your web app URL or MSIX package', 'Gets all benefits of MSIX'] },
+        game: { desc: 'Publish your web game.', best: 'Best for publishing web games',
+          points: ['Simply provide your web game URL or MSIX package', 'Gets all benefits of MSIX'] } },
+      { id: 'gdk', icon: 'fluent:xbox-controller-20-filled',
+        game: { desc: 'Publish your Win32 game.', best: 'Best for publishing large PC games',
+          points: ['Gets all benefits of MSIX and more', 'Streaming install &amp; smart updates', 'Self-service \u2014 no ID@Xbox or concept approval', 'Aligned with Xbox gaming workflows for future expansion'] } }
     ];
+    var FMT_NAMES = { msix: 'MSIX', win32: 'EXE / MSI', pwa: 'PWA', gdk: 'GDK' };
     // Whole card is clickable: the name button carries data-addformat (handled on .main) and an ::after
     // overlay that spans the card, so a click anywhere opens the reserve dialog preset to this format.
-    function fcard(f) {
-      return '<article class="pubcard' + (f.rec ? ' pubcard--rec' : '') + '"' + (f.app ? ' data-app' : '') + (f.game ? ' data-game' : '') + '>' +
+    // The chevron is decorative (aria-hidden) — the accessible control is the name button.
+    function fcard(f, ctx) {
+      var c = f[ctx]; if (!c) return '';
+      return '<article class="pubcard' + (c.rec ? ' pubcard--rec' : '') + '" data-' + ctx + '>' +
         '<div class="pubcard__head">' +
           '<span class="pubcard__ico"><iconify-icon icon="' + f.icon + '" width="23" height="23" aria-hidden="true"></iconify-icon></span>' +
-          '<h3 class="pubcard__name"><button type="button" class="pubcard__hit" data-addformat="' + f.id + '">' + f.name + '</button></h3>' +
-          (f.rec ? '<span class="pill pill--info pill--sm pubcard__rec">Recommended</span>' : '') +
+          '<span class="pubcard__chev" aria-hidden="true"><iconify-icon icon="fluent:chevron-right-20-regular" width="20" height="20"></iconify-icon></span>' +
         '</div>' +
-        '<p class="pubcard__desc">' + f.desc + '</p>' +
-        '<ul class="pubcard__list">' + f.points.map(function (p) { return '<li><iconify-icon class="pubcard__mk" icon="fluent:checkmark-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + p + '</span></li>'; }).join('') + '</ul>' +
-        '<span class="pubcard__go" aria-hidden="true"><iconify-icon icon="fluent:arrow-right-16-regular" width="18" height="18"></iconify-icon></span>' +
+        '<div class="pubcard__titles">' +
+          '<h3 class="pubcard__name"><button type="button" class="pubcard__hit" data-addformat="' + f.id + '">' + FMT_NAMES[f.id] + '</button></h3>' +
+          (c.rec ? '<span class="pubcard__rec">Recommended</span>' : '') +
+        '</div>' +
+        '<p class="pubcard__desc">' + c.desc + '</p>' +
+        '<ul class="pubcard__list">' + c.points.map(function (p) { return '<li><iconify-icon class="pubcard__mk" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + p + '</span></li>'; }).join('') + '</ul>' +
+        '<span class="pubcard__best">' + c.best + '</span>' +
       '</article>';
     }
+    var _cards = [];
+    FMTS.forEach(function (f) { if (f.app) _cards.push(fcard(f, 'app')); if (f.game) _cards.push(fcard(f, 'game')); });
     return '<fluent-tablist id="pubtabs" class="pubtabs" activeid="pubtab-app" aria-label="Publish an app or a game">' +
         '<fluent-tab id="pubtab-app"><iconify-icon slot="start" icon="fluent:apps-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>App</fluent-tab>' +
         '<fluent-tab id="pubtab-game"><iconify-icon slot="start" icon="fluent:xbox-controller-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Game</fluent-tab>' +
       '</fluent-tablist>' +
-      '<div class="pubgrid" id="pubgrid" data-tab="app">' + FMTS.map(fcard).join('') + '</div>' +
+      '<div class="pubgrid" id="pubgrid" data-tab="app">' + _cards.join('') + '</div>' +
       '<div class="pubaid">' +
         '<span class="pubaid__q">Not sure which one to pick?</span>' +
         '<span class="pubaid__acts">' +
@@ -487,7 +486,7 @@
       document.body.appendChild(ov);
     }
     ov.hidden = false;
-    renderFmtHelp("start");
+    renderFmtHelp(opts && opts.skipIntro ? "start" : "intro");
   }
   function closeFormatHelp() { var ov = document.getElementById("fmthelpModal"); if (ov) ov.hidden = true; }
 
@@ -548,6 +547,21 @@
   }
   function renderFmtHelp(id) {
     var body = document.getElementById("fmthelpBody"); if (!body) return;
+    var card = body.closest(".fmthelp-modal__card");
+    if (id === "intro") {   // landing: read the format cards, or start the guided questionnaire
+      if (card) card.classList.add("fmthelp-modal__card--wide");
+      body.innerHTML =
+        '<div class="fmtw__head"><h2 class="fmtw__title">Which format is right for you?</h2>' +
+          '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+        '<div class="fmthelp-guide">' +
+          '<span class="fmthelp-guide__txt"><strong>Not sure which to pick?</strong><span>Answer a few quick questions and we\u2019ll recommend one for you.</span></span>' +
+          '<fluent-button appearance="primary" data-fmtw-start><iconify-icon slot="start" icon="fluent:wand-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Answer a few questions</fluent-button>' +
+        '</div>' +
+        '<div class="fmthelp-cards">' + storeOnrampsBodyHTML() + '</div>';
+      wirePubTabs(body);
+      return;
+    }
+    if (card) card.classList.remove("fmthelp-modal__card--wide");
     if (FMTW_RESULT[id]) {
       var r = FMTW_RESULT[id];
       body.innerHTML =
@@ -556,8 +570,8 @@
         '<div class="fmtw__result"><span class="fmtw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
           '<div><div class="fmtw__result-name">' + r.name + '</div>' + (r.rec ? '<span class="fmtw__result-rec">Most popular</span>' : '') + '</div></div>' +
         '<p class="fmtw__result-why">' + r.why + '</p>' +
-        '<div class="fmtw__result-actions"><fluent-button appearance="primary" data-fmtw-add="' + id + '">Add ' + r.name + '</fluent-button>' +
-          '<button type="button" class="fmtw__restart" data-fmtw-jump="0">Start over</button></div>';
+        '<div class="fmtw__result-actions"><fluent-button appearance="primary" data-fmtw-add="' + id + '">Select ' + r.name + '</fluent-button>' +
+          '<button type="button" class="fmtw__restart" data-fmtw-intro>Back to formats</button></div>';
       return;
     }
     var step = FMTW[id]; if (!step) return;
@@ -573,7 +587,7 @@
       fmtwBar(pct) + fmtwCrumbs() +
       '<h3 class="fmtw__q">' + step.q + '</h3>' +
       '<div class="fmtw__opts">' + opts + '</div>' +
-      '<div class="fmtw__foot">' + (pathLen ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + (pathLen - 1) + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' : '') + '</div>';
+      '<div class="fmtw__foot">' + (pathLen ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + (pathLen - 1) + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' : '<button type="button" class="fmtw__back" data-fmtw-intro><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>All formats</button>') + '</div>';
   }
   function fmtwPick(id, idx) {
     var step = FMTW[id]; if (!step) return;
@@ -930,13 +944,13 @@
     var o, k;
     if (ovChartApp === "__all__") {
       var series = liveApps.map(function (a, i) { return { name: a.name, color: anaAppColor(i), values: ovnMetricData(a).vals }; });
-      o = { series: series, labels: ovnMetricData(liveApps[0]).labels, h: 280 };
+      o = { series: series, labels: ovnMetricData(liveApps[0]).labels, h: 220 };
       for (k in yopt) o[k] = yopt[k];
       return chartLine(o) + legendDots(series);
     }
     var app = appById(ovChartApp) || liveApps[0], md = ovnMetricData(app);
     var color = ovMetric === "crashes" ? "var(--magenta)" : ovMetric === "rating" ? "#f7b955" : "var(--brand)";
-    o = { series: [{ name: app.name, color: color, values: md.vals }], labels: md.labels, h: 280, area: true };
+    o = { series: [{ name: app.name, color: color, values: md.vals }], labels: md.labels, h: 220, area: true };
     for (k in yopt) o[k] = yopt[k];
     return chartLine(o);
   }
@@ -968,7 +982,7 @@
         metric = kk === "live" ? fmtCompact(acqData(a).instTotal) + " installs" : "";
       }
       return '<tr class="ovn-mini__row" data-openapp="' + a.id + '" title="Open ' + esc(a.storeName || a.name) + '">' +
-        '<td class="ovn-mini__app">' + appIcoImg(a) + '<span>' + esc(a.storeName || a.name) + '</span></td>' +
+        '<td class="ovn-mini__app"><div class="ovn-mini__appwrap">' + appIcoImg(a) + '<span>' + esc(a.storeName || a.name) + '</span></div></td>' +
         '<td class="ovn-mini__status">' + status + '</td>' +
         '<td class="ovn-mini__metric">' + metric + '</td></tr>';
     }).join("");
@@ -1227,7 +1241,7 @@
         wirePubTabs(el);
         return;
       }
-      el.innerHTML = storeOnrampsAccordionHTML() + unifiedDashHTML();
+      el.innerHTML = unifiedDashHTML();
       wirePubTabs(el);
       sizeCharts(el); observeCharts(el); wireOvnChart();
       return;
@@ -3853,6 +3867,37 @@
     if (dBtn) dBtn.addEventListener("click", function () { close(); openModal(); });
     try { dlg.show(); } catch (e) {}
   }
+
+  // "What you can publish" on demand (has-apps overview): the format cards in a dialog, opened from the header.
+  function showWhatPubDialog() {
+    var dlg = $("whatpubModal");
+    if (!dlg) { dlg = document.createElement("fluent-dialog"); dlg.id = "whatpubModal"; document.body.appendChild(dlg); }
+    dlg.setAttribute("aria-label", "What you can publish");
+    dlg.innerHTML =
+      '<fluent-dialog-body class="whatpub-dlg">' +
+        '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-whatpub-close><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></fluent-button>' +
+        '<div slot="title" class="whatpub-dlg__head">' +
+          '<span class="whatpub-dlg__title">What you can publish</span>' +
+          '<span class="whatpub-dlg__sub">' + STORE_ONRAMPS_SUB + '</span>' +
+        '</div>' +
+        storeOnrampsBodyHTML() +
+      '</fluent-dialog-body>';
+    var close = function () { try { dlg.hide(); } catch (e) {} };
+    dlg.querySelectorAll("[data-whatpub-close]").forEach(function (b) { b.addEventListener("click", close); });
+    // Cards + Help me choose run the same actions as the .main delegation, closing this dialog first.
+    dlg.addEventListener("click", function (e) {
+      var addf = e.target.closest("[data-addformat]");
+      if (addf) {
+        var f = addf.getAttribute("data-addformat");
+        var grid = addf.closest("#pubgrid");
+        var pt = f === "gdk" ? "game" : (f === "win32" ? "app" : (grid && grid.getAttribute("data-tab") === "game" ? "game" : "app"));
+        close(); openNewApp({ type: pt, pkgType: f }); return;
+      }
+      if (e.target.closest("[data-fmthelp]")) { close(); openFormatHelp({ skipIntro: true }); return; }
+    });
+    wirePubTabs(dlg);
+    try { dlg.show(); } catch (e) {}
+  }
   // ===== TEMP DEMO (store portal, revert later) =========================================
   // Once an app is published in the Store portal we "recognize" the developer's code signing
   // certificate (the published app was a signed Win32 app) and surface their OTHER signed apps
@@ -4288,6 +4333,7 @@
         if (STORE || state.verified) openModal(); else goView("overview"); return; }
       if (e.target.closest("[data-nav-marketing]")) { location.href = "wdp-marketing.html"; return; }
       if (e.target.closest("[data-newapp]")) { openNewApp(); return; }
+      if (e.target.closest("[data-whatpub]")) { showWhatPubDialog(); return; }
       if (e.target.closest("[data-fmthelp]")) { openFormatHelp(); return; }
       if (e.target.closest("[data-cmpopen]")) { openCompare(); return; }
       var _sc = e.target.closest("[data-scrollto]");
@@ -4437,6 +4483,8 @@
       if (e.target.closest("[data-cmpclose]")) { closeCompare(); return; }
       var _wo = e.target.closest("[data-fmtw-opt]");
       if (_wo) { var p = _wo.getAttribute("data-fmtw-opt").split(":"); fmtwPick(p[0], +p[1]); return; }
+      if (e.target.closest("[data-fmtw-start]")) { fmtwState.path = []; renderFmtHelp("start"); return; }
+      if (e.target.closest("[data-fmtw-intro]")) { fmtwState.path = []; renderFmtHelp("intro"); return; }
       var _wj = e.target.closest("[data-fmtw-jump]");
       if (_wj) {
         var _ji = +_wj.getAttribute("data-fmtw-jump");

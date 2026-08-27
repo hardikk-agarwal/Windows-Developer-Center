@@ -413,19 +413,17 @@
   .atd-opt:focus-within { outline: none; border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
   .atd-opt__top { display: flex; align-items: center; justify-content: space-between; }
   .atd-opt__radio { flex: none; }
-  .atd-opt__ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-8); background: var(--subtle); color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--stroke-2); }
-  .atd-opt.is-sel .atd-opt__ico { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--fg-1); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 26%, transparent); }
+  .atd-opt__ico { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-1); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg-1) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--fg-1) 9%, transparent); }
   .atd-opt__head { display: flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; }
-  .atd-opt__name { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--fg-1); letter-spacing: -.005em; }
-  .atd-opt__badge { font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; line-height: 1.6; }
-  .atd-opt__badge--rec { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); }
-  .atd-opt__badge--cur { color: var(--fg-3); background: transparent; border: 1px solid var(--stroke-3); }
-  .atd-opt__desc { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
-  .atd-opt__feats { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-6); }
-  .atd-opt__feat { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12px; color: var(--fg-2); line-height: 1.35; }
-  .atd-opt__feat iconify-icon { flex: 0 0 auto; margin-top: 1px; color: var(--status-success); }
-  .atd-opt__feat.is-no { color: var(--fg-3); }
-  .atd-opt__feat.is-no iconify-icon { color: var(--fg-3); }
+  .atd-opt__name { font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--fg-1); letter-spacing: -.01em; }
+  .atd-opt__badge { font-size: 12px; font-weight: var(--font-weight-semibold); padding: 3px 9px; border-radius: 999px; line-height: 1.4; }
+  .atd-opt__badge--rec { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+  .atd-opt__badge--cur { color: var(--fg-2); background: var(--subtle); border: 1px solid var(--stroke-3); }
+  .atd-opt__desc { font-size: 13px; color: var(--fg-2); line-height: 1.5; }
+  .atd-opt__feats { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-14) 0 0; border-top: 1px solid color-mix(in srgb, var(--stroke-2) 70%, transparent); display: flex; flex-direction: column; gap: var(--sp-10); }
+  .atd-opt__feat { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
+  .atd-opt__feat iconify-icon { flex: 0 0 auto; margin-top: 0.5px; color: var(--brand); }
+  .atd-opt__best { margin-top: auto; padding-top: var(--sp-12); font-size: 12.5px; color: var(--fg-3); line-height: 1.4; }
   .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); background: var(--subtle); border: 1px solid var(--stroke-2); }
   .atd__impact-lead { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
   .atd__impact-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-6); }
@@ -512,12 +510,14 @@
   .price-adv-accordion { display: block; width: 100%; margin: var(--sp-16) 0 var(--sp-4); }
   .price-adv-accordion[hidden] { display: none; }
   #price-adv-item { display: block; width: 100%; max-width: none; }
-  #price-adv-item::part(button) { padding-inline: 0; }
-  #price-adv-item::part(content) { width: 100%; box-sizing: border-box; padding-inline: 0; margin-inline: 0; }
+  /* Header reads as the section bar: title fills the row, the expand chevron sits at the far right edge. */
+  #price-adv-item::part(heading) { display: flex; align-items: center; }
+  #price-adv-item::part(button) { order: -1; flex: 1 1 auto; padding-inline: 0; }
+  #price-adv-item::part(content) { width: 100%; box-sizing: border-box; padding: var(--sp-10) 0 0 var(--sp-20); margin-inline: 0; }
   #price-advanced { width: 100%; padding: 0; }
   .price-adv__head { display: flex; align-items: center; gap: var(--sp-10); }
   .price-adv__head-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .price-adv__head-title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .price-adv__head-title { font-size: var(--font-size-base-400); font-weight: var(--font-weight-semibold); color: var(--fg-1); letter-spacing: -.01em; }
   .price-adv__head-sub { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.4; }
   /* Inline "See & customize" link inside the auto-converted price hint — opens the per-market dialog. */
   .price-hint-link { display: inline; background: none; border: 0; padding: 0; font: inherit; color: var(--brand); font-weight: var(--font-weight-semibold); cursor: pointer; }
@@ -1791,6 +1791,9 @@
   /* On hover, append a pencil glyph so "click to edit" is explicit. */
   .ez-live .ez-store-hero__cat.live-edit-target:hover::after { content: ''; position: static; top: auto; right: auto; transform: none; box-shadow: none; border-radius: 0; width: 12px; height: 12px; flex: none; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/contain no-repeat; mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/contain no-repeat; }
   .ez-live #ez-pv-category.live-edit--active { padding: 0; background: transparent; border-bottom-color: transparent; }
+  /* Category is required: red * on the dropdown until one is picked (stripped from the customer preview). */
+  #ez-pv-category.ez-cat-field { position: relative; overflow: visible; }
+  #ez-pv-category.ez-cat-field[data-empty-required="true"]::after { content: '*'; position: absolute; top: -4px; right: -12px; color: var(--status-danger); font-weight: 700; font-size: 16px; line-height: 1; z-index: 3; pointer-events: none; }
   .ez-store-hero__sep { opacity: .5; }
   .ez-store-hero__desc { font-size: 14px; line-height: 19px; color: rgba(255,255,255,.92); margin: var(--sp-16) 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .ez-store-hero__cta { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-16); }
@@ -2343,11 +2346,32 @@
   #submit-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
   .ez-iarc-id-line { font-size: 14px; color: var(--fg-3); margin: var(--sp-16) 0 0; }
   /* ===== Submit-for-review dialog ===== */
+  /* Review step is wide for the listing preview; Release step returns to a normal, tidy width. */
+  #submit-dialog::part(control), #submit-dialog::part(dialog) { width: min(640px, 94vw); max-width: min(640px, 94vw); }
+  #submit-dialog.sd-wide::part(control), #submit-dialog.sd-wide::part(dialog) { width: min(920px, 96vw); max-width: min(920px, 96vw); }
   #submit-dialog .ez-sd__section + .ez-sd__section { margin-top: var(--sp-20); }
   #submit-dialog .ez-sd__title { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 var(--sp-8); }
   #submit-dialog .ez-sd__hint { font-size: 12px; color: var(--fg-3); margin: 0 0 var(--sp-10); line-height: 1.45; }
   /* Submission recap: a scannable grid of labeled cells (icon + label + value) so each fact reads on its own. */
   #submit-dialog .ez-sd__summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-8); margin: 0; }
+  /* 2-step submit: progress header, step panels, and the Step-1 customer preview frame. */
+  #submit-dialog .sd-steps { display: flex; align-items: center; gap: var(--sp-10); list-style: none; margin: 0 0 var(--sp-20); padding: 0; }
+  #submit-dialog .sd-steps__item { display: inline-flex; align-items: center; gap: var(--sp-8); color: var(--fg-3); font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); }
+  #submit-dialog .sd-steps__num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--stroke-2); font-size: 12px; flex: 0 0 auto; }
+  #submit-dialog .sd-steps__item.is-current { color: var(--fg-1); }
+  #submit-dialog .sd-steps__item.is-current .sd-steps__num,
+  #submit-dialog .sd-steps__item.is-done .sd-steps__num { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  #submit-dialog .sd-steps__bar { flex: 0 1 40px; height: 2px; border-radius: var(--r-full); background: var(--stroke-2); }
+  #submit-dialog .ez-sd__title-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8); margin: 0 0 var(--sp-8); }
+  #submit-dialog .ez-sd__title-row .ez-sd__title { margin: 0; }
+  #submit-dialog .sd-editlink { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 0; padding: 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  #submit-dialog .sd-editlink:hover { text-decoration: underline; }
+  #submit-dialog .sd-preview { max-height: min(56vh, 580px); overflow-y: auto; overflow-x: hidden; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); }
+  /* Step 1: keep the preview the star — facts sit under it as compact labeled chips, not tall cards. */
+  #submit-dialog #submit-step-1 .ez-sd__summary { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  #submit-dialog #submit-step-1 .ez-sd__stat { padding: var(--sp-6) var(--sp-10); align-items: center; }
+  #submit-dialog #submit-step-1 .ez-sd__stat-ic { margin-top: 0; }
+  #submit-dialog #submit-step-1 .ez-sd__stat-text { flex-direction: row; align-items: baseline; gap: 6px; }
   #submit-dialog .ez-sd__stat { display: flex; align-items: flex-start; gap: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); }
   #submit-dialog .ez-sd__stat-ic { flex: 0 0 auto; color: var(--fg-2); margin-top: 1px; }
   #submit-dialog .ez-sd__stat-text { display: flex; flex-direction: column; min-width: 0; }
@@ -2609,10 +2633,17 @@
   .lpv-card .ez-store-hero__desc { -webkit-line-clamp: unset; display: block; overflow: visible; }
   #flow-wrap #step-listing #ez-live-preview .lpv-card .ez-store-hero__desc { max-width: 100%; margin-top: 0; }
   #flow-wrap #step-listing #ez-live-preview .lpv-card .ez-field--hero-short { margin-top: var(--sp-8); }
+  /* With a cover image the short description sits in the 45% hero column (that width lives on
+     .ez-field--hero-short); the cloned <p> must fill that column, not re-apply 45% and shrink to ~20%.
+     Applies to every preview surface (inline, submit dialog, listing-preview dialog). */
+  .lpv-card .ez-store-hero[data-has-media] .ez-field--hero-short .ez-store-hero__desc { max-width: 100%; }
+  /* Preview with no cover image: keep the short description to a readable column, not full-bleed across the hero. */
+  .lpv-card .ez-store-hero:not([data-has-media]) .ez-store-hero__desc,
+  .lpv-card .ez-store-hero:not([data-has-media]) .ez-field--hero-short { max-width: 620px; }
   /* Empty-state kickstart card. */
   /* Slim, edge-to-edge AI kickstart strip above the listing card (bleeds to the card edges like the
      hero); a light-touch accelerator, not a chunky brand card. */
-  .listing-kickstart { display: flex; align-items: center; gap: var(--sp-10); margin: var(--sp-12) calc(var(--sp-24) * -1) var(--sp-8); padding: var(--sp-8) var(--sp-24); border: 0; border-top: 1px solid var(--stroke-3); border-bottom: 1px solid var(--stroke-3); border-radius: 0; background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
+  .listing-kickstart { display: flex; align-items: center; gap: var(--sp-10); margin: var(--sp-12) calc(var(--sp-24) * -1) 0; padding: var(--sp-8) var(--sp-24); border: 0; border-top: 1px solid var(--stroke-3); border-bottom: 1px solid var(--stroke-3); border-radius: 0; background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
   #flow-wrap.is-wizard .listing-kickstart { margin-inline: calc(var(--sp-32) * -1); padding-inline: var(--sp-32); }
   .listing-kickstart[hidden] { display: none; }
   .listing-kickstart__spark { flex: 0 0 auto; color: var(--brand); }
@@ -2789,23 +2820,6 @@
     min-width: 100%;
     box-sizing: border-box;
   }
-  .markets-dialog__presets {
-    display: flex; flex-wrap: wrap; gap: var(--sp-6);
-    margin: 0 0 var(--sp-4);
-  }
-  .markets-preset {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 999px;
-    border: 1px solid var(--stroke-2); background: var(--layer);
-    color: var(--fg-2); font: inherit; font-size: var(--font-size-base-200);
-    font-weight: var(--font-weight-semibold); cursor: pointer;
-  }
-  .markets-preset:hover { border-color: var(--stroke-3); color: var(--fg-1); }
-  .markets-preset iconify-icon { color: var(--fg-3); flex: none; }
-  .markets-preset.is-on { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, transparent); }
-  .markets-preset.is-on iconify-icon { color: var(--brand); }
-  .markets-preset.is-part { color: var(--fg-1); }
-  .markets-preset.is-part iconify-icon { color: var(--fg-2); }
   #markets-dialog .markets-dialog__toolbar {
     display: flex; align-items: center; justify-content: space-between;
     gap: var(--sp-12);
@@ -3208,8 +3222,9 @@
   }
   #price-schedule-dialog .price-schedule-grid .field,
   #price-sale-dialog .price-schedule-grid .field { margin-bottom: 0; }
+  #price-schedule-dialog .price-schedule-grid__wide { grid-column: 1 / -1; }
   #price-sale-dialog .price-sale-fields > .field { margin-bottom: var(--sp-12); }
-  #price-sale-dialog #price-sale-type, #price-sale-dialog #price-sale-markets-mode { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); }
+  #price-sale-dialog #price-sale-type { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); }
   #price-schedule-dialog #price-schedule-tz { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4) var(--sp-16); min-height: 32px; }
   #price-schedule-dialog .price-schedule-scope-empty { display: flex; align-items: flex-start; gap: var(--sp-6); margin: var(--sp-8) 0 0; font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
   #price-schedule-dialog .price-schedule-scope-empty iconify-icon { color: var(--fg-3); flex: none; margin-top: 1px; }
@@ -3232,20 +3247,38 @@
   #price-sale-dialog .markets-dialog__row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
   #price-sale-dialog .markets-dialog__row-name { flex: 1 1 auto; font-size: var(--font-size-base-300); color: var(--fg-1); }
   #price-sale-dialog .markets-dialog__empty { padding: var(--sp-16); text-align: center; color: var(--fg-3); font-size: var(--font-size-base-200); }
-  /* 2-step sale flow: step 1 picks markets (taller list for the dedicated step), step 2 sets the
-     discount. The scope chip on step 2 shows the chosen markets and jumps back to step 1 on click. */
-  #price-sale-dialog #price-sale-step-markets .markets-dialog__list { max-height: 260px; }
+  /* Sale scope picker ("Specific markets") reuses the shared region tree with a taller list. */
+  #price-sale-dialog #price-sale-markets-list { max-height: 260px; }
+  #price-sale-markets-pick { margin-top: var(--sp-10); }
   /* ===== Market group dialog (#price-group-dialog) — reuses the sale dialog's market-picker ===== */
   #price-group-dialog fluent-text-input, #price-group-dialog fluent-dropdown { width: 100%; }
   #price-group-dialog fluent-text-input::part(root), #price-group-dialog fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
   #price-group-dialog fluent-button[slot="title-action"] { min-width: 0; }
   #price-group-markets-pick { margin-top: var(--sp-10); }
-  #price-group-dialog .markets-dialog__search { margin: 0 0 var(--sp-8); display: block; width: 100%; box-sizing: border-box; }
-  #price-group-dialog .markets-dialog__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: 0 0 var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-3); }
+  #price-group-dialog .markets-dialog__search { margin: 0 0 var(--sp-6); display: block; width: 100%; box-sizing: border-box; }
+  #price-group-dialog .markets-dialog__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: 0 0 var(--sp-6); font-size: var(--font-size-base-200); color: var(--fg-3); }
   #price-group-dialog .markets-dialog__toolbar-actions { display: flex; gap: var(--sp-12); }
   #price-group-dialog .markets-dialog__toolbar-actions button { background: transparent; border: 0; padding: 0; color: var(--brand); cursor: pointer; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); }
   #price-group-dialog .markets-dialog__toolbar-actions button:hover { text-decoration: underline; }
-  #price-group-dialog .markets-dialog__list { max-height: 240px; overflow-y: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-2); padding: var(--sp-4) 0; }
+  #price-group-dialog .markets-dialog__list { max-height: 176px; overflow-y: auto; border: 1px solid var(--stroke-2); border-radius: var(--r-2); padding: var(--sp-4) 0; }
+  /* Grouped region market picker — shared shell for every markets dialog. Region max-height/padding
+     need the dialog id to beat the per-dialog list rules; the inner .pg-reg rules are class-only. */
+  #markets-dialog .markets-dialog__list--grouped,
+  #price-group-dialog .markets-dialog__list--grouped,
+  #price-sale-dialog .markets-dialog__list--grouped,
+  #price-overrides-dialog .markets-dialog__list--grouped { max-height: 288px; padding: 0; }
+  .markets-dialog__list--grouped .pg-reg + .pg-reg { border-top: 1px solid var(--stroke-1); }
+  .markets-dialog__list--grouped .pg-reg__head { display: flex; align-items: center; gap: var(--sp-4); padding: 0 var(--sp-10) 0 var(--sp-12); }
+  .markets-dialog__list--grouped .pg-reg__check { display: inline-flex; align-items: center; margin: 0; padding: var(--sp-8) var(--sp-4); cursor: pointer; }
+  .markets-dialog__list--grouped .pg-reg__check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
+  .markets-dialog__list--grouped .pg-reg__toggle { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-8); background: transparent; border: 0; padding: var(--sp-8) 0; font: inherit; color: var(--fg-1); text-align: left; cursor: pointer; }
+  .markets-dialog__list--grouped .pg-reg__chev { flex: 0 0 auto; color: var(--fg-3); transition: transform var(--dur-2) var(--ease-out); }
+  .markets-dialog__list--grouped .pg-reg.is-open .pg-reg__chev { transform: rotate(90deg); }
+  .markets-dialog__list--grouped .pg-reg__name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--font-weight-semibold); }
+  .markets-dialog__list--grouped .pg-reg__count { flex: 0 0 auto; font-size: var(--font-size-base-200); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+  .markets-dialog__list--grouped .pg-reg__count.is-on { color: var(--brand); font-weight: var(--font-weight-semibold); }
+  .markets-dialog__list--grouped .pg-reg__kids { padding: 0 0 var(--sp-4) var(--sp-20); }
+  @media (prefers-reduced-motion: reduce) { .markets-dialog__list--grouped .pg-reg__chev { transition: none; } }
   #price-group-dialog .markets-dialog__row { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-6) var(--sp-12); cursor: pointer; user-select: none; }
   #price-group-dialog .markets-dialog__row:hover { background: color-mix(in srgb, var(--fg-1) 4%, transparent); }
   #price-group-dialog .markets-dialog__row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
@@ -3254,14 +3287,10 @@
   #price-group-dialog .price-sale-amount-row { display: flex; align-items: center; gap: var(--sp-8); }
   #price-group-dialog .price-sale-amount-row fluent-dropdown { width: auto; flex: 0 0 auto; min-width: 92px; }
   #price-group-dialog .price-sale-amount-row fluent-text-input { flex: 1 1 auto; }
-  #price-group-dialog .field { margin-bottom: var(--sp-16); }
+  #price-group-dialog .field { margin-bottom: var(--sp-12); }
   #price-group-dialog .field:last-of-type { margin-bottom: 0; }
-  #price-group-dialog .price-group-pricefield { border-top: 1px solid var(--stroke-3); padding-top: var(--sp-16); }
-  .price-group-price-toggle { display: flex; align-items: flex-start; gap: var(--sp-12); cursor: pointer; margin: 0; }
-  .price-group-price-toggle fluent-switch { flex: 0 0 auto; margin-top: 1px; }
-  .price-group-price-toggle > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .price-group-price-toggle__title { font-size: var(--font-size-base-300); color: var(--fg-1); font-weight: var(--font-weight-semibold); }
-  .price-group-price-toggle__hint { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
+  #price-group-dialog .price-group-pricefield { border-top: 1px solid var(--stroke-3); padding-top: var(--sp-12); }
+  .price-group-price-note { display: block; margin-top: var(--sp-8); font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
   .price-groups { display: flex; flex-direction: column; gap: var(--sp-6); }
   .price-groups:not(:empty) { margin-top: var(--sp-10); }
   .price-sale-scope { display: flex; align-items: center; gap: var(--sp-10); width: 100%; margin: 0 0 var(--sp-16); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); color: var(--fg-2); font: inherit; font-size: var(--font-size-base-200); text-align: left; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
@@ -3301,6 +3330,33 @@
   .price-sale-item__text { flex: 1 1 auto; min-width: 0; }
   .price-sale-item__remove { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; background: transparent; border: 0; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; }
   .price-sale-item__remove:hover { background: var(--hover, color-mix(in srgb, var(--fg-1) 10%, transparent)); color: var(--fg-1); }
+  /* Advanced-pricing "manager" sections — one consistent, scalable pattern for Market groups,
+     Scheduled changes, and Sales: header (icon + title + count) with a right-aligned Add,
+     a list of rows with explicit Edit + Remove, and a calm empty state. */
+  .price-mgr { border-top: 1px solid var(--stroke-3); padding-top: var(--sp-14); margin-top: var(--sp-14); }
+  #price-mgr-groups { border-top: 0; padding-top: 0; margin-top: 0; }
+  .price-mgr__head { display: flex; align-items: center; gap: var(--sp-8); }
+  .price-mgr__ico { flex: 0 0 auto; display: inline-flex; color: var(--fg-2); }
+  .price-mgr__title { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .price-mgr__count { flex: 0 0 auto; min-width: 18px; height: 18px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: var(--font-weight-semibold); color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); border-radius: 999px; }
+  .price-mgr__add { margin-inline-start: auto; display: inline-flex; align-items: center; gap: var(--sp-4); appearance: none; border: 0; background: transparent; font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--brand); border-radius: var(--r-4); padding: var(--sp-4) var(--sp-8); cursor: pointer; }
+  .price-mgr__add:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  .price-mgr__add:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .price-mgr__body { margin-top: var(--sp-8); }
+  .price-mgr__empty { margin: 0; font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
+  .price-mgr__list { display: flex; flex-direction: column; gap: var(--sp-6); }
+  .price-item { display: flex; align-items: center; gap: var(--sp-10); padding: var(--sp-8) var(--sp-10); border: 1px solid var(--stroke-2); border-radius: var(--r-6); background: var(--subtle); cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .price-item:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--stroke-2)); background: color-mix(in srgb, var(--brand) 6%, var(--subtle)); }
+  .price-item:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .price-item__ico { flex: 0 0 auto; display: inline-flex; color: var(--brand); }
+  .price-item__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .price-item__title { font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); color: var(--fg-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .price-item__meta { font-size: var(--font-size-base-200); color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .price-item__actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 2px; }
+  .price-item__act { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; background: transparent; border: 0; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; }
+  .price-item__act:hover { background: var(--hover, color-mix(in srgb, var(--fg-1) 10%, transparent)); color: var(--fg-1); }
+  .price-item__act--danger:hover { background: color-mix(in srgb, var(--status-danger) 14%, transparent); color: var(--status-danger); }
+  #flow-wrap.is-review-mode .price-mgr__add, #flow-wrap.is-review-mode .price-item__act { display: none !important; }
   /* "More options" per-step toggle (wizard only) — reveals the advanced Listing / Reach
      fields on demand. Off by default; only shown on the Listing and Reach & price steps. */
   #flow-wrap.is-wizard #wz-more-bar { display: flex; align-items: center; margin: 0 0 var(--sp-16); position: relative; }
@@ -3394,6 +3450,10 @@
   .ez-pkg-url__row fluent-text-input::part(root) { width: 100%; min-width: 100%; max-width: none; box-sizing: border-box; }
   .ez-pkg-url__row fluent-text-input::part(control) { width: 100%; box-sizing: border-box; }
   .ez-pkg-url__row fluent-button { flex: 0 0 auto; white-space: nowrap; }
+  .ez-pkg-convert { margin: 0; font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
+  .ez-pkg-convert a { color: var(--brand); text-decoration: none; font-weight: var(--font-weight-semibold); }
+  .ez-pkg-convert a:hover { text-decoration: underline; }
+  .ez-pkg-convert a iconify-icon { vertical-align: -2px; margin-left: 2px; }
   /* One surface, two ways in. Two equally-weighted bordered cards stacked with an "or" between
      them still read as two fields that BOTH need filling; a single card with the "or" across its
      middle reads as one thing to satisfy, while keeping the URL route as prominent as upload. */
@@ -4814,6 +4874,8 @@
                 <fluent-text-input id="pkg-url-input" placeholder="Installer or website URL" aria-label="Installer or website URL"></fluent-text-input>
                 <fluent-button id="pkg-url-add" appearance="primary" disabled>Add</fluent-button>
               </div>
+              <!-- Win32 only: nudge to MSIX so Microsoft handles signing + hosting. -->
+              <p class="ez-pkg-convert" id="pkg-url-convert" hidden>Don&rsquo;t have your app hosted or signed? <a href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Convert it to MSIX<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a> and Microsoft signs &amp; hosts it for you.</p>
             </div>
           </div>
         </div>
@@ -5442,34 +5504,41 @@
                   </span>
                   <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
                 </fluent-button>
-                <fluent-button appearance="subtle" class="price-tool" id="price-group-btn">
-                  <span class="price-tool__ic"><iconify-icon icon="fluent:group-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
-                  <span class="price-tool__txt">
-                    <span class="price-tool__title" id="price-group-label">Create a market group</span>
-                    <span class="price-tool__desc">Group markets to price them together &mdash; and reuse when scheduling.</span>
-                  </span>
-                  <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-                </fluent-button>
-                <div class="price-groups" id="price-groups"></div>
-                <fluent-button appearance="subtle" class="price-tool" id="price-schedule-btn">
-                  <span class="price-tool__ic"><iconify-icon icon="fluent:calendar-clock-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
-                  <span class="price-tool__txt">
-                    <span class="price-tool__title" id="price-schedule-label">Schedule a price change</span>
-                    <span class="price-tool__desc">Change your base price on a future date.</span>
-                  </span>
-                  <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-                </fluent-button>
+                <section class="price-mgr" id="price-mgr-groups">
+                  <div class="price-mgr__head">
+                    <span class="price-mgr__ico"><iconify-icon icon="fluent:group-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+                    <span class="price-mgr__title">Market groups</span>
+                    <span class="price-mgr__count" id="price-groups-count" hidden></span>
+                    <button type="button" class="price-mgr__add" id="price-group-add">
+                      <iconify-icon icon="fluent:add-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>New group
+                    </button>
+                  </div>
+                  <div class="price-mgr__body" id="price-groups"></div>
+                </section>
+                <section class="price-mgr" id="price-mgr-sched">
+                  <div class="price-mgr__head">
+                    <span class="price-mgr__ico"><iconify-icon icon="fluent:calendar-clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+                    <span class="price-mgr__title">Scheduled price changes</span>
+                    <span class="price-mgr__count" id="price-sched-count" hidden></span>
+                    <button type="button" class="price-mgr__add" id="price-schedule-add">
+                      <iconify-icon icon="fluent:add-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Schedule change
+                    </button>
+                  </div>
+                  <div class="price-mgr__body" id="price-schedules"></div>
+                </section>
                 <div class="price-sale-wrap" id="price-sale-wrap">
-                  <fluent-button appearance="subtle" class="price-tool" id="price-sale-btn">
-                    <span class="price-tool__ic"><iconify-icon icon="fluent:tag-multiple-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
-                    <span class="price-tool__txt">
-                      <span class="price-tool__title">Add a sale price</span>
-                      <span class="price-tool__desc">Run a limited-time discount with a start and end date.</span>
-                    </span>
-                    <iconify-icon class="price-tool__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-                  </fluent-button>
+                  <section class="price-mgr" id="price-mgr-sales">
+                    <div class="price-mgr__head">
+                      <span class="price-mgr__ico"><iconify-icon icon="fluent:tag-multiple-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>
+                      <span class="price-mgr__title">Sales</span>
+                      <span class="price-mgr__count" id="price-sales-count" hidden></span>
+                      <button type="button" class="price-mgr__add" id="price-sale-add">
+                        <iconify-icon icon="fluent:add-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Add sale
+                      </button>
+                    </div>
+                    <div class="price-mgr__body" id="price-sales"></div>
+                  </section>
                 </div>
-              <div class="price-sales" id="price-sales"></div>
             </div>
             <div class="price-trial-row" id="price-trial-row">
               <div class="price-trial-row__head">
@@ -6337,8 +6406,6 @@
       <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
     </fluent-text-input>
 
-    <div class="markets-dialog__presets" id="markets-presets" aria-label="Quick-select by region"></div>
-
     <div class="markets-dialog__toolbar">
       <span id="markets-selected-count">0 selected</span>
       <div class="markets-dialog__toolbar-actions">
@@ -6347,7 +6414,7 @@
       </div>
     </div>
 
-    <div class="markets-dialog__list" id="markets-list" role="listbox" aria-multiselectable="true"></div>
+    <div class="markets-dialog__list" id="markets-list" aria-label="Markets by region"></div>
 
     <fluent-button slot="action" appearance="secondary" data-markets-dialog-close>Cancel</fluent-button>
     <fluent-button slot="action" appearance="primary" id="markets-confirm-btn">
@@ -6516,6 +6583,13 @@
     </p>
 
     <div class="price-schedule-grid">
+      <div class="field price-schedule-grid__wide">
+        <label class="field__label">Time zone</label>
+        <fluent-radio-group orientation="horizontal" aria-label="Time zone" id="price-schedule-tz">
+          <fluent-field label-position="after"><label slot="label" for="ptz-local">Local<span id="ptz-local-zone"></span></label><fluent-radio id="ptz-local" slot="input" value="local" checked></fluent-radio></fluent-field>
+          <fluent-field label-position="after"><label slot="label" for="ptz-utc">UTC</label><fluent-radio id="ptz-utc" slot="input" value="utc"></fluent-radio></fluent-field>
+        </fluent-radio-group>
+      </div>
       <div class="field">
         <label for="price-schedule-date" class="field__label">Effective date</label>
         <fluent-text-input id="price-schedule-date" type="date"></fluent-text-input>
@@ -6523,13 +6597,6 @@
       <div class="field">
         <label for="price-schedule-time" class="field__label">Time</label>
         <fluent-text-input id="price-schedule-time" type="time"></fluent-text-input>
-      </div>
-      <div class="field">
-        <label class="field__label">Time zone</label>
-        <fluent-radio-group orientation="horizontal" aria-label="Time zone" id="price-schedule-tz">
-          <fluent-field label-position="after"><label slot="label" for="ptz-local">Local<span id="ptz-local-zone"></span></label><fluent-radio id="ptz-local" slot="input" value="local" checked></fluent-radio></fluent-field>
-          <fluent-field label-position="after"><label slot="label" for="ptz-utc">UTC</label><fluent-radio id="ptz-utc" slot="input" value="utc"></fluent-radio></fluent-field>
-        </fluent-radio-group>
       </div>
       <div class="field">
         <label for="price-schedule-price" class="field__label">New base price (USD)</label>
@@ -6570,25 +6637,20 @@
     </fluent-button>
 
     <p class="markets-dialog__intro" style="font-size:var(--font-size-base-200);color:var(--fg-3);margin:0 0 var(--sp-12);">
-      Group markets so you can price them together &mdash; then reuse the group when you schedule a price change.
+      Set one custom price for a group of markets, and reuse it when scheduling price changes.
     </p>
 
     <div class="field">
-      <label for="price-group-name" class="field__label">Group name</label>
+      <label for="price-group-name" class="field__label">Group name <span class="field-mark field-mark--req" aria-label="required">*</span></label>
       <fluent-text-input id="price-group-name" placeholder="e.g. Europe, Emerging markets"></fluent-text-input>
     </div>
 
     <div class="field">
-      <label class="field__label">Markets in this group</label>
-      <fluent-radio-group orientation="horizontal" aria-label="Markets in this group" id="price-group-markets-mode">
-        <fluent-field label-position="after"><label slot="label" for="pgm-all">All markets</label><fluent-radio id="pgm-all" slot="input" value="all"></fluent-radio></fluent-field>
-        <fluent-field label-position="after"><label slot="label" for="pgm-choose">Specific markets</label><fluent-radio id="pgm-choose" slot="input" value="choose" checked></fluent-radio></fluent-field>
-      </fluent-radio-group>
+      <label class="field__label">Markets in this group <span class="field-mark field-mark--req" aria-label="required">*</span></label>
       <div class="price-sale-markets" id="price-group-markets-pick">
         <fluent-text-input id="price-group-markets-search" class="markets-dialog__search" placeholder="Search markets…">
           <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
         </fluent-text-input>
-        <div class="markets-dialog__presets" id="price-group-presets" aria-label="Quick-select by region"></div>
         <div class="markets-dialog__toolbar">
           <span id="price-group-markets-count">0 selected</span>
           <div class="markets-dialog__toolbar-actions">
@@ -6596,24 +6658,19 @@
             <button type="button" id="price-group-markets-clear">Clear all</button>
           </div>
         </div>
-        <div class="markets-dialog__list" id="price-group-markets-list" role="listbox" aria-multiselectable="true"></div>
+        <div class="markets-dialog__list markets-dialog__list--grouped" id="price-group-markets-list" aria-label="Markets by region"></div>
       </div>
     </div>
 
     <div class="field price-group-pricefield">
-      <label class="price-group-price-toggle">
-        <fluent-switch id="price-group-custom-toggle"></fluent-switch>
-        <span>
-          <span class="price-group-price-toggle__title">Set a custom price for this group</span>
-          <span class="price-group-price-toggle__hint">Off &mdash; these markets keep your auto-converted local prices.</span>
-        </span>
-      </label>
-      <div class="price-sale-amount-row" id="price-group-price-row" hidden style="margin-top: var(--sp-10);">
+      <label for="price-group-price" class="field__label">Custom price <span class="field-mark field-mark--req" aria-label="required">*</span></label>
+      <div class="price-sale-amount-row" id="price-group-price-row" style="margin-top: var(--sp-10);">
         <fluent-dropdown id="price-group-currency" class="price-currency-dropdown" aria-label="Group price currency">
           <fluent-listbox></fluent-listbox>
         </fluent-dropdown>
         <fluent-text-input id="price-group-price" type="text" inputmode="decimal" placeholder="4.99"></fluent-text-input>
       </div>
+      <span class="price-group-price-note">One custom price applies to every market in the group.</span>
     </div>
 
     <fluent-button slot="action" id="price-group-cancel" appearance="secondary" data-price-group-close>Cancel</fluent-button>
@@ -6638,17 +6695,13 @@
     </fluent-button>
 
     <p class="markets-dialog__intro" id="price-sale-intro" style="font-size:var(--font-size-base-200);color:var(--fg-3);margin:0 0 var(--sp-12);">
-      First, choose where this sale runs — every market, or specific ones.
+      Set the discount, when it runs, and which markets it applies to. During the sale, your original price shows with a strikethrough.
     </p>
 
-    <!-- Step 1 — pick the markets the sale applies to. -->
-    <div class="price-sale-step" id="price-sale-step-markets">
+    <div class="price-sale-fields">
       <div class="field">
-        <label class="field__label">Markets</label>
-        <fluent-radio-group orientation="horizontal" aria-label="Where the sale applies" id="price-sale-markets-mode">
-          <fluent-field label-position="after"><label slot="label" for="psm-all">All markets</label><fluent-radio id="psm-all" slot="input" value="all" checked></fluent-radio></fluent-field>
-          <fluent-field label-position="after"><label slot="label" for="psm-choose">Specific markets</label><fluent-radio id="psm-choose" slot="input" value="choose"></fluent-radio></fluent-field>
-        </fluent-radio-group>
+        <label for="price-sale-scope" class="field__label">Applies to</label>
+        <fluent-dropdown id="price-sale-scope"><fluent-listbox></fluent-listbox></fluent-dropdown>
         <div class="price-sale-markets" id="price-sale-markets-pick" hidden>
           <fluent-text-input id="price-sale-markets-search" class="markets-dialog__search" placeholder="Search markets…">
             <iconify-icon slot="start" icon="fluent:search-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
@@ -6660,19 +6713,9 @@
               <button type="button" id="price-sale-markets-clear">Clear all</button>
             </div>
           </div>
-          <div class="markets-dialog__list" id="price-sale-markets-list" role="listbox" aria-multiselectable="true"></div>
+          <div class="markets-dialog__list markets-dialog__list--grouped" id="price-sale-markets-list" aria-label="Markets by region"></div>
         </div>
       </div>
-    </div>
-
-    <!-- Step 2 — sale details; the scope chip shows the chosen markets and jumps back to step 1. -->
-    <div class="price-sale-step" id="price-sale-step-details" hidden>
-      <button type="button" class="price-sale-scope" id="price-sale-scope-edit" aria-label="Edit markets">
-        <iconify-icon class="price-sale-scope__ico" icon="fluent:globe-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-        <span class="price-sale-scope__text">Sale applies to <strong id="price-sale-scope-label">all markets</strong></span>
-        <span class="price-sale-scope__edit"><iconify-icon icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Edit</span>
-      </button>
-      <div class="price-sale-fields">
       <div class="field">
         <label class="field__label">Discount</label>
         <fluent-radio-group orientation="horizontal" aria-label="Discount type" id="price-sale-type">
@@ -6713,22 +6756,13 @@
           <fluent-text-input id="price-sale-end" type="date"></fluent-text-input>
         </div>
       </div>
-      </div>
-
-      <p class="price-schedule-preview" id="price-sale-preview">Set a discount and dates to preview the sale.</p>
     </div>
 
+    <p class="price-schedule-preview" id="price-sale-preview">Set a discount and dates to preview the sale.</p>
+
     <fluent-button slot="action" id="price-sale-cancel" appearance="secondary" data-price-sale-close>Cancel</fluent-button>
-    <fluent-button slot="action" id="price-sale-back" appearance="secondary" hidden>
-      <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-      Back
-    </fluent-button>
     <fluent-button slot="action" id="price-sale-remove" appearance="subtle" hidden>Remove sale</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="price-sale-next">
-      Next
-      <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-    </fluent-button>
-    <fluent-button slot="action" appearance="primary" id="price-sale-save" hidden disabled>
+    <fluent-button slot="action" appearance="primary" id="price-sale-save" disabled>
       <iconify-icon slot="start" icon="fluent:checkmark-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Save sale
     </fluent-button>
@@ -7396,18 +7430,35 @@
   <fluent-dialog-body>
     <span slot="title" id="submit-dialog-title">
       <iconify-icon icon="fluent:rocket-20-regular" width="18" height="18" aria-hidden="true" style="vertical-align: -3px; margin-right: 4px;"></iconify-icon>
-      Submit for review
+      <span id="submit-step-title">Review your submission</span>
     </span>
     <fluent-button slot="title-action" appearance="subtle" data-submit-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <section class="ez-sd__section">
-      <h3 class="ez-sd__title">What you're submitting</h3>
-      <div class="ez-sd__summary" id="submit-summary"></div>
-    </section>
+    <!-- 2-step submit: (1) review the listing + facts, (2) release settings + confirm. -->
+    <ol class="sd-steps" id="submit-steps" aria-label="Submit progress">
+      <li class="sd-steps__item is-current" data-sd-step="1" aria-current="step"><span class="sd-steps__num">1</span><span class="sd-steps__lbl">Review</span></li>
+      <li class="sd-steps__bar" aria-hidden="true"></li>
+      <li class="sd-steps__item" data-sd-step="2"><span class="sd-steps__num">2</span><span class="sd-steps__lbl">Release</span></li>
+    </ol>
+
+    <div class="sd-step" id="submit-step-1">
+      <section class="ez-sd__section">
+        <h3 class="ez-sd__title">What you're submitting</h3>
+        <div class="ez-sd__summary" id="submit-summary"></div>
+      </section>
+      <section class="ez-sd__section">
+        <div class="ez-sd__title-row">
+          <h3 class="ez-sd__title">What customers will see</h3>
+          <button type="button" class="sd-editlink" id="submit-edit-listing"><iconify-icon icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Edit listing</button>
+        </div>
+        <div class="sd-preview" id="submit-preview"></div>
+      </section>
+    </div>
 
     <!-- Optional submission settings — disclosures now live on the Disclosures & age rating step. -->
+    <div class="sd-step" id="submit-step-2" hidden>
     <section class="ez-sd__section">
       <h3 class="ez-sd__title">Review &amp; release</h3>
       <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
@@ -7482,9 +7533,12 @@
       </fluent-accordion-item>
       </fluent-accordion>
     </section>
+    </div>
 
-    <fluent-button slot="action" appearance="secondary" data-submit-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="submit-confirm-btn">
+    <fluent-button slot="action" appearance="secondary" id="submit-cancel" data-submit-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="submit-continue">Continue<iconify-icon slot="end" icon="fluent:arrow-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></fluent-button>
+    <fluent-button slot="action" appearance="secondary" id="submit-back" hidden><iconify-icon slot="start" icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="submit-confirm-btn" hidden>
       <iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Submit for review
     </fluent-button>
@@ -8357,7 +8411,7 @@
   const ADV_DEFAULTS = () => ({
     markets: { mode: 'all', selected: [], newRegions: true },
     audience: { mode: 'public', groups: [] },
-    price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, groups: [], schedule: null, sales: [], win32Trial: 'none' },
+    price: { mode: 'free', currency: 'USD', amount: 4.99, overrides: {}, groups: [], schedules: [], sales: [], win32Trial: 'none' },
     trial: { mode: 'none', duration: '7' },
     // Gradual rollout of an UPDATE (Windows 10/11): release to a % of customers first, then ramp.
     rollout: { gradual: false, percent: 10, mandatory: false },
@@ -8410,7 +8464,7 @@
     updateSnapshot = {}; WZ_STEPS.forEach(function (s) { updateSnapshot[s] = updSectionSig(s); });
     updateBaselineData = {
       listing: { name: state.name || '', desc: state.desc || '', category: state.category || '', shots: (state.shots || []).length, icon: (userIconDataUrl || pkgIconDataUrl || '').length, whatsNew: (adv.listing.whatsNew || '').trim(), whatsNewLoc: JSON.stringify(adv.listing.whatsNewLocales || {}), whatsNewSame: adv.listing.whatsNewSameAll !== false, features: (adv.listing.features || '').trim(), hero: !!adv.listing.hero, trailers: (adv.listing.trailers || []).length },
-      reach: { priceMode: adv.price.mode, priceAmt: adv.price.amount, currency: adv.price.currency, priceSchedule: JSON.stringify(adv.price.schedule || null), groups: JSON.stringify(adv.price.groups || []), sales: JSON.stringify(adv.price.sales || []), overrides: JSON.stringify(adv.price.overrides || {}), win32Trial: adv.price.win32Trial || 'none', markets: JSON.stringify(adv.markets), audience: JSON.stringify(adv.audience), trial: adv.trial.mode, schedule: JSON.stringify(adv.schedule), hold: JSON.stringify(adv.publishHold) },
+      reach: { priceMode: adv.price.mode, priceAmt: adv.price.amount, currency: adv.price.currency, priceSchedules: JSON.stringify(adv.price.schedules || []), groups: JSON.stringify(adv.price.groups || []), sales: JSON.stringify(adv.price.sales || []), overrides: JSON.stringify(adv.price.overrides || {}), win32Trial: adv.price.win32Trial || 'none', markets: JSON.stringify(adv.markets), audience: JSON.stringify(adv.audience), trial: adv.trial.mode, schedule: JSON.stringify(adv.schedule), hold: JSON.stringify(adv.publishHold) },
       rating: { rating: state.rating, decl: JSON.stringify(adv.declarations), iarc: adv.iarcId || '' }
     };
     updateChangedSet = new Set();
@@ -9217,8 +9271,8 @@
     // paid Store apps (they need a base price to act on); Free trial shows for any non-Win32 app.
     { section: 'step-reach', label: 'Per-market prices', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => Object.keys(adv.price.overrides || {}).length > 0,
       value: () => { const n = Object.keys(adv.price.overrides || {}).length; return n ? (n + (n === 1 ? ' market' : ' markets')) : ''; }, focus: '#price-overrides-btn' },
-    { section: 'step-reach', label: 'Scheduled price change', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => !!adv.price.schedule,
-      value: () => adv.price.schedule ? (adv.price.schedule.date || 'Scheduled') : '', focus: '#price-schedule-btn' },
+    { section: 'step-reach', label: 'Scheduled price change', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => (adv.price.schedules || []).length > 0,
+      value: () => { const a = adv.price.schedules || []; return a.length ? (a.length === 1 ? (a[0].date || 'Scheduled') : (a.length + ' scheduled')) : ''; }, focus: '#price-schedule-add' },
     { section: 'step-reach', label: 'Sale price', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => (adv.price.sales || []).length > 0,
       value: () => { const n = (adv.price.sales || []).length; return n ? (n + (n === 1 ? ' sale' : ' sales')) : ''; }, focus: '#price-sale-btn' },
     { section: 'step-reach', label: 'Free trial', applies: () => !packages.some(p => p.win32 && !p._pending), required: false, done: () => adv.trial.mode !== 'none',
@@ -10255,6 +10309,7 @@
       const uTitle = urlPart.querySelector('.ez-pkg-method__title'); if (uTitle && cfg.urlTitle) uTitle.textContent = cfg.urlTitle;
       const uDesc = urlPart.querySelector('.ez-pkg-url__hint'); if (uDesc && cfg.urlDesc) uDesc.textContent = cfg.urlDesc;
       const uInput = document.getElementById('pkg-url-input'); if (uInput && cfg.urlPlaceholder) { uInput.setAttribute('placeholder', cfg.urlPlaceholder); if (cfg.urlTitle) uInput.setAttribute('aria-label', cfg.urlTitle); }
+      const uConvert = document.getElementById('pkg-url-convert'); if (uConvert) uConvert.hidden = (type !== 'win32');   // MSIX nudge is Win32-only
     }
     if (typeof updateUploadConstraints === 'function') updateUploadConstraints();
   }
@@ -10323,15 +10378,19 @@
   // Change-app-type dialog: each type with a short case (pros/cons), the current one flagged, and a
   // live preview of what switching changes (reuses typeChangeImpact for the MSIX<->Win32 boundary).
   const APPTYPE_INFO = {
-    msix: { label: 'MSIX', icon: 'fluent:box-20-regular', rec: true,
-      desc: 'The easiest, most capable path to the Store.',
-      feats: [{ ok: 1, t: 'Free code signing, hosting & delivery' }, { ok: 1, t: 'Automatic updates, S-Mode, private apps & flighting' }] },
-    win32: { label: 'EXE / MSI', icon: 'fluent:desktop-20-regular',
-      desc: 'Publish your existing installer as-is.',
-      feats: [{ ok: 0, t: 'You buy a CA certificate and pay to host it' }, { ok: 0, t: 'Build your own updates; no S-Mode, private apps or flighting' }] },
-    pwa: { label: 'PWA', icon: 'fluent:globe-20-regular',
-      desc: 'Your website, packaged as MSIX.',
-      feats: [{ ok: 1, t: 'Same Store benefits as MSIX' }] }
+    msix: { label: 'MSIX', icon: 'fluent:box-20-filled',
+      app: { rec: true, desc: 'Publish any app packaged as MSIX.', best: 'Best for publishing new apps',
+        feats: ['Free code signing &amp; binary hosting', 'Commerce options: MS Store, Own, 3p', 'Automatic updates', 'Supports S-Mode, private apps, flighting'] },
+      game: { desc: 'Publish UWP game packaged as MSIX.', best: 'Best for publishing casual games',
+        feats: ['Free code signing &amp; binary hosting', 'Commerce options: MS Store, Own, 3p', 'Automatic updates'] } },
+    win32: { label: 'EXE / MSI', icon: 'fluent:desktop-20-filled',
+      app: { desc: 'Publish your existing .msi/.exe installer as-is.', best: 'Best for publishing apps that you distribute yourself today',
+        feats: ['You manage &amp; pay for code signing &amp; binary hosting', 'Commerce options: Own, 3p', 'You manage app updates'] } },
+    pwa: { label: 'PWA', icon: 'fluent:globe-20-filled',
+      app: { desc: 'Publish your web app.', best: 'Best for publishing web apps',
+        feats: ['Simply provide your web app URL or MSIX package', 'Gets all benefits of MSIX'] },
+      game: { desc: 'Publish your web game.', best: 'Best for publishing web games',
+        feats: ['Simply provide your web game URL or MSIX package', 'Gets all benefits of MSIX'] } }
   };
   let _atdPick = null;
   function appTypeDlg() { return document.getElementById('apptype-dialog'); }
@@ -10350,20 +10409,22 @@
   }
   function renderAppTypeOpts() {
     const wrap = document.getElementById('atd-opts'); if (!wrap) return;
-    const types = ['msix', 'win32', 'pwa'].filter(t => !(t === 'win32' && IS_GAME));
+    const ctx = IS_GAME ? 'game' : 'app';
+    const types = ['msix', 'win32', 'pwa'].filter(t => APPTYPE_INFO[t][ctx]);
     wrap.innerHTML = types.map(t => {
-      const info = APPTYPE_INFO[t], isCur = t === v4Type, isSel = t === _atdPick;
-      const badges = (info.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
+      const info = APPTYPE_INFO[t], c = info[ctx], isCur = t === v4Type, isSel = t === _atdPick;
+      const badges = (c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
         (isCur ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
-      const feats = (info.feats || []).map(f => '<li class="atd-opt__feat' + (f.ok ? '' : ' is-no') + '"><iconify-icon icon="' + (f.ok ? 'fluent:checkmark-circle-16-filled' : 'fluent:dismiss-circle-16-regular') + '" width="14" height="14" aria-hidden="true"></iconify-icon><span>' + f.t + '</span></li>').join('');
+      const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
       return '<label class="atd-opt' + (isSel ? ' is-sel' : '') + '" for="atd-r-' + t + '" data-atd-opt="' + t + '">' +
         '<span class="atd-opt__top">' +
           '<span class="atd-opt__ico"><iconify-icon icon="' + info.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
           '<fluent-radio class="atd-opt__radio" id="atd-r-' + t + '" value="' + t + '"' + (isSel ? ' checked' : '') + '></fluent-radio>' +
         '</span>' +
         '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badges + '</span>' +
-        '<span class="atd-opt__desc">' + info.desc + '</span>' +
+        '<span class="atd-opt__desc">' + c.desc + '</span>' +
         '<ul class="atd-opt__feats">' + feats + '</ul>' +
+        '<span class="atd-opt__best">' + c.best + '</span>' +
         '</label>';
     }).join('');
     // mirror [checked] onto .checked so the dot fills (this build doesn't flip :state(checked) on .checked)
@@ -14204,12 +14265,13 @@
       nd.className = 'ez-cat-field';
       nd.setAttribute('data-pv-field', 'category');
       nd.setAttribute('aria-label', 'Category');
+      nd.setAttribute('data-empty-required', selectedValue ? 'false' : 'true');   // required-* shows until a category is picked
       const lb = document.createElement('fluent-listbox');
       const mkOpt = (val, label) => { const o = document.createElement('fluent-option'); o.setAttribute('value', val); o.textContent = label; if (val === (selectedValue || '')) { o.setAttribute('selected', ''); o.selected = true; } lb.appendChild(o); };
       mkOpt('', 'Choose a category');
       dropdown.querySelectorAll('fluent-option').forEach(o => mkOpt(o.getAttribute('value') || '', o.textContent));
       nd.appendChild(lb);
-      nd.addEventListener('change', () => { dropdown.value = nd.value || ''; mountedVal = nd.value || ''; dropdown.dispatchEvent(new Event('change', { bubbles: true })); });
+      nd.addEventListener('change', () => { dropdown.value = nd.value || ''; mountedVal = nd.value || ''; nd.setAttribute('data-empty-required', nd.value ? 'false' : 'true'); dropdown.dispatchEvent(new Event('change', { bubbles: true })); });
       return nd;
     }
     function mount(selectedValue) {
@@ -16690,6 +16752,10 @@
     const _cb = $('submit-confirm-btn');
     if (_cb) { _cb.disabled = false; _cb.innerHTML = '<iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Submit for review'; }
     buildSubmitSummary();
+    // Step 1 preview — the customer-facing listing snapshot (reuses the Store listing preview render).
+    const _pv = $('submit-preview');
+    if (_pv) { _pv.innerHTML = ''; try { const node = buildListingPreviewNodeForLocale(lpvActive()); if (node) _pv.appendChild(node); } catch (e) {} }
+    try { goSubmitStep(1); } catch (e) {}
     try { syncRolloutDialog(); } catch (e) {}
     // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
     syncPublishHoldUI();
@@ -16814,8 +16880,32 @@
     const notesEl = $('submit-notes');
     if (notesEl) notesEl.addEventListener('input', updateCredsSummary);
   })();
-  if (submitDlg) submitDlg.querySelectorAll('[data-submit-close]').forEach(b => b.addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} }));
+  if (submitDlg) submitDlg.querySelectorAll('[data-submit-close]').forEach(b => b.addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} const pv = $('submit-preview'); if (pv) pv.innerHTML = ''; }));
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
+  // 2-step submit: Review (preview + facts) then Release & submit. Toggles panels + action buttons.
+  let submitStep = 1;
+  function goSubmitStep(n) {
+    submitStep = (n === 2) ? 2 : 1;
+    if (submitDlg) submitDlg.classList.toggle('sd-wide', submitStep === 1);
+    const s1 = $('submit-step-1'), s2 = $('submit-step-2');
+    if (s1) s1.hidden = submitStep !== 1;
+    if (s2) s2.hidden = submitStep !== 2;
+    const show = (id, on) => { const e = $(id); if (e) e.hidden = !on; };
+    show('submit-cancel', submitStep === 1);
+    show('submit-continue', submitStep === 1);
+    show('submit-back', submitStep === 2);
+    show('submit-confirm-btn', submitStep === 2);
+    const t = $('submit-step-title'); if (t) t.textContent = submitStep === 1 ? 'Review your submission' : 'Release & submit';
+    document.querySelectorAll('#submit-steps .sd-steps__item').forEach(el => {
+      const sn = +el.getAttribute('data-sd-step');
+      el.classList.toggle('is-current', sn === submitStep);
+      el.classList.toggle('is-done', sn < submitStep);
+      if (sn === submitStep) el.setAttribute('aria-current', 'step'); else el.removeAttribute('aria-current');
+    });
+  }
+  if ($('submit-continue')) $('submit-continue').addEventListener('click', () => goSubmitStep(2));
+  if ($('submit-back')) $('submit-back').addEventListener('click', () => goSubmitStep(1));
+  if ($('submit-edit-listing')) $('submit-edit-listing').addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} const pv = $('submit-preview'); if (pv) pv.innerHTML = ''; try { if (typeof showWzStep === 'function') showWzStep(WZ_STEPS.indexOf('step-listing')); } catch (e) {} });
   if ($('withdraw-btn')) $('withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('cert-withdraw-btn')) $('cert-withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('cert-review-btn')) $('cert-review-btn').addEventListener('click', function () { reviewFromInReview = true; goReviewDetails(); });
@@ -16964,14 +17054,8 @@
       const oc = Object.keys(adv.price.overrides || {}).length;
       const pol = $('price-overrides-label');
       if (pol) pol.textContent = oc ? ('Local prices \u00b7 ' + oc + ' customized') : 'See & customize local prices';
-      let schedLabel = 'Schedule a price change';
-      if (adv.price.schedule) {
-        schedLabel = 'Price change on ' + adv.price.schedule.date;
-        const _sc = adv.price.schedule.scope;
-        if (_sc && _sc.mode === 'group') { const _g = (adv.price.groups || []).find(x => x.id === _sc.groupId); if (_g) schedLabel += ' \u00b7 ' + _g.name; }
-      }
-      $('price-schedule-label').textContent = schedLabel;
       try { window.__renderGroups?.(); } catch (e) {}
+      try { window.__renderSchedules?.(); } catch (e) {}
       try { window.__renderSales?.(); } catch (e) {}
       applyTrial();
       try { ezRenderPreview(); } catch (e) {}   // reflect the paid price on the preview Buy CTA
@@ -17013,9 +17097,9 @@
     const mp = $('markets-pick-btn'); if (mp) mp.addEventListener('click', () => { if (typeof openMarketsDialog === 'function') openMarketsDialog(); });
     const gp = $('groups-pick-btn'); if (gp) gp.addEventListener('click', () => { if (typeof openGroupsDialog === 'function') openGroupsDialog(); });
     const po = $('price-overrides-btn'); if (po) po.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
-    const pgb = $('price-group-btn'); if (pgb) pgb.addEventListener('click', () => { if (window.openPriceGroupDialog) window.openPriceGroupDialog(); });
-    const ps = $('price-schedule-btn'); if (ps) ps.addEventListener('click', () => { if (typeof openPriceScheduleDialog === 'function') openPriceScheduleDialog(); });
-    const psale = $('price-sale-btn'); if (psale) psale.addEventListener('click', () => { if (window.openPriceSaleDialog) window.openPriceSaleDialog(); });
+    const pgb = $('price-group-add'); if (pgb) pgb.addEventListener('click', () => { if (window.openPriceGroupDialog) window.openPriceGroupDialog(); });
+    const ps = $('price-schedule-add'); if (ps) ps.addEventListener('click', () => { if (typeof openPriceScheduleDialog === 'function') openPriceScheduleDialog(); });
+    const psale = $('price-sale-add'); if (psale) psale.addEventListener('click', () => { if (window.openPriceSaleDialog) window.openPriceSaleDialog(); });
     // (Advanced pricing + free trial now live in a fluent-accordion — expand/collapse is native.)
     const phc = $('price-hint-customize');
     if (phc) phc.addEventListener('click', () => { if (typeof openOverridesDialog === 'function') openOverridesDialog(); });
@@ -17209,6 +17293,108 @@
     ];
     window.MKT_REGIONS = MKT_REGIONS;
 
+    // ---- One canonical region-grouped market picker, shared by every markets dialog ----
+    // Renders a scrollable list of collapsible region sections (the presets above, plus an "Other
+    // markets" catch-all) that expand to their markets; typing in search shows a flat result set.
+    // Row markup and row events are supplied by the caller, so the same shell drives both the
+    // multi-select (checkbox) pickers and the per-market price table.
+    window.buildRegionPicker = function (opts) {
+      const listEl = opts.listEl;
+      if (!listEl) return { render() {}, refreshHeaders() {}, collapseAll() {}, rerender() {} };
+      const open = new Set();
+      let curFilter = '';
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+      function allMarkets() {
+        if (opts.markets) return opts.markets();
+        const M = window.MARKET_NAME || {};
+        return Object.keys(M).map(c => ({ code: c, name: M[c] })).sort((a, b) => a.name.localeCompare(b.name));
+      }
+      function regions() {
+        const list = allMarkets();
+        const byCode = {}; list.forEach(m => { byCode[m.code] = m; });
+        const codeSet = new Set(list.map(m => m.code));
+        const base = (window.MKT_REGIONS || []).map(r => ({ name: r.name, codes: r.codes.filter(c => codeSet.has(c)) })).filter(r => r.codes.length);
+        const seen = new Set(); base.forEach(r => r.codes.forEach(c => seen.add(c)));
+        const others = list.filter(m => !seen.has(m.code)).map(m => m.code);
+        if (others.length) base.push({ name: 'Other markets', codes: others });
+        base.forEach(r => { r.rows = r.codes.map(c => byCode[c]).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name)); });
+        return base;
+      }
+      function badgeFor(r) { return opts.regionBadge ? opts.regionBadge(r, r.rows) : { text: '' + r.rows.length, on: false }; }
+      function stateFor(r) { return (opts.checkbox && opts.regionState) ? opts.regionState(r, r.rows) : 'none'; }
+      function kidsHTML(r, i) {
+        return '<div class="pg-reg__kids" id="pg-kids-' + i + '" role="group" aria-label="' + esc(r.name) + ' markets">' + r.rows.map(opts.rowHTML).join('') + '</div>';
+      }
+      function headHTML(r, i) {
+        const isOpen = open.has(i);
+        const b = badgeFor(r);
+        const st = stateFor(r);
+        const check = opts.checkbox
+          ? '<label class="pg-reg__check"><input type="checkbox" data-reg-check="' + i + '"' + (st === 'all' ? ' checked' : '') + ' aria-label="Select all ' + esc(r.name) + ' markets" /></label>'
+          : '';
+        return '<div class="pg-reg' + (isOpen ? ' is-open' : '') + '" data-reg="' + i + '">' +
+          '<div class="pg-reg__head">' + check +
+            '<button type="button" class="pg-reg__toggle" data-reg-toggle="' + i + '" aria-expanded="' + isOpen + '" aria-controls="pg-kids-' + i + '">' +
+              '<iconify-icon class="pg-reg__chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
+              '<span class="pg-reg__name">' + esc(r.name) + '</span>' +
+              '<span class="pg-reg__count' + (b.on ? ' is-on' : '') + '">' + b.text + '</span>' +
+            '</button>' +
+          '</div>' +
+          (isOpen ? kidsHTML(r, i) : '') +
+        '</div>';
+      }
+      function render(filter) {
+        curFilter = filter || '';
+        const q = curFilter.trim().toLowerCase();
+        if (q) {
+          const all = allMarkets().filter(m => m.name.toLowerCase().includes(q));
+          listEl.classList.remove('markets-dialog__list--grouped');
+          listEl._regs = null;
+          listEl.innerHTML = all.length ? all.map(opts.rowHTML).join('')
+            : '<div class="markets-dialog__empty">No markets match &ldquo;' + esc(q) + '&rdquo;.</div>';
+          return;
+        }
+        listEl.classList.add('markets-dialog__list--grouped');
+        const regs = regions();
+        listEl._regs = regs;
+        listEl.innerHTML = regs.map((r, i) => headHTML(r, i)).join('');
+        if (opts.checkbox && opts.regionState) regs.forEach((r, i) => { if (stateFor(r) === 'some') { const cb = listEl.querySelector('input[data-reg-check="' + i + '"]'); if (cb) cb.indeterminate = true; } });
+      }
+      function refreshHeaders() {
+        const regs = listEl._regs; if (!regs) return;
+        regs.forEach((r, i) => {
+          const node = listEl.querySelector('.pg-reg[data-reg="' + i + '"]'); if (!node) return;
+          const b = badgeFor(r);
+          const cnt = node.querySelector('.pg-reg__count'); if (cnt) { cnt.textContent = b.text; cnt.classList.toggle('is-on', !!b.on); }
+          if (opts.checkbox && opts.regionState) { const st = stateFor(r); const cb = node.querySelector('input[data-reg-check]'); if (cb) { cb.checked = st === 'all'; cb.indeterminate = st === 'some'; } }
+        });
+      }
+      listEl.addEventListener('click', e => {
+        const t = e.target.closest('[data-reg-toggle]'); if (!t || !listEl.contains(t)) return;
+        e.preventDefault();
+        const i = +t.getAttribute('data-reg-toggle');
+        const node = listEl.querySelector('.pg-reg[data-reg="' + i + '"]'); if (!node) return;
+        const isOpen = !open.has(i);
+        if (isOpen) open.add(i); else open.delete(i);
+        node.classList.toggle('is-open', isOpen);
+        t.setAttribute('aria-expanded', String(isOpen));
+        const kids = node.querySelector('.pg-reg__kids');
+        if (isOpen) { if (!kids && listEl._regs) node.insertAdjacentHTML('beforeend', kidsHTML(listEl._regs[i], i)); }
+        else if (kids) kids.remove();
+      });
+      if (opts.checkbox) listEl.addEventListener('change', e => {
+        const rc = e.target.closest('input[data-reg-check]'); if (!rc || !listEl.contains(rc)) return;
+        const i = +rc.getAttribute('data-reg-check');
+        const r = listEl._regs && listEl._regs[i]; if (!r) return;
+        if (opts.onRegionToggle) opts.onRegionToggle(r, rc.checked, r.rows);
+        const kids = listEl.querySelector('#pg-kids-' + i);
+        if (kids) kids.outerHTML = kidsHTML(r, i);
+        refreshHeaders();
+        if (opts.onChange) opts.onChange();
+      });
+      return { render, refreshHeaders, collapseAll: () => open.clear(), rerender: () => render(curFilter) };
+    };
+
     // Internal selection (keyed by CODE) + snapshot taken on open for Cancel.
     const selectedMarkets = new Set();
     let marketsDraft = null;
@@ -17221,70 +17407,28 @@
     const marketsClearAllBtn  = $('markets-clear-all');
     const marketsConfirmBtn   = $('markets-confirm-btn');
 
-    function renderMarketsList(filter) {
-      if (!marketsList) return;
-      const q = (filter || '').trim().toLowerCase();
-      const base = q
-        ? ALL_MARKETS.filter(m => m.name.toLowerCase().includes(q))
-        : ALL_MARKETS.slice();
-      // Selected markets float to the top (stable sort keeps each group alphabetical) so a whole
-      // region/group's markets stay visible together instead of scattered behind the scroll.
-      const filtered = base.sort((a, b) =>
-        (selectedMarkets.has(a.code) ? 0 : 1) - (selectedMarkets.has(b.code) ? 0 : 1));
-      if (!filtered.length) {
-        marketsList.innerHTML = `<div class="markets-dialog__empty">No markets match "${q}".</div>`;
-        return;
-      }
-      marketsList.innerHTML = filtered.map(market => {
-        const safeId = 'mkt-' + market.code.toLowerCase();
-        const checked = selectedMarkets.has(market.code) ? 'checked' : '';
-        return `<label class="markets-dialog__row" role="option" aria-selected="${!!checked}">
-          <input type="checkbox" id="${safeId}" data-market="${market.code}" ${checked} />
-          <span class="markets-dialog__row-name">${market.name}</span>
-        </label>`;
-      }).join('');
-      marketsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', () => {
-          const code = cb.dataset.market;
-          if (cb.checked) selectedMarkets.add(code);
-          else selectedMarkets.delete(code);
-          updateMarketsCount();
-          renderMarketsPresets();
-        });
-      });
-    }
-
     function updateMarketsCount() {
       if (marketsCountEl) marketsCountEl.textContent = `${selectedMarkets.size} of ${ALL_MARKETS.length} selected`;
     }
 
-    const marketsPresetsEl = $('markets-presets');
-    function mktRegionAvail(region) { return region.codes.filter(c => window.MARKET_NAME[c]); }
-    function mktRegionState(region) {
-      const av = mktRegionAvail(region); if (!av.length) return 'none';
-      const n = av.filter(c => selectedMarkets.has(c)).length;
-      return n === 0 ? 'none' : (n === av.length ? 'all' : 'some');
-    }
-    function renderMarketsPresets() {
-      if (!marketsPresetsEl) return;
-      marketsPresetsEl.innerHTML = MKT_REGIONS.map((r, i) => {
-        const st = mktRegionState(r);
-        const ico = st === 'all' ? 'fluent:checkmark-circle-16-filled' : (st === 'some' ? 'fluent:subtract-circle-16-filled' : 'fluent:add-circle-16-regular');
-        return `<button type="button" class="markets-preset${st === 'all' ? ' is-on' : st === 'some' ? ' is-part' : ''}" data-mkt-region="${i}" aria-pressed="${st === 'all'}"><iconify-icon icon="${ico}" width="15" height="15" aria-hidden="true"></iconify-icon>${r.name}</button>`;
-      }).join('');
-    }
-    function toggleMktRegion(i) {
-      const r = MKT_REGIONS[i]; if (!r) return;
-      const av = mktRegionAvail(r);
-      if (mktRegionState(r) === 'all') av.forEach(c => selectedMarkets.delete(c));
-      else av.forEach(c => selectedMarkets.add(c));
-      renderMarketsList(marketsSearch ? marketsSearch.value : '');
-      renderMarketsPresets();
+    // One shared region-grouped picker (see window.buildRegionPicker).
+    const marketsPicker = window.buildRegionPicker({
+      listEl: marketsList,
+      markets: () => ALL_MARKETS.slice(),
+      checkbox: true,
+      rowHTML: m => `<label class="markets-dialog__row"><input type="checkbox" data-mkt="${m.code}"${selectedMarkets.has(m.code) ? ' checked' : ''} /><span class="markets-dialog__row-name">${m.name}</span></label>`,
+      regionState: (r, rows) => { const n = rows.filter(m => selectedMarkets.has(m.code)).length; return n === 0 ? 'none' : (n === rows.length ? 'all' : 'some'); },
+      regionBadge: (r, rows) => { const n = rows.filter(m => selectedMarkets.has(m.code)).length; return { text: n ? `${n} / ${rows.length}` : `${rows.length}`, on: n > 0 }; },
+      onRegionToggle: (r, select) => { r.rows.forEach(m => { if (select) selectedMarkets.add(m.code); else selectedMarkets.delete(m.code); }); },
+      onChange: () => updateMarketsCount()
+    });
+    function renderMarketsList(filter) { marketsPicker.render(filter || ''); }
+    marketsList && marketsList.addEventListener('change', e => {
+      const cb = e.target.closest('input[data-mkt]'); if (!cb) return;
+      const code = cb.getAttribute('data-mkt');
+      if (cb.checked) selectedMarkets.add(code); else selectedMarkets.delete(code);
       updateMarketsCount();
-    }
-    marketsPresetsEl && marketsPresetsEl.addEventListener('click', e => {
-      const b = e.target.closest('[data-mkt-region]'); if (!b) return;
-      toggleMktRegion(+b.getAttribute('data-mkt-region'));
+      marketsPicker.refreshHeaders();
     });
 
     function openMarketsDialog() {
@@ -17295,8 +17439,8 @@
       seed.forEach(code => { if (window.MARKET_NAME[code]) selectedMarkets.add(code); });
       marketsDraft = new Set(selectedMarkets); // snapshot for Cancel/X
       if (marketsSearch) marketsSearch.value = '';
+      marketsPicker.collapseAll();
       renderMarketsList('');
-      renderMarketsPresets();
       updateMarketsCount();
       try { if (typeof marketsDialog.show === 'function') marketsDialog.show(); } catch (e) {}
       setTimeout(() => { try { marketsSearch && marketsSearch.focus(); } catch (e) {} }, 50);
@@ -17319,13 +17463,11 @@
     marketsSelectAllBtn && marketsSelectAllBtn.addEventListener('click', () => {
       ALL_MARKETS.forEach(m => selectedMarkets.add(m.code));
       renderMarketsList(marketsSearch ? marketsSearch.value : '');
-      renderMarketsPresets();
       updateMarketsCount();
     });
     marketsClearAllBtn && marketsClearAllBtn.addEventListener('click', () => {
       selectedMarkets.clear();
       renderMarketsList(marketsSearch ? marketsSearch.value : '');
-      renderMarketsPresets();
       updateMarketsCount();
     });
     marketsConfirmBtn && marketsConfirmBtn.addEventListener('click', () => {
@@ -17679,25 +17821,23 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     return PO_ALL_MARKETS;
   }
 
-  function renderPriceOverridesList(filter) {
-    if (!priceOverridesList) return;
-    const baseAmount = poBaseAmount();
-    const baseCurrency = poBaseCurrency();
-    if (priceOverridesBase) priceOverridesBase.textContent = `${baseCurrency} ${baseAmount.toFixed(poFractionDigitsFor(baseCurrency))}`;
-    const active = poActiveMarkets();
-    const q = (filter || '').trim().toLowerCase();
-    const filtered = q ? active.filter(m => m.name.toLowerCase().includes(q)) : active;
-    if (!filtered.length) {
-      priceOverridesList.innerHTML = `<div class="markets-dialog__empty">No markets match "${q}".</div>`;
-      return;
-    }
-    priceOverridesList.innerHTML = filtered.map(market => {
-      const digits = poFractionDigitsFor(market.currency);
-      const baseLocal = poConvertBetween(baseAmount, baseCurrency, market.currency);
-      const override = priceOverrides.get(market.code);
-      const value = override != null ? override : baseLocal;
-      const overridden = override != null;
-      return `<div class="price-row" data-code="${market.code}">
+  let overridesPicker = null;   // shared region-grouped picker (price rows; built lazily)
+  function ensureOverridesPicker() {
+    if (overridesPicker || !priceOverridesList) return overridesPicker;
+    overridesPicker = window.buildRegionPicker({
+      listEl: priceOverridesList,
+      markets: poActiveMarkets,
+      checkbox: false,
+      regionBadge: (r, rows) => { const n = rows.filter(m => priceOverrides.has(m.code)).length; return { text: n ? (n + ' set') : ('' + rows.length), on: n > 0 }; },
+      rowHTML: market => {
+        const baseAmount = poBaseAmount();
+        const baseCurrency = poBaseCurrency();
+        const digits = poFractionDigitsFor(market.currency);
+        const baseLocal = poConvertBetween(baseAmount, baseCurrency, market.currency);
+        const override = priceOverrides.get(market.code);
+        const value = override != null ? override : baseLocal;
+        const overridden = override != null;
+        return `<div class="price-row" data-code="${market.code}">
         <span class="price-row__name">${market.name}</span>
         <span class="price-row__currency">${market.currency}</span>
         <input type="number" step="${digits === 0 ? '1' : '0.01'}"
@@ -17708,33 +17848,41 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
                value="${value.toFixed(digits)}" />
         <button type="button" class="price-row__reset ${overridden ? 'price-row__reset--visible' : ''}" data-code="${market.code}">Reset</button>
       </div>`;
-    }).join('');
-
-    priceOverridesList.querySelectorAll('input[type="number"]').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const code = inp.dataset.code;
-        const defaultLocal = parseFloat(inp.dataset.default);
-        const newVal = parseFloat(inp.value);
-        const reset = inp.parentElement.querySelector('.price-row__reset');
-        if (!Number.isFinite(newVal) || Math.abs(newVal - defaultLocal) < 0.005) {
-          priceOverrides.delete(code);
-          inp.classList.remove('price-row__input--overridden');
-          reset?.classList.remove('price-row__reset--visible');
-        } else {
-          priceOverrides.set(code, newVal);
-          inp.classList.add('price-row__input--overridden');
-          reset?.classList.add('price-row__reset--visible');
-        }
-        updatePriceOverridesCount();
-      });
+      }
     });
-    priceOverridesList.querySelectorAll('.price-row__reset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        priceOverrides.delete(btn.dataset.code);
-        renderPriceOverridesList(filter);
-        updatePriceOverridesCount();
-      });
+    priceOverridesList.addEventListener('input', e => {
+      const inp = e.target.closest('.price-row__input'); if (!inp) return;
+      const code = inp.dataset.code;
+      const defaultLocal = parseFloat(inp.dataset.default);
+      const newVal = parseFloat(inp.value);
+      const reset = inp.parentElement.querySelector('.price-row__reset');
+      if (!Number.isFinite(newVal) || Math.abs(newVal - defaultLocal) < 0.005) {
+        priceOverrides.delete(code);
+        inp.classList.remove('price-row__input--overridden');
+        reset?.classList.remove('price-row__reset--visible');
+      } else {
+        priceOverrides.set(code, newVal);
+        inp.classList.add('price-row__input--overridden');
+        reset?.classList.add('price-row__reset--visible');
+      }
+      updatePriceOverridesCount();
+      overridesPicker.refreshHeaders();
     });
+    priceOverridesList.addEventListener('click', e => {
+      const btn = e.target.closest('.price-row__reset'); if (!btn) return;
+      priceOverrides.delete(btn.dataset.code);
+      overridesPicker.rerender();
+      updatePriceOverridesCount();
+    });
+    return overridesPicker;
+  }
+  function renderPriceOverridesList(filter) {
+    if (!priceOverridesList) return;
+    const baseAmount = poBaseAmount();
+    const baseCurrency = poBaseCurrency();
+    if (priceOverridesBase) priceOverridesBase.textContent = `${baseCurrency} ${baseAmount.toFixed(poFractionDigitsFor(baseCurrency))}`;
+    ensureOverridesPicker();
+    if (overridesPicker) overridesPicker.render(filter || '');
   }
 
   function updatePriceOverridesCount() {
@@ -17784,6 +17932,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     poSnapshot = {};
     priceOverrides.forEach((v, k) => { poSnapshot[k] = v; });
     if (priceOverridesSearch) priceOverridesSearch.value = '';
+    ensureOverridesPicker(); if (overridesPicker) overridesPicker.collapseAll();
     renderPriceOverridesList('');
     updatePriceOverridesCount();
     priceOverridesDialog.setAttribute('open', '');
@@ -17836,8 +17985,9 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   const priceScheduleTime    = $('price-schedule-time');
   const priceScheduleTz      = $('price-schedule-tz');
 
-  // Snapshot of adv.price.schedule taken when the dialog opens; restored on Cancel/X.
-  let priceScheduleSnapshot = null;
+  // Which schedule is being edited (-1 = adding a new one).
+  let priceScheduleEditIndex = -1;
+  function scheduleArr() { return (adv && adv.price && Array.isArray(adv.price.schedules)) ? adv.price.schedules : []; }
 
   function _baseCurrency() {
     return (adv && adv.price && adv.price.currency) || 'USD';
@@ -17939,15 +18089,15 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     return (r && r.checked) ? 'utc' : 'local';
   }
 
-  function openPriceScheduleDialog() {
+  function openPriceScheduleDialog(index) {
     if (!priceScheduleDialog) return;
-    const sched = (adv && adv.price && adv.price.schedule) ? adv.price.schedule : null;
-    // Take a restore snapshot of the current adv schedule.
-    priceScheduleSnapshot = sched ? { ...sched } : null;
+    const arr = scheduleArr();
+    priceScheduleEditIndex = (typeof index === 'number' && arr[index]) ? index : -1;
+    const sched = priceScheduleEditIndex >= 0 ? arr[priceScheduleEditIndex] : null;
     if (priceScheduleDate) priceScheduleDate.value = sched?.date || '';
     if (priceScheduleTime) priceScheduleTime.value = (sched && sched.time) || '00:00';
     if (priceSchedulePrice) priceSchedulePrice.value = sched ? String(sched.price) : '';
-    if (priceScheduleRemove) priceScheduleRemove.hidden = !sched;
+    if (priceScheduleRemove) priceScheduleRemove.hidden = priceScheduleEditIndex < 0;
     // Update the input label to reflect the current base currency.
     const priceLabel = priceScheduleDialog.querySelector('label[for="price-schedule-price"]');
     if (priceLabel) priceLabel.textContent = `New base price (${_baseCurrency()})`;
@@ -17958,19 +18108,14 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     priceScheduleDialog.removeAttribute('hidden');
     try { if (typeof priceScheduleDialog.show === 'function') priceScheduleDialog.show(); } catch (e) {}
   }
-  function closePriceScheduleDialog(restore) {
+  function closePriceScheduleDialog() {
     if (!priceScheduleDialog) return;
-    if (restore && adv && adv.price) {
-      // Restore the on-open snapshot into adv (no persist/refresh — nothing changed).
-      adv.price.schedule = priceScheduleSnapshot ? { ...priceScheduleSnapshot } : null;
-    }
-    priceScheduleSnapshot = null;
     priceScheduleDialog.removeAttribute('open');
     try { if (typeof priceScheduleDialog.hide === 'function') priceScheduleDialog.hide(); } catch (e) {}
   }
 
   priceScheduleDialog?.querySelectorAll('[data-price-schedule-close]').forEach(el => {
-    el.addEventListener('click', () => closePriceScheduleDialog(true));
+    el.addEventListener('click', () => closePriceScheduleDialog());
   });
   priceScheduleDate?.addEventListener('input', syncScheduleSaveEnabled);
   priceSchedulePrice?.addEventListener('input', syncScheduleSaveEnabled);
@@ -17989,24 +18134,62 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (!date || !Number.isFinite(price)) return;
     const time = (priceScheduleTime?.value) || '00:00';
     const tz = scheduleTzValue();
-    if (adv && adv.price) adv.price.schedule = { date, time, tz, price, scope: scheduleScopeValue() };
-    priceScheduleSnapshot = null;
+    const obj = { date, time, tz, price, scope: scheduleScopeValue() };
+    if (adv && adv.price) {
+      if (!Array.isArray(adv.price.schedules)) adv.price.schedules = [];
+      if (priceScheduleEditIndex >= 0) adv.price.schedules[priceScheduleEditIndex] = obj;
+      else adv.price.schedules.push(obj);
+      adv.price.schedules.sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    }
     persistAdvanced();
+    renderSchedulesList();
     try { window.__reachRefresh?.price?.(); } catch (e) {}
-    announce(`Price change scheduled for ${formatScheduleDate(date)} at ${formatScheduleTime(time)} ${scheduleTzLabel(tz)}.`);
-    priceScheduleDialog?.removeAttribute('open');
-    try { if (typeof priceScheduleDialog?.hide === 'function') priceScheduleDialog.hide(); } catch (e) {}
+    announce(priceScheduleEditIndex >= 0 ? 'Scheduled change updated.' : `Price change scheduled for ${formatScheduleDate(date)} at ${formatScheduleTime(time)} ${scheduleTzLabel(tz)}.`);
+    closePriceScheduleDialog();
   });
 
   priceScheduleRemove?.addEventListener('click', () => {
-    if (adv && adv.price) adv.price.schedule = null;
-    priceScheduleSnapshot = null;
+    if (priceScheduleEditIndex >= 0 && adv && adv.price && Array.isArray(adv.price.schedules)) adv.price.schedules.splice(priceScheduleEditIndex, 1);
     persistAdvanced();
+    renderSchedulesList();
     try { window.__reachRefresh?.price?.(); } catch (e) {}
     announce('Scheduled price change removed.');
-    priceScheduleDialog?.removeAttribute('open');
-    try { if (typeof priceScheduleDialog?.hide === 'function') priceScheduleDialog.hide(); } catch (e) {}
+    closePriceScheduleDialog();
   });
+
+  // Scheduled-changes list (manager). Title = the new base price; meta = when + scope.
+  function schedRowMeta(s) {
+    const scope = (s.scope && s.scope.mode === 'group') ? ((priceGroupsArr().find(x => x.id === s.scope.groupId) || {}).name || 'All markets') : 'All markets';
+    return formatScheduleDate(s.date) + ' at ' + formatScheduleTime(s.time || '00:00') + ' ' + scheduleTzLabel(s.tz) + ' \u00b7 ' + scope;
+  }
+  function schedRow(s, i) {
+    const cur = _baseCurrency();
+    const title = 'New price ' + cur + ' ' + Number(s.price).toFixed(fractionDigitsFor(cur));
+    return '<div class="price-item" data-sched-edit="' + i + '" role="button" tabindex="0">' +
+        '<span class="price-item__ico"><iconify-icon icon="fluent:calendar-clock-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="price-item__main"><span class="price-item__title">' + gEsc(title) + '</span><span class="price-item__meta">' + schedRowMeta(s) + '</span></span>' +
+        '<span class="price-item__actions">' +
+          '<button type="button" class="price-item__act" data-sched-edit="' + i + '" aria-label="Edit scheduled change"><iconify-icon icon="fluent:edit-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button>' +
+          '<button type="button" class="price-item__act price-item__act--danger" data-sched-remove="' + i + '" aria-label="Remove scheduled change"><iconify-icon icon="fluent:dismiss-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button>' +
+        '</span>' +
+      '</div>';
+  }
+  function renderSchedulesList() {
+    const host = $('price-schedules'); if (!host) return;
+    const arr = scheduleArr();
+    host.innerHTML = arr.length
+      ? '<div class="price-mgr__list">' + arr.map(schedRow).join('') + '</div>'
+      : '<p class="price-mgr__empty">Line up future base-price changes \u2014 each takes effect on the date you set.</p>';
+    const c = $('price-sched-count'); if (c) { c.textContent = arr.length; c.hidden = !arr.length; }
+  }
+  window.__renderSchedules = renderSchedulesList;
+  $('price-schedules')?.addEventListener('click', (e) => {
+    const rm = e.target.closest('[data-sched-remove]');
+    if (rm) { e.stopPropagation(); const i = parseInt(rm.getAttribute('data-sched-remove'), 10); if (adv && adv.price && Array.isArray(adv.price.schedules)) { adv.price.schedules.splice(i, 1); persistAdvanced(); renderSchedulesList(); try { window.__reachRefresh?.price?.(); } catch (e2) {} announce('Scheduled price change removed.'); } return; }
+    const row = e.target.closest('[data-sched-edit]');
+    if (row) openPriceScheduleDialog(parseInt(row.getAttribute('data-sched-edit'), 10));
+  });
+  renderSchedulesList();
 
   // ---- Sale pricing dialog (price OR % off · an audience · a date range) ----
   const priceSaleDialog   = $('price-sale-dialog');
@@ -18040,34 +18223,28 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     const total = Object.keys(window.MARKET_NAME || {}).length;
     if (priceSaleMarketsCount) priceSaleMarketsCount.textContent = saleMarketsSel.size + ' of ' + total + ' selected';
   }
-  function renderSaleMarketsList(filter) {
-    if (!priceSaleMarketsList) return;
-    const q = (filter || '').trim().toLowerCase();
-    const all = saleAllMarkets();
-    const filtered = q ? all.filter(m => m.name.toLowerCase().includes(q)) : all;
-    if (!filtered.length) { priceSaleMarketsList.innerHTML = '<div class="markets-dialog__empty">No markets match &ldquo;' + q + '&rdquo;.</div>'; return; }
-    priceSaleMarketsList.innerHTML = filtered.map(m => {
-      const checked = saleMarketsSel.has(m.code) ? 'checked' : '';
-      return '<label class="markets-dialog__row" role="option" aria-selected="' + (!!checked) + '">' +
-        '<input type="checkbox" data-sale-market="' + m.code + '" ' + checked + ' />' +
-        '<span class="markets-dialog__row-name">' + m.name + '</span></label>';
-    }).join('');
-    priceSaleMarketsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const code = cb.getAttribute('data-sale-market');
-        if (cb.checked) saleMarketsSel.add(code); else saleMarketsSel.delete(code);
-        updateSaleMarketsCount(); syncSaleSaveEnabled();
-      });
+  let salePicker = null;   // shared region-grouped picker (built lazily)
+  function ensureSalePicker() {
+    if (salePicker || !priceSaleMarketsList) return salePicker;
+    salePicker = window.buildRegionPicker({
+      listEl: priceSaleMarketsList,
+      markets: saleAllMarkets,
+      checkbox: true,
+      rowHTML: m => '<label class="markets-dialog__row"><input type="checkbox" data-mkt="' + m.code + '"' + (saleMarketsSel.has(m.code) ? ' checked' : '') + ' /><span class="markets-dialog__row-name">' + m.name + '</span></label>',
+      regionState: (r, rows) => { const n = rows.filter(m => saleMarketsSel.has(m.code)).length; return n === 0 ? 'none' : (n === rows.length ? 'all' : 'some'); },
+      regionBadge: (r, rows) => { const n = rows.filter(m => saleMarketsSel.has(m.code)).length; return { text: n ? (n + ' / ' + rows.length) : ('' + rows.length), on: n > 0 }; },
+      onRegionToggle: (r, select) => { r.rows.forEach(m => { if (select) saleMarketsSel.add(m.code); else saleMarketsSel.delete(m.code); }); },
+      onChange: () => { updateSaleMarketsCount(); syncSaleSaveEnabled(); }
     });
+    priceSaleMarketsList.addEventListener('change', e => {
+      const cb = e.target.closest('input[data-mkt]'); if (!cb) return;
+      const code = cb.getAttribute('data-mkt');
+      if (cb.checked) saleMarketsSel.add(code); else saleMarketsSel.delete(code);
+      updateSaleMarketsCount(); syncSaleSaveEnabled(); salePicker.refreshHeaders();
+    });
+    return salePicker;
   }
-  function setSaleMarketsMode(mode, sync) {
-    saleMarketsMode = (mode === 'choose') ? 'choose' : 'all';
-    const seg = $('price-sale-markets-mode');
-    if (seg) seg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === saleMarketsMode; r.checked = on; r.toggleAttribute('checked', on); });
-    if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = saleMarketsMode !== 'choose';
-    if (saleMarketsMode === 'choose') { renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); }
-    if (sync) syncSaleSaveEnabled();
-  }
+  function renderSaleMarketsList(filter) { ensureSalePicker(); if (salePicker) salePicker.render(filter || ''); }
   function saleMarketsLabel(s) {
     const m = s && s.markets;
     if (Array.isArray(m) && m.length) return m.length === 1 ? ((window.MARKET_NAME || {})[m[0]] || m[0]) : (m.length + ' markets');
@@ -18149,42 +18326,34 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (end < start) { priceSalePreview.textContent = 'The end date must be on or after the start date.'; return; }
     priceSalePreview.innerHTML = range + who + ' pay <strong>' + cur + ' ' + v.toFixed(cdig) + '</strong>' + (sameCur ? (' instead of <strong>' + bcur + ' ' + base.toFixed(bdig) + '</strong>') : '') + salePreviewScope() + '.';
   }
-  // Step 1 (markets) is complete when it's "all markets" or at least one specific market is picked.
-  function saleStep1Valid() { return saleMarketsMode !== 'choose' || saleMarketsSel.size > 0; }
-  function currentSaleMarketsLabel() {
-    if (saleMarketsMode !== 'choose') return 'all markets';
-    const n = saleMarketsSel.size;
-    if (!n) return 'no markets yet';
-    const names = [...saleMarketsSel].map(c => (window.MARKET_NAME || {})[c] || c);
-    if (n === 1) return names[0];
-    if (n === 2) return names[0] + ' and ' + names[1];
-    return names.slice(0, 2).join(', ') + ' +' + (n - 2) + ' more';
+  // Scope ("Applies to") — All markets, a saved group (shortcut to its markets), or Specific markets.
+  function populateSaleScope() {
+    const dd = $('price-sale-scope'); if (!dd) return;
+    const lb = dd.querySelector('fluent-listbox') || dd;
+    let opts = '<fluent-option value="all">All markets</fluent-option>';
+    priceGroupsArr().forEach(g => { opts += '<fluent-option value="g:' + g.id + '">' + gEsc(g.name) + '</fluent-option>'; });
+    opts += '<fluent-option value="choose">Specific markets\u2026</fluent-option>';
+    lb.innerHTML = opts;
   }
-  function updateSaleScopeLabel() { const el = $('price-sale-scope-label'); if (el) el.textContent = currentSaleMarketsLabel(); }
+  function applySaleScope(v) {
+    if (v === 'all') { saleMarketsMode = 'all'; if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = true; }
+    else if (v && v.slice(0, 2) === 'g:') {
+      const g = priceGroupsArr().find(x => x.id === v.slice(2));
+      saleMarketsMode = 'choose'; saleMarketsSel.clear();
+      if (g && Array.isArray(g.markets)) g.markets.forEach(c => saleMarketsSel.add(c));
+      else if (g && g.markets === 'all') saleAllMarkets().forEach(m => saleMarketsSel.add(m.code));
+      if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = false;
+      renderSaleMarketsList(''); updateSaleMarketsCount();
+    } else {
+      saleMarketsMode = 'choose';
+      if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = false;
+      renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount();
+    }
+    syncSaleSaveEnabled();
+  }
   function syncSaleSaveEnabled() {
     if (priceSaleSave) priceSaleSave.disabled = !saleValid();
-    if (priceSaleNext) priceSaleNext.disabled = !saleStep1Valid();
-    updateSaleScopeLabel();
     renderSalePreview();
-  }
-  // Two-step flow: step 1 = choose markets, step 2 = discount + dates. New sale starts on step 1;
-  // editing jumps to step 2 (the scope chip there jumps back to step 1 to change markets).
-  let saleStep = 1;
-  function showSaleStep(step) {
-    saleStep = (step === 2) ? 2 : 1;
-    const s1 = $('price-sale-step-markets'), s2 = $('price-sale-step-details'), intro = $('price-sale-intro');
-    if (s1) s1.hidden = saleStep !== 1;
-    if (s2) s2.hidden = saleStep !== 2;
-    if (intro) intro.textContent = saleStep === 1
-      ? 'First, choose where this sale runs \u2014 every market, or specific ones.'
-      : 'Now set the discount and when it runs. During the sale, your original price shows with a strikethrough.';
-    if (priceSaleCancel) priceSaleCancel.hidden = saleStep !== 1;
-    if (priceSaleNext)   priceSaleNext.hidden   = saleStep !== 1;
-    if (priceSaleBack)   priceSaleBack.hidden   = saleStep !== 2;
-    if (priceSaleSave)   priceSaleSave.hidden   = saleStep !== 2;
-    if (priceSaleRemove) priceSaleRemove.hidden = !(saleStep === 2 && priceSaleEditIndex >= 0);
-    syncSaleSaveEnabled();
-    setTimeout(() => { try { (saleStep === 2 ? priceSaleAmount : ($('price-sale-markets-mode') || {}).querySelector?.('fluent-radio[checked]'))?.focus?.(); } catch (e) {} }, 30);
   }
   let priceSaleEditIndex = -1; // -1 = adding a new sale; otherwise the index being edited
   function saleList() { return (adv && adv.price && Array.isArray(adv.price.sales)) ? adv.price.sales : []; }
@@ -18194,16 +18363,29 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     const who = SALE_AUDIENCE_LABEL[s.audience] || 'everyone';
     return what + ' · ' + saleMarketsLabel(s) + ' · ' + who + ' · ' + formatScheduleDate(s.start) + ' – ' + formatScheduleDate(s.end);
   }
+  function saleTitleTxt(s) {
+    const cur = s.currency || _baseCurrency();
+    return s.type === 'percent' ? (s.value + '% off') : (cur + ' ' + Number(s.value).toFixed(fractionDigitsFor(cur)));
+  }
+  function saleRow(s, i) {
+    const who = SALE_AUDIENCE_LABEL[s.audience] || 'everyone';
+    const meta = saleMarketsLabel(s) + ' \u00b7 ' + who + ' \u00b7 ' + formatScheduleDate(s.start) + ' \u2013 ' + formatScheduleDate(s.end);
+    return '<div class="price-item" data-sale-edit="' + i + '" role="button" tabindex="0">' +
+        '<span class="price-item__ico"><iconify-icon icon="fluent:tag-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="price-item__main"><span class="price-item__title">' + saleTitleTxt(s) + '</span><span class="price-item__meta">' + meta + '</span></span>' +
+        '<span class="price-item__actions">' +
+          '<button type="button" class="price-item__act" data-sale-edit="' + i + '" aria-label="Edit sale"><iconify-icon icon="fluent:edit-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button>' +
+          '<button type="button" class="price-item__act price-item__act--danger" data-sale-remove="' + i + '" aria-label="Remove sale"><iconify-icon icon="fluent:dismiss-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button>' +
+        '</span>' +
+      '</div>';
+  }
   function renderSalesList() {
-    const host = $('price-sales');
-    if (!host) return;
-    host.innerHTML = saleList().map((s, i) =>
-      '<div class="price-sale-item" data-sale-edit="' + i + '" role="button" tabindex="0">' +
-        '<iconify-icon icon="fluent:tag-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
-        '<span class="price-sale-item__text">' + saleSummary(s) + '</span>' +
-        '<button type="button" class="price-sale-item__remove" data-sale-remove="' + i + '" aria-label="Remove sale"><iconify-icon icon="fluent:dismiss-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
-      '</div>'
-    ).join('');
+    const host = $('price-sales'); if (!host) return;
+    const arr = saleList();
+    host.innerHTML = arr.length
+      ? '<div class="price-mgr__list">' + arr.map(saleRow).join('') + '</div>'
+      : '<p class="price-mgr__empty">Run a limited-time discount \u2014 set a price or % off, an audience, and a date range.</p>';
+    const c = $('price-sales-count'); if (c) { c.textContent = arr.length; c.hidden = !arr.length; }
   }
   window.__renderSales = renderSalesList;
   function openPriceSaleDialog(index) {
@@ -18219,15 +18401,20 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     reselectDD(priceSaleAudience, sale?.audience || 'all');
     if (priceSaleStart) priceSaleStart.value = sale?.start || '';
     if (priceSaleEnd) priceSaleEnd.value = sale?.end || '';
-    if (priceSaleRemove) priceSaleRemove.hidden = priceSaleEditIndex < 0; // only when editing an existing sale
+    if (priceSaleRemove) priceSaleRemove.hidden = priceSaleEditIndex < 0;
     // Seed the market scope from the sale (default: all markets).
     saleMarketsSel.clear();
     const seedMarkets = sale && sale.markets;
-    if (Array.isArray(seedMarkets)) seedMarkets.forEach(c => { if ((window.MARKET_NAME || {})[c]) saleMarketsSel.add(c); });
+    const isChoose = Array.isArray(seedMarkets) && seedMarkets.length > 0;
+    if (isChoose) seedMarkets.forEach(c => { if ((window.MARKET_NAME || {})[c]) saleMarketsSel.add(c); });
+    saleMarketsMode = isChoose ? 'choose' : 'all';
     if (priceSaleMarketsSearch) priceSaleMarketsSearch.value = '';
-    setSaleMarketsMode(Array.isArray(seedMarkets) && seedMarkets.length ? 'choose' : 'all', false);
-    // New sale → start on the markets step; editing → jump to the details step (markets already chosen).
-    showSaleStep(priceSaleEditIndex >= 0 ? 2 : 1);
+    ensureSalePicker(); if (salePicker) salePicker.collapseAll();
+    populateSaleScope();
+    reselectDD($('price-sale-scope'), isChoose ? 'choose' : 'all');
+    if (priceSaleMarketsPick) priceSaleMarketsPick.hidden = !isChoose;
+    if (isChoose) { renderSaleMarketsList(''); updateSaleMarketsCount(); }
+    syncSaleSaveEnabled();
     priceSaleDialog.setAttribute('open', '');
     priceSaleDialog.removeAttribute('hidden');
     try { if (typeof priceSaleDialog.show === 'function') priceSaleDialog.show(); } catch (e) {}
@@ -18238,13 +18425,10 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     try { if (typeof priceSaleDialog.hide === 'function') priceSaleDialog.hide(); } catch (e) {}
   }
   $('price-sale-type')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'price'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setSaleType(v, true); });
-  $('price-sale-markets-mode')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'all'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setSaleMarketsMode(v, true); });
+  $('price-sale-scope')?.addEventListener('change', function () { applySaleScope(this.value); });
   priceSaleMarketsSearch?.addEventListener('input', e => renderSaleMarketsList(e.target.value));
   $('price-sale-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => saleMarketsSel.add(m.code)); renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); syncSaleSaveEnabled(); });
   $('price-sale-markets-clear')?.addEventListener('click', () => { saleMarketsSel.clear(); renderSaleMarketsList(priceSaleMarketsSearch ? priceSaleMarketsSearch.value : ''); updateSaleMarketsCount(); syncSaleSaveEnabled(); });
-  $('price-sale-next')?.addEventListener('click', () => { if (saleStep1Valid()) showSaleStep(2); });
-  $('price-sale-back')?.addEventListener('click', () => showSaleStep(1));
-  $('price-sale-scope-edit')?.addEventListener('click', () => showSaleStep(1));
   priceSaleDialog?.querySelectorAll('[data-price-sale-close]').forEach(el => el.addEventListener('click', () => closePriceSaleDialog()));
   priceSaleAmount?.addEventListener('input', syncSaleSaveEnabled);
   priceSalePercent?.addEventListener('input', syncSaleSaveEnabled);
@@ -18290,64 +18474,44 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   const priceGroupSaveLabel = $('price-group-save-label');
   const priceGroupRemove = $('price-group-remove');
   const priceGroupTitleText = $('price-group-title-text');
-  const priceGroupCustomToggle = $('price-group-custom-toggle');
-  const priceGroupPriceRow = $('price-group-price-row');
   const priceGroupCurrency = $('price-group-currency');
   const priceGroupPrice = $('price-group-price');
-  const priceGroupMarketsPick = $('price-group-markets-pick');
   const priceGroupMarketsList = $('price-group-markets-list');
   const priceGroupMarketsSearch = $('price-group-markets-search');
-  let groupMarketsMode = 'choose';
   const groupMarketsSel = new Set();
   let priceGroupEditId = null;
+  let groupPicker = null;   // shared region-grouped picker (built lazily)
   function updateGroupMarketsCount() {
     const total = Object.keys(window.MARKET_NAME || {}).length;
     const el = $('price-group-markets-count');
     if (el) el.textContent = groupMarketsSel.size + ' of ' + total + ' selected';
   }
-  function renderGroupMarketsList(filter) {
-    if (!priceGroupMarketsList) return;
-    const q = (filter || '').trim().toLowerCase();
-    const all = saleAllMarkets();
-    const filtered = q ? all.filter(m => m.name.toLowerCase().includes(q)) : all;
-    if (!filtered.length) { priceGroupMarketsList.innerHTML = '<div class="markets-dialog__empty">No markets match &ldquo;' + gEsc(q) + '&rdquo;.</div>'; return; }
-    priceGroupMarketsList.innerHTML = filtered.map(m => {
-      const checked = groupMarketsSel.has(m.code) ? 'checked' : '';
-      return '<label class="markets-dialog__row" role="option" aria-selected="' + (!!checked) + '">' +
-        '<input type="checkbox" data-group-market="' + m.code + '" ' + checked + ' />' +
-        '<span class="markets-dialog__row-name">' + gEsc(m.name) + '</span></label>';
-    }).join('');
-    priceGroupMarketsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const code = cb.getAttribute('data-group-market');
-        if (cb.checked) groupMarketsSel.add(code); else groupMarketsSel.delete(code);
-        updateGroupMarketsCount(); renderGroupPresets(); syncGroupSaveEnabled();
-      });
+  function ensureGroupPicker() {
+    if (groupPicker || !priceGroupMarketsList) return groupPicker;
+    groupPicker = window.buildRegionPicker({
+      listEl: priceGroupMarketsList,
+      markets: saleAllMarkets,
+      checkbox: true,
+      rowHTML: m => '<label class="markets-dialog__row"><input type="checkbox" data-mkt="' + m.code + '"' + (groupMarketsSel.has(m.code) ? ' checked' : '') + ' /><span class="markets-dialog__row-name">' + gEsc(m.name) + '</span></label>',
+      regionState: (r, rows) => { const n = rows.filter(m => groupMarketsSel.has(m.code)).length; return n === 0 ? 'none' : (n === rows.length ? 'all' : 'some'); },
+      regionBadge: (r, rows) => { const n = rows.filter(m => groupMarketsSel.has(m.code)).length; return { text: n ? (n + ' / ' + rows.length) : ('' + rows.length), on: n > 0 }; },
+      onRegionToggle: (r, select) => { r.rows.forEach(m => { if (select) groupMarketsSel.add(m.code); else groupMarketsSel.delete(m.code); }); },
+      onChange: () => { updateGroupMarketsCount(); syncGroupSaveEnabled(); }
     });
+    priceGroupMarketsList.addEventListener('change', e => {
+      const cb = e.target.closest('input[data-mkt]'); if (!cb) return;
+      const code = cb.getAttribute('data-mkt');
+      if (cb.checked) groupMarketsSel.add(code); else groupMarketsSel.delete(code);
+      updateGroupMarketsCount(); syncGroupSaveEnabled(); groupPicker.refreshHeaders();
+    });
+    return groupPicker;
   }
-  function setGroupMarketsMode(mode, sync) {
-    groupMarketsMode = (mode === 'all') ? 'all' : 'choose';
-    const seg = $('price-group-markets-mode');
-    if (seg) seg.querySelectorAll('fluent-radio').forEach(r => { const on = r.getAttribute('value') === groupMarketsMode; r.checked = on; r.toggleAttribute('checked', on); });
-    if (priceGroupMarketsPick) priceGroupMarketsPick.hidden = groupMarketsMode !== 'choose';
-    if (groupMarketsMode === 'choose') { renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); renderGroupPresets(); updateGroupMarketsCount(); }
-    if (sync) syncGroupSaveEnabled();
-  }
-  function groupCustomOn() { return !!(priceGroupCustomToggle && priceGroupCustomToggle.checked); }
-  function groupPriceHint(on) {
-    var h = document.querySelector('#price-group-dialog .price-group-price-toggle__hint');
-    if (h) h.textContent = on ? 'One custom price applies to every market in this group.' : 'Off \u2014 these markets keep your auto-converted local prices.';
-  }
-  function setGroupCustomPrice(on, sync) {
-    if (priceGroupCustomToggle) { priceGroupCustomToggle.checked = !!on; priceGroupCustomToggle.toggleAttribute('checked', !!on); }
-    if (priceGroupPriceRow) priceGroupPriceRow.hidden = !on;
-    groupPriceHint(!!on);
-    if (sync) syncGroupSaveEnabled();
-  }
+  function renderGroupMarketsList(filter) { ensureGroupPicker(); if (groupPicker) groupPicker.render(filter || ''); }
   function groupValid() {
     if (!priceGroupName || !priceGroupName.value.trim()) return false;
-    if (groupMarketsMode === 'choose' && groupMarketsSel.size === 0) return false;
-    if (groupCustomOn()) { const v = parseFloat((priceGroupPrice && priceGroupPrice.value) || ''); if (!(Number.isFinite(v) && v > 0)) return false; }
+    if (groupMarketsSel.size === 0) return false;
+    const v = parseFloat(((priceGroupPrice && priceGroupPrice.value) || '').trim());
+    if (!(Number.isFinite(v) && v > 0)) return false;
     return true;
   }
   function syncGroupSaveEnabled() { const bad = !groupValid(); if (priceGroupSave) { priceGroupSave.disabled = bad; priceGroupSave.toggleAttribute('disabled', bad); } }
@@ -18370,19 +18534,24 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (g.price != null && Number.isFinite(g.price)) { const cur = g.currency || _baseCurrency(); priceTxt = cur + ' ' + Number(g.price).toFixed(fractionDigitsFor(cur)); }
     return gEsc(g.name) + ' \u00b7 ' + groupScopeLabel(g) + ' \u00b7 ' + priceTxt;
   }
+  function groupRow(g) {
+    const cur = g.currency || _baseCurrency();
+    const priceTxt = (g.price != null && Number.isFinite(g.price)) ? (cur + ' ' + Number(g.price).toFixed(fractionDigitsFor(cur))) : 'Auto-converted prices';
+    return '<div class="price-item" data-group-edit="' + g.id + '" role="button" tabindex="0">' +
+        '<span class="price-item__ico"><iconify-icon icon="fluent:group-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="price-item__main"><span class="price-item__title">' + gEsc(g.name) + '</span><span class="price-item__meta">' + groupScopeLabel(g) + ' \u00b7 ' + priceTxt + '</span></span>' +
+        '<span class="price-item__actions">' +
+          '<button type="button" class="price-item__act" data-group-edit="' + g.id + '" aria-label="Edit group"><iconify-icon icon="fluent:edit-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button>' +
+          '<button type="button" class="price-item__act price-item__act--danger" data-group-remove="' + g.id + '" aria-label="Remove group"><iconify-icon icon="fluent:dismiss-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon></button>' +
+        '</span>' +
+      '</div>';
+  }
   function renderGroupsList() {
-    const host = $('price-groups');
-    if (host) {
-      host.innerHTML = priceGroupsArr().map(g =>
-        '<div class="price-sale-item" data-group-edit="' + g.id + '" role="button" tabindex="0">' +
-          '<iconify-icon icon="fluent:group-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' +
-          '<span class="price-sale-item__text">' + groupSummary(g) + '</span>' +
-          '<button type="button" class="price-sale-item__remove" data-group-remove="' + g.id + '" aria-label="Remove group"><iconify-icon icon="fluent:dismiss-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
-        '</div>'
-      ).join('');
-    }
-    const label = $('price-group-label');
-    if (label) { const n = priceGroupsArr().length; label.textContent = n ? ('Market groups \u00b7 ' + n) : 'Create a market group'; }
+    const host = $('price-groups'); const arr = priceGroupsArr();
+    if (host) host.innerHTML = arr.length
+      ? '<div class="price-mgr__list">' + arr.map(groupRow).join('') + '</div>'
+      : '<p class="price-mgr__empty">Group markets to give them one custom price \u2014 reuse the group when scheduling changes.</p>';
+    const c = $('price-groups-count'); if (c) { c.textContent = arr.length; c.hidden = !arr.length; }
   }
   window.__renderGroups = renderGroupsList;
   function openPriceGroupDialog(id) {
@@ -18395,14 +18564,15 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
     if (priceGroupRemove) priceGroupRemove.hidden = !g;
     if (priceGroupName) priceGroupName.value = g ? (g.name || '') : '';
     groupMarketsSel.clear();
+    ensureGroupPicker(); if (groupPicker) groupPicker.collapseAll();
     const seed = g && g.markets;
-    if (Array.isArray(seed)) seed.forEach(c => { if ((window.MARKET_NAME || {})[c]) groupMarketsSel.add(c); });
+    if (seed === 'all') saleAllMarkets().forEach(m => groupMarketsSel.add(m.code));
+    else if (Array.isArray(seed)) seed.forEach(c => { if ((window.MARKET_NAME || {})[c]) groupMarketsSel.add(c); });
     if (priceGroupMarketsSearch) priceGroupMarketsSearch.value = '';
-    setGroupMarketsMode(seed === 'all' ? 'all' : 'choose', false);
+    renderGroupMarketsList(''); updateGroupMarketsCount();
     const hasCustom = !!(g && g.price != null && Number.isFinite(g.price));
     reselectDD(priceGroupCurrency, (g && g.currency) || _baseCurrency());
     if (priceGroupPrice) priceGroupPrice.value = hasCustom ? String(g.price) : '';
-    setGroupCustomPrice(hasCustom, false);
     syncGroupSaveEnabled();
     priceGroupDialog.setAttribute('open', '');
     priceGroupDialog.removeAttribute('hidden');
@@ -18417,37 +18587,16 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   priceGroupName?.addEventListener('input', syncGroupSaveEnabled);
   priceGroupPrice?.addEventListener('input', syncGroupSaveEnabled);
   priceGroupCurrency?.addEventListener('change', syncGroupSaveEnabled);
-  priceGroupCustomToggle?.addEventListener('change', () => { const on = priceGroupCustomToggle.checked; if (priceGroupPriceRow) priceGroupPriceRow.hidden = !on; groupPriceHint(on); syncGroupSaveEnabled(); });
-  $('price-group-markets-mode')?.addEventListener('change', function () { const rr = this.querySelectorAll('fluent-radio'); let v = 'choose'; for (let i = 0; i < rr.length; i++) if (rr[i].checked) { v = rr[i].getAttribute('value'); break; } setGroupMarketsMode(v, true); });
   priceGroupMarketsSearch?.addEventListener('input', e => renderGroupMarketsList(e.target.value));
-  $('price-group-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => groupMarketsSel.add(m.code)); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); renderGroupPresets(); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
-  $('price-group-markets-clear')?.addEventListener('click', () => { groupMarketsSel.clear(); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); renderGroupPresets(); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
-  function pgRegionAvail(r) { return r.codes.filter(c => (window.MARKET_NAME || {})[c]); }
-  function pgRegionState(r) { const av = pgRegionAvail(r); if (!av.length) return 'none'; const n = av.filter(c => groupMarketsSel.has(c)).length; return n === 0 ? 'none' : (n === av.length ? 'all' : 'some'); }
-  function renderGroupPresets() {
-    const el = $('price-group-presets'); if (!el) return;
-    el.innerHTML = (window.MKT_REGIONS || []).map((r, i) => {
-      const st = pgRegionState(r);
-      const ico = st === 'all' ? 'fluent:checkmark-circle-16-filled' : (st === 'some' ? 'fluent:subtract-circle-16-filled' : 'fluent:add-circle-16-regular');
-      return '<button type="button" class="markets-preset' + (st === 'all' ? ' is-on' : st === 'some' ? ' is-part' : '') + '" data-pg-region="' + i + '" aria-pressed="' + (st === 'all') + '"><iconify-icon icon="' + ico + '" width="15" height="15" aria-hidden="true"></iconify-icon>' + r.name + '</button>';
-    }).join('');
-  }
-  function toggleGroupRegion(i) {
-    const r = (window.MKT_REGIONS || [])[i]; if (!r) return;
-    const av = pgRegionAvail(r);
-    if (pgRegionState(r) === 'all') av.forEach(c => groupMarketsSel.delete(c));
-    else av.forEach(c => groupMarketsSel.add(c));
-    renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : '');
-    renderGroupPresets(); updateGroupMarketsCount(); syncGroupSaveEnabled();
-  }
-  $('price-group-presets')?.addEventListener('click', e => { const b = e.target.closest('[data-pg-region]'); if (b) toggleGroupRegion(+b.getAttribute('data-pg-region')); });
+  $('price-group-markets-all')?.addEventListener('click', () => { saleAllMarkets().forEach(m => groupMarketsSel.add(m.code)); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
+  $('price-group-markets-clear')?.addEventListener('click', () => { groupMarketsSel.clear(); renderGroupMarketsList(priceGroupMarketsSearch ? priceGroupMarketsSearch.value : ''); updateGroupMarketsCount(); syncGroupSaveEnabled(); });
   priceGroupDialog?.querySelectorAll('[data-price-group-close]').forEach(el => el.addEventListener('click', () => closePriceGroupDialog()));
   priceGroupSave?.addEventListener('click', () => {
     if (!groupValid()) return;
     const name = priceGroupName.value.trim();
-    const markets = groupMarketsMode === 'all' ? 'all' : [...groupMarketsSel];
-    let currency = null, price = null;
-    if (groupCustomOn()) { currency = (priceGroupCurrency && priceGroupCurrency.value) || _baseCurrency(); price = parseFloat(priceGroupPrice.value); }
+    const markets = [...groupMarketsSel];
+    const currency = (priceGroupCurrency && priceGroupCurrency.value) || _baseCurrency();
+    const price = parseFloat(priceGroupPrice.value);
     if (adv && adv.price) {
       if (!Array.isArray(adv.price.groups)) adv.price.groups = [];
       if (priceGroupEditId) { const g = adv.price.groups.find(x => x.id === priceGroupEditId); if (g) { g.name = name; g.markets = markets; g.currency = currency; g.price = price; } }
@@ -18462,7 +18611,7 @@ function openGroupsDialog() { return window.openGroupsDialog(); }
   function removeGroupById(id) {
     if (!adv || !adv.price || !Array.isArray(adv.price.groups)) return;
     adv.price.groups = adv.price.groups.filter(g => g.id !== id);
-    if (adv.price.schedule && adv.price.schedule.scope && adv.price.schedule.scope.groupId === id) adv.price.schedule.scope = { mode: 'all' };
+    (adv.price.schedules || []).forEach(s => { if (s.scope && s.scope.groupId === id) s.scope = { mode: 'all' }; });
     persistAdvanced();
     renderGroupsList();
     try { window.__reachRefresh?.price?.(); } catch (e) {}
