@@ -15,23 +15,46 @@
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
-/* Overview zero state — "Get started": a light 3-step sequence (informational) linked by a connector. */
-.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 28px; margin: 6px 0 26px; }
-.gstep { position: relative; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.gstep__n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-  font-weight: 700; font-size: 14px; position: relative; z-index: 1; color: var(--brand-soft);
-  background: color-mix(in srgb, var(--brand) 18%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent); }
-.gstep:not(:last-child)::after { content: ''; position: absolute; top: 14px; left: 38px; width: calc(100% - 18px); height: 2px;
-  border-radius: 2px; background: color-mix(in srgb, var(--brand) 28%, var(--border)); z-index: 0; }
+/* Overview zero state — "Publish your app in a few simple steps": three bordered step cards, each with
+   a big ordinal, linked by a short dash connector (matches the Windows Developer Portal Figma). */
+.gsteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 16px 0 18px; }
+.gstep { position: relative; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 22px 22px; }
+.gstep__n { font-size: 40px; font-weight: 600; line-height: 1; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; margin-bottom: 10px; color: color-mix(in srgb, var(--text) 24%, transparent); }
+.gstep:not(:last-child)::after { content: ''; position: absolute; top: 50%; right: -18px; transform: translateY(-50%);
+  width: 12px; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--text) 30%, var(--border)); }
 .gstep__t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.gstep__t strong { font-size: 16px; color: var(--text); letter-spacing: -0.01em; }
-.gstep__t .muted { font-size: 14px; line-height: 1.5; color: var(--text-2); }
+.gstep__t strong { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.005em; }
+.gstep__t .muted { font-size: 13px; line-height: 1.46; color: var(--text-2); }
 .gstep__cta { margin-top: 8px; align-self: flex-start; }
+.gsteps-learn { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 24px; font-size: 14px; font-weight: 600; color: var(--brand); text-decoration: none; }
+.gsteps-learn:hover { text-decoration: underline; }
+.gsteps-learn iconify-icon { flex: none; }
 @media (max-width: 760px) {
-  .gsteps { grid-template-columns: 1fr; gap: 18px; }
-  .gstep { flex-direction: row; align-items: flex-start; gap: 14px; }
+  .gsteps { grid-template-columns: 1fr; gap: 14px; }
   .gstep:not(:last-child)::after { display: none; }
+}
+
+/* Add a product — full-page reserve view (replaces the modal), matches the Windows Developer Portal Figma. */
+.addprod { max-width: 940px; padding: 4px 0 40px; }
+.addprod__back { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 18px; padding: 4px 8px 4px 4px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--text-2); text-decoration: none; }
+.addprod__back:hover { color: var(--text); background: color-mix(in srgb, var(--text) 6%, transparent); }
+.addprod__title { margin: 0 0 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+.addprod__sub { margin: 0 0 32px; font-size: 14px; color: var(--text-2); }
+.apform { display: flex; flex-direction: column; gap: 22px; max-width: 680px; }
+.apform__row { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 16px 20px; align-items: start; }
+.apform__label { display: flex; align-items: center; gap: 6px; padding-top: 7px; font-size: 14px; font-weight: 600; color: var(--text); }
+.apform__label label { cursor: default; }
+.apform__req { color: var(--danger); font-weight: 600; }
+.apform__control { min-width: 0; max-width: 340px; }
+.apform__control .field__hint { margin-top: 7px; }
+.apform__actions { display: flex; justify-content: flex-start; gap: 12px; margin-top: 32px; padding-left: 196px; }
+@media (max-width: 720px) {
+  .apform__row { grid-template-columns: 1fr; gap: 6px; }
+  .apform__label { padding-top: 0; }
+  .apform__control { max-width: none; }
+  .apform__actions { padding-left: 0; }
 }
 
 /* Overview — "What you can publish": a comparison-first table. Each format (MSIX / .EXE·.MSI / PWA / GDK)

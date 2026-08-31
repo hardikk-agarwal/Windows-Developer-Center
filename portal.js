@@ -311,12 +311,12 @@
         '<div class="status-card__top">' +
           '<img class="status-card__illo" data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
           '<div class="status-card__body">' +
-            '<h2>Add your app to the Microsoft Store</h2>' +
+            '<h2>Bring your app or game to the Microsoft Store</h2>' +
             '<p class="muted">Reach more than a billion Windows devices. Track installs, usage, ratings, and crashes \u2014 all in one place.</p>' +
           '</div>' +
           '<div class="status-card__action">' +
             '<fluent-button appearance="primary" size="large" data-newapp>' +
-              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add your first app</fluent-button>' +
+              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a product</fluent-button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -395,6 +395,17 @@
   function storeOnrampsHTML() {
     return '<div class="block__head block__head--sub"><div><h2>What you can publish</h2>' +
         '<p class="muted">' + STORE_ONRAMPS_SUB + '</p></div></div>' + storeOnrampsBodyHTML();
+  }
+  // Zero-state: a neutral 3-step "how to publish" (reserve name -> provide package -> complete listing),
+  // shown instead of the format cards. Reuses the .gsteps stepper; format browsing stays one click away.
+  function storeStepsHTML() {
+    return '<div class="block__head block__head--sub"><div><h2>Publish your app in a few simple steps</h2></div></div>' +
+      '<div class="gsteps">' +
+        gstep('01', 'Reserve your product name', 'Choose a unique name for your app or game.') +
+        gstep('02', 'Add your package and listing', 'Upload your package and add the details customers will see in Microsoft Store.') +
+        gstep('03', 'Set age rating and availability', 'Complete the age-rating questions and choose where your product will be available.') +
+      '</div>' +
+      '<a class="gsteps-learn" href="https://learn.microsoft.com/windows/apps/publish/" target="_blank" rel="noopener noreferrer">Learn more about publishing to Store<iconify-icon icon="fluent:open-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></a>';
   }
   // Has-apps: the same content collapsed into an accordion below the dashboard.
   function storeOnrampsAccordionHTML() {
@@ -1236,9 +1247,8 @@
     var el = $("overviewSummary");
     if (!el) return;
     if (STORE) {
-      if (!state.apps.length) {                          // fresh portal zero-state: hero + "What you can publish" format cards
-        el.innerHTML = storeOnrampsHTML();
-        wirePubTabs(el);
+      if (!state.apps.length) {                          // fresh portal zero-state: hero + "Get published in 3 steps"
+        el.innerHTML = storeStepsHTML();
         return;
       }
       el.innerHTML = unifiedDashHTML();
@@ -1449,8 +1459,8 @@
           '</div>';
       return;
     }
-    wrap.innerHTML = '<div class="table-wrap"><table class="table">' +
-      '<thead><tr><th>Certificate</th><th>Thumbprint</th><th>Apps</th><th>Added</th><th>Status</th><th></th></tr></thead>' +
+    wrap.innerHTML = '<div class="table-wrap"><table class="table table--certs">' +
+      '<thead><tr><th>Certificate</th><th>Source</th><th>Apps</th><th>Added</th><th>Expires</th><th>Status</th><th></th></tr></thead>' +
       '<tbody>' + state.certs.map(certRowHTML).join("") + '</tbody></table></div>' +
       (scanning ? certScanBannerHTML() : ((STORE && !UNIFIED) ? "" : certFoundBannerHTML()));
   }
@@ -1478,6 +1488,36 @@
       '</div>' +
     '</div>';
   }
+  // Certificate provenance: submitted by hand in this tab, or recognized from a Win32 package the
+  // developer published to the Store (that package's Authenticode signer is surfaced here directly).
+  function certSourceCell(c) {
+    if (c.source === "store")
+      return '<span class="cert-src" title="Recognized from your Win32 package published to the Store">' +
+        '<iconify-icon icon="fluent:store-microsoft-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Store package</span>';
+    return '<span class="cert-src" title="Added by submitting a signed binary">' +
+      '<iconify-icon icon="fluent:document-add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Added manually</span>';
+  }
+  // Expiry from the cert's NotAfter — flagged when expired or expiring within 30 days.
+  function certExpiryCell(c) {
+    if (!c.notAfter) return '<span class="muted">—</span>';
+    var d = new Date(c.notAfter);
+    if (isNaN(d.getTime())) return '<span class="muted">—</span>';
+    var s = d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
+    var days = Math.round((d.getTime() - Date.now()) / 86400000);
+    if (days < 0) return '<span class="cert-exp cert-exp--over" title="Expired">' + s + '</span>';
+    if (days <= 30) return '<span class="cert-exp cert-exp--soon" title="Expires in ' + days + ' day' + (days === 1 ? '' : 's') + '">' + s + '</span>';
+    return '<span>' + s + '</span>';
+  }
+  function fmtThumbFull(hex) { var u = (hex || "").toUpperCase(); return u ? u.match(/.{1,4}/g).join(" ") : "—"; }
+  // Thumbprint + raw signer subject/issuer live in an expandable details row — there when you need
+  // them, out of the way otherwise.
+  function certDetailsHTML(c, algo) {
+    function row(k, v) { return '<div class="certdet__row"><span class="certdet__k">' + k + '</span><span class="certdet__v">' + v + '</span></div>'; }
+    var html = row("Thumbprint", '<span class="mono">' + fmtThumbFull(c.thumb) + '</span> <span class="muted">' + algo + '</span>');
+    if (c.subject) html += row("Subject", esc(c.subject));
+    if (c.issuer) html += row("Issuer", esc(c.issuer));
+    return '<div class="certdet">' + html + '</div>';
+  }
   function certRowHTML(c) {
     var apps = state.apps.filter(function (a) { return a.certId === c.id; }).length;
     var sub = c.thumbKind === "hash" ? "File fingerprint (backend offline)" : "Authenticode signer";
@@ -1486,15 +1526,22 @@
     var appsCell = (scanning && c.id === scanningCertId)
       ? '<span class="cert-scan"><span class="spinner spinner--xs"></span>Finding\u2026</span>'
       : apps;
-    return '<tr>' +
+    var detId = "certdet-" + c.id;
+    return '<tr class="cert-row">' +
       '<td><div class="cell-main"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
         '<div><strong>' + esc(c.label) + '</strong><span class="muted">' + sub + '</span></div></div></td>' +
-      '<td class="mono">' + fmtThumb(c.thumb) + ' <span class="muted">' + algo + '</span></td>' +
+      '<td>' + certSourceCell(c) + '</td>' +
       '<td>' + appsCell + '</td>' +
       '<td>' + esc(c.added) + '</td>' +
+      '<td>' + certExpiryCell(c) + '</td>' +
       '<td>' + trustPill(c.trust) + '</td>' +
-      '<td><button class="linkbtn" data-removecert="' + c.id + '">Remove</button></td>' +
-    '</tr>';
+      '<td class="cert-row__actions">' +
+        '<button class="linkbtn cert-det-btn" data-certdetails="' + c.id + '" aria-expanded="false" aria-controls="' + detId + '">' +
+          '<iconify-icon class="cert-det-chev" icon="fluent:chevron-down-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Details</button>' +
+        '<button class="linkbtn" data-removecert="' + c.id + '">Remove</button>' +
+      '</td>' +
+    '</tr>' +
+    '<tr class="cert-detrow" id="' + detId + '" hidden><td colspan="7">' + certDetailsHTML(c, algo) + '</td></tr>';
   }
 
   function appSkeletonHTML(n) {
@@ -3658,7 +3705,8 @@
       label: cnOf(info.signerSubject) || file.name.replace(/\.[^.]+$/, ""),
       subject: info.signerSubject || null, issuer: info.issuer || null,
       thumb: thumb, thumbKind: info.signerThumbprint ? "cert" : "hash",
-      trust: info.status || "Unknown", signed: !!info.signerThumbprint, added: today()
+      trust: info.status || "Unknown", signed: !!info.signerThumbprint,
+      source: "manual", notAfter: info.notAfter || null, added: today()
     };
     state.certs.push(cert);
     return { cert: cert, created: true };
@@ -3912,7 +3960,8 @@
     var CS_THUMB = "1D6C5C2964313A6FD555B53BB6FFE077A4FA82F2";
     var certId = uid();
     state.certs.push({ id: certId, label: "Microsoft Corporation", thumb: CS_THUMB,
-      thumbKind: "cert", trust: "Valid", signed: true, added: today(), verified: false });
+      thumbKind: "cert", trust: "Valid", signed: true, source: "store",
+      notAfter: new Date(Date.now() + 400 * 864e5).toISOString(), added: today(), verified: false });
     scanning = true; scanningCertId = certId; renderCerts(); renderApps();
     // Populate the REAL apps signed by this certificate — the same /api/apps-by-cert scan the WDP portal uses.
     var added = 0;
@@ -4009,38 +4058,110 @@
      re-opened later by clicking their row. On submit, tdp-bridge.js writes the result back
      so the table shows "In Store". */
   var publishId = null;
+  var _reserveFmt = null;   // format from a format-card CTA / existing app; null -> chosen on landing in the flow
+  var _apType = "app";      // Add-a-product page: product type preset (app | game)
+  var _apName = "";         // Add-a-product page: prefilled name (existing app) or blank (new)
+  var _apLang = "en-US";    // Add-a-product page: default language preset
+  var _apTitle = "Add a product";
   function openPublish(id) {
     var a = appById(id); if (!a) return;
     publishId = id;
-    if ($("pubTitle")) $("pubTitle").textContent = "Publish to the Store";
-    resetPubSteps();
-    var nm = $("pubName");
-    nm.value = (a.storeName || a.name).replace(/\.[^.]+$/, "");
-    setDropdownValue($("pubLang"), a.storeLang || "en-US");
-    if ($("pubType")) setDropdownValue($("pubType"), a.type || "app");
-    if ($("pubAppType")) setDropdownValue($("pubAppType"), a.pkgType || "msix");
-    syncPubChoice();
-    var m = $("publishModal"); if (m && m.show) m.show();
-    checkPubName();
-    setTimeout(function () { try { nm.focus(); nm.select(); } catch (e) {} }, 40);
+    _reserveFmt = a.pkgType || null;
+    _apType = a.type || "app";
+    _apName = (a.storeName || a.name).replace(/\.[^.]+$/, "");
+    _apLang = a.storeLang || "en-US";
+    _apTitle = "Publish to the Store";
+    goView("add-product");
   }
   // "Create new app" — reserve a name for a brand-new app (not a discovered one).
   // opts (from a format column CTA): { type: 'app'|'game', pkgType: 'msix'|'win32'|'pwa'|'gdk' }.
   function openNewApp(opts) {
     opts = opts || {};
     publishId = null;
-    if ($("pubTitle")) $("pubTitle").textContent = "Add a new app";
-    resetPubSteps();
-    $("pubName").value = "";
-    setDropdownValue($("pubLang"), "en-US");
-    if ($("pubType")) setDropdownValue($("pubType"), opts.type === "game" ? "game" : "app");
-    if ($("pubAppType")) setDropdownValue($("pubAppType"), opts.pkgType || "msix");
-    syncPubChoice();
-    var m = $("publishModal"); if (m && m.show) m.show();
-    checkPubName();
-    setTimeout(function () { try { $("pubName").focus(); } catch (e) {} }, 40);
+    _reserveFmt = opts.pkgType || null;
+    _apType = opts.type === "game" ? "game" : "app";
+    _apName = "";
+    _apLang = "en-US";
+    _apTitle = "Add a product";
+    goView("add-product");
   }
   function closePublish() { var m = $("publishModal"); if (m && m.hide) m.hide(); }
+  // ---- Add a product (full page) ------------------------------------------------------------
+  // The reserve step is a routed page (not a modal) reached via openNewApp / openPublish; it renders
+  // into a .block appended to .main, so the portal chrome stays and Overview keeps its nav highlight.
+  function ensureAddProductBlock() {
+    var el = document.getElementById("add-product");
+    if (!el) {
+      el = document.createElement("section");
+      el.className = "block"; el.id = "add-product";
+      var main = document.querySelector(".main");
+      if (main) main.appendChild(el);
+    }
+    return el;
+  }
+  var AP_LANGS = [["en-US", "English (United States)"], ["en-GB", "English (United Kingdom)"], ["es-ES", "Spanish (Spain)"], ["fr-FR", "French (France)"], ["de-DE", "German (Germany)"], ["pt-BR", "Portuguese (Brazil)"], ["it-IT", "Italian (Italy)"], ["ja-JP", "Japanese"], ["zh-CN", "Chinese (Simplified)"], ["hi-IN", "Hindi (India)"]];
+  function apField(label, forId, infoLabel, tip, control) {
+    var infoId = forId + "Info";
+    return '<div class="apform__row">' +
+      '<div class="apform__label"><label for="' + forId + '">' + label + '</label><span class="apform__req" aria-hidden="true">*</span>' +
+        '<span class="field__info" id="' + infoId + '" tabindex="0" aria-label="' + esc(infoLabel) + '"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></span>' +
+        '<fluent-tooltip anchor="' + infoId + '" positioning="after">' + tip + '</fluent-tooltip></div>' +
+      '<div class="apform__control">' + control + '</div>' +
+    '</div>';
+  }
+  function addProductHTML() {
+    var isGame = _apType === "game";
+    var langOpts = AP_LANGS.map(function (l) { return '<fluent-option value="' + l[0] + '"' + (l[0] === _apLang ? " selected" : "") + '>' + l[1] + '</fluent-option>'; }).join("");
+    return '<div class="addprod">' +
+      '<a class="addprod__back" href="#overview" data-ap-cancel><iconify-icon icon="fluent:arrow-left-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>' +
+      '<h1 class="addprod__title">' + esc(_apTitle) + '</h1>' +
+      '<p class="addprod__sub">Create and publish an app or game on the Microsoft Store</p>' +
+      '<div class="apform">' +
+        apField("Product name", "apName", "About reserving a product name", "Make sure you have the rights to use any name you reserve. You must submit this product to the Microsoft Store within three months, or you\u2019ll lose your name reservation.",
+          '<fluent-text-input id="apName" appearance="outline" aria-label="Product name" placeholder="Your product name" style="width:100%"></fluent-text-input><span class="field__hint" id="apNameHint"></span>') +
+        apField("Product type", "apType", "About product type", "This can\u2019t be changed later. Once you create the product, you can\u2019t switch it between App and Game.",
+          '<fluent-radio-group id="apType" class="pubchoice" orientation="horizontal" value="' + (isGame ? "game" : "app") + '" aria-label="Product type">' +
+            '<fluent-field label-position="after"><label slot="label" for="ap-app">App</label><fluent-radio id="ap-app" slot="input" value="app"' + (isGame ? "" : " checked") + '></fluent-radio></fluent-field>' +
+            '<fluent-field label-position="after"><label slot="label" for="ap-game">Game</label><fluent-radio id="ap-game" slot="input" value="game"' + (isGame ? " checked" : "") + '></fluent-radio></fluent-field>' +
+          '</fluent-radio-group>') +
+        apField("Default language", "apLang", "About the default language", "This language will be used to create your default listing. Content from the default listing is copied into every new listing you add, so you start with content already in place. You can edit it anytime.",
+          '<fluent-dropdown id="apLang" appearance="outline" aria-label="Default language" style="width:100%"><fluent-listbox>' + langOpts + '</fluent-listbox></fluent-dropdown>') +
+      '</div>' +
+      '<div class="apform__actions">' +
+        '<fluent-button appearance="primary" id="apCreate" disabled><iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add product</fluent-button>' +
+        '<fluent-button appearance="secondary" data-ap-cancel>Cancel</fluent-button>' +
+      '</div>' +
+    '</div>';
+  }
+  function renderAddProduct() {
+    var el = ensureAddProductBlock();
+    el.innerHTML = addProductHTML();
+    var name = el.querySelector("#apName");
+    var create = el.querySelector("#apCreate");
+    var hint = el.querySelector("#apNameHint");
+    if (name && _apName) name.value = _apName;
+    function refresh() {
+      var v = (name && name.value || "").trim();
+      if (hint) {
+        if (v.length < 2) { hint.className = "field__hint"; hint.textContent = ""; }
+        else { hint.className = "field__hint field__hint--ok"; hint.innerHTML = '<iconify-icon icon="fluent:checkmark-circle-12-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Name available'; }
+      }
+      if (create) { if (v.length >= 2) create.removeAttribute("disabled"); else create.setAttribute("disabled", ""); }
+    }
+    function submit() {
+      if (create && create.hasAttribute("disabled")) return;
+      reserveAndOpen(name ? name.value : "", readDropdownValue(el.querySelector("#apType")) || "app", readDropdownValue(el.querySelector("#apLang")) || "en-US", _reserveFmt);
+    }
+    if (name) {
+      name.addEventListener("input", refresh);
+      name.addEventListener("keyup", refresh);
+      name.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+    }
+    if (create) create.addEventListener("click", submit);
+    el.querySelectorAll("[data-ap-cancel]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); goView("overview"); }); });
+    refresh();
+    setTimeout(function () { try { name.focus(); } catch (e) {} }, 60);
+  }
   // Reveal the right App-type options for the product (.EXE/.MSI app-only, GDK game-only) and the
   // Partner Center off-ramp when GDK is picked.
   function syncPubChoice() {
@@ -4065,7 +4186,7 @@
   function updatePubCreate() {
     var btn = $("pubCreate"); if (!btn) return;
     var v = ($("pubName").value || "").trim();
-    var isGdk = $("pubAppType") && readDropdownValue($("pubAppType")) === "gdk";
+    var isGdk = _reserveFmt === "gdk";
     if (v.length >= 2 && !isGdk) btn.removeAttribute("disabled"); else btn.setAttribute("disabled", "");
   }
   function checkPubName() {
@@ -4077,10 +4198,13 @@
   // "Create app": reserve the name (creating a brand-new app if there's no existing one),
   // add/mark it in-progress in the table immediately, then open the flow.
   function doCreateApp() {
-    var name = ($("pubName").value || "").trim(); if (name.length < 2) return;
-    // GDK titles are reserved in Partner Center, not here — the button is disabled, but guard anyway.
-    var fmt = $("pubAppType") ? readDropdownValue($("pubAppType")) : "msix";
-    if (fmt === "gdk") return;
+    reserveAndOpen(($("pubName").value || ""), $("pubType") ? readDropdownValue($("pubType")) : "app", readDropdownValue($("pubLang")), _reserveFmt);
+  }
+  // Reserve the name (create the app row if new, else update the existing one), then open the flow.
+  // Shared by the Add-a-product page and the legacy reserve dialog.
+  function reserveAndOpen(name, type, lang, fmt) {
+    name = (name || "").trim(); if (name.length < 2) return;
+    if (fmt === "gdk") return;   // GDK titles are reserved in Partner Center, not here
     var a = publishId ? appById(publishId) : null;
     if (!a) {                                            // new app — added to the table right now
       var cert = state.certs.filter(function (c) { return c.trust === "Valid"; })[0] || state.certs[0] || null;
@@ -4090,9 +4214,9 @@
       state.apps.push(a);
     }
     a.storeName = name;
-    a.storeLang = readDropdownValue($("pubLang")) || "en-US";
-    if ($("pubType")) a.type = readDropdownValue($("pubType")) || "app";
-    a.pkgType = (fmt && fmt !== "unsure") ? fmt : null;   // seeds the flow's package step; can change later
+    a.storeLang = lang || "en-US";
+    a.type = (type === "game") ? "game" : "app";
+    a.pkgType = (["msix", "win32", "pwa"].indexOf(fmt) >= 0) ? fmt : null;   // else chosen on landing in the flow
     a.storeCreated = a.storeCreated || today();
     if (!a.store) a.storeStatus = "in-progress";        // reserved → entering the flow
     save(); renderApps();                               // persist + reflect the new row
@@ -4130,7 +4254,7 @@
       // `type` is the PACKAGE family (msix / win32 / pwa) chosen when the app was reserved — the flow
       // opens straight into that format's package step. The App/Game choice rides separately in
       // `productKind` (used to pre-answer the age questionnaire's first question).
-      id: a.id, name: a.storeName || a.name, type: (["msix", "win32", "pwa"].indexOf(a.pkgType) >= 0 ? a.pkgType : "msix"), subtype: null,
+      id: a.id, name: a.storeName || a.name, type: (["msix", "win32", "pwa"].indexOf(a.pkgType) >= 0 ? a.pkgType : null), subtype: null,
       productKind: a.type === "game" ? "game" : "app",
       language: a.storeLang || "en-US",
       // published apps open straight to the live hub; only a freshly-submitted app is in-review
@@ -4146,6 +4270,9 @@
     if (realIcon) mapped.icon = realIcon;
     mapped.baseLogo = realIcon || tileDataUrl(a.name);
     var i = ms.map(function (x) { return x.id; }).indexOf(a.id);
+    // Preserve a format the developer already picked inside the flow: when the portal record still has
+    // no pkgType (deferred at reserve), don't overwrite the flow's saved type with null on re-entry.
+    if (i >= 0 && !mapped.type && ms[i] && ["msix", "win32", "pwa"].indexOf(ms[i].type) >= 0) mapped.type = ms[i].type;
     if (i >= 0) ms[i] = Object.assign({}, ms[i], mapped); else ms.push(mapped);
     try { localStorage.setItem("msstore.apps", JSON.stringify(ms)); } catch (e) {}
     // Variant flows live side by side; publish-v6.html (unified: V2 layout, non-gated, V5 package
@@ -4387,6 +4514,15 @@
       if (cont) { openPublishFlow(cont.getAttribute("data-continue")); return; }
       var an = e.target.closest("[data-analytics]");
       if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; goView("analytics"); renderAnalytics(); return; }
+      var cdt = e.target.closest("[data-certdetails]");
+      if (cdt) {
+        var _cid = cdt.getAttribute("data-certdetails");
+        var _drow = document.getElementById("certdet-" + _cid);
+        var _open = cdt.getAttribute("aria-expanded") === "true";
+        cdt.setAttribute("aria-expanded", _open ? "false" : "true");
+        if (_drow) _drow.hidden = _open;
+        return;
+      }
       var rc = e.target.closest("[data-removecert]");
       if (rc) { confirmRemoveCert(rc.getAttribute("data-removecert")); return; }
       var openapp = e.target.closest("[data-openapp]");
@@ -4602,12 +4738,14 @@
   /* ---------------- Sidebar view router ---------------- */
   // Customer groups is a Store-portal-only view.
   var VIEWS = STORE
-    ? ["overview", "apps", "certificates", "analytics", "customer-groups"]
-    : ["overview", "apps", "certificates", "analytics"];
+    ? ["overview", "apps", "certificates", "analytics", "customer-groups", "add-product"]
+    : ["overview", "apps", "certificates", "analytics", "add-product"];
   function showView(id) {
     if (VIEWS.indexOf(id) === -1) id = "overview";
+    if (id === "add-product") renderAddProduct();
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
-    document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === id); });
+    var navId = id === "add-product" ? "overview" : id;   // the reserve page is launched from Overview — keep it lit
+    document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === navId); });
     if (id === "analytics") renderAnalytics();
     else { var dsh0 = document.getElementById("demoSwitchHost"); if (dsh0) dsh0.innerHTML = ""; }
     scrollTopMain();

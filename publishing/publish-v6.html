@@ -398,6 +398,12 @@
   .wz-pkgtype__btn:hover .wz-pkgtype__editico { color: var(--brand); }
   .wz-pkgtype__btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
   .wz-pkgtype__val { font-size: 13px; font-weight: var(--font-weight-semibold); }
+  .wz-pkgtype__val--unset { color: var(--fg-3); font-weight: var(--font-weight-regular); font-style: italic; }
+  .wz-pkgtype__select { appearance: none; border: 0; background: none; padding: 0; margin: 0; font: inherit; font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--brand); cursor: pointer; }
+  .wz-pkgtype__select:hover { text-decoration: underline; }
+  .wz-pkgtype__sep { color: var(--fg-3); margin: 0 3px; }
+  .wz-pkgtype__change { appearance: none; border: 0; background: none; padding: 0; margin: 0; font: inherit; font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--brand); cursor: pointer; }
+  .wz-pkgtype__change:hover { text-decoration: underline; }
   .wz-pkgtype__editico { color: var(--fg-3); transition: color 120ms ease; }
   .wz-pkgtype__lock { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--fg-3); }
   #flow-wrap:not(.is-wizard) #wz-pkgtype { display: none !important; }   /* the switcher belongs to the wizard rail */
@@ -405,10 +411,27 @@
   /* Change-app-type dialog: pick a type (cards left-to-right, each with its own capabilities). */
   #apptype-dialog::part(control), #apptype-dialog::part(dialog) { width: min(820px, 94vw); max-width: min(820px, 94vw); }
   .atd__lead { font-size: 13.5px; color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.5; }
+  .atd-help-q { align-self: center; font-size: 13px; color: var(--fg-2); }
+  #atd-help { margin-inline-end: auto; }   /* push Help-me-choose to the left; Cancel + Confirm stay right */
   .atd__opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-10); align-items: stretch; }
+  /* Inline app-type gate (Package step first-run) — reuses the .atd-opt card visuals as buttons */
+  .pkg-choose { margin: 0 0 var(--sp-8); }
+  .pkg-choose__lead { font-size: 13.5px; color: var(--fg-2); margin: 0 0 var(--sp-16); line-height: 1.5; max-width: 640px; }
+  .pkg-choose__opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-12); align-items: stretch; }
+  @media (max-width: 760px) { .pkg-choose__opts { grid-template-columns: 1fr; } }
+  .pkg-choose__opt { appearance: none; width: 100%; }
+  .pkg-choose .pkg-choose__opt:hover { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: var(--layer); }
+  .pkg-choose__opt:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .pkg-choose__pick { color: var(--fg-3); transition: color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
+  .pkg-choose__opt:hover .pkg-choose__pick { color: var(--brand); transform: translateX(2px); }
+  .pkg-choose__aid { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-16); font-size: 13px; }
+  .pkg-choose__aid-txt { color: var(--fg-3); }
+  #flow-wrap.is-choosing-format #ez-pkg-identity-banner,
+  #flow-wrap.is-wizard.is-choosing-format #ez-pkg-identity-banner.is-wz-show { display: none !important; }   /* banner's .is-wz-show is !important, so out-specify it during the gate */
+  @media (prefers-reduced-motion: reduce) { .pkg-choose__pick { transition: none; } }
   .atd-opt { display: flex; flex-direction: column; gap: var(--sp-8); text-align: left; padding: var(--sp-14); background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); cursor: pointer; font: inherit; height: 100%; }
   .atd-opt:hover { border-color: var(--stroke-3); background: var(--subtle); }
-  .atd-opt.is-sel { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: color-mix(in srgb, var(--brand) 7%, var(--layer)); }
+  .atd-opt.is-sel, .atd-opt.is-sel:hover { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: var(--layer); }
   /* Focus follows selection in this radiogroup, so reuse the one brand ring — no detached 2nd outline. */
   .atd-opt:focus-within { outline: none; border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
   .atd-opt__top { display: flex; align-items: center; justify-content: space-between; }
@@ -429,6 +452,43 @@
   .atd__impact-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-6); }
   .atd__impact-list li { display: flex; align-items: flex-start; gap: var(--sp-6); font-size: 12.5px; color: var(--fg-2); line-height: 1.4; }
   .atd__impact-list li iconify-icon { color: var(--fg-3); flex: 0 0 auto; margin-top: 1px; }
+  /* Help-me-choose questionnaire (format wizard) — opened from the Choose-your-app-type dialog */
+  .fmthelp-modal { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .fmthelp-modal[hidden] { display: none; }
+  .fmthelp-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+  .fmthelp-modal__card { position: relative; width: min(460px, 100%); max-height: 88vh; overflow: auto; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-16); box-shadow: var(--shadow-16); padding: var(--sp-24); }
+  .fmtw__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-bottom: var(--sp-14); }
+  .fmtw__title { margin: 0; font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .fmtw__progress { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--fg-1) 12%, transparent); overflow: hidden; }
+  .fmtw__progress > span { display: block; height: 100%; background: var(--brand); border-radius: 999px; transition: width var(--dur-3) var(--ease-out); }
+  .fmtw__close { flex: none; appearance: none; border: 0; background: transparent; color: var(--fg-3); cursor: pointer; padding: 2px; border-radius: var(--r-6); display: inline-flex; }
+  .fmtw__close:hover { color: var(--fg-1); background: var(--subtle); }
+  .fmtw__crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6); margin: var(--sp-16) 0 0; }
+  .fmtw__crumb { display: inline-flex; align-items: center; appearance: none; border: 1px solid var(--stroke-2); background: var(--subtle); color: var(--fg-2); font: inherit; font-size: 12px; font-weight: var(--font-weight-semibold); padding: 3px 10px; border-radius: 999px; cursor: pointer; }
+  .fmtw__crumb:hover { color: var(--fg-1); border-color: var(--stroke-3); }
+  .fmtw__crumb-arrow { flex: none; color: var(--fg-3); }
+  .fmtw__q { margin: var(--sp-16) 0 0; font-size: 17px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.3; }
+  .fmtw__opts { display: flex; flex-direction: column; gap: var(--sp-10); margin-top: var(--sp-16); }
+  .fmtw__opt { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; appearance: none; padding: var(--sp-14); border-radius: var(--r-12); border: 1px solid var(--stroke-2); background: var(--layer); color: var(--fg-1); font: inherit; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+  .fmtw__opt:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
+  .fmtw__opt-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-2); }
+  .fmtw__opt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fmtw__opt-title { font-size: 14px; font-weight: var(--font-weight-semibold); }
+  .fmtw__opt-desc { font-size: 12px; color: var(--fg-3); line-height: 1.35; }
+  .fmtw__opt-arrow { flex: none; color: var(--fg-3); }
+  .fmtw__foot { display: flex; align-items: center; margin-top: var(--sp-16); min-height: 22px; }
+  .fmtw__back { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
+  .fmtw__back:hover { color: var(--fg-1); }
+  .fmtw__result-eyebrow { display: block; margin-top: var(--sp-16); font-size: 12px; font-weight: var(--font-weight-semibold); letter-spacing: .02em; color: var(--fg-3); }
+  .fmtw__result { display: flex; align-items: center; gap: 14px; margin-top: var(--sp-12); }
+  .fmtw__result-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-12); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .fmtw__result-name { font-size: 22px; font-weight: 700; color: var(--fg-1); line-height: 1.1; }
+  .fmtw__result-rec { display: inline-block; margin-top: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); padding: 2px 7px; border-radius: 999px; }
+  .fmtw__result-why { margin: var(--sp-16) 0 0; font-size: 13.5px; line-height: 1.5; color: var(--fg-2); }
+  .fmtw__result-actions { display: flex; align-items: center; gap: 14px; margin-top: var(--sp-24); }
+  .fmtw__restart { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; }
+  .fmtw__restart:hover { color: var(--fg-1); text-decoration: underline; }
+  @media (prefers-reduced-motion: reduce) { .fmtw__progress > span, .fmtw__opt { transition: none; } }
   .v4-type .seg { display: flex; width: 100%; max-width: 520px; }
   .v4-type .seg__opt { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-6); text-align: center; }
   .v4-type .seg__info { flex: 0 0 auto; margin-inline-start: var(--sp-4); color: currentColor; opacity: .5; cursor: help; transition: opacity var(--dur-2) var(--ease-out); }
@@ -2366,6 +2426,16 @@
   #submit-dialog .ez-sd__title-row .ez-sd__title { margin: 0; }
   #submit-dialog .sd-editlink { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 0; padding: 0; color: var(--brand); font: inherit; font-size: var(--font-size-base-200); font-weight: var(--font-weight-semibold); cursor: pointer; }
   #submit-dialog .sd-editlink:hover { text-decoration: underline; }
+  #submit-dialog .ez-sd__collapse { display: inline-flex; align-items: center; gap: var(--sp-6); background: none; border: 0; padding: 0; margin: 0; cursor: pointer; font: inherit; color: inherit; }
+  #submit-dialog .ez-sd__collapse .ez-sd__title { margin: 0; }
+  #submit-dialog .ez-sd__collapse-chev { color: var(--fg-3); flex: 0 0 auto; transition: transform var(--dur-2) var(--ease-out); }
+  #submit-dialog .ez-sd__collapse[aria-expanded="true"] .ez-sd__collapse-chev { transform: rotate(90deg); }
+  #submit-dialog .sd-preview[hidden] { display: none; }
+  #submit-dialog #submit-step-1 .ez-sd__summary.is-changes { display: flex; flex-direction: column; gap: var(--sp-8); }
+  #submit-dialog #submit-step-1 .ez-sd__summary.is-changes .ez-sd__stat { padding: var(--sp-10) var(--sp-12); align-items: flex-start; }
+  #submit-dialog #submit-step-1 .ez-sd__summary.is-changes .ez-sd__stat-ic { margin-top: 1px; color: var(--brand); }
+  #submit-dialog #submit-step-1 .ez-sd__summary.is-changes .ez-sd__stat-text { flex-direction: column; align-items: flex-start; gap: 1px; }
+  @media (prefers-reduced-motion: reduce) { #submit-dialog .ez-sd__collapse-chev { transition: none; } }
   #submit-dialog .sd-preview { max-height: min(56vh, 580px); overflow-y: auto; overflow-x: hidden; border: 1px solid var(--stroke-2); border-radius: var(--r-8); background: var(--subtle); }
   /* Step 1: keep the preview the star — facts sit under it as compact labeled chips, not tall cards. */
   #submit-dialog #submit-step-1 .ez-sd__summary { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
@@ -3466,7 +3536,8 @@
   /* Upload-only (no URL method, e.g. MSIX): drop the container edge and give the drop zone a
      persistent dashed border, so it reads as a drag-and-drop target. */
   .ez-pkg-add--split:has(#pkg-url-part[hidden]) { border: 0; background: none; overflow: visible; }
-  .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop { border: 1.5px dashed var(--stroke-1); border-radius: var(--r-12); background: var(--canvas-tint); }
+  .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop { border: 1.5px dashed var(--stroke-1); border-radius: var(--r-12); background: var(--canvas-tint); align-items: center; text-align: center; padding: var(--sp-32) var(--sp-20); gap: var(--sp-6); }
+  .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop iconify-icon { width: 40px; height: 40px; margin-bottom: var(--sp-8); }
   .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop:hover, .ez-pkg-add--split:has(#pkg-url-part[hidden]) .ez-pkg-drop.is-drag { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--canvas-tint)); outline: none; }
   .ez-pkg-add--split .ez-pkg-url__row { width: 100%; }
   .ez-pkg-method__ic { color: var(--brand); }
@@ -4208,13 +4279,15 @@
   #flow-wrap.wz-v2.is-wizard .ez-apphead__meta { margin-top: var(--sp-4); }
   /* Left-rail identity: [icon | name+type | status] — name (read-only) over the app type, with the Draft
      status pill parked top-right so it doesn't crowd the identity. Name wraps freely in the narrow rail. */
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icon text meta"; align-items: center; column-gap: var(--sp-12); }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icon name meta" "icon pkg pkg"; align-items: center; column-gap: var(--sp-12); row-gap: 3px; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__icon { grid-area: icon; width: 56px; height: 56px; font-size: 20px; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { grid-area: text; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-6); }
+  /* The type line gets its OWN full-width row (the icon spans both) so "EXE/MSI · Change" isn't pinched
+     into the narrow name column beside the status pill. display:contents lets name + type place directly. */
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__text { display: contents; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .ez-apphead__meta { grid-area: meta; margin: 0; justify-self: end; align-self: start; }
-  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-title { min-width: 0; overflow-wrap: anywhere; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner .ez-title { grid-area: name; align-self: end; min-width: 0; overflow-wrap: anywhere; }
   /* App type + a pencil that changes ONLY the package type (opens the Change app type comparison). */
-  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { display: flex; align-items: center; gap: 5px; }
+  #flow-wrap.wz-v2.is-wizard .wz-banner #wz-pkgtype { grid-area: pkg; align-self: start; display: flex; align-items: center; gap: 5px; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__val { min-width: 0; font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #flow-wrap.wz-v2.is-wizard .wz-banner .wz-pkgtype__lockico { flex: 0 0 auto; color: var(--fg-3); }
   .wz-pkgtype__edit { flex: 0 0 auto; display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: var(--r-4); background: transparent; color: var(--fg-3); cursor: pointer; transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
@@ -4234,13 +4307,8 @@
     border: 0; border-radius: var(--r-8);
     white-space: normal; text-align: left;
   }
-  /* Status icon — flat (no ringed circle / connector line), colored by state. */
-  #flow-wrap.wz-v2.is-wizard .wz-stepind__dot {
-    position: relative; z-index: 1;
-    width: 22px; height: 22px; flex: 0 0 22px;
-    color: var(--fg-3);
-  }
-  #flow-wrap.wz-v2.is-wizard .wz-stepind__dot iconify-icon { width: 20px; height: 20px; }
+  /* Section glyphs removed from the side rail — labels + trailing status carry it (matches Figma). */
+  #flow-wrap.wz-v2.is-wizard .wz-stepind__dot { display: none; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind__label { font-size: 14px; font-weight: 600; line-height: 18px; }
   /* States: Fluent 2 selected-nav treatment — a leading brand accent bar + a soft brand-tinted row,
      with the section glyph in brand. Non-current glyphs stay muted; a section's completion now reads
@@ -4368,11 +4436,13 @@
   /* ---- Step count badge + hover "what's left" checklist (v2 vertical rail) ---- */
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge { margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; line-height: 1; color: var(--fg-2); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current .wz-stepind__badge { color: var(--brand); }
-  #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--review { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--brand); }
+  #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--review { font-size: 12px; font-weight: 400; color: var(--brand); }
   /* Trailing status glyphs: a green ✓ once the section is complete (wins even on the current row), a
      muted lock while it's gated. */
   #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current .wz-stepind__badge--done,
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--done { color: var(--status-success); }
+  #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--text,
+  #flow-wrap.wz-v2.is-wizard .wz-stepind.is-current .wz-stepind__badge--text { color: var(--fg-3); font-weight: 400; }
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge--locked { color: var(--fg-3); }
   #flow-wrap.wz-v2.is-wizard .wz-stepind__badge iconify-icon { display: block; }
   /* Determinate progress ring (right slot): a muted track + a brand arc filled to the section's
@@ -4720,8 +4790,8 @@
     <!-- Wizard progress: one step at a time, in order. -->
     <div class="wz-steps" id="wz-steps" role="list" aria-label="Publishing steps">
       <button type="button" class="wz-stepind is-current" data-wz="step-package" data-icon="fluent:box-20-filled" role="listitem" aria-current="step"><span class="wz-stepind__dot"><iconify-icon icon="fluent:box-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Package</span></button>
-      <button type="button" class="wz-stepind" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listing</span></button>
-      <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Content &amp; ratings</span></button>
+      <button type="button" class="wz-stepind" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listings</span></button>
+      <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Rating &amp; disclosures</span></button>
       <button type="button" class="wz-stepind" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
       <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
       <div class="submit-checklist" id="submit-checklist">
@@ -4744,7 +4814,7 @@
     <div class="wz-banner__action" id="submit-bar">
       <fluent-button id="submit" appearance="primary" size="large" disabled>
         <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Submit for review
+        Review &amp; submit
       </fluent-button>
     </div>
     </div><!-- /.wz-banner -->
@@ -4821,8 +4891,8 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-package">1</span>
           <div>
-            <h2 class="ez-step__title">Add your app package <span class="field-mark field-mark--req" aria-label="required">*</span></h2>
-            <p class="ez-step__sub"> Upload your app package — this is what customers download from the Store. </p>
+            <h2 class="ez-step__title">Add your app package</h2>
+            <p class="ez-step__sub"> Upload the package you want to publish on Microsoft Store </p>
             <p class="ez-step__summary" id="sum-package"></p>
           </div>
           <fluent-button type="button" class="ez-add-pkg" id="add-more-pkg" appearance="secondary" hidden>
@@ -4836,6 +4906,20 @@
              via .is-wz-show (showWzStep) + the data-mode rules; position here doesn't affect that. -->
         <!-- "What are you publishing?" chooser (from V5): tailors the package-dependent bits below
              without needing the file. A real package locks the choice (chooser hides). -->
+        <!-- First-choice gate: when the app was reserved without a package format, the type is chosen
+             HERE — inline and required — before any upload UI appears. No dismissable modal, and the
+             step can't proceed without it. Collapses to the compact #v4-type switcher once chosen. -->
+        <div class="pkg-choose" id="pkg-choose" hidden>
+          <p class="pkg-choose__lead">First, choose your app type. It shapes how you provide your package and what the Store can do for your app — you can change it later.</p>
+          <div class="pkg-choose__opts" id="pkg-choose-opts" role="group" aria-label="Choose your app type"></div>
+          <div class="pkg-choose__aid">
+            <span class="pkg-choose__aid-txt">Not sure which to pick?</span>
+            <fluent-button appearance="subtle" id="pkg-choose-help" data-pkgchoose-help>
+              <iconify-icon slot="start" icon="fluent:lightbulb-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
+              Help me choose
+            </fluent-button>
+          </div>
+        </div>
         <div class="v4-type" id="v4-type">
           <p class="v4-type__q">What are you publishing?</p>
           <fluent-tablist class="v4-type__tabs" aria-label="What are you publishing?" id="v4-type-seg" activeid="v4tab-msix">
@@ -4847,10 +4931,10 @@
         </div>
         <p class="manifest-identity-prompt adv-only" id="ez-pkg-identity-banner">
           <iconify-icon icon="fluent:document-bullet-list-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
-          <span class="manifest-identity-prompt__text">Building an MSIX package? Get the identity details to create the Store ready package.</span>
+          <span class="manifest-identity-prompt__text">Building your MSIX package? Get the identity details you need to make it Store-ready.</span>
           <span class="manifest-identity-prompt__actions">
             <button type="button" class="link-btn" id="build-guide-btn">How to build a package</button>
-            <button type="button" class="link-btn" id="show-identity-btn">Show identity</button>
+            <button type="button" class="link-btn" id="show-identity-btn">View identity details</button>
           </span>
         </p>
         <input type="file" id="pkg-file" accept=".msix,.msixbundle,.msixupload,.appx,.appxbundle,.appxupload,.xap,.exe,.msi" hidden multiple />
@@ -5597,7 +5681,7 @@
              disabled until every section is complete (mirrors the header action). -->
         <fluent-button id="wz-submit-foot" appearance="primary" size="medium" hidden disabled>
           <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-          Submit for review
+          Review &amp; submit
         </fluent-button>
       </div>
     </div>
@@ -7414,14 +7498,19 @@
     <fluent-button slot="title-action" appearance="subtle" data-apptype-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
-    <p class="atd__lead">How you package your app decides what the Store can do for it — pick the best fit.</p>
+    <p class="atd__lead" id="atd-lead">How you package your app decides what the Store can do for it — pick the best fit.</p>
     <fluent-radio-group class="atd__opts" id="atd-opts" orientation="horizontal" aria-label="App type"></fluent-radio-group>
     <div class="atd__impact" id="atd-impact" hidden>
       <p class="atd__impact-lead" id="atd-impact-lead"></p>
       <ul class="atd__impact-list" id="atd-impact-list"></ul>
     </div>
-    <fluent-button slot="action" appearance="secondary" data-apptype-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="atd-confirm" disabled>Switch app type</fluent-button>
+    <span slot="action" class="atd-help-q" id="atd-help-q" hidden>Not sure which one to choose?</span>
+    <fluent-button slot="action" appearance="transparent" id="atd-help" data-atd-help hidden>
+      Help me choose
+      <iconify-icon slot="end" icon="fluent:open-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <fluent-button slot="action" appearance="secondary" id="atd-cancel" data-apptype-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="atd-confirm" disabled>Confirm</fluent-button>
   </fluent-dialog-body>
 </fluent-dialog>
 
@@ -7445,15 +7534,18 @@
 
     <div class="sd-step" id="submit-step-1">
       <section class="ez-sd__section">
-        <h3 class="ez-sd__title">What you're submitting</h3>
+        <h3 class="ez-sd__title" id="submit-summary-title">What you're submitting</h3>
         <div class="ez-sd__summary" id="submit-summary"></div>
       </section>
       <section class="ez-sd__section">
         <div class="ez-sd__title-row">
-          <h3 class="ez-sd__title">What customers will see</h3>
+          <button type="button" class="ez-sd__collapse" id="submit-preview-toggle" aria-expanded="false" aria-controls="submit-preview">
+            <iconify-icon class="ez-sd__collapse-chev" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+            <span class="ez-sd__title">What customers will see</span>
+          </button>
           <button type="button" class="sd-editlink" id="submit-edit-listing"><iconify-icon icon="fluent:edit-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Edit listing</button>
         </div>
-        <div class="sd-preview" id="submit-preview"></div>
+        <div class="sd-preview" id="submit-preview" hidden></div>
       </section>
     </div>
 
@@ -7968,6 +8060,7 @@
   let easyOpen = 'step-package';
   let easyPrevDone = {};
   function setActiveSection(id) {
+    if (formatGateActive() && id && id !== 'step-package') { announce('Choose your app type first.'); return; }
     if (id) activeSection = id;
     if (activeSection === 'step-reach') reachVisited = true;
     if (activeSection === 'step-rating') ratingVisited = true;
@@ -8515,51 +8608,26 @@
   function renderUpdateChanges() {
     recomputeUpdateChanges();
     var banner = document.getElementById('upd-changes');
-    if (!banner) return;
-    if (!inUpdateFlow) { banner.hidden = true; return; }
-    banner.hidden = false;
-    var changed = WZ_STEPS.filter(function (s) { return updateChangedSet.has(s); });
-    var n = changed.length;
-    var hasNewPkg = (packages || []).some(function (p) { return !p._pending && !updateBaselineIds.has(p.id); });
-    var needsNotes = hasNewPkg && !(adv.listing.whatsNew || '').trim();
-    // SLIM banner (mirrors the cert-feedback banner): status + count + a button that opens the detail dialog.
-    banner.classList.toggle('is-empty', n === 0);
-    banner.innerHTML =
-      '<span class="upd-banner__ico"><iconify-icon icon="' + (n ? 'fluent:edit-24-regular' : 'fluent:document-edit-24-regular') + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
-      '<div class="upd-banner__text">' +
-        '<strong>' + (n ? 'What\u2019s changed in this update' : 'No changes yet') + '</strong>' +
-        '<span>' + (n
-          ? ('You\u2019re changing ' + n + ' section' + (n === 1 ? '' : 's') + ' vs your live listing.' + (needsNotes ? ' Release notes needed.' : ''))
-          : 'Edit any section to update your live listing.') + '</span>' +
-      '</div>' +
-      (n
-        ? '<span class="upd-banner__count">' + n + '</span>' +
-          '<fluent-button appearance="primary" size="small" data-upd-open>' +
-            '<iconify-icon slot="start" icon="fluent:list-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>View changes</fluent-button>'
-        : '');
-    var sub = document.getElementById('upd-changes-sub');
-    if (sub) sub.textContent = n
-      ? ('You\u2019re changing ' + n + ' section' + (n === 1 ? '' : 's') + ' vs your live listing. Select one to jump to it.')
-      : 'No changes yet \u2014 edit any section to update your live listing.';
-    var noteWrap = document.getElementById('upd-changes-note');
-    if (noteWrap) {
-      noteWrap.innerHTML = needsNotes ? '<button type="button" class="upd-changes-note-cta" id="upd-whatsnew-nudge">' +
-        '<span class="upd-changes__ic"><iconify-icon icon="fluent:notepad-edit-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
-        '<span class="upd-changes__txt"><strong>Add what\u2019s new in this version</strong><span>Release notes for your new package \u2014 shown on your listing.</span></span>' +
-        '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' : '';
-    }
-    var list = document.getElementById('upd-changes-list');
-    if (list) {
-      list.innerHTML = changed.map(function (s) {
-        return '<li class="upd-changes__item"><button type="button" class="upd-changes__jump" data-wz-jump="' + s + '">' +
-          '<span class="upd-changes__ic"><iconify-icon icon="' + (WZ_SECTION_ICON[s] || 'fluent:edit-16-regular') + '" width="16" height="16" aria-hidden="true"></iconify-icon></span>' +
-          '<span class="upd-changes__txt"><strong>' + WZ_SECTION_NAMES[s] + '</strong><span>' + updChangeDesc(s) + '</span></span>' +
-          '<iconify-icon class="upd-changes__go" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button></li>';
-      }).join('');
+    if (banner) {
+      // Retired the always-on "what's changed" banner (changes are reviewed at submit time). The only
+      // top-of-flow nudge: a new package was added, so prompt for release notes ("What's new").
+      var hasNewPkg = inUpdateFlow && (packages || []).some(function (p) { return !p._pending && !updateBaselineIds.has(p.id); });
+      var needsNotes = hasNewPkg && !(adv.listing.whatsNew || '').trim();
+      banner.hidden = !needsNotes;
+      banner.className = 'upd-banner upd-banner--nudge';
+      banner.innerHTML = needsNotes
+        ? '<span class="upd-banner__ico"><iconify-icon icon="fluent:notepad-edit-20-regular" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+          '<div class="upd-banner__text"><strong>Tell customers what\u2019s new</strong>' +
+            '<span>You added a new package \u2014 add release notes so customers know what changed in this version.</span></div>' +
+          '<fluent-button appearance="primary" size="small" data-upd-whatsnew><iconify-icon slot="start" icon="fluent:edit-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add release notes</fluent-button>'
+        : '';
     }
     try { if (typeof updateWzChrome === 'function') updateWzChrome(); } catch (e) {}
   }
   window.renderUpdateChanges = renderUpdateChanges;
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('[data-upd-whatsnew]') && typeof openWhatsNewDialog === 'function') openWhatsNewDialog(true);
+  });
   function openUpdDialog() {
     renderUpdateChanges();
     var dlg = document.getElementById('upd-changes-dialog');
@@ -8712,7 +8780,7 @@
   // the final step's primary action opens the submit (review) dialog.
   // ===================================================================
   const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach'];
-  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listing', 'step-rating': 'Content & ratings', 'step-reach': 'Reach & price' };
+  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listings', 'step-rating': 'Rating & disclosures', 'step-reach': 'Reach & price' };
   const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
   let wzIndex = 0;
   // In an update, a section the developer hasn't touched is exactly what's already live (it passed
@@ -8755,8 +8823,9 @@
     return wzStepStarted(id) ? 'in-progress' : 'not-started';
   }
   function wzFurthestReachable() {
-    // v6 is NON-GATED (like v5): every step is reachable from the start, in any order — the
-    // package step no longer locks Listing / Compliance / Reach & price.
+    // The one hard gate: until an app type is chosen, only the Package step is reachable (everything
+    // downstream depends on the format). Once chosen, every step is open, in any order (v6 is non-gated).
+    if (formatGateActive()) return 0;
     return WZ_STEPS.length - 1;
   }
   function showWzStep(i, opts) {
@@ -8820,7 +8889,7 @@
       el.setAttribute('aria-current', isCurrent ? 'step' : 'false');
       el.setAttribute('aria-disabled', locked ? 'true' : 'false');
       // Guidance: locked tabs explain the prerequisite on hover (and on click, below).
-      if (locked) el.setAttribute('title', 'Add your app package first to unlock this section.');
+      if (locked) el.setAttribute('title', formatGateActive() ? 'Choose your app type first to unlock this section.' : 'Add your app package first to unlock this section.');
       else el.removeAttribute('title');
       // LEFT indicator: the section's own glyph (box / slide-text / shield / tag), tinted by state in
       // CSS. It's static per step, so write it once — re-rendering the icon on every gate refresh
@@ -8837,18 +8906,18 @@
       const total = reqItems.length, doneCount = reqItems.filter(it => ckDone(it)).length, leftN = total - doneCount;
       const needsReview = !locked && !inUpdateFlow && leftN === 0 && status !== 'complete';
       const isChanged = inUpdateFlow && !locked && updateChangedSet.has(id);
-      const badgeMode = locked ? 'locked' : (!inUpdateFlow && status === 'complete') ? 'done' : leftN > 0 ? 'ring' : needsReview ? 'review' : '';
-      // The ring replaces the visible number, so the precise count moves to the tooltip.
-      if (badgeMode === 'ring') el.setAttribute('title', doneCount + ' of ' + total + ' done');
+      const badgeMode = locked ? 'locked' : (!inUpdateFlow && status === 'complete') ? 'done' : leftN > 0 ? 'text' : needsReview ? 'review' : '';
+      // Short status text; the exact count rides in the tooltip.
+      if (badgeMode === 'text') el.setAttribute('title', doneCount + ' of ' + total + ' done');
       let badge = el.querySelector('.wz-stepind__badge');
       if (badgeMode) {
         if (!badge) { badge = document.createElement('span'); badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
-        const frac = total > 0 ? Math.max(0, Math.min(1, doneCount / total)) : 0;
+        const textLabel = isCurrent ? (leftN + ' left') : 'Not started';
         const content = badgeMode === 'done' ? '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>'
           : badgeMode === 'locked' ? '<iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>'
           : badgeMode === 'review' ? 'Review'
-          : '<span class="wz-ring" style="--p:' + frac.toFixed(3) + '"><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="wz-ring__trk" cx="8" cy="8" r="7"></circle><circle class="wz-ring__fill" cx="8" cy="8" r="7"></circle></svg></span>';
-        badge.className = 'wz-stepind__badge' + (badgeMode === 'review' ? ' wz-stepind__badge--review' : badgeMode === 'done' ? ' wz-stepind__badge--done' : badgeMode === 'locked' ? ' wz-stepind__badge--locked' : ' wz-stepind__badge--ring');
+          : textLabel;
+        badge.className = 'wz-stepind__badge' + (badgeMode === 'review' ? ' wz-stepind__badge--review' : badgeMode === 'done' ? ' wz-stepind__badge--done' : badgeMode === 'locked' ? ' wz-stepind__badge--locked' : ' wz-stepind__badge--text');
         if (badge.dataset.sig !== badgeMode + content) { badge.dataset.sig = badgeMode + content; badge.innerHTML = content; }
       } else if (badge) { badge.remove(); }
       // The badge + status icon are aria-hidden decoration, so carry the same status in the button's name.
@@ -8892,8 +8961,10 @@
       cont.hidden = isLast;
       if (!isLast) {
         if (contLabel) contLabel.textContent = 'Continue to ' + WZ_SECTION_NAMES[WZ_STEPS[wzIndex + 1]];
-        cont.disabled = false;   // non-gated: Continue always navigates; Submit is the only gate
-        cont.setAttribute('appearance', wzStepComplete(WZ_STEPS[wzIndex]) ? 'primary' : 'secondary');
+        const fmtGate = formatGateActive();   // choose an app type before leaving the Package step
+        cont.disabled = fmtGate;
+        if (fmtGate) cont.title = 'Choose your app type to continue.'; else cont.removeAttribute('title');
+        cont.setAttribute('appearance', (!fmtGate && wzStepComplete(WZ_STEPS[wzIndex])) ? 'primary' : 'secondary');
       }
     }
     // On the last step (Reach & price), the footer also carries Submit for review — disabled until
@@ -8941,6 +9012,7 @@
     return { text: '', ready: false };
   }
   function wzNext() {
+    if (formatGateActive()) { announce('Choose your app type to continue.'); return; }
     if (wzIndex === WZ_STEPS.length - 1) { const sub = $('submit'); if (sub && !sub.disabled) sub.click(); return; }
     showWzStep(wzIndex + 1);
   }
@@ -8951,7 +9023,7 @@
   if ($('wz-back-btn')) $('wz-back-btn').addEventListener('click', wzBack);  // the per-step "Back" button
   document.querySelectorAll('#wz-steps .wz-stepind').forEach((el, i) => el.addEventListener('click', () => {
     if (i <= Math.max(wzFurthestReachable(), wzIndex)) showWzStep(i);
-    else announce('Add your app package first to unlock ' + (WZ_SECTION_NAMES[el.dataset.wz] || 'this section') + '.');
+    else announce((formatGateActive() ? 'Choose your app type first to unlock ' : 'Add your app package first to unlock ') + (WZ_SECTION_NAMES[el.dataset.wz] || 'this section') + '.');
   }));
 
   // ---- Step hover checklist (v2 vertical rail): hovering a step previews what's still left in
@@ -10285,6 +10357,10 @@
   // package locks it. (restoreFlowData overrides this with the saved value on return visits.)
   let v4Type = (function () { const _t = app && app.type; return (['msix', 'win32', 'pwa'].indexOf(_t) >= 0 && !(_t === 'win32' && IS_GAME)) ? _t : 'msix'; })();  // 'msix' | 'win32' | 'pwa'
   const V4_TYPE_LABEL = { msix: 'MSIX', win32: 'EXE/MSI', pwa: 'PWA' };
+  // Did the developer defer the format at reserve time? (The reserve dialog no longer asks — it's
+  // asked here, once, on landing.) True when the app carries no chosen package format yet; drives the
+  // one-time "Choose your app type" prompt in the boot sequence. A confirmed package makes it moot.
+  let _needsFormatChoice = !(app && ['msix', 'win32', 'pwa'].indexOf(app.type) >= 0);
   // System requirements (optional, its own card below the Package step): the developer's stated
   // MINIMUM. Nothing pre-selected; providing any value surfaces it in the listing + drives the warning.
   // Minimum requirements live at the top level (back-compat); `rec` holds the optional Recommended set.
@@ -10293,7 +10369,7 @@
   // Desktop installer offers upload (.exe/.msi) OR a hosted link, Web app offers upload (a packaged
   // MSIX, e.g. from PWABuilder) OR a link to the live website.
   const V4_PKG_UI = {
-    msix: { upload: true, url: false, uploadTitle: 'Upload your package' },
+    msix: { upload: true, url: false, uploadTitle: 'Upload your MSIX package' },
     win32: { upload: true, url: true, uploadTitle: 'Upload your installer', urlTitle: 'Link to your installer', urlDesc: 'Provide the link to the CDN where your binary is hosted.', urlPlaceholder: 'https://example.com/setup.exe' },
     pwa: { upload: true, url: true, uploadTitle: 'Upload your package', urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
   };
@@ -10363,18 +10439,76 @@
     const lock = document.getElementById('v4-type-lock');
     if (lock) { const s = lock.querySelector('span'); if (s) s.textContent = 'Set by your package — ' + (V4_TYPE_LABEL[shown] || shown) + '.'; }
     renderPkgTypeRail();
+    try { updatePkgChooseGate(); } catch (e) {}
   }
   // Package format shown as read-only text under the app name, with a pencil to change ONLY the type
   // (opens the Change app type comparison). A muted lock replaces the pencil when a real package fixes it.
   function renderPkgTypeRail() {
     const host = document.getElementById('wz-pkgtype'); if (!host) return;
     const locked = (typeof lockedPkgType === 'function') ? lockedPkgType() : null;
+    if (formatGateActive()) {   // no format chosen yet — the rail prompts to open the chooser modal
+      host.innerHTML = '<button type="button" class="wz-pkgtype__select" data-apptype-edit>Select package type</button>';
+      return;
+    }
     const label = V4_TYPE_LABEL[locked || v4Type] || (locked || v4Type);
     host.innerHTML = '<span class="wz-pkgtype__val">' + label + '</span>' +
       (locked
         ? ''
-        : '<button type="button" class="wz-pkgtype__edit" data-apptype-edit aria-label="Change package type" title="Change package type"><iconify-icon icon="fluent:edit-16-regular" width="13" height="13" aria-hidden="true"></iconify-icon></button>');
+        : '<span class="wz-pkgtype__sep" aria-hidden="true">\u00b7</span><button type="button" class="wz-pkgtype__change" data-apptype-edit aria-label="Change package type">Change</button>');
   }
+  // Inline first-choice gate (Package step): the three app-type cards as buttons. Picking one commits
+  // immediately (no Continue) and reveals the upload UI — see updatePkgChooseGate. Games get MSIX + PWA.
+  function renderPkgChoose() {
+    const wrap = document.getElementById('pkg-choose-opts'); if (!wrap) return;
+    const ctx = IS_GAME ? 'game' : 'app';
+    const types = ['msix', 'win32', 'pwa'].filter(t => APPTYPE_INFO[t][ctx]);
+    wrap.innerHTML = types.map(t => {
+      const info = APPTYPE_INFO[t], c = info[ctx];
+      const badge = c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '';
+      const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
+      return '<button type="button" class="atd-opt pkg-choose__opt" data-pkgchoose-opt="' + t + '">' +
+        '<span class="atd-opt__top"><span class="atd-opt__ico"><iconify-icon icon="' + info.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+          '<iconify-icon class="pkg-choose__pick" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badge + '</span>' +
+        '<span class="atd-opt__desc">' + c.desc + '</span>' +
+        '<ul class="atd-opt__feats">' + feats + '</ul>' +
+        '<span class="atd-opt__best">' + c.best + '</span>' +
+        '</button>';
+    }).join('');
+  }
+  // Gate the Package step on the format choice: while none is chosen (and no package locks it), show
+  // the inline chooser and hide the upload UI + compact switcher; once chosen, reverse it.
+  // The format gate is active while no type is chosen and no package locks it — nothing else in the
+  // flow unlocks until the developer picks one (drives wzFurthestReachable + the Continue/Submit gates).
+  function formatGateActive() {
+    const locked = (typeof lockedPkgType === 'function') ? lockedPkgType() : null;
+    return !!_needsFormatChoice && !locked;
+  }
+  // The first-time format pick is a modal now (openAppTypeDialog 'choose'); the inline gate is retired.
+  // We still hide the compact package-type switcher while nothing's chosen so it doesn't imply a default.
+  function updatePkgChooseGate() {
+    const gate = document.getElementById('pkg-choose'); if (gate) gate.hidden = true;
+    const gating = formatGateActive();
+    if (gating) { const v4 = document.getElementById('v4-type'); if (v4) v4.hidden = true; }   // syncV4TypeChooser restores it after a choice
+    const fw = document.getElementById('flow-wrap'); if (fw) fw.classList.remove('is-choosing-format');
+  }
+  // Commit an inline pick: remember the format, drop the gate, and reveal the upload UI for it.
+  function choosePkgFormat(t) {
+    if (['msix', 'win32', 'pwa'].indexOf(t) < 0) return;
+    _needsFormatChoice = false;
+    try { setV4Type(t); } catch (e) { v4Type = t; }
+    try { persistChosenFormat(t); } catch (e) {}
+    try { renderPkgTypeRail(); } catch (e) {}
+    try { if (window.__apdSyncType) window.__apdSyncType(); } catch (e) {}
+    try { updatePkgChooseGate(); } catch (e) {}
+    try { scheduleFlowSave(); } catch (e) {}
+    try { const uz = document.getElementById('upload-zone'); if (uz && !uz.hidden) uz.focus(); } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-pkgchoose-help]')) { try { openFormatHelp(); } catch (err) {} return; }
+    const opt = e.target.closest('[data-pkgchoose-opt]'); if (!opt) return;
+    choosePkgFormat(opt.getAttribute('data-pkgchoose-opt'));
+  });
   // Change-app-type dialog: each type with a short case (pros/cons), the current one flagged, and a
   // live preview of what switching changes (reuses typeChangeImpact for the MSIX<->Win32 boundary).
   const APPTYPE_INFO = {
@@ -10393,10 +10527,20 @@
         feats: ['Simply provide your web game URL or MSIX package', 'Gets all benefits of MSIX'] } }
   };
   let _atdPick = null;
+  let _atdMode = 'change';   // 'change' = switch an existing type (impact preview) | 'choose' = first-time pick on landing
   function appTypeDlg() { return document.getElementById('apptype-dialog'); }
-  function openAppTypeDialog() {
+  function openAppTypeDialog(mode) {
     if ((typeof lockedPkgType === 'function') && lockedPkgType()) return;   // a real package fixes the type
-    _atdPick = v4Type;
+    _atdMode = (mode === 'choose') ? 'choose' : 'change';
+    const choose = _atdMode === 'choose';
+    _atdPick = choose ? null : v4Type;   // first-time pick starts unselected → Confirm stays disabled until they choose
+    const title = document.getElementById('apptype-dialog-title'); if (title) title.textContent = choose ? 'Let\u2019s set up your publishing experience' : 'Change app type';
+    const lead = document.getElementById('atd-lead'); if (lead) lead.textContent = choose
+      ? 'Choose how you want to publish your app.'
+      : 'How you package your app decides what the Store can do for it — pick the best fit.';
+    const help = document.getElementById('atd-help'); if (help) help.hidden = !choose;
+    const helpq = document.getElementById('atd-help-q'); if (helpq) helpq.hidden = !choose;
+    const cancel = document.getElementById('atd-cancel'); if (cancel) cancel.hidden = false;
     renderAppTypeOpts(); renderAppTypeImpact();
     const dlg = appTypeDlg(); if (!dlg) return;
     try { if (typeof dlg.show === 'function') dlg.show(); } catch (e) {}
@@ -10414,7 +10558,7 @@
     wrap.innerHTML = types.map(t => {
       const info = APPTYPE_INFO[t], c = info[ctx], isCur = t === v4Type, isSel = t === _atdPick;
       const badges = (c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
-        (isCur ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
+        (isCur && _atdMode !== 'choose' ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
       const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
       return '<label class="atd-opt' + (isSel ? ' is-sel' : '') + '" for="atd-r-' + t + '" data-atd-opt="' + t + '">' +
         '<span class="atd-opt__top">' +
@@ -10443,6 +10587,12 @@
   function renderAppTypeImpact() {
     const panel = document.getElementById('atd-impact'), lead = document.getElementById('atd-impact-lead'),
       list = document.getElementById('atd-impact-list'), btn = document.getElementById('atd-confirm');
+    // First-time pick: no "before/after" impact (nothing was set yet) — just Continue with the choice.
+    if (_atdMode === 'choose') {
+      if (btn) { btn.toggleAttribute('disabled', !_atdPick); btn.textContent = 'Confirm'; }
+      if (panel) panel.hidden = true;
+      return;
+    }
     const changed = _atdPick && _atdPick !== v4Type, targetLabel = V4_TYPE_LABEL[_atdPick] || _atdPick;
     if (btn) { btn.toggleAttribute('disabled', !changed); btn.textContent = changed ? ('Switch to ' + targetLabel) : 'Switch app type'; }
     if (!panel) return;
@@ -10458,23 +10608,170 @@
     }
   }
   function confirmAppTypeChange() {
-    const t = _atdPick; closeAppTypeDialog();
-    if (!t || t === v4Type) return;
+    const t = _atdPick, choosing = _atdMode === 'choose'; closeAppTypeDialog();
+    if (!t) return;
+    if (choosing) {
+      // First-time pick: clear the gate BEFORE setV4Type so its updateGate() unlocks the flow, then
+      // remember it so we don't re-ask on return.
+      _needsFormatChoice = false;
+      try { setV4Type(t, { silent: true }); } catch (e) { v4Type = t; }
+      persistChosenFormat(t);
+      try { renderPkgTypeRail(); } catch (e) {}
+      try { if (window.__apdSyncType) window.__apdSyncType(); } catch (e) {}
+      try { scheduleFlowSave(); } catch (e) {}
+      return;
+    }
+    if (t === v4Type) return;
     try { setV4Type(t); } catch (e) { v4Type = t; }
     try { renderPkgTypeRail(); } catch (e) {}
     try { if (window.__apdSyncType) window.__apdSyncType(); } catch (e) {}   // keep the App details radios in sync
   }
+  // Remember the developer's first-time format pick on the app record so returning to the flow doesn't
+  // re-prompt (v4Type init + the landing prompt both read app.type).
+  function persistChosenFormat(t) {
+    try { if (app) app.type = t; } catch (e) {}
+    try {
+      var all = JSON.parse(localStorage.getItem('msstore.apps') || '[]');
+      var i = all.findIndex(function (x) { return x && x.id === app.id; });
+      if (i >= 0) { all[i].type = t; localStorage.setItem('msstore.apps', JSON.stringify(all)); }
+    } catch (e) {}
+  }
   (function wireAppTypeDialog() {
-    document.addEventListener('click', e => { if (e.target.closest('[data-apptype-edit]')) { e.preventDefault(); openAppTypeDialog(); } });
+    document.addEventListener('click', e => { if (e.target.closest('[data-apptype-edit]')) { e.preventDefault(); openAppTypeDialog(formatGateActive() ? 'choose' : 'change'); } });
     const dlg = appTypeDlg(); if (!dlg) return;
     dlg.addEventListener('click', e => {
       if (e.target.closest('[data-apptype-close]')) { closeAppTypeDialog(); return; }
+      if (e.target.closest('[data-atd-help]')) { e.preventDefault(); try { openFormatHelp(); } catch (err) {} return; }
       const opt = e.target.closest('[data-atd-opt]'); if (opt) { selectAppType(opt.getAttribute('data-atd-opt')); return; }
       if (e.target.closest('#atd-confirm')) { confirmAppTypeChange(); return; }
     });
     dlg.addEventListener('change', e => {
       const wrap = e.target.closest && e.target.closest('#atd-opts');
       if (wrap) { const r = e.target.closest('fluent-radio'); if (r) selectAppType(r.getAttribute('value')); }
+    });
+  })();
+
+  // ---- "Help me choose" questionnaire ------------------------------------------------------
+  // Guided path to a recommended package format, opened from the Choose-your-app-type dialog. We
+  // already know app-vs-game (IS_GAME), so we skip that question and start at the right branch.
+  // Ported from the portal's format wizard; results here are limited to the formats this flow can set
+  // (MSIX / EXE·MSI / PWA — no GDK, since GDK games are managed in Partner Center).
+  const FMTW_V6 = {
+    appKind: { q: 'What kind of app is it?', opts: [
+      { icon: 'fluent:desktop-20-regular', title: 'A Windows desktop app', desc: 'It runs natively on Windows', chip: 'Desktop app', next: 'appHandling' },
+      { icon: 'fluent:globe-20-regular', title: 'A website or web app', desc: 'It runs in the browser today', chip: 'Web app', result: 'pwa' }
+    ] },
+    appHandling: { q: 'Who should handle signing, hosting, updates & payments?', opts: [
+      { icon: 'fluent:sparkle-20-regular', title: 'Let Microsoft handle it', desc: 'Free code signing, hosting, automatic updates, and Store checkout', chip: 'Microsoft-managed', result: 'msix' },
+      { icon: 'fluent:wrench-20-regular', title: 'I\u2019ll use my own', desc: 'I have my code-signing certificate, hosting, and commerce', chip: 'Self-managed', result: 'win32' }
+    ] },
+    gameKind: { q: 'How is your game built?', opts: [
+      { icon: 'fluent:box-20-regular', title: 'A standard PC game', desc: 'Built with a common engine or framework', chip: 'PC game', result: 'msix' },
+      { icon: 'fluent:globe-20-regular', title: 'A web-based game', desc: 'It runs in the browser', chip: 'Web game', result: 'pwa' }
+    ] }
+  };
+  const FMTW_RESULT_V6 = {
+    msix: { name: 'MSIX', rec: true, icon: 'fluent:box-20-filled', why: 'The modern Windows app package. Microsoft signs, hosts, and auto-updates it for free, and you get Store checkout, sales, and staged rollout.' },
+    win32: { name: 'EXE / MSI', icon: 'fluent:desktop-20-filled', why: 'Bring your existing installer to the Store as-is. You keep your own code signing, hosting, updates, and commerce.' },
+    pwa: { name: 'PWA', icon: 'fluent:globe-20-filled', why: 'Your website, packaged as MSIX (via PWABuilder). Microsoft signs, hosts, and updates it, with full Store checkout.' }
+  };
+  let fmtwState = { pt: 'app', path: [] };
+  function fmtwStartId() { return fmtwState.pt === 'game' ? 'gameKind' : 'appKind'; }
+  function openFormatHelp() {
+    fmtwState = { pt: IS_GAME ? 'game' : 'app', path: [] };
+    let ov = document.getElementById('fmthelpModal');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'fmthelpModal'; ov.className = 'fmthelp-modal';
+      ov.innerHTML = '<div class="fmthelp-modal__backdrop" data-fmthclose></div><div class="fmthelp-modal__card" role="dialog" aria-modal="true" aria-label="Help me choose an app type"><div id="fmthelpBody"></div></div>';
+      document.body.appendChild(ov);
+    }
+    ov.hidden = false;
+    renderFmtHelp(fmtwStartId());
+    try { closeAppTypeDialog(); } catch (e) {}   // the choose modal uses the top layer — hide it so the questionnaire shows
+  }
+  function closeFormatHelp() { const ov = document.getElementById('fmthelpModal'); if (ov) ov.hidden = true; }
+  function fmtwDepth(id) {
+    if (!id || FMTW_RESULT_V6[id]) return 0;
+    const step = FMTW_V6[id]; if (!step) return 0;
+    let m = 0;
+    for (let i = 0; i < step.opts.length; i++) { const d = fmtwDepth(step.opts[i].next || step.opts[i].result); if (d > m) m = d; }
+    return 1 + m;
+  }
+  function fmtwBar(pct) {
+    return '<div class="fmtw__head"><h2 class="fmtw__title">Help me choose</h2>' +
+      '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+      '<div class="fmtw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>';
+  }
+  function fmtwCrumbs() {
+    const p = fmtwState.path || [];
+    if (!p.length) return '';
+    return '<div class="fmtw__crumbs">' + p.map(function (c, i) {
+      return (i ? '<iconify-icon class="fmtw__crumb-arrow" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' : '') +
+        '<button type="button" class="fmtw__crumb" data-fmtw-jump="' + i + '" aria-label="Change this answer: ' + c.chip + '">' + c.chip + '</button>';
+    }).join('') + '</div>';
+  }
+  function renderFmtHelp(id) {
+    const body = document.getElementById('fmthelpBody'); if (!body) return;
+    if (FMTW_RESULT_V6[id]) {
+      const r = FMTW_RESULT_V6[id];
+      body.innerHTML =
+        fmtwBar(100) + fmtwCrumbs() +
+        '<span class="fmtw__result-eyebrow">Recommended for you</span>' +
+        '<div class="fmtw__result"><span class="fmtw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
+          '<div><div class="fmtw__result-name">' + r.name + '</div>' + (r.rec ? '<span class="fmtw__result-rec">Most popular</span>' : '') + '</div></div>' +
+        '<p class="fmtw__result-why">' + r.why + '</p>' +
+        '<div class="fmtw__result-actions"><fluent-button appearance="primary" data-fmtw-add="' + id + '">Select ' + r.name + '</fluent-button>' +
+          '<button type="button" class="fmtw__restart" data-fmtw-start>Start over</button></div>';
+      return;
+    }
+    const step = FMTW_V6[id]; if (!step) return;
+    const pathLen = (fmtwState.path || []).length;
+    const pct = Math.round(pathLen / (pathLen + fmtwDepth(id)) * 100);
+    const opts = step.opts.map(function (o, i) {
+      return '<button type="button" class="fmtw__opt" data-fmtw-opt="' + id + ':' + i + '">' +
+        '<span class="fmtw__opt-ico"><iconify-icon icon="' + o.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="fmtw__opt-txt"><span class="fmtw__opt-title">' + o.title + '</span>' + (o.desc ? '<span class="fmtw__opt-desc">' + o.desc + '</span>' : '') + '</span>' +
+        '<iconify-icon class="fmtw__opt-arrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    }).join('');
+    body.innerHTML =
+      fmtwBar(pct) + fmtwCrumbs() +
+      '<h3 class="fmtw__q">' + step.q + '</h3>' +
+      '<div class="fmtw__opts">' + opts + '</div>' +
+      '<div class="fmtw__foot">' + (pathLen
+        ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + (pathLen - 1) + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>'
+        : '<button type="button" class="fmtw__back" data-fmthclose><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>All app types</button>') + '</div>';
+  }
+  function fmtwPick(id, idx) {
+    const step = FMTW_V6[id]; if (!step) return;
+    const opt = step.opts[idx]; if (!opt) return;
+    if (!fmtwState.path) fmtwState.path = [];
+    fmtwState.path.push({ step: id, chip: opt.chip || opt.title });
+    if (opt.set) { for (const k in opt.set) fmtwState[k] = opt.set[k]; }
+    renderFmtHelp(opt.result || opt.next);
+  }
+  (function wireFormatHelp() {
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('[data-fmthclose]')) { closeFormatHelp(); try { if (formatGateActive()) openAppTypeDialog('choose'); } catch (err) {} return; }   // back to the chooser modal
+      const wo = e.target.closest('[data-fmtw-opt]');
+      if (wo) { const p = wo.getAttribute('data-fmtw-opt').split(':'); fmtwPick(p[0], +p[1]); return; }
+      if (e.target.closest('[data-fmtw-start]')) { fmtwState.path = []; renderFmtHelp(fmtwStartId()); return; }
+      const wj = e.target.closest('[data-fmtw-jump]');
+      if (wj) {
+        const ji = +wj.getAttribute('data-fmtw-jump');
+        const pp = fmtwState.path || [];
+        const target = pp[ji] ? pp[ji].step : fmtwStartId();
+        fmtwState.path = pp.slice(0, ji);
+        renderFmtHelp(target);
+        return;
+      }
+      const wa = e.target.closest('[data-fmtw-add]');
+      if (wa) {
+        const t = wa.getAttribute('data-fmtw-add');
+        closeFormatHelp();
+        choosePkgFormat(t);   // same commit path as an inline pick (drops the gate, reveals upload)
+        return;
+      }
     });
   })();
   let _pkgTypeConfirm = null, _pkgTypeCancel = null;
@@ -14697,6 +14994,24 @@
   function buildSubmitSummary() {
     const dl = $('submit-summary'); if (!dl) return;
     const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    const titleEl = $('submit-summary-title');
+    // Update flow: lead with WHAT CHANGED vs the live listing, not the full facts sheet.
+    if (inUpdateFlow) {
+      if (titleEl) titleEl.textContent = 'What\u2019s changed in this update';
+      recomputeUpdateChanges();
+      const changed = WZ_STEPS.filter(s => updateChangedSet.has(s));
+      dl.classList.add('is-changes');
+      dl.innerHTML = changed.length
+        ? changed.map(s =>
+            '<div class="ez-sd__stat">' +
+              '<iconify-icon class="ez-sd__stat-ic" icon="' + (WZ_SECTION_ICON[s] || 'fluent:edit-20-regular') + '" width="18" height="18" aria-hidden="true"></iconify-icon>' +
+              '<div class="ez-sd__stat-text"><span class="ez-sd__stat-k">' + esc(WZ_SECTION_NAMES[s]) + '</span><span class="ez-sd__stat-v">' + esc(updChangeDesc(s)) + '</span></div>' +
+            '</div>').join('')
+        : '<div class="ez-sd__stat"><iconify-icon class="ez-sd__stat-ic" icon="fluent:info-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon><div class="ez-sd__stat-text"><span class="ez-sd__stat-v">No changes yet \u2014 edit a section before you resubmit.</span></div></div>';
+      return;
+    }
+    if (titleEl) titleEl.textContent = 'What you\u2019re submitting';
+    dl.classList.remove('is-changes');
     const isWin32 = (typeof packages !== 'undefined') && packages.some(p => p.win32 && !p._pending);
     // Listing languages — the default locale plus any added ones.
     const locs = (adv.listing && adv.listing.locales) ? Object.keys(adv.listing.locales) : [];
@@ -15122,6 +15437,7 @@
         v: 2,
         packages: packages.map(function (p) { var c = {}; for (var q in p) { if (p.hasOwnProperty(q) && q !== '_file') c[q] = p[q]; } return c; }),
         v4Type: v4Type,
+        formatChosen: !_needsFormatChoice,
         name: fName ? fName.value : '',
         desc: fDesc ? fDesc.value : '',
         category: fCategory ? fCategory.value : '',
@@ -15168,6 +15484,7 @@
     try {
       if (Array.isArray(d.packages)) { packages.length = 0; d.packages.forEach(function (p) { packages.push(p); }); }
       if (d.v4Type) v4Type = d.v4Type;
+      if (d.formatChosen) _needsFormatChoice = false;   // a format was already picked — don't re-prompt on re-entry
       if (d.adv) flowDeepAssign(adv, d.adv);
       // Keep the multi-locale description in sync: the live buffer is fDesc.value, but boot tasks
       // may reload from adv.listing.locales[active] — seed that bucket so it can't blank the field.
@@ -15349,6 +15666,13 @@
       setTimeout(function () {
         try { restoreFlowData(); } catch (e) {}
         __flowRestored = true;
+        // First-choice gate: the reserve step defers the package format. If the app landed here without
+        // one chosen (and no package locks it), open the "Let's set up your publishing experience" modal
+        // over the (locked) flow. Runs after restore so a returning draft with a package won't prompt.
+        try {
+          updatePkgChooseGate();
+          if (formatGateActive()) { setTimeout(function () { try { openAppTypeDialog('choose'); } catch (e) {} }, 200); }
+        } catch (e) {}
         try {
           // Every edit inside the flow persists (debounced). Capture-phase listeners catch fields,
           // dropdowns, file inputs and fluent controls anywhere in the editor.
@@ -15557,8 +15881,9 @@
     // Full trail: Apps / App / Sub-view (read-only submission details nest one deeper). Every level
     // except the last is a jump link; the last is the current page.
     function buildCrumbs() {
-      var crumbs = [{ label: 'Apps', href: '../' + (window.__portalFile || 'store-portal.html') + '#apps' }];
-      if (!inSubview()) { crumbs.push({ label: appCrumbName(), current: true }); return crumbs; }
+      var base = '../' + (window.__portalFile || 'store-portal.html');
+      var crumbs = [{ label: 'Overview', href: base + '#overview' }];
+      if (!inSubview()) { crumbs.push({ label: appCrumbName(), href: base + '#apps' }); crumbs.push({ label: 'Publishing', current: true }); return crumbs; }
       crumbs.push({ label: appCrumbName(), action: 'home' });
       if (window.__reviewMode) {
         if (!reviewFromInReview) crumbs.push({ label: 'View submissions', action: 'exitReview' });
@@ -16755,6 +17080,10 @@
     // Step 1 preview — the customer-facing listing snapshot (reuses the Store listing preview render).
     const _pv = $('submit-preview');
     if (_pv) { _pv.innerHTML = ''; try { const node = buildListingPreviewNodeForLocale(lpvActive()); if (node) _pv.appendChild(node); } catch (e) {} }
+    // Listing preview starts COLLAPSED — the summary leads; expand to see the full customer-facing view.
+    const _pvToggle = $('submit-preview-toggle');
+    if (_pvToggle) _pvToggle.setAttribute('aria-expanded', 'false');
+    if (_pv) _pv.hidden = true;
     try { goSubmitStep(1); } catch (e) {}
     try { syncRolloutDialog(); } catch (e) {}
     // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
@@ -16886,7 +17215,8 @@
   let submitStep = 1;
   function goSubmitStep(n) {
     submitStep = (n === 2) ? 2 : 1;
-    if (submitDlg) submitDlg.classList.toggle('sd-wide', submitStep === 1);
+    const _pvOpen = $('submit-preview-toggle') && $('submit-preview-toggle').getAttribute('aria-expanded') === 'true';
+    if (submitDlg) submitDlg.classList.toggle('sd-wide', submitStep === 1 && _pvOpen);   // widen only when the listing preview is expanded
     const s1 = $('submit-step-1'), s2 = $('submit-step-2');
     if (s1) s1.hidden = submitStep !== 1;
     if (s2) s2.hidden = submitStep !== 2;
@@ -16906,6 +17236,12 @@
   if ($('submit-continue')) $('submit-continue').addEventListener('click', () => goSubmitStep(2));
   if ($('submit-back')) $('submit-back').addEventListener('click', () => goSubmitStep(1));
   if ($('submit-edit-listing')) $('submit-edit-listing').addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} const pv = $('submit-preview'); if (pv) pv.innerHTML = ''; try { if (typeof showWzStep === 'function') showWzStep(WZ_STEPS.indexOf('step-listing')); } catch (e) {} });
+  if ($('submit-preview-toggle')) $('submit-preview-toggle').addEventListener('click', function () {
+    const expand = this.getAttribute('aria-expanded') !== 'true';
+    this.setAttribute('aria-expanded', expand ? 'true' : 'false');
+    const pv = $('submit-preview'); if (pv) pv.hidden = !expand;
+    if (submitDlg) submitDlg.classList.toggle('sd-wide', submitStep === 1 && expand);
+  });
   if ($('withdraw-btn')) $('withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('cert-withdraw-btn')) $('cert-withdraw-btn').addEventListener('click', withdrawSubmission);
   if ($('cert-review-btn')) $('cert-review-btn').addEventListener('click', function () { reviewFromInReview = true; goReviewDetails(); });

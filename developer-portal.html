@@ -12,8 +12,8 @@
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
-  <link rel="stylesheet" href="portal.css?v=139" />
-  <link rel="stylesheet" href="store-portal.css?v=180" />
+  <link rel="stylesheet" href="portal.css?v=142" />
+  <link rel="stylesheet" href="store-portal.css?v=183" />
   <link rel="stylesheet" href="help-support.css?v=6" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -103,7 +103,7 @@
         <div class="block__head">
           <div>
             <h1>Overview</h1>
-            <p class="muted">Create, publish, and manage your apps on the Microsoft Store.</p>
+            <p class="muted">Create and publish an app or game on the Microsoft Store.</p>
           </div>
         </div>
         <div id="statusCard"><!-- rendered by portal.js --></div>
@@ -299,9 +299,9 @@
         </fluent-radio-group>
       </div>
 
-      <!-- App type = package format. Options track Product type (.EXE/.MSI app-only, GDK game-only).
-           Not a hard commitment — it seeds the flow's package step and can change later. GDK off-ramps below. -->
-      <div class="field" id="pubAppTypeField">
+      <!-- App type = package format. HIDDEN in reserve — the format is chosen on landing in the publishing
+           flow ("Choose your app type" dialog), filtered by the App/Game product type. -->
+      <div class="field" id="pubAppTypeField" hidden>
         <div class="field__labelrow">
           <label class="field__label" id="pubAppTypeLabel">App type</label>
           <span class="field__info" id="pubAppTypeInfo" tabindex="0" aria-label="About app type">
@@ -434,7 +434,7 @@
        Certificates + Analytics experiences, one storage key, all apps in one table. -->
   <script>window.PORTAL_MODE = "unified";</script>
   <script type="module" src="theme-fluent.js?v=64"></script>
-  <script src="portal.js?v=249"></script>
+  <script src="portal.js?v=257"></script>
   <!-- AI Help & Support widget (floating, bottom-right). ai-config.js is local/gitignored; ai-client.js
        falls back to the same-origin /api/ai proxy, and help-support.js falls back to a local responder. -->
   <script src="publishing/ai-config.js"></script>
