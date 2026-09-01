@@ -447,6 +447,7 @@
   .atd-opt__feat { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
   .atd-opt__feat iconify-icon { flex: 0 0 auto; margin-top: 0.5px; color: var(--brand); }
   .atd-opt__best { margin-top: auto; padding-top: var(--sp-12); font-size: 12.5px; color: var(--fg-3); line-height: 1.4; }
+  .atd__warn { margin-top: var(--sp-16); }
   .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); background: var(--subtle); border: 1px solid var(--stroke-2); }
   .atd__impact-lead { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
   .atd__impact-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-6); }
@@ -457,8 +458,10 @@
   .fmthelp-modal[hidden] { display: none; }
   .fmthelp-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
   .fmthelp-modal__card { position: relative; width: min(460px, 100%); max-height: 88vh; overflow: auto; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-16); box-shadow: var(--shadow-16); padding: var(--sp-24); }
-  .fmtw__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-bottom: var(--sp-14); }
+  .fmtw__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-12); margin-bottom: var(--sp-14); }
+  .fmtw__headmain { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .fmtw__title { margin: 0; font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
+  .fmtw__lead { margin: 0; font-size: 13px; color: var(--fg-3); line-height: 1.45; }
   .fmtw__progress { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--fg-1) 12%, transparent); overflow: hidden; }
   .fmtw__progress > span { display: block; height: 100%; background: var(--brand); border-radius: 999px; transition: width var(--dur-3) var(--ease-out); }
   .fmtw__close { flex: none; appearance: none; border: 0; background: transparent; color: var(--fg-3); cursor: pointer; padding: 2px; border-radius: var(--r-6); display: inline-flex; }
@@ -467,26 +470,44 @@
   .fmtw__crumb { display: inline-flex; align-items: center; appearance: none; border: 1px solid var(--stroke-2); background: var(--subtle); color: var(--fg-2); font: inherit; font-size: 12px; font-weight: var(--font-weight-semibold); padding: 3px 10px; border-radius: 999px; cursor: pointer; }
   .fmtw__crumb:hover { color: var(--fg-1); border-color: var(--stroke-3); }
   .fmtw__crumb-arrow { flex: none; color: var(--fg-3); }
+  .fmtw__crumbs-sep { flex: none; width: 1px; height: 14px; background: var(--stroke-2); }
   .fmtw__q { margin: var(--sp-16) 0 0; font-size: 17px; font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.3; }
   .fmtw__opts { display: flex; flex-direction: column; gap: var(--sp-10); margin-top: var(--sp-16); }
   .fmtw__opt { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; appearance: none; padding: var(--sp-14); border-radius: var(--r-12); border: 1px solid var(--stroke-2); background: var(--layer); color: var(--fg-1); font: inherit; cursor: pointer; transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
   .fmtw__opt:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
-  .fmtw__opt-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-2); }
+  .fmtw__opt-ico { flex: none; align-self: flex-start; display: grid; place-items: center; width: 38px; height: 38px; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-2); }
   .fmtw__opt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .fmtw__opt-title { font-size: 14px; font-weight: var(--font-weight-semibold); }
+  .fmtw__opt-rec { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); padding: 1px 6px; border-radius: 999px; vertical-align: middle; }
   .fmtw__opt-desc { font-size: 12px; color: var(--fg-3); line-height: 1.35; }
+  .fmtw__opt-list { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+  .fmtw__opt-li { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--fg-2); line-height: 1.35; }
+  .fmtw__li-mk { flex: none; }
+  .fmtw__li-mk--check { color: var(--brand); margin-top: 1px; }
+  .fmtw__li-mk--dot { width: 14px; height: 17px; display: inline-flex; align-items: center; justify-content: center; }
+  .fmtw__li-mk--dot::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--fg-3); }
   .fmtw__opt-arrow { flex: none; color: var(--fg-3); }
-  .fmtw__foot { display: flex; align-items: center; margin-top: var(--sp-16); min-height: 22px; }
+  .fmtw__foot { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-16); min-height: 22px; }
   .fmtw__back { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
   .fmtw__back:hover { color: var(--fg-1); }
+  .fmtw__exit { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 8px; margin-left: -8px; border-radius: var(--r-6); }
+  .fmtw__exit:hover { color: var(--fg-1); background: var(--subtle); }
+  .fmtw__exit:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .fmtw__skip { margin-left: auto; appearance: none; border: 0; background: transparent; color: var(--brand); font: inherit; font-size: 13px; font-weight: var(--font-weight-semibold); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
+  .fmtw__skip:hover { text-decoration: underline; }
+  .fmtw__skip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-6); }
   .fmtw__result-eyebrow { display: block; margin-top: var(--sp-16); font-size: 12px; font-weight: var(--font-weight-semibold); letter-spacing: .02em; color: var(--fg-3); }
   .fmtw__result { display: flex; align-items: center; gap: 14px; margin-top: var(--sp-12); }
-  .fmtw__result-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-12); background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+  .fmtw__result-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-1); }
   .fmtw__result-name { font-size: 22px; font-weight: 700; color: var(--fg-1); line-height: 1.1; }
   .fmtw__result-rec { display: inline-block; margin-top: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); padding: 2px 7px; border-radius: 999px; }
   .fmtw__result-why { margin: var(--sp-16) 0 0; font-size: 13.5px; line-height: 1.5; color: var(--fg-2); }
+  .fmtw__result-convert { margin: var(--sp-10) 0 0; font-size: 12.5px; line-height: 1.5; color: var(--fg-3); }
+  .fmtw__result-convert a { color: var(--brand); text-decoration: none; font-weight: var(--font-weight-semibold); }
+  .fmtw__result-convert a:hover { text-decoration: underline; }
+  .fmtw__result-convert a iconify-icon { vertical-align: -2px; margin-left: 2px; }
   .fmtw__result-actions { display: flex; align-items: center; gap: 14px; margin-top: var(--sp-24); }
-  .fmtw__restart { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; }
+  .fmtw__restart { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; margin-right: auto; }
   .fmtw__restart:hover { color: var(--fg-1); text-decoration: underline; }
   @media (prefers-reduced-motion: reduce) { .fmtw__progress > span, .fmtw__opt { transition: none; } }
   .v4-type .seg { display: flex; width: 100%; max-width: 520px; }
@@ -612,7 +633,7 @@
   /* Higher specificity than the flex rule above, so a hidden row actually stays hidden. */
   .declarations__item[hidden] { display: none; }
   .declarations__ico { flex: 0 0 auto; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-8); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-2); transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out); }
-  .declarations__label { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 500; color: var(--fg-1); cursor: pointer; }
+  .declarations__label { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 400; line-height: 1.4; color: var(--fg-1); cursor: pointer; }
   .declarations__answer { display: inline-flex; align-items: center; gap: var(--sp-8); flex: 0 0 auto; }
   .declarations__yn { font-size: 12px; color: var(--fg-3); min-width: 22px; text-align: right; }
   @media (prefers-reduced-motion: reduce) {
@@ -1156,10 +1177,14 @@
   .build-guide__tab:focus-visible { outline: 2px solid var(--store-link); outline-offset: 2px; border-radius: var(--r-4); }
   .build-guide__panel[hidden] { display: none; }
   .build-guide__paneltitle { margin: 0 0 var(--sp-10); font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); }
-  .build-guide__steps { margin: 0; padding: 0; list-style: none; counter-reset: bgstep; display: flex; flex-direction: column; gap: var(--sp-12); }
+  .build-guide__steps { margin: 0; padding: 0; list-style: none; counter-reset: bgstep; display: flex; flex-direction: column; gap: var(--sp-16); }
   .build-guide__steps > li { counter-increment: bgstep; display: grid; grid-template-columns: 22px 1fr; gap: var(--sp-10); align-items: start; font-size: var(--font-size-base-200); color: var(--fg-2); line-height: 1.5; }
   .build-guide__steps > li::before { content: counter(bgstep); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); font-size: 12px; font-weight: 700; flex: 0 0 auto; }
   .build-guide__steps strong { color: var(--fg-1); font-weight: var(--font-weight-semibold); }
+  /* Two-tier step: scannable bold title, then one light supporting line. */
+  .build-guide__stepbody { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 1px; }
+  .build-guide__steptitle { font-size: var(--font-size-base-300); font-weight: var(--font-weight-semibold); color: var(--fg-1); line-height: 1.3; }
+  .build-guide__stepdesc { font-size: var(--font-size-base-200); color: var(--fg-3); line-height: 1.45; }
   .build-guide__steps code { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 12px; background: var(--subtle); padding: 1px 5px; border-radius: var(--r-4); }
   .build-guide__steps .build-guide__cmd { display: block; margin-top: 5px; padding: 6px 8px; background: var(--subtle); border: 1px solid var(--stroke-3); border-radius: var(--r-4); color: var(--fg-1); overflow-x: auto; white-space: nowrap; }
   .build-guide__panel .build-guide__doclink { margin-top: var(--sp-14); }
@@ -3524,6 +3549,11 @@
   .ez-pkg-convert a { color: var(--brand); text-decoration: none; font-weight: var(--font-weight-semibold); }
   .ez-pkg-convert a:hover { text-decoration: underline; }
   .ez-pkg-convert a iconify-icon { vertical-align: -2px; margin-left: 2px; }
+  /* PWA: MSIX upload is offered as a secondary text action under the primary "Link to your website". */
+  .ez-pkg-altnote { margin: var(--sp-12) 0 0; font-size: 12px; color: var(--fg-3); line-height: 1.45; }
+  .ez-pkg-altnote__act { appearance: none; border: 0; background: none; padding: 0; margin: 0; font: inherit; color: var(--brand); font-weight: var(--font-weight-semibold); cursor: pointer; }
+  .ez-pkg-altnote__act:hover { text-decoration: underline; }
+  .ez-pkg-altnote__act:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-4); }
   /* One surface, two ways in. Two equally-weighted bordered cards stacked with an "or" between
      them still read as two fields that BOTH need filling; a single card with the "or" across its
      middle reads as one thing to satisfy, while keeping the URL route as prominent as upload. */
@@ -4791,7 +4821,7 @@
     <div class="wz-steps" id="wz-steps" role="list" aria-label="Publishing steps">
       <button type="button" class="wz-stepind is-current" data-wz="step-package" data-icon="fluent:box-20-filled" role="listitem" aria-current="step"><span class="wz-stepind__dot"><iconify-icon icon="fluent:box-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Package</span></button>
       <button type="button" class="wz-stepind" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listings</span></button>
-      <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Rating &amp; disclosures</span></button>
+      <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Ratings &amp; disclosures</span></button>
       <button type="button" class="wz-stepind" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
       <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
       <div class="submit-checklist" id="submit-checklist">
@@ -4813,7 +4843,6 @@
          so the submit/withdraw show-hide logic still targets it. -->
     <div class="wz-banner__action" id="submit-bar">
       <fluent-button id="submit" appearance="primary" size="large" disabled>
-        <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
         Review &amp; submit
       </fluent-button>
     </div>
@@ -4962,6 +4991,8 @@
               <p class="ez-pkg-convert" id="pkg-url-convert" hidden>Don&rsquo;t have your app hosted or signed? <a href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Convert it to MSIX<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a> and Microsoft signs &amp; hosts it for you.</p>
             </div>
           </div>
+          <!-- PWA: MSIX upload offered as a secondary text action; the URL method above stays primary. -->
+          <p class="ez-pkg-altnote" id="pkg-msix-alt" hidden>Already have an MSIX package for your web app? <button type="button" class="ez-pkg-altnote__act" id="pkg-msix-alt-btn">Upload it instead</button></p>
         </div>
         <div class="ez-extracting" id="ez-extracting" hidden>
           <fluent-spinner size="small" aria-hidden="true"></fluent-spinner>
@@ -5331,7 +5362,7 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-rating">3</span>
           <div>
-            <h2 class="ez-step__title">Set your content &amp; ratings</h2>
+            <h2 class="ez-step__title">Set your ratings &amp; disclosures</h2>
             <p class="ez-step__sub">Get your app’s age rating and disclose your app behavior.</p>
             <p class="ez-step__summary" id="sum-rating"></p>
           </div>
@@ -5366,7 +5397,7 @@
         <div class="ez-substep">
           <h3 class="ez-substep__title">Disclosures</h3>
           <div class="declarations__group">
-            <p class="declarations__grouphead">About your app <span class="declarations__grouphint">Check anything that applies.</span></p>
+            <p class="declarations__grouphead">About your app</p>
             <ul class="declarations__list">
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-commerce">
@@ -5403,7 +5434,7 @@
             </ul>
           </div>
           <div class="declarations__group" id="decl-group-capabilities">
-            <p class="declarations__grouphead">Windows capabilities <span class="declarations__grouphint">On by default — turn off to restrict.</span></p>
+            <p class="declarations__grouphead">Windows capabilities</p>
             <ul class="declarations__list">
             <!-- MSIX only -->
             <li class="declarations__item" id="decl-item-alt-drives" hidden>
@@ -5680,7 +5711,6 @@
         <!-- On the last step (Reach & price), the footer also offers Submit for review —
              disabled until every section is complete (mirrors the header action). -->
         <fluent-button id="wz-submit-foot" appearance="primary" size="medium" hidden disabled>
-          <iconify-icon slot="start" icon="fluent:checkmark-circle-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
           Review &amp; submit
         </fluent-button>
       </div>
@@ -6203,7 +6233,7 @@
     </div>
     <input type="file" id="pwa-pkg-logo-file" accept="image/*" hidden />
 
-    <p class="pwapkg__intro" id="pwa-pkg-intro">We’ll turn your website into an app customers can install from the Microsoft Store — <strong>nothing to build, no code changes</strong>.</p>
+    <p class="pwapkg__intro" id="pwa-pkg-intro">Your live site, packaged for the Store — <strong>no code changes</strong>.</p>
 
     <div class="pwapkg__scan" id="pwa-pkg-scan" hidden>
       <fluent-spinner size="small" aria-hidden="true"></fluent-spinner>
@@ -6216,7 +6246,7 @@
     <label class="pwapkg__prefill" id="pwa-pkg-prefill" hidden>
       <span class="pwapkg__prefill-text">
         <span class="pwapkg__prefill-title"><iconify-icon icon="fluent:sparkle-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon> Prefill my Store listing from this site</span>
-        <span class="pwapkg__prefill-hint">We’ll draft your description, screenshots and other listing details from your website. Turn it off to fill the listing in yourself — you can edit everything either way.</span>
+        <span class="pwapkg__prefill-hint">Draft your description, screenshots and details from your site — edit anytime.</span>
       </span>
       <fluent-switch id="pwa-pkg-prefill-toggle" checked aria-label="Prefill my Store listing from this site"></fluent-switch>
     </label>
@@ -7016,9 +7046,7 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <p class="build-guide__intro">
-      Build an <strong>MSIX</strong> package and drop it in the box above — or bring an <strong>.exe / .msi</strong> installer as-is.
-    </p>
+    <p class="build-guide__intro">Build an <strong>MSIX</strong> package — or bring an <strong>.exe / .msi</strong> installer as-is.</p>
 
     <div class="build-guide__tabs" role="tablist" aria-label="Choose how you build">
       <button type="button" class="build-guide__tab is-active" role="tab" aria-selected="true" id="bg-tab-vs" data-bg-tab="vs">Visual Studio</button>
@@ -7027,12 +7055,12 @@
     </div>
 
     <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-vs" data-bg-panel="vs">
-      <p class="build-guide__panelintro">The easiest path — Visual Studio fills in your package identity for you.</p>
+      <p class="build-guide__panelintro">The easiest path — Visual Studio fills in your identity for you.</p>
       <ol class="build-guide__steps">
-        <li><span><strong>Add a packaging project.</strong> A <strong>Windows Application Packaging Project</strong> (install the MSIX Packaging Tools workload first).</span></li>
-        <li><span><strong>Associate with the Store.</strong> <strong>Publish → Associate App with the Store</strong> signs you in and fills your identity automatically.</span></li>
-        <li><span><strong>Create App Packages.</strong> <strong>Publish → Create App Packages</strong> builds your <code>.msix</code>.</span></li>
-        <li><span><strong>Upload</strong> it in the box above.</span></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Add a packaging project</span><span class="build-guide__stepdesc">A Windows Application Packaging Project (install the MSIX Packaging Tools workload).</span></div></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Associate with the Store</span><span class="build-guide__stepdesc">Publish → Associate App with the Store fills your identity automatically.</span></div></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Create the package</span><span class="build-guide__stepdesc">Publish → Create App Packages builds your <code>.msix</code>.</span></div></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Upload it above</span></div></li>
       </ol>
       <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/msix/desktop/desktop-to-uwp-packaging-dot-net" target="_blank" rel="noopener">Full walkthrough <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
     </div>
@@ -7040,10 +7068,10 @@
     <div class="build-guide__panel" role="tabpanel" aria-labelledby="bg-tab-vscode" data-bg-panel="vscode" hidden>
       <p class="build-guide__panelintro">Build from the command line — you set the identity yourself.</p>
       <ol class="build-guide__steps">
-        <li><span><strong>Install the Windows SDK</strong> for <code>makeappx</code>.</span></li>
-        <li><span><strong>Set identity</strong> in <code>AppxManifest.xml</code> to match your reservation. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span></li>
-        <li><span><strong>Build.</strong><code class="build-guide__cmd">makeappx pack /d YourApp /p App.msix</code></span></li>
-        <li><span><strong>Upload</strong> <code>App.msix</code> above — signing is optional, the Store re-signs.</span></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Install the Windows SDK</span><span class="build-guide__stepdesc">For the <code>makeappx</code> tool.</span></div></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Set your identity</span><span class="build-guide__stepdesc">In <code>AppxManifest.xml</code>, match your reservation. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span></div></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Build the package</span><span class="build-guide__stepdesc"><code class="build-guide__cmd">makeappx pack /d YourApp /p App.msix</code></span></div></li>
+        <li><div class="build-guide__stepbody"><span class="build-guide__steptitle">Upload it above</span><span class="build-guide__stepdesc">Signing is optional — the Store re-signs.</span></div></li>
       </ol>
       <a class="build-guide__doclink" href="https://learn.microsoft.com/windows/win32/appxpkg/make-appx-package--makeappx-exe-" target="_blank" rel="noopener">Full walkthrough <iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>
     </div>
@@ -7065,7 +7093,7 @@
 
     <p class="build-guide__note">
       <iconify-icon icon="fluent:info-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
-      <span>Your package <strong>Name</strong> and <strong>Publisher</strong> must match your reservation, or the upload is rejected. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span>
+      <span>Your package <strong>Name</strong> and <strong>Publisher</strong> must match your reservation. <button type="button" class="link-btn build-guide__inline-link" data-build-guide-identity>Show identity</button></span>
     </p>
 
     <a slot="action" class="build-guide__learn" href="https://learn.microsoft.com/windows/msix/overview" target="_blank" rel="noopener">
@@ -7495,11 +7523,14 @@
 <fluent-dialog id="apptype-dialog" modal-type="modal" aria-labelledby="apptype-dialog-title">
   <fluent-dialog-body>
     <span slot="title" id="apptype-dialog-title">Change app type</span>
-    <fluent-button slot="title-action" appearance="subtle" data-apptype-close aria-label="Close">
+    <fluent-button slot="title-action" appearance="subtle" id="atd-close" data-apptype-close aria-label="Close">
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
     <p class="atd__lead" id="atd-lead">How you package your app decides what the Store can do for it — pick the best fit.</p>
     <fluent-radio-group class="atd__opts" id="atd-opts" orientation="horizontal" aria-label="App type"></fluent-radio-group>
+    <fluent-message-bar class="atd__warn" id="atd-pkgwarn" intent="warning" hidden>
+      <span id="atd-pkgwarn-msg"></span>
+    </fluent-message-bar>
     <div class="atd__impact" id="atd-impact" hidden>
       <p class="atd__impact-lead" id="atd-impact-lead"></p>
       <ul class="atd__impact-list" id="atd-impact-list"></ul>
@@ -8780,7 +8811,7 @@
   // the final step's primary action opens the submit (review) dialog.
   // ===================================================================
   const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach'];
-  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listings', 'step-rating': 'Rating & disclosures', 'step-reach': 'Reach & price' };
+  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listings', 'step-rating': 'Ratings & disclosures', 'step-reach': 'Reach & price' };
   const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
   let wzIndex = 0;
   // In an update, a section the developer hasn't touched is exactly what's already live (it passed
@@ -8912,7 +8943,8 @@
       let badge = el.querySelector('.wz-stepind__badge');
       if (badgeMode) {
         if (!badge) { badge = document.createElement('span'); badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
-        const textLabel = isCurrent ? (leftN + ' left') : 'Not started';
+        // Show the remaining-required count on every incomplete step (matches the rail tabs, spine and a11y label) instead of a current-step-only "Not started".
+        const textLabel = leftN + ' left';
         const content = badgeMode === 'done' ? '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>'
           : badgeMode === 'locked' ? '<iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>'
           : badgeMode === 'review' ? 'Review'
@@ -10371,15 +10403,18 @@
   const V4_PKG_UI = {
     msix: { upload: true, url: false, uploadTitle: 'Upload your MSIX package' },
     win32: { upload: true, url: true, uploadTitle: 'Upload your installer', urlTitle: 'Link to your installer', urlDesc: 'Provide the link to the CDN where your binary is hosted.', urlPlaceholder: 'https://example.com/setup.exe' },
-    pwa: { upload: true, url: true, uploadTitle: 'Upload your package', urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
+    pwa: { upload: true, uploadSecondary: true, url: true, uploadTitle: 'Upload your package', urlTitle: 'Link to your website', urlDesc: 'We’ll package your site into a Store-ready app and sign it.', urlPlaceholder: 'https://yourapp.com' }
   };
   function applyV4PkgUI(type) {
     let cfg = V4_PKG_UI[type] || V4_PKG_UI.msix;
     if (isMvp() && type === 'win32') cfg = Object.assign({}, cfg, { upload: false });   // MVP: Win32 installers are URL-only
     const drop = document.getElementById('upload-zone'), urlPart = document.getElementById('pkg-url-part'), orDiv = document.getElementById('pkg-or');
-    if (drop) drop.hidden = !cfg.upload;
+    const altNote = document.getElementById('pkg-msix-alt');
+    const secondaryUpload = !!(cfg.upload && cfg.uploadSecondary);   // PWA: URL is primary; MSIX upload is a text link below
+    if (drop) drop.hidden = !cfg.upload || secondaryUpload;
     if (urlPart) urlPart.hidden = !cfg.url;
-    if (orDiv) orDiv.hidden = !(cfg.upload && cfg.url);
+    if (orDiv) orDiv.hidden = !(cfg.upload && cfg.url) || secondaryUpload;
+    if (altNote) altNote.hidden = !secondaryUpload;
     if (drop && cfg.uploadTitle) { const t2 = drop.querySelector('.ez-pkg-method__title'); if (t2) t2.textContent = cfg.uploadTitle; }
     if (urlPart) {
       const uTitle = urlPart.querySelector('.ez-pkg-method__title'); if (uTitle && cfg.urlTitle) uTitle.textContent = cfg.urlTitle;
@@ -10399,8 +10434,8 @@
   // ---- Prototype fidelity: Vision (default) vs MVP -----------------------------------------
   // Vision shows the full experience we'd want to build; MVP hides what isn't shippable yet. The
   // header toggle persists the choice and adds .is-mvp to #flow-wrap; each behaviour reads isMvp().
-  let pubMode = 'mvp';
-  try { if (localStorage.getItem('tdp.pubMode') === 'vision') pubMode = 'vision'; } catch (e) {}
+  let pubMode = 'vision';
+  try { if (localStorage.getItem('tdp.pubMode') === 'mvp') pubMode = 'mvp'; } catch (e) {}
   function isMvp() { return pubMode === 'mvp'; }
   function applyPubMode() {
     const wrap = document.getElementById('flow-wrap');
@@ -10451,10 +10486,10 @@
       return;
     }
     const label = V4_TYPE_LABEL[locked || v4Type] || (locked || v4Type);
+    // Change is ALWAYS offered — even with a package added; switching then prompts to remove it (see openAppTypeDialog).
     host.innerHTML = '<span class="wz-pkgtype__val">' + label + '</span>' +
-      (locked
-        ? ''
-        : '<span class="wz-pkgtype__sep" aria-hidden="true">\u00b7</span><button type="button" class="wz-pkgtype__change" data-apptype-edit aria-label="Change package type">Change</button>');
+      '<span class="wz-pkgtype__sep" aria-hidden="true">\u00b7</span>' +
+      '<button type="button" class="wz-pkgtype__change" data-apptype-edit aria-label="Change package type">Change</button>';
   }
   // Inline first-choice gate (Package step): the three app-type cards as buttons. Picking one commits
   // immediately (no Continue) and reveals the upload UI — see updatePkgChooseGate. Games get MSIX + PWA.
@@ -10528,35 +10563,45 @@
   };
   let _atdPick = null;
   let _atdMode = 'change';   // 'change' = switch an existing type (impact preview) | 'choose' = first-time pick on landing
+  let _atdLockedPkg = null;  // package family (msix|win32|pwa) fixed by a confirmed package when the dialog opened, else null
   function appTypeDlg() { return document.getElementById('apptype-dialog'); }
   function openAppTypeDialog(mode) {
-    if ((typeof lockedPkgType === 'function') && lockedPkgType()) return;   // a real package fixes the type
     _atdMode = (mode === 'choose') ? 'choose' : 'change';
     const choose = _atdMode === 'choose';
-    _atdPick = choose ? null : v4Type;   // first-time pick starts unselected → Confirm stays disabled until they choose
+    _atdLockedPkg = (typeof lockedPkgType === 'function') ? lockedPkgType() : null;   // a confirmed package fixes the family; switching will drop it
+    _atdPick = choose ? null : (_atdLockedPkg || v4Type);   // first-time pick starts unselected → Confirm stays disabled until they choose
     const title = document.getElementById('apptype-dialog-title'); if (title) title.textContent = choose ? 'Let\u2019s set up your publishing experience' : 'Change app type';
     const lead = document.getElementById('atd-lead'); if (lead) lead.textContent = choose
       ? 'Choose how you want to publish your app.'
       : 'How you package your app decides what the Store can do for it — pick the best fit.';
     const help = document.getElementById('atd-help'); if (help) help.hidden = !choose;
     const helpq = document.getElementById('atd-help-q'); if (helpq) helpq.hidden = !choose;
-    const cancel = document.getElementById('atd-cancel'); if (cancel) cancel.hidden = false;
+    const cancel = document.getElementById('atd-cancel'); if (cancel) { cancel.hidden = false; cancel.textContent = choose ? 'Exit' : 'Cancel'; }
+    const closeX = document.getElementById('atd-close'); if (closeX) closeX.hidden = choose;   // no dismiss X on the required gate — Exit is the way out
     renderAppTypeOpts(); renderAppTypeImpact();
     const dlg = appTypeDlg(); if (!dlg) return;
     try { if (typeof dlg.show === 'function') dlg.show(); } catch (e) {}
     try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.open) inner.showModal(); } catch (e) {}
+    // Choose mode is a required gate: swallow Esc so it can't silently dismiss to a locked flow (Exit leaves instead).
+    try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && !inner.__atdCancelWired) { inner.__atdCancelWired = true; inner.addEventListener('cancel', function (ev) { if (_atdMode === 'choose') ev.preventDefault(); }); } } catch (e) {}
   }
   function closeAppTypeDialog() {
     const dlg = appTypeDlg(); if (!dlg) return;
     try { if (typeof dlg.hide === 'function') dlg.hide(); } catch (e) {}
     try { const inner = dlg.shadowRoot && dlg.shadowRoot.querySelector('dialog'); if (inner && inner.open) inner.close(); } catch (e) {}
   }
+  // The type gate is required, but never a trap: this leaves the whole publishing flow (back to the apps list).
+  function exitPublishFlow() {
+    const back = document.querySelector('.ez-back');
+    const href = (back && back.getAttribute('href')) || ('../' + (window.__portalFile || 'store-portal.html') + '#apps');
+    try { location.href = href; } catch (e) {}
+  }
   function renderAppTypeOpts() {
     const wrap = document.getElementById('atd-opts'); if (!wrap) return;
     const ctx = IS_GAME ? 'game' : 'app';
     const types = ['msix', 'win32', 'pwa'].filter(t => APPTYPE_INFO[t][ctx]);
     wrap.innerHTML = types.map(t => {
-      const info = APPTYPE_INFO[t], c = info[ctx], isCur = t === v4Type, isSel = t === _atdPick;
+      const info = APPTYPE_INFO[t], c = info[ctx], isCur = t === (_atdLockedPkg || v4Type), isSel = t === _atdPick;
       const badges = (c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
         (isCur && _atdMode !== 'choose' ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
       const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
@@ -10586,29 +10631,49 @@
   }
   function renderAppTypeImpact() {
     const panel = document.getElementById('atd-impact'), lead = document.getElementById('atd-impact-lead'),
-      list = document.getElementById('atd-impact-list'), btn = document.getElementById('atd-confirm');
+      list = document.getElementById('atd-impact-list'), btn = document.getElementById('atd-confirm'),
+      warn = document.getElementById('atd-pkgwarn');
     // First-time pick: no "before/after" impact (nothing was set yet) — just Continue with the choice.
     if (_atdMode === 'choose') {
       if (btn) { btn.toggleAttribute('disabled', !_atdPick); btn.textContent = 'Confirm'; }
       if (panel) panel.hidden = true;
+      if (warn) warn.hidden = true;
       return;
     }
-    const changed = _atdPick && _atdPick !== v4Type, targetLabel = V4_TYPE_LABEL[_atdPick] || _atdPick;
-    if (btn) { btn.toggleAttribute('disabled', !changed); btn.textContent = changed ? ('Switch to ' + targetLabel) : 'Switch app type'; }
+    const cur = _atdLockedPkg || v4Type;
+    const changed = _atdPick && _atdPick !== cur, targetLabel = V4_TYPE_LABEL[_atdPick] || _atdPick;
+    const willRemove = changed && !!_atdLockedPkg;   // a confirmed package must be dropped when the family changes
+    // Up-front warning: switching away from an added package removes it.
+    if (warn) {
+      warn.hidden = !willRemove;
+      const msg = document.getElementById('atd-pkgwarn-msg');
+      if (willRemove && msg) {
+        const confirmed = packages.filter(p => !p._pending);
+        const what = confirmed.length === 1 ? ('\u201c' + confirmed[0].filename + '\u201d') : ('your ' + confirmed.length + ' uploaded packages');
+        msg.textContent = 'Switching to ' + targetLabel + ' will remove ' + what + '. You\u2019ll add a new ' + targetLabel + ' package after switching.';
+      }
+    }
+    if (btn) { btn.toggleAttribute('disabled', !changed); btn.textContent = willRemove ? 'Remove package & switch' : (changed ? ('Switch to ' + targetLabel) : 'Switch app type'); }
     if (!panel) return;
     if (!changed) { panel.hidden = true; return; }
-    panel.hidden = false;
     const lines = (typeof typeChangeImpact === 'function') ? typeChangeImpact(_atdPick === 'win32') : [];
     if (lines.length) {
+      panel.hidden = false;
       if (lead) lead.textContent = 'What changes if you switch to ' + targetLabel + ':';
       if (list) list.innerHTML = lines.map(l => '<li><iconify-icon icon="fluent:arrow-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon><span>' + l + '</span></li>').join('');
+    } else if (willRemove) {
+      panel.hidden = true;   // the removal warning already carries the consequence
+      if (list) list.innerHTML = '';
     } else {
+      panel.hidden = false;
       if (lead) lead.textContent = 'Same Store benefits either way \u2014 nothing you\u2019ve set will change.';
       if (list) list.innerHTML = '';
     }
   }
   function confirmAppTypeChange() {
-    const t = _atdPick, choosing = _atdMode === 'choose'; closeAppTypeDialog();
+    const t = _atdPick, choosing = _atdMode === 'choose';
+    const removing = !choosing && !!_atdLockedPkg && t && t !== _atdLockedPkg;   // family switch drops the added package(s)
+    closeAppTypeDialog();
     if (!t) return;
     if (choosing) {
       // First-time pick: clear the gate BEFORE setV4Type so its updateGate() unlocks the flow, then
@@ -10619,6 +10684,19 @@
       try { renderPkgTypeRail(); } catch (e) {}
       try { if (window.__apdSyncType) window.__apdSyncType(); } catch (e) {}
       try { scheduleFlowSave(); } catch (e) {}
+      return;
+    }
+    if (removing) {
+      // One family per submission — switching family invalidates every uploaded package, so clear them
+      // first (that also drops the lock so setV4Type can apply the new type), then re-sync the flow.
+      packages.length = 0;
+      _needsFormatChoice = false;
+      try { setV4Type(t, { silent: true }); } catch (e) { v4Type = t; }
+      persistChosenFormat(t);
+      try { renderPackages(); } catch (e) {}   // re-syncs the chooser lock, rail, gate, and the upload UI
+      try { if (window.__apdSyncType) window.__apdSyncType(); } catch (e) {}
+      try { scheduleFlowSave(); } catch (e) {}
+      try { if (typeof announce === 'function') announce('Package removed. App type set to ' + (V4_TYPE_LABEL[t] || t) + ' — add a new package to continue.'); } catch (e) {}
       return;
     }
     if (t === v4Type) return;
@@ -10640,7 +10718,7 @@
     document.addEventListener('click', e => { if (e.target.closest('[data-apptype-edit]')) { e.preventDefault(); openAppTypeDialog(formatGateActive() ? 'choose' : 'change'); } });
     const dlg = appTypeDlg(); if (!dlg) return;
     dlg.addEventListener('click', e => {
-      if (e.target.closest('[data-apptype-close]')) { closeAppTypeDialog(); return; }
+      if (e.target.closest('[data-apptype-close]')) { if (_atdMode === 'choose') exitPublishFlow(); else closeAppTypeDialog(); return; }
       if (e.target.closest('[data-atd-help]')) { e.preventDefault(); try { openFormatHelp(); } catch (err) {} return; }
       const opt = e.target.closest('[data-atd-opt]'); if (opt) { selectAppType(opt.getAttribute('data-atd-opt')); return; }
       if (e.target.closest('#atd-confirm')) { confirmAppTypeChange(); return; }
@@ -10661,9 +10739,9 @@
       { icon: 'fluent:desktop-20-regular', title: 'A Windows desktop app', desc: 'It runs natively on Windows', chip: 'Desktop app', next: 'appHandling' },
       { icon: 'fluent:globe-20-regular', title: 'A website or web app', desc: 'It runs in the browser today', chip: 'Web app', result: 'pwa' }
     ] },
-    appHandling: { q: 'Who should handle signing, hosting, updates & payments?', opts: [
-      { icon: 'fluent:sparkle-20-regular', title: 'Let Microsoft handle it', desc: 'Free code signing, hosting, automatic updates, and Store checkout', chip: 'Microsoft-managed', result: 'msix' },
-      { icon: 'fluent:wrench-20-regular', title: 'I\u2019ll use my own', desc: 'I have my code-signing certificate, hosting, and commerce', chip: 'Self-managed', result: 'win32' }
+    appHandling: { q: 'How do you want to handle delivery and payments?', opts: [
+      { icon: 'fluent:sparkle-20-regular', title: 'Let Microsoft handle it', bullets: ['No certificate to buy', 'Nothing to host', 'Automatic updates', 'Payments via Microsoft, a third party, or your own'], chip: 'Microsoft-managed', rec: true, result: 'msix' },
+      { icon: 'fluent:wrench-20-regular', title: 'I\u2019ll use my own', bullets: ['Bring your own signing certificate', 'Host it yourself', 'Ship your own updates', 'Payments via a third party or your own'], chip: 'Self-managed', result: 'win32' }
     ] },
     gameKind: { q: 'How is your game built?', opts: [
       { icon: 'fluent:box-20-regular', title: 'A standard PC game', desc: 'Built with a common engine or framework', chip: 'PC game', result: 'msix' },
@@ -10671,9 +10749,9 @@
     ] }
   };
   const FMTW_RESULT_V6 = {
-    msix: { name: 'MSIX', rec: true, icon: 'fluent:box-20-filled', why: 'The modern Windows app package. Microsoft signs, hosts, and auto-updates it for free, and you get Store checkout, sales, and staged rollout.' },
-    win32: { name: 'EXE / MSI', icon: 'fluent:desktop-20-filled', why: 'Bring your existing installer to the Store as-is. You keep your own code signing, hosting, updates, and commerce.' },
-    pwa: { name: 'PWA', icon: 'fluent:globe-20-filled', why: 'Your website, packaged as MSIX (via PWABuilder). Microsoft signs, hosts, and updates it, with full Store checkout.' }
+    msix: { name: 'MSIX', rec: true, icon: 'fluent:box-20-filled', why: 'The modern Windows app package — Microsoft signs, hosts, and updates it for you, for free.' },
+    win32: { name: 'EXE / MSI', icon: 'fluent:desktop-20-filled', why: 'Bring your existing installer to the Store as-is — you keep your own signing, hosting, and updates.' },
+    pwa: { name: 'PWA', icon: 'fluent:globe-20-filled', why: 'Your website, packaged for the Store — Microsoft signs, hosts, and updates it for you.' }
   };
   let fmtwState = { pt: 'app', path: [] };
   function fmtwStartId() { return fmtwState.pt === 'game' ? 'gameKind' : 'appKind'; }
@@ -10683,7 +10761,7 @@
     if (!ov) {
       ov = document.createElement('div');
       ov.id = 'fmthelpModal'; ov.className = 'fmthelp-modal';
-      ov.innerHTML = '<div class="fmthelp-modal__backdrop" data-fmthclose></div><div class="fmthelp-modal__card" role="dialog" aria-modal="true" aria-label="Help me choose an app type"><div id="fmthelpBody"></div></div>';
+      ov.innerHTML = '<div class="fmthelp-modal__backdrop"></div><div class="fmthelp-modal__card" role="dialog" aria-modal="true" aria-label="Set up your app"><div id="fmthelpBody"></div></div>';
       document.body.appendChild(ov);
     }
     ov.hidden = false;
@@ -10698,15 +10776,19 @@
     for (let i = 0; i < step.opts.length; i++) { const d = fmtwDepth(step.opts[i].next || step.opts[i].result); if (d > m) m = d; }
     return 1 + m;
   }
-  function fmtwBar(pct) {
-    return '<div class="fmtw__head"><h2 class="fmtw__title">Help me choose</h2>' +
-      '<button type="button" class="fmtw__close" data-fmthclose aria-label="Close"><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></button></div>' +
+  function fmtwBar(pct, lead) {
+    return '<div class="fmtw__head">' +
+        '<div class="fmtw__headmain"><h2 class="fmtw__title">Let\u2019s set up your app</h2>' +
+          (lead ? '<p class="fmtw__lead">' + lead + '</p>' : '') + '</div>' +
+      '</div>' +
       '<div class="fmtw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>';
   }
-  function fmtwCrumbs() {
+  function fmtwCrumbs(backIdx) {
     const p = fmtwState.path || [];
-    if (!p.length) return '';
-    return '<div class="fmtw__crumbs">' + p.map(function (c, i) {
+    const hasBack = typeof backIdx === 'number' && backIdx >= 0;
+    if (!p.length && !hasBack) return '';
+    const back = hasBack ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + backIdx + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' + (p.length ? '<span class="fmtw__crumbs-sep" aria-hidden="true"></span>' : '') : '';
+    return '<div class="fmtw__crumbs">' + back + p.map(function (c, i) {
       return (i ? '<iconify-icon class="fmtw__crumb-arrow" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' : '') +
         '<button type="button" class="fmtw__crumb" data-fmtw-jump="' + i + '" aria-label="Change this answer: ' + c.chip + '">' + c.chip + '</button>';
     }).join('') + '</div>';
@@ -10721,8 +10803,9 @@
         '<div class="fmtw__result"><span class="fmtw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
           '<div><div class="fmtw__result-name">' + r.name + '</div>' + (r.rec ? '<span class="fmtw__result-rec">Most popular</span>' : '') + '</div></div>' +
         '<p class="fmtw__result-why">' + r.why + '</p>' +
-        '<div class="fmtw__result-actions"><fluent-button appearance="primary" data-fmtw-add="' + id + '">Select ' + r.name + '</fluent-button>' +
-          '<button type="button" class="fmtw__restart" data-fmtw-start>Start over</button></div>';
+        (id === 'msix' ? '<p class="fmtw__result-convert">Have an <strong>.exe</strong> or <strong>.msi</strong>? <a href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Convert it to MSIX<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>.</p>' : '') +
+        '<div class="fmtw__result-actions"><button type="button" class="fmtw__restart" data-fmtw-start>Start over</button>' +
+          '<fluent-button appearance="primary" data-fmtw-add="' + id + '">Select ' + r.name + '</fluent-button></div>';
       return;
     }
     const step = FMTW_V6[id]; if (!step) return;
@@ -10731,16 +10814,17 @@
     const opts = step.opts.map(function (o, i) {
       return '<button type="button" class="fmtw__opt" data-fmtw-opt="' + id + ':' + i + '">' +
         '<span class="fmtw__opt-ico"><iconify-icon icon="' + o.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
-        '<span class="fmtw__opt-txt"><span class="fmtw__opt-title">' + o.title + '</span>' + (o.desc ? '<span class="fmtw__opt-desc">' + o.desc + '</span>' : '') + '</span>' +
+        '<span class="fmtw__opt-txt"><span class="fmtw__opt-title">' + o.title + (o.rec ? ' <span class="fmtw__opt-rec">Recommended</span>' : '') + '</span>' + (o.bullets ? '<span class="fmtw__opt-list">' + o.bullets.map(function (b) { return '<span class="fmtw__opt-li">' + (o.rec ? '<iconify-icon class="fmtw__li-mk fmtw__li-mk--check" icon="fluent:checkmark-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' : '<span class="fmtw__li-mk fmtw__li-mk--dot" aria-hidden="true"></span>') + '<span>' + b + '</span></span>'; }).join('') + '</span>' : (o.desc ? '<span class="fmtw__opt-desc">' + o.desc + '</span>' : '')) + '</span>' +
         '<iconify-icon class="fmtw__opt-arrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
     }).join('');
     body.innerHTML =
-      fmtwBar(pct) + fmtwCrumbs() +
+      fmtwBar(pct, pathLen === 0 ? 'Answer a couple of quick questions and we\u2019ll recommend the best way to publish it.' : '') + fmtwCrumbs(pathLen ? pathLen - 1 : -1) +
       '<h3 class="fmtw__q">' + step.q + '</h3>' +
       '<div class="fmtw__opts">' + opts + '</div>' +
-      '<div class="fmtw__foot">' + (pathLen
-        ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + (pathLen - 1) + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>'
-        : '<button type="button" class="fmtw__back" data-fmthclose><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>All app types</button>') + '</div>';
+      '<div class="fmtw__foot">' +
+        '<button type="button" class="fmtw__exit" data-fmthexit>Exit</button>' +
+        '<button type="button" class="fmtw__skip" data-fmthpick>I already know my app type<iconify-icon icon="fluent:arrow-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
+      '</div>';
   }
   function fmtwPick(id, idx) {
     const step = FMTW_V6[id]; if (!step) return;
@@ -10752,7 +10836,8 @@
   }
   (function wireFormatHelp() {
     document.addEventListener('click', function (e) {
-      if (e.target.closest('[data-fmthclose]')) { closeFormatHelp(); try { if (formatGateActive()) openAppTypeDialog('choose'); } catch (err) {} return; }   // back to the chooser modal
+      if (e.target.closest('[data-fmthexit]')) { exitPublishFlow(); return; }   // leave the whole flow (the gate's escape hatch)
+      if (e.target.closest('[data-fmthpick]')) { closeFormatHelp(); try { openAppTypeDialog('choose'); } catch (err) {} return; }   // skip the questionnaire — pick the type directly
       const wo = e.target.closest('[data-fmtw-opt]');
       if (wo) { const p = wo.getAttribute('data-fmtw-opt').split(':'); fmtwPick(p[0], +p[1]); return; }
       if (e.target.closest('[data-fmtw-start]')) { fmtwState.path = []; renderFmtHelp(fmtwStartId()); return; }
@@ -12024,6 +12109,8 @@
   }
   if ($('add-more-pkg')) $('add-more-pkg').addEventListener('click', openAddPkgDialog);
   uploadZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pkgFile.click(); } });
+  // PWA secondary action: "Upload it instead" opens the same file picker the drop-zone uses.
+  if ($('pkg-msix-alt-btn')) $('pkg-msix-alt-btn').addEventListener('click', () => { pkgFile.click(); });
   // Drag-and-drop onto the dashed drop box (the upload affordance).
   ['dragenter', 'dragover'].forEach(ev => uploadZone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); uploadZone.classList.add('is-drag'); }));
   ['dragleave', 'dragend'].forEach(ev => uploadZone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); uploadZone.classList.remove('is-drag'); }));
@@ -12214,8 +12301,7 @@
       pwaPkgSyncFooter(); return;
     }
     if (!pwaPkgReady()) { body.innerHTML = pwaPkgMissingHtml(); pwaPkgSyncFooter(); return; }
-    // Manifest present → the ready report + Store identity.
-    const id = pwaPkgIdentity();
+    // Manifest present → the ready report. Store identity is auto-assigned; its specifics aren't needed here.
     const row = function (state, label, detail) {
       const icon = state === 'ok' ? 'fluent:checkmark-circle-16-filled' : state === 'info' ? 'fluent:info-16-filled' : 'fluent:warning-16-filled';
       return '<li class="pwapkg__check pwapkg__check--' + state + '"><iconify-icon icon="' + icon + '" width="16" height="16" aria-hidden="true"></iconify-icon>' +
@@ -12223,15 +12309,11 @@
         (detail ? '<span class="pwapkg__check-detail">' + pwaEsc(detail) + '</span>' : '') + '</span></li>';
     };
     const rows = [
-      row('ok', 'Web app manifest', (pwaPkgManifest && pwaPkgManifest.generated) ? 'Using the one we generated — included in your package' : 'Found on your site — we read your app’s name and icon'),
-      row(https ? 'ok' : 'warn', 'Secure connection', https ? 'Your site is served over HTTPS' : 'Use HTTPS before you publish')
+      row('ok', (pwaPkgManifest && pwaPkgManifest.generated) ? 'Web app manifest generated' : 'Web app manifest found', ''),
+      row(https ? 'ok' : 'warn', https ? 'Served over HTTPS' : 'Not served over HTTPS', https ? '' : 'Use HTTPS before you publish'),
+      row('ok', 'Store identity ready', '')
     ];
-    const idRow =
-      '<li class="pwapkg__check pwapkg__check--ok"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>' +
-        '<span class="pwapkg__check-text"><span class="pwapkg__check-label">Store identity</span>' +
-          '<dl class="pwapkg__identity-rows"><dt>Package name</dt><dd title="' + pwaEsc(id.identityName) + '">' + pwaEsc(id.identityName) + '</dd><dt>Publisher</dt><dd>' + pwaEsc(id.publisherDisplay) + '</dd></dl>' +
-        '</span></li>';
-    body.innerHTML = '<ul class="pwapkg__checks">' + rows.join('') + idRow + '</ul>';
+    body.innerHTML = '<ul class="pwapkg__checks">' + rows.join('') + '</ul>';
     pwaPkgSyncFooter();
   }
   function pwaPkgSetPhase(phase) {   // 'scan' | 'review' | 'building'
@@ -12480,6 +12562,7 @@
       .finally(function () { pwaPkgManifestDone = true; pwaPkgRenderReport(); });
     const _pf = $('pwa-pkg-prefill-toggle'); if (_pf) _pf.checked = true;   // recommended default: prefill on for each new site
     pwaPkgPreview(url);
+    try { new Image().src = pwaPkgHomepageShotUrl(url); } catch (e) {}   // warm the 16:10 homepage capture so it's ready if the listing is prefilled
     pwaPkgSetPhase('scan');
     try { dlg.show(); } catch (e) {}
     setTimeout(function () { pwaPkgRenderReport(); pwaPkgSetPhase('review'); }, 900);
@@ -12509,7 +12592,21 @@
     const prefillToggle = $('pwa-pkg-prefill-toggle');
     const wantPrefill = !(prefillToggle && prefillToggle.checked === false);
     announce('Your website was packaged as an MSIX and added.' + (mf && mf.name ? (wantPrefill ? ' Logo and details pulled from the site.' : ' Logo pulled from the site.') : ''));
-    if (wantPrefill) autoDraftFromSite();   // full auto-draft of the listing — only when the developer opted in
+    if (wantPrefill) { addSiteHomepageShot(url); autoDraftFromSite(); }   // lead the gallery with the homepage capture, then draft the copy — only when opted in
+  }
+  // Homepage screenshot captured at the Store screenshot ratio (16:10) via mShots, so it fills the listing frame.
+  function pwaPkgHomepageShotUrl(u) {
+    u = u || pwaPkgPendingUrl;
+    return u ? ('https://s.wordpress.com/mshots/v1/' + encodeURIComponent(u) + '?w=1280&h=800') : '';
+  }
+  function addSiteHomepageShot(url) {
+    if (!Array.isArray(state.shots)) state.shots = [];
+    const shot = pwaPkgHomepageShotUrl(url);
+    if (!shot || state.shots.indexOf(shot) >= 0 || state.shots.length >= 8) return;
+    state.shots.unshift(shot);   // the real homepage leads the Store screenshot gallery
+    try { renderShots(); } catch (e) {}
+    try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}
+    try { if (window.__scheduleFlowSave) window.__scheduleFlowSave(); } catch (e) {}
   }
   (function wirePwaPackager() {
     const dlg = $('pwa-pkg-dialog'); if (!dlg) return;
@@ -15667,11 +15764,11 @@
         try { restoreFlowData(); } catch (e) {}
         __flowRestored = true;
         // First-choice gate: the reserve step defers the package format. If the app landed here without
-        // one chosen (and no package locks it), open the "Let's set up your publishing experience" modal
-        // over the (locked) flow. Runs after restore so a returning draft with a package won't prompt.
+        // one chosen (and no package locks it), open the guided "Help me choose" questionnaire (which has
+        // a Skip to the type picker). Runs after restore so a returning draft with a package won't prompt.
         try {
           updatePkgChooseGate();
-          if (formatGateActive()) { setTimeout(function () { try { openAppTypeDialog('choose'); } catch (e) {} }, 200); }
+          if (formatGateActive()) { setTimeout(function () { try { openFormatHelp(); } catch (e) {} }, 200); }
         } catch (e) {}
         try {
           // Every edit inside the flow persists (debounced). Capture-phase listeners catch fields,

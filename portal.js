@@ -301,7 +301,7 @@
           '<div class="ovx-hero__actions">' +
             '<button type="button" class="ovx-hero__whatpub" data-whatpub><iconify-icon icon="fluent:book-open-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>What you can publish</button>' +
             '<fluent-button appearance="primary" data-newapp>' +
-              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
+              'Add a new app</fluent-button>' +
           '</div>' +
         '</div>';
       return;
@@ -316,7 +316,7 @@
           '</div>' +
           '<div class="status-card__action">' +
             '<fluent-button appearance="primary" size="large" data-newapp>' +
-              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add a product</fluent-button>' +
+              'Add a product</fluent-button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1586,7 +1586,7 @@
           '<p class="muted">Name your app, add your packages and store listing, ' +
             'then publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
           '<fluent-button appearance="primary" data-newapp>' +
-            '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add a new app</fluent-button>' +
+            'Add a new app</fluent-button>' +
         '</div>';
         return;
       }
@@ -4063,6 +4063,13 @@
   var _apName = "";         // Add-a-product page: prefilled name (existing app) or blank (new)
   var _apLang = "en-US";    // Add-a-product page: default language preset
   var _apTitle = "Add a product";
+  var _apBack = "overview"; // Add-a-product page: view that "back"/Cancel returns to (mirrors where the flow was launched)
+  var AP_BACK_LABELS = { overview: "Overview", apps: "Apps", certificates: "Certificates", analytics: "Analytics", "customer-groups": "Customer groups" };
+  function apBackView() {
+    var h = (location.hash || "").slice(1);
+    if (h === "add-product") return _apBack;   // re-entered from within the flow — keep the original origin
+    return AP_BACK_LABELS[h] ? h : "overview";
+  }
   function openPublish(id) {
     var a = appById(id); if (!a) return;
     publishId = id;
@@ -4071,6 +4078,7 @@
     _apName = (a.storeName || a.name).replace(/\.[^.]+$/, "");
     _apLang = a.storeLang || "en-US";
     _apTitle = "Publish to the Store";
+    _apBack = apBackView();
     goView("add-product");
   }
   // "Create new app" — reserve a name for a brand-new app (not a discovered one).
@@ -4083,6 +4091,7 @@
     _apName = "";
     _apLang = "en-US";
     _apTitle = "Add a product";
+    _apBack = apBackView();
     goView("add-product");
   }
   function closePublish() { var m = $("publishModal"); if (m && m.hide) m.hide(); }
@@ -4100,36 +4109,38 @@
     return el;
   }
   var AP_LANGS = [["en-US", "English (United States)"], ["en-GB", "English (United Kingdom)"], ["es-ES", "Spanish (Spain)"], ["fr-FR", "French (France)"], ["de-DE", "German (Germany)"], ["pt-BR", "Portuguese (Brazil)"], ["it-IT", "Italian (Italy)"], ["ja-JP", "Japanese"], ["zh-CN", "Chinese (Simplified)"], ["hi-IN", "Hindi (India)"]];
-  function apField(label, forId, infoLabel, tip, control) {
-    var infoId = forId + "Info";
+  function apField(label, forId, desc, control) {
     return '<div class="apform__row">' +
-      '<div class="apform__label"><label for="' + forId + '">' + label + '</label><span class="apform__req" aria-hidden="true">*</span>' +
-        '<span class="field__info" id="' + infoId + '" tabindex="0" aria-label="' + esc(infoLabel) + '"><iconify-icon icon="fluent:info-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></span>' +
-        '<fluent-tooltip anchor="' + infoId + '" positioning="after">' + tip + '</fluent-tooltip></div>' +
-      '<div class="apform__control">' + control + '</div>' +
+      '<div class="apform__label"><label for="' + forId + '">' + label + '</label><span class="apform__req" aria-hidden="true">*</span></div>' +
+      '<div class="apform__control"><p class="apform__desc">' + desc + '</p>' + control + '</div>' +
     '</div>';
   }
   function addProductHTML() {
     var isGame = _apType === "game";
     var langOpts = AP_LANGS.map(function (l) { return '<fluent-option value="' + l[0] + '"' + (l[0] === _apLang ? " selected" : "") + '>' + l[1] + '</fluent-option>'; }).join("");
     return '<div class="addprod">' +
-      '<a class="addprod__back" href="#overview" data-ap-cancel><iconify-icon icon="fluent:arrow-left-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>Overview</a>' +
+      '<a class="addprod__back" href="#' + _apBack + '" data-ap-cancel><iconify-icon icon="fluent:arrow-left-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' + (AP_BACK_LABELS[_apBack] || "Overview") + '</a>' +
       '<h1 class="addprod__title">' + esc(_apTitle) + '</h1>' +
-      '<p class="addprod__sub">Create and publish an app or game on the Microsoft Store</p>' +
+      '<p class="addprod__sub">Publish an app or game on the Microsoft Store</p>' +
       '<div class="apform">' +
-        apField("Product name", "apName", "About reserving a product name", "Make sure you have the rights to use any name you reserve. You must submit this product to the Microsoft Store within three months, or you\u2019ll lose your name reservation.",
-          '<fluent-text-input id="apName" appearance="outline" aria-label="Product name" placeholder="Your product name" style="width:100%"></fluent-text-input><span class="field__hint" id="apNameHint"></span>') +
-        apField("Product type", "apType", "About product type", "This can\u2019t be changed later. Once you create the product, you can\u2019t switch it between App and Game.",
-          '<fluent-radio-group id="apType" class="pubchoice" orientation="horizontal" value="' + (isGame ? "game" : "app") + '" aria-label="Product type">' +
-            '<fluent-field label-position="after"><label slot="label" for="ap-app">App</label><fluent-radio id="ap-app" slot="input" value="app"' + (isGame ? "" : " checked") + '></fluent-radio></fluent-field>' +
+        apField("Product name", "apName", "This name will appear on Microsoft Store, you can change the name later also",
+          '<fluent-text-input id="apName" appearance="outline" aria-label="Product name" placeholder="Your product name"></fluent-text-input><span class="field__hint" id="apNameHint"></span>') +
+        apField("Product type", "apType", "You can\u2019t change this later",
+          '<fluent-radio-group id="apType" class="pubchoice" orientation="horizontal"' + (isGame ? ' value="game"' : '') + ' aria-label="Product type">' +
+            '<fluent-field label-position="after"><label slot="label" for="ap-app">App</label><fluent-radio id="ap-app" slot="input" value="app"></fluent-radio></fluent-field>' +
             '<fluent-field label-position="after"><label slot="label" for="ap-game">Game</label><fluent-radio id="ap-game" slot="input" value="game"' + (isGame ? " checked" : "") + '></fluent-radio></fluent-field>' +
-          '</fluent-radio-group>') +
-        apField("Default language", "apLang", "About the default language", "This language will be used to create your default listing. Content from the default listing is copied into every new listing you add, so you start with content already in place. You can edit it anytime.",
-          '<fluent-dropdown id="apLang" appearance="outline" aria-label="Default language" style="width:100%"><fluent-listbox>' + langOpts + '</fluent-listbox></fluent-dropdown>') +
+          '</fluent-radio-group>' +
+          '<fluent-message-bar class="pcnote pcnote--gdk" id="apGdkNote" intent="info"' + (isGame ? '' : ' hidden') + '>' +
+            '<iconify-icon slot="icon" class="pcnote__ico" icon="fluent:info-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+            '<span class="pcnote__msg"><strong>Publishing a GDK game?</strong> GDK games continue to be published through Partner Center.</span>' +
+            '<a slot="actions" class="pcnote__go" href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" aria-label="Continue in Partner Center (opens in a new tab)">Continue in Partner Center<iconify-icon icon="fluent:arrow-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>' +
+          '</fluent-message-bar>') +
+        apField("Default language", "apLang", "This language will be auto added for your Store listing, you can change it later also",
+          '<fluent-dropdown id="apLang" appearance="outline" aria-label="Default language"><fluent-listbox>' + langOpts + '</fluent-listbox></fluent-dropdown>') +
       '</div>' +
       '<div class="apform__actions">' +
-        '<fluent-button appearance="primary" id="apCreate" disabled><iconify-icon slot="start" icon="fluent:add-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>Add product</fluent-button>' +
         '<fluent-button appearance="secondary" data-ap-cancel>Cancel</fluent-button>' +
+        '<fluent-button appearance="primary" id="apCreate" disabled>Add product</fluent-button>' +
       '</div>' +
     '</div>';
   }
@@ -4139,18 +4150,29 @@
     var name = el.querySelector("#apName");
     var create = el.querySelector("#apCreate");
     var hint = el.querySelector("#apNameHint");
+    var typeGroup = el.querySelector("#apType");
     if (name && _apName) name.value = _apName;
+    function typeSelected() { return !!el.querySelector("#apType fluent-radio[checked]"); }
     function refresh() {
       var v = (name && name.value || "").trim();
       if (hint) {
         if (v.length < 2) { hint.className = "field__hint"; hint.textContent = ""; }
         else { hint.className = "field__hint field__hint--ok"; hint.innerHTML = '<iconify-icon icon="fluent:checkmark-circle-12-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Name available'; }
       }
-      if (create) { if (v.length >= 2) create.removeAttribute("disabled"); else create.setAttribute("disabled", ""); }
+      if (create) { if (v.length >= 2 && typeSelected()) create.removeAttribute("disabled"); else create.setAttribute("disabled", ""); }
+    }
+    // fluent-radio doesn't reflect checked to an attribute — mirror it so the picked dot fills.
+    var gdkNote = el.querySelector("#apGdkNote");
+    function syncType() {
+      var rr = el.querySelectorAll("#apType fluent-radio");
+      for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute("checked", !!rr[i].checked);
+      var game = el.querySelector("#ap-game");
+      if (gdkNote) gdkNote.hidden = !(game && game.checked);   // GDK off-ramp shows only for games
+      refresh();
     }
     function submit() {
       if (create && create.hasAttribute("disabled")) return;
-      reserveAndOpen(name ? name.value : "", readDropdownValue(el.querySelector("#apType")) || "app", readDropdownValue(el.querySelector("#apLang")) || "en-US", _reserveFmt);
+      reserveAndOpen(name ? name.value : "", readDropdownValue(typeGroup) || "app", readDropdownValue(el.querySelector("#apLang")) || "en-US", _reserveFmt);
     }
     if (name) {
       name.addEventListener("input", refresh);
@@ -4158,7 +4180,9 @@
       name.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } });
     }
     if (create) create.addEventListener("click", submit);
-    el.querySelectorAll("[data-ap-cancel]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); goView("overview"); }); });
+    if (typeGroup) typeGroup.addEventListener("change", function () { setTimeout(syncType, 0); });
+    el.querySelectorAll("[data-ap-cancel]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); goView(_apBack); }); });
+    setTimeout(syncType, 0);   // after upgrade: mirror the initial state (Game only when arriving from a game flow)
     refresh();
     setTimeout(function () { try { name.focus(); } catch (e) {} }, 60);
   }
@@ -4683,7 +4707,8 @@
     var _rs = $("resetState"); if (_rs) _rs.addEventListener("click", function (e) {
       e.preventDefault();
       if (confirm("Clear all certificates, apps, and verification state?")) {
-        try { for (var _i = localStorage.length - 1; _i >= 0; _i--) { var _k = localStorage.key(_i); if (_k && _k.indexOf(KEY) === 0) localStorage.removeItem(_k); } } catch (_e) {}
+        // Reset ALL demo state: portal (per-account), publishing flows (msstore.apps + tdp.flow.*) and per-app data — keep only display prefs.
+        try { for (var _i = localStorage.length - 1; _i >= 0; _i--) { var _k = localStorage.key(_i); if (_k && (_k.indexOf("tdp.") === 0 || _k.indexOf("msstore.") === 0) && _k !== "msstore.theme") localStorage.removeItem(_k); } } catch (_e) {}
         state = load(); save(); renderAll(); showSignin();
       }
     });
@@ -4744,7 +4769,7 @@
     if (VIEWS.indexOf(id) === -1) id = "overview";
     if (id === "add-product") renderAddProduct();
     document.querySelectorAll(".main .block").forEach(function (b) { b.classList.toggle("active", b.id === id); });
-    var navId = id === "add-product" ? "overview" : id;   // the reserve page is launched from Overview — keep it lit
+    var navId = id === "add-product" ? _apBack : id;   // the reserve page keeps its launch view's nav lit
     document.querySelectorAll(".snav a[data-nav]").forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("href").slice(1) === navId); });
     if (id === "analytics") renderAnalytics();
     else { var dsh0 = document.getElementById("demoSwitchHost"); if (dsh0) dsh0.innerHTML = ""; }
