@@ -299,9 +299,8 @@
           '<div class="ovx-hero__text"><h2>Welcome back' + (firstName ? ", " + esc(firstName) : "") + '</h2>' +
             '<p>' + bits.join(" \u00b7 ") + '</p></div>' +
           '<div class="ovx-hero__actions">' +
-            '<button type="button" class="ovx-hero__whatpub" data-whatpub><iconify-icon icon="fluent:book-open-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>What you can publish</button>' +
             '<fluent-button appearance="primary" data-newapp>' +
-              'Add a new app</fluent-button>' +
+              '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New product</fluent-button>' +
           '</div>' +
         '</div>';
       return;
@@ -316,7 +315,7 @@
           '</div>' +
           '<div class="status-card__action">' +
             '<fluent-button appearance="primary" size="large" data-newapp>' +
-              'Add a product</fluent-button>' +
+              '<iconify-icon slot="start" icon="fluent:add-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>New product</fluent-button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1586,7 +1585,7 @@
           '<p class="muted">Name your app, add your packages and store listing, ' +
             'then publish to the Microsoft Store — reaching more than a billion Windows devices.</p>' +
           '<fluent-button appearance="primary" data-newapp>' +
-            'Add a new app</fluent-button>' +
+            '<iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New product</fluent-button>' +
         '</div>';
         return;
       }
@@ -1737,17 +1736,17 @@
     return null;
   }
   // App "type" = what you're publishing: Game (from the App/Game reservation), else the package family
-  // (MSIX / Desktop / Web) from the added package (a.packageType), the format reserved up front
+  // (MSIX / EXE·MSI / Web) from the added package (a.packageType), the format reserved up front
   // (a.pkgType), or the installer's file extension.
   function appTypeMeta(a) {
     if (a.type === "game" || a.productKind === "game") return { key: "game", label: "Game", icon: "fluent:xbox-controller-20-regular" };
     var pk = a.packageType || a.pkgType || pkgFromFile(a.file);
     if (pk === "msix") return { key: "msix", label: "MSIX app", icon: "fluent:box-20-regular" };
     if (pk === "pwa") return { key: "pwa", label: "Web app", icon: "fluent:globe-20-regular" };
-    if (pk === "win32") return { key: "win32", label: "Desktop app", icon: "fluent:desktop-20-regular" };
+    if (pk === "win32") return { key: "win32", label: "EXE / MSI", icon: "fluent:desktop-20-regular" };
     return { key: "", label: "", icon: "" };   // no package added yet → no type to show
   }
-  function typeFilterLabel(k) { return { all: "All types", msix: "MSIX apps", win32: "Desktop apps", pwa: "Web apps", game: "Games", app: "Other apps" }[k] || k; }
+  function typeFilterLabel(k) { return { all: "All types", msix: "MSIX apps", win32: "EXE / MSI apps", pwa: "Web apps", game: "Games", app: "Other apps" }[k] || k; }
   function statusFilterLabel(k) { return { all: "All statuses", live: "In the Store", "in-review": "In certification", draft: "Drafts", rejected: "Needs attention" }[k] || k; }
   function appMetricVals(a) {
     if (!(a.store || a.storeStatus === "published")) return { inst: -1, crash: 999, rating: -1 };
@@ -2061,14 +2060,14 @@
         '<strong>Unlock analytics for your apps</strong>' +
         '<p class="muted">Publish your first app to the Microsoft Store to start tracking installs, usage, ratings, and crash health \u2014 all in one place. Data appears within a couple of days of going live.</p>' +
         '<div class="empty__cta">' +
-          '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:rocket-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add app to Store</fluent-button>' +
+          '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New product</fluent-button>' +
         '</div></div>';
     }
     return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
       '<strong>Unlock analytics for your apps</strong>' +
       '<p class="muted">We don\u2019t see any apps for you yet. Add your code signing certificate to surface the apps you\u2019ve signed and see their crash &amp; hang analytics \u2014 or onboard to the Microsoft Store for the full picture: crashes, acquisition, usage, ratings &amp; reviews, and performance.</p>' +
       '<div class="empty__cta">' +
-        '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:rocket-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add app to Store</fluent-button>' +
+        '<fluent-button appearance="primary" data-newapp><iconify-icon slot="start" icon="fluent:add-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>New product</fluent-button>' +
         '<fluent-button appearance="outline" data-certmodal><iconify-icon slot="start" icon="fluent:certificate-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Add certificate</fluent-button>' +
       '</div></div>';
   }
@@ -4062,7 +4061,7 @@
   var _apType = "app";      // Add-a-product page: product type preset (app | game)
   var _apName = "";         // Add-a-product page: prefilled name (existing app) or blank (new)
   var _apLang = "en-US";    // Add-a-product page: default language preset
-  var _apTitle = "Add a product";
+  var _apTitle = "Add new product";
   var _apBack = "overview"; // Add-a-product page: view that "back"/Cancel returns to (mirrors where the flow was launched)
   var AP_BACK_LABELS = { overview: "Overview", apps: "Apps", certificates: "Certificates", analytics: "Analytics", "customer-groups": "Customer groups" };
   function apBackView() {
@@ -4070,8 +4069,8 @@
     if (h === "add-product") return _apBack;   // re-entered from within the flow — keep the original origin
     return AP_BACK_LABELS[h] ? h : "overview";
   }
-  // Demo variant: 'v2' = the guided/adaptive Add-a-product page (type chosen up front, no in-flow gate).
-  function journeyV2() { try { return localStorage.getItem("tdp.journey") === "v2"; } catch (e) { return false; } }
+  // Demo variant: 'v2' (default) = the guided add-product page; 'v1' = classic (format chosen in-flow).
+  function journeyV2() { try { return localStorage.getItem("tdp.journey") !== "v1"; } catch (e) { return true; } }
   // --- V2 guided "Help me choose" (same copy as the publish flow) + slim package-type field ---
   var _apPkg = "";          // V2 chosen package (msix | win32 | pwa); "" = nothing selected yet
   var _apGuideOnOpen = false;  // V2: open the guided questionnaire dialog after the form renders (first app)
@@ -4090,7 +4089,7 @@
       { icon: "fluent:globe-20-regular", title: "A website or web app", desc: "It runs in the browser today", chip: "Web app", result: "pwa" }
     ] },
     appHandling: { q: "Who should manage code signing, hosting, and app payments?", opts: [
-      { icon: "fluent:sparkle-20-regular", title: "Let Microsoft handle it", bullets: ["Free code signing by Microsoft", "Free binary hosting by Microsoft", "Auto app updates to customers", "Commerce options: Microsoft, a third party, or your own"], chip: "Microsoft-managed", rec: true, result: "msix" },
+      { icon: "fluent:sparkle-20-regular", title: "Let Microsoft handle it", bullets: ["Free code signing", "Free binary hosting", "Auto app updates to customers", "Commerce options: Microsoft, a third party, or your own"], chip: "Microsoft-managed", result: "msix" },
       { icon: "fluent:wrench-20-regular", title: "I\u2019ll use my own", bullets: ["Code signing managed by you", "Binary hosting managed by you", "App updates managed by you", "Commerce options: a third party or your own"], chip: "Self-managed", result: "win32" }
     ] },
     gameKind: { q: "How is your game built?", opts: [
@@ -4103,8 +4102,8 @@
     ] }
   };
   var AP_PKG_INFO = {
-    msix: { name: "MSIX", icon: "fluent:box-20-filled", tag: "Microsoft signs, hosts & updates it \u2014 free", why: "The modern Windows app package \u2014 Microsoft signs, hosts, and updates it for you, for free." },
-    win32: { name: "EXE / MSI", icon: "fluent:desktop-20-filled", tag: "You keep your own signing, hosting & updates", why: "Bring your existing installer to the Store as-is \u2014 you keep your own signing, hosting, and updates." },
+    msix: { name: "MSIX", icon: "fluent:box-20-filled", tag: "Free signing and hosting with auto updates", why: "The modern Windows app package \u2014 Microsoft signs, hosts, and updates it for you, for free." },
+    win32: { name: "EXE / MSI", icon: "fluent:desktop-20-filled", tag: "You handle signing, hosting & updates yourself", why: "Bring your existing installer to the Store as-is \u2014 you keep your own signing, hosting, and updates." },
     pwa: { name: "PWA", icon: "fluent:globe-20-filled", tag: "Your web app, packaged for the Store", why: "Your website, packaged for the Store \u2014 Microsoft signs, hosts, and updates it for you." },
     gdk: { name: "GDK", icon: "fluent:games-20-filled", tag: "Games with Xbox services \u2014 publish via Partner Center", why: "Games that use Xbox services are submitted and managed in Partner Center." }
   };
@@ -4189,10 +4188,9 @@
           apgCrumbs() +
           '<div class="apgw__result"><span class="apgw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
             '<div class="apgw__result-head"><span class="apgw__result-name">' + r.name + '</span><span class="apg__orec">Recommended</span></div></div>' +
-          '<p class="apgw__result-why">' + r.why + '</p>' +
           (_apgResult === "msix" ? '<p class="apgw__convert">Have an <strong>.exe</strong> or <strong>.msi</strong>? <a href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Convert it to MSIX<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>.</p>' : '') +
           '<div class="apgw__result-actions"><button type="button" class="apgw__restart" data-apg-restart>Start over</button>' +
-            '<fluent-button appearance="primary" data-apg-apply>Select ' + r.name + '</fluent-button></div>' +
+            '<fluent-button appearance="primary" data-apg-apply>Go with ' + r.name + '</fluent-button></div>' +
         '</fluent-dialog-body>';
       return;
     }
@@ -4227,7 +4225,7 @@
         '<span class="pkgopt__txt"><span class="pkgopt__title">' + info.name + (t === "msix" ? ' <span class="pkgopt__rec">Recommended</span>' : '') + '</span><span class="pkgopt__desc">' + info.tag + '</span></span></label>' +
         '<fluent-radio id="pkg-' + t + '" slot="input" value="' + t + '"' + (sel ? ' checked' : '') + '></fluent-radio></fluent-field>';
     }).join("");
-    return '<fluent-radio-group id="apPkg" class="pkgset" orientation="vertical" aria-label="Package type"' + (_apPkg ? ' value="' + _apPkg + '"' : '') + '>' + radios + '</fluent-radio-group>' +
+    return '<fluent-radio-group id="apPkg" class="pkgset" orientation="horizontal" aria-label="Package type"' + (_apPkg ? ' value="' + _apPkg + '"' : '') + '>' + radios + '</fluent-radio-group>' +
       '<p class="pkghelp"><iconify-icon icon="fluent:lightbulb-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Not sure which one? <button type="button" class="apg-link" data-apg-redo>Help me decide</button></p>';
   }
   function openPublish(id) {
@@ -4253,7 +4251,7 @@
     _apPkg = (["msix", "win32", "pwa", "gdk"].indexOf(opts.pkgType) >= 0) ? opts.pkgType : "";
     _apName = "";
     _apLang = "en-US";
-    _apTitle = "Add a product";
+    _apTitle = "Add new product";
     _apBack = apBackView();
     // V2: the FIRST app auto-opens the guided questionnaire dialog over the form; returning developers
     // (and preset CTAs) get the form directly, with a "Help me decide" launcher on package type.
@@ -4291,8 +4289,9 @@
     '</fluent-message-bar>';
   }
   // V2 reveals fields progressively: Package type appears after Product type, Default language after a
-  // package (except GDK, which shows the Partner Center banner instead), and the footer only once every
-  // value is set. V1 keeps the classic all-at-once form with the inline GDK note.
+  // package (except GDK, which shows the Partner Center banner instead), and the footer once all rows are
+  // present — its Add product button stays disabled until every value is set. V1 keeps the classic
+  // all-at-once form with the inline GDK note.
   function addProductHTML() {
     var v2 = journeyV2();
     var langOpts = AP_LANGS.map(function (l) { return '<fluent-option value="' + l[0] + '"' + (l[0] === _apLang ? " selected" : "") + '>' + l[1] + '</fluent-option>'; }).join("");
@@ -4347,7 +4346,8 @@
     var footer = el.querySelector("#apFooter");
     if (name && _apName) name.value = _apName;
     function nameVal() { return ((name && name.value) || "").trim(); }
-    function allSet() { return nameVal().length >= 2 && (!v2 || (!!_apType && !!_apPkg && _apPkg !== "gdk")); }
+    function rowsPresent() { return !!_apType && !!_apPkg && _apPkg !== "gdk"; }   // every field row is on screen (GDK off-ramps to Partner Center, so no footer)
+    function allSet() { return nameVal().length >= 2 && (!v2 || rowsPresent()); }
     function refresh() {
       var v = nameVal();
       if (hint) {
@@ -4356,7 +4356,7 @@
       }
       var ok = allSet();
       if (create) { if (ok) create.removeAttribute("disabled"); else create.setAttribute("disabled", ""); }
-      if (v2 && footer) footer.hidden = !ok;   // footer appears only once every value is set (and not GDK)
+      if (v2 && footer) footer.hidden = !rowsPresent();   // footer shows once all rows are present; button stays disabled until every value is set
     }
     function mirrorType() { var rr = el.querySelectorAll("#apType fluent-radio"); for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute("checked", !!rr[i].checked); }
     function mirrorPkg() { el.querySelectorAll("#apPkg fluent-radio").forEach(function (r) { r.toggleAttribute("checked", !!r.checked); }); el.querySelectorAll(".pkgopt").forEach(function (f) { var r = f.querySelector("fluent-radio"); f.classList.toggle("is-sel", !!(r && r.checked)); }); }
@@ -4924,10 +4924,10 @@
       }
     });
 
-    // Journey toggle (Classic V1 / Guided V2) — demo control in the sidebar foot.
+    // Journey toggle (V1 / V2) — demo control tucked into the profile menu.
     (function () {
       var seg = document.getElementById("journeyToggle"); if (!seg) return;
-      function paint() { var v = journeyV2() ? "v2" : "v1"; seg.querySelectorAll("[data-journey]").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-journey") === v); }); }
+      function paint() { var v = journeyV2() ? "v2" : "v1"; seg.querySelectorAll("[data-journey]").forEach(function (b) { var on = b.getAttribute("data-journey") === v; b.classList.toggle("is-active", on); b.setAttribute("aria-pressed", on ? "true" : "false"); }); }
       paint();
       seg.addEventListener("click", function (e) {
         var b = e.target.closest("[data-journey]"); if (!b) return;
@@ -4945,7 +4945,7 @@
     if (pBtn && pFly) {
       var THEME_KEY = "msstore.theme";
       var themeMode = function () { var s; try { s = localStorage.getItem(THEME_KEY); } catch (e) {} return s === "light" ? "light" : s === "dark" ? "dark" : "system"; };
-      var syncThemeSeg = function () { var m = themeMode(); Array.prototype.forEach.call(pFly.querySelectorAll(".pfseg__opt"), function (o) { var on = o.getAttribute("data-theme-mode") === m; o.classList.toggle("is-active", on); o.setAttribute("aria-checked", on ? "true" : "false"); }); };
+      var syncThemeSeg = function () { var m = themeMode(); Array.prototype.forEach.call(pFly.querySelectorAll(".pfseg__opt[data-theme-mode]"), function (o) { var on = o.getAttribute("data-theme-mode") === m; o.classList.toggle("is-active", on); o.setAttribute("aria-checked", on ? "true" : "false"); }); };
       var setThemeMode = function (m) {
         if (m === "system") { try { localStorage.removeItem(THEME_KEY); } catch (e) {} document.documentElement.setAttribute("data-theme", window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); }
         else { try { localStorage.setItem(THEME_KEY, m); } catch (e) {} document.documentElement.setAttribute("data-theme", m); }
@@ -4956,7 +4956,7 @@
       document.addEventListener("click", function (e) { if (!pFly.hidden && !pFly.contains(e.target) && !pBtn.contains(e.target)) closeFly(); });
       document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !pFly.hidden) { closeFly(); pBtn.focus(); } });
       pFly.addEventListener("click", function (e) {
-        var seg = e.target.closest(".pfseg__opt"); if (seg) { setThemeMode(seg.getAttribute("data-theme-mode")); return; }
+        var seg = e.target.closest(".pfseg__opt[data-theme-mode]"); if (seg) { setThemeMode(seg.getAttribute("data-theme-mode")); return; }
         if (e.target.closest("[data-pf-profile]")) { e.preventDefault(); closeFly(); toast("Your profile lives in your Microsoft account settings", true); return; }
         if (e.target.closest("[data-pf-settings]")) { e.preventDefault(); closeFly(); toast("Account settings \u2014 demo build", true); return; }
       });

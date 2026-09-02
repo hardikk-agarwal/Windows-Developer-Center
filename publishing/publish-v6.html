@@ -135,7 +135,7 @@
 
   /* Steps */
   .ez-step { background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-12); padding: var(--sp-24); margin-bottom: var(--sp-16); }
-  .ez-step__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-16); position: relative; } /* flex-wrap: on narrow widths the toolbar drops below the title instead of clipping */
+  .ez-step__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-12); margin-bottom: var(--sp-32); position: relative; } /* flex-wrap: on narrow widths the toolbar drops below the title instead of clipping */
   .ez-step__action { margin-left: auto; flex: 0 0 auto; }
   /* Listing step head: group the language switcher with the Autofill action so they sit
      together on the right — the language dropdown to the left of the Autofill button.
@@ -203,6 +203,7 @@
   @media (prefers-reduced-motion: reduce) { .fre-coach { animation: none; } }
   .ez-step__num { width: 28px; height: 28px; flex: 0 0 auto; border-radius: 50%; background: var(--subtle); color: var(--fg-3); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; transition: background var(--dur-3) var(--ease-out), color var(--dur-3) var(--ease-out); }
   .ez-step--done .ez-step__num { background: var(--status-success); color: var(--fg-on-brand); }
+  .ez-step__num { display: none; }   /* step number removed from every section head */
   .ez-step__title { font-size: var(--font-size-base-500); line-height: var(--line-height-base-500); font-weight: 600; color: var(--fg-1); margin: 0; }
   .ez-step__sub { font-size: 14px; color: var(--fg-3); margin: var(--sp-2) 0 0; }
   .ez-step__summary { display: none; font-size: 14px; color: var(--fg-2); margin: var(--sp-2) 0 0; }
@@ -407,6 +408,12 @@
   .wz-pkgtype__editico { color: var(--fg-3); transition: color 120ms ease; }
   .wz-pkgtype__lock { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--fg-3); }
   #flow-wrap:not(.is-wizard) #wz-pkgtype { display: none !important; }   /* the switcher belongs to the wizard rail */
+  /* "Change" package type only applies while editing a draft or an update — hide it (and the dot) in
+     the read-only submitted (state-done) and review views; the type label stays. */
+  #flow-wrap:has(#editor[hidden]) .wz-pkgtype__sep,
+  #flow-wrap:has(#editor[hidden]) .wz-pkgtype__change,
+  #flow-wrap.is-review-mode .wz-pkgtype__sep,
+  #flow-wrap.is-review-mode .wz-pkgtype__change { display: none !important; }
 
   /* Change-app-type dialog: pick a type (cards left-to-right, each with its own capabilities). */
   #apptype-dialog::part(control), #apptype-dialog::part(dialog) { width: min(820px, 94vw); max-width: min(820px, 94vw); }
@@ -443,10 +450,9 @@
   .atd-opt__badge--rec { color: var(--brand); background: color-mix(in srgb, var(--brand) 16%, transparent); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
   .atd-opt__badge--cur { color: var(--fg-2); background: var(--subtle); border: 1px solid var(--stroke-3); }
   .atd-opt__desc { font-size: 13px; color: var(--fg-2); line-height: 1.5; }
-  .atd-opt__feats { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-14) 0 0; border-top: 1px solid color-mix(in srgb, var(--stroke-2) 70%, transparent); display: flex; flex-direction: column; gap: var(--sp-10); }
-  .atd-opt__feat { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
-  .atd-opt__feat iconify-icon { flex: 0 0 auto; margin-top: 0.5px; color: var(--brand); }
-  .atd-opt__best { margin-top: auto; padding-top: var(--sp-12); font-size: 12.5px; color: var(--fg-3); line-height: 1.4; }
+  .atd-opt__feats { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-14) 0 0; border-top: 1px solid color-mix(in srgb, var(--stroke-2) 70%, transparent); display: flex; flex-direction: column; gap: var(--sp-8); }
+  .atd-opt__feat { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
+  .atd-opt__feat::before { content: '\2022'; flex: 0 0 auto; color: var(--fg-3); }
   .atd__warn { margin-top: var(--sp-16); }
   .atd__impact { margin-top: var(--sp-16); padding: var(--sp-12) var(--sp-16); border-radius: var(--r-12); background: var(--subtle); border: 1px solid var(--stroke-2); }
   .atd__impact-lead { font-size: 13px; font-weight: var(--font-weight-semibold); color: var(--fg-1); margin: 0 0 var(--sp-8); }
@@ -551,6 +557,8 @@
   .markets-choose-row .market-chip iconify-icon { color: var(--fg-3); }
   /* Currency picker — Fluent dropdown, matching the amount input and the rest of the flow. */
   .price-currency-dropdown { width: 96px; flex: 0 0 auto; }
+  /* Win32-only price models (Freemium, Subscription) are hidden for Store-handled apps. */
+  .reach-seg[data-choice="price"] fluent-field[hidden] { display: none; }
   .price-win32-note { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-10); padding: var(--sp-10) var(--sp-12); border: 1px solid color-mix(in srgb, var(--brand) 32%, transparent); border-radius: var(--r-8); background: color-mix(in srgb, var(--brand) 8%, var(--subtle)); font-size: var(--font-size-base-200); line-height: 1.45; color: var(--fg-2); max-width: 520px; }
   .price-win32-note[hidden] { display: none; }
   .price-win32-note > iconify-icon { flex: 0 0 auto; color: var(--brand); margin-top: 1px; }
@@ -2047,9 +2055,10 @@
   /* Package rows aren't expandable in review — drop the button affordance. */
   #flow-wrap.is-review-mode .ez-pkg-trow { cursor: default; }
 
-  /* L2 sub-views (experiments, add-ons, review details, update) drop the app-identity header — the
-     page-level back breadcrumb + the sub-view's own title carry context instead. */
-  #flow-wrap.is-subview .ez-head { display: none; }
+  /* L2 sub-views (experiments, add-ons, review details) drop the app-identity header — the
+     page-level back breadcrumb + the sub-view's own title carry context instead. The update flow keeps
+     the header (it's the main editing view), so exclude it. */
+  #flow-wrap.is-subview:not(.is-update-flow) .ez-head { display: none; }
   /* In the experiments/add-ons panels the step tabs + submit are hidden too, so the whole banner
      rail is just an empty rounded card — collapse it there. Review/update keep the banner for their
      step nav (their editor is visible), so scope this to the panel sub-views via #editor[hidden]. */
@@ -2270,7 +2279,7 @@
   .addon-locked-note { margin: 2px 0 0; font-size: 12px; color: var(--fg-4); font-style: italic; }
   /* Left-stepper: "Updated" pill marking a section changed in this update (the actionable signal;
      unchanged sections recede to a muted check instead of green — see the .is-update-flow overrides). */
-  .wz-stepind__updated { margin-left: auto; flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--r-full); background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
+  .wz-stepind__updated { margin-left: auto; flex: 0 0 auto; font-size: 12px; font-weight: 400; color: var(--brand); }
 
   /* ---- "Publish with Copilot": agentic ZIP intake (entry, intake dialog, run overlay, summary) ---- */
   .cpx-entry { display: flex; align-items: center; gap: var(--sp-14); width: 100%; text-align: left; cursor: pointer;
@@ -2546,6 +2555,51 @@
   #submit-dialog .ez-sd__check-text strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
   #submit-dialog .ez-sd__check-note { font-size: 12px; line-height: 15px; color: var(--fg-3); }
   #submit-dialog .ez-rollout-pct { margin: var(--sp-10) 0 0 var(--sp-24); }
+  /* ===== Testing & release (step 5): Reach & price's two-column rows — label left, controls right.
+     The submit dialog's step 2 was retired; these controls now live on this page. ===== */
+  #step-submit .reach-row { row-gap: var(--sp-10); }
+  #step-submit .reach-row[hidden] { display: none; }
+  #step-submit .reach-row > *:not(.reach-row__head) { max-width: 560px; }
+  #step-submit .ez-sd__radios { display: flex; flex-direction: column; gap: var(--sp-10); margin: 0; }
+  #step-submit .ez-sd__radio-date { width: 190px; margin: 0; justify-self: start; }
+  #step-submit .ez-sd__radio-date[hidden] { display: none; }
+  #step-submit .ez-sd__field-label { display: block; font-size: 13px; font-weight: 600; color: var(--fg-1); margin: 0 0 var(--sp-8); }
+  #step-submit .ez-sd__field-note { font-size: 12px; color: var(--fg-3); margin: var(--sp-8) 0 0; }
+  #step-submit .ez-sd__creds-list { display: flex; flex-direction: column; gap: var(--sp-8); margin: 0; }
+  #step-submit .ez-sd__creds-list:empty { display: none; }
+  #step-submit .ez-sd__cred-row { display: flex; align-items: center; gap: var(--sp-8); }
+  #step-submit .ez-sd__cred-row fluent-text-input { display: block; min-width: 0; }
+  #step-submit .ez-sd__cred-name { flex: 0 0 38%; }
+  #step-submit .ez-sd__cred-val { flex: 1 1 0; }
+  #step-submit .ez-sd__cred-del { flex: 0 0 auto; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; }
+  #step-submit .ez-sd__cred-del:hover { background: var(--subtle); color: var(--fg-1); }
+  #step-submit .ez-sd__creds-add { display: inline-flex; align-items: center; gap: 4px; margin: 0; padding: 0; background: none; border: 0; color: var(--brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; justify-self: start; }
+  #step-submit .ez-sd__cert-notes { width: 100%; margin: 0; }
+  #step-submit .ez-sd__cert-notes::part(root), #step-submit .ez-sd__cert-notes::part(control) { width: 100%; box-sizing: border-box; }
+  #step-submit .ez-sd__check { display: flex; align-items: flex-start; gap: var(--sp-10); margin: 0; }
+  #step-submit .ez-sd__check-text { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; cursor: pointer; }
+  #step-submit .ez-sd__check-text strong { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+  #step-submit .ez-sd__check-note { font-size: 12px; line-height: 15px; color: var(--fg-3); }
+  #step-submit .ez-rollout-pct { margin-top: var(--sp-4); }
+  #step-submit .ez-rollout-presets { display: flex; flex-wrap: wrap; gap: var(--sp-16); margin-top: var(--sp-6); }
+  /* Reviewer access: intro + credential chips + a button that opens the creds dialog. */
+  #step-submit .subm-lead { font-size: 13px; color: var(--fg-2); margin: 0; line-height: 1.5; }
+  #step-submit .subm-creds { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  #step-submit .subm-creds[hidden] { display: none; }
+  .subm-cred-chip { display: inline-flex; align-items: center; gap: var(--sp-6); max-width: 100%; padding: 5px var(--sp-10) 5px var(--sp-8); border: 1px solid var(--stroke-2); border-radius: 999px; background: var(--subtle); color: var(--fg-1); font-size: 12.5px; }
+  .subm-cred-chip iconify-icon { color: var(--fg-3); flex: 0 0 auto; }
+  .subm-cred-chip__name { font-weight: 600; white-space: nowrap; flex: 0 0 auto; }
+  .subm-cred-chip__val { color: var(--fg-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Test credentials dialog: repeatable name/value rows + "add another". */
+  #creds-dialog::part(control), #creds-dialog::part(dialog) { width: min(560px, 94vw); max-width: min(560px, 94vw); }
+  #creds-dialog fluent-button[slot="title-action"] { min-width: 32px; width: 32px; padding: 0; }
+  .creds-dlg__intro { font-size: 13px; color: var(--fg-3); margin: 0 0 var(--sp-16); line-height: 1.5; }
+  .creds-dlg__list { display: flex; flex-direction: column; gap: var(--sp-12); }
+  .creds-dlg__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: var(--sp-8); align-items: center; }
+  .creds-dlg__row fluent-text-input { display: block; min-width: 0; width: 100%; }
+  .creds-dlg__del { flex: 0 0 auto; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--r-4); color: var(--fg-3); cursor: pointer; }
+  .creds-dlg__del:hover { background: var(--subtle); color: var(--fg-1); }
+  .creds-dlg__add { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--sp-16); padding: 4px 0; background: none; border: 0; color: var(--brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
   /* Rollout % is a horizontal fluent-radio-group (single-select). */
   .ez-rollout-presets { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4) var(--sp-16); margin-top: var(--sp-4); }
   .cert-rollout { margin-bottom: var(--sp-16); padding: var(--sp-16); border: 1px solid color-mix(in srgb, var(--brand) 26%, transparent); border-radius: var(--r-12); background: color-mix(in srgb, var(--brand) 6%, var(--layer)); }
@@ -4823,6 +4877,7 @@
       <button type="button" class="wz-stepind" data-wz="step-listing" data-icon="fluent:slide-text-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:slide-text-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Store listings</span></button>
       <button type="button" class="wz-stepind" data-wz="step-rating" data-icon="fluent:shield-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:shield-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Ratings &amp; disclosures</span></button>
       <button type="button" class="wz-stepind" data-wz="step-reach" data-icon="fluent:tag-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:tag-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Reach &amp; price</span></button>
+      <button type="button" class="wz-stepind" data-wz="step-submit" data-icon="fluent:rocket-20-filled" role="listitem"><span class="wz-stepind__dot"><iconify-icon icon="fluent:rocket-20-filled" width="18" height="18" aria-hidden="true"></iconify-icon></span><span class="wz-stepind__label">Testing &amp; release</span></button>
       <!-- Submit-readiness checklist: right-aligned in the tab row, expandable, shows what's left before review. -->
       <div class="submit-checklist" id="submit-checklist">
         <fluent-button appearance="subtle" size="small" class="submit-checklist__toggle" id="submit-checklist-toggle" aria-expanded="false" aria-controls="submit-checklist-panel">
@@ -4857,6 +4912,7 @@
           <button type="button" class="ez-rail__item" data-section="step-listing">Store listing<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-rating">Ratings &amp; disclosures<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
           <button type="button" class="ez-rail__item" data-section="step-reach">Reach &amp; price<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
+          <button type="button" class="ez-rail__item" data-section="step-submit">Testing &amp; release<iconify-icon class="ez-rail__done" icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon></button>
         </div>
         <fluent-button type="button" class="ez-rail__preview" id="ez-preview-open" appearance="subtle" size="small">
           <iconify-icon slot="start" icon="fluent:eye-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -4920,7 +4976,7 @@
         <div class="ez-step__head">
           <span class="ez-step__num" id="num-package">1</span>
           <div>
-            <h2 class="ez-step__title">Add your app package</h2>
+            <h2 class="ez-step__title">Add your app package <span class="field-mark field-mark--req" aria-label="required">*</span></h2>
             <p class="ez-step__sub"> Upload the package you want to publish on Microsoft Store </p>
             <p class="ez-step__summary" id="sum-package"></p>
           </div>
@@ -5542,6 +5598,10 @@
             <fluent-radio-group class="reach-seg" orientation="horizontal" aria-label="Price" data-choice="price">
               <fluent-field label-position="after"><label slot="label" for="pr-free">Free</label>
                 <fluent-radio id="pr-free" slot="input" value="free"></fluent-radio></fluent-field>
+              <fluent-field label-position="after" id="pr-freemium-field" hidden><label slot="label" for="pr-freemium">Freemium</label>
+                <fluent-radio id="pr-freemium" slot="input" value="freemium"></fluent-radio></fluent-field>
+              <fluent-field label-position="after" id="pr-subscription-field" hidden><label slot="label" for="pr-subscription">Subscription</label>
+                <fluent-radio id="pr-subscription" slot="input" value="subscription"></fluent-radio></fluent-field>
               <fluent-field label-position="after"><label slot="label" for="pr-paid">Paid</label>
                 <fluent-radio id="pr-paid" slot="input" value="paid"></fluent-radio></fluent-field>
             </fluent-radio-group>
@@ -5688,31 +5748,81 @@
         </div>
       </section>
 
+      <!-- Step 5: submission options (release timing + certification test sign-in/notes). Optional —
+           defaults are valid; visiting marks it complete (same "review" model as Reach & price). -->
+      <section class="ez-step" id="step-submit">
+        <div class="ez-step__head">
+          <span class="ez-step__num" id="num-submit">5</span>
+          <div>
+            <h2 class="ez-step__title">Testing &amp; release</h2>
+            <p class="ez-step__sub">Give reviewers what they need to test your app, and choose when it goes live.</p>
+            <p class="ez-step__summary" id="sum-submit"></p>
+          </div>
+        </div>
+        <div class="reach-grid">
+          <!-- Reviewer access: test sign-in + notes (all package types). -->
+          <div class="reach-row">
+            <div class="reach-row__head"><iconify-icon icon="fluent:key-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon><strong>Reviewer access</strong></div>
+            <p class="subm-lead">Provide any credentials reviewers need to access your app.</p>
+            <div class="subm-creds" id="submit-creds-summary" hidden></div>
+            <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
+              <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> <span id="submit-creds-add-label">Add test credential</span>
+            </button>
+            <fluent-textarea id="submit-notes" rows="3" class="ez-sd__cert-notes" placeholder="Notes for reviewers (optional)"></fluent-textarea>
+            <p class="reach-row__hint">Only the certification team sees this.</p>
+          </div>
+          <!-- Go live: release timing after certification. -->
+          <div class="reach-row" id="submit-hold-opts">
+            <div class="reach-row__head"><iconify-icon icon="fluent:rocket-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon><strong>Go live</strong></div>
+            <fluent-radio-group class="ez-sd__radios" data-hold="publish-hold" orientation="vertical">
+              <fluent-field label-position="after"><label slot="label" for="ph-auto">As soon as it’s approved</label><fluent-radio id="ph-auto" slot="input" value="auto"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="ph-manual">I’ll publish it manually</label><fluent-radio id="ph-manual" slot="input" value="manual"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="ph-date">On a date</label><fluent-radio id="ph-date" slot="input" value="date"></fluent-radio></fluent-field>
+            </fluent-radio-group>
+            <fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input>
+            <p class="reach-row__hint">Applies once your app passes certification.</p>
+          </div>
+          <!-- Stop offering — UPDATE flow only. -->
+          <div class="reach-row" id="submit-release-end-field" hidden>
+            <div class="reach-row__head"><iconify-icon icon="fluent:calendar-cancel-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon><strong>Stop offering</strong></div>
+            <fluent-radio-group class="ez-sd__radios" data-hold="release-end" orientation="vertical">
+              <fluent-field label-position="after"><label slot="label" for="re-never">Keep it available</label><fluent-radio id="re-never" slot="input" value="never"></fluent-radio></fluent-field>
+              <fluent-field label-position="after"><label slot="label" for="re-date">On a date</label><fluent-radio id="re-date" slot="input" value="date"></fluent-radio></fluent-field>
+            </fluent-radio-group>
+            <fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input>
+            <p class="reach-row__hint">Stops offering to new customers — existing customers keep access.</p>
+          </div>
+          <!-- Rollout — UPDATE flow only (shown via syncRolloutDialog). -->
+          <div class="reach-row" id="submit-rollout" hidden>
+            <div class="reach-row__head"><iconify-icon icon="fluent:arrow-trending-lines-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon><strong>Rollout</strong></div>
+            <fluent-field label-position="after" class="ez-sd__check">
+              <fluent-checkbox id="rollout-gradual" slot="input" aria-labelledby="rollout-gradual-lbl"></fluent-checkbox>
+              <label slot="label" id="rollout-gradual-lbl" for="rollout-gradual" class="ez-sd__check-text"><strong>Roll out gradually</strong><span class="ez-sd__check-note">Release to a share of your Windows&nbsp;10/11 customers first, then ramp up to everyone — so you can watch for issues before a full release.</span></label>
+            </fluent-field>
+            <div class="ez-rollout-pct" id="rollout-pct-field" hidden>
+              <span class="ez-sd__field-label" id="rollout-pct-label">Start with</span>
+              <fluent-radio-group class="ez-rollout-presets" id="rollout-presets" orientation="horizontal" aria-labelledby="rollout-pct-label">
+                <fluent-field label-position="after"><label slot="label" for="rop-5">5%</label><fluent-radio id="rop-5" slot="input" value="5"></fluent-radio></fluent-field>
+                <fluent-field label-position="after"><label slot="label" for="rop-10">10%</label><fluent-radio id="rop-10" slot="input" value="10"></fluent-radio></fluent-field>
+                <fluent-field label-position="after"><label slot="label" for="rop-25">25%</label><fluent-radio id="rop-25" slot="input" value="25"></fluent-radio></fluent-field>
+                <fluent-field label-position="after"><label slot="label" for="rop-50">50%</label><fluent-radio id="rop-50" slot="input" value="50"></fluent-radio></fluent-field>
+              </fluent-radio-group>
+              <p class="ez-sd__field-note">You can raise this — or pause — anytime from the app overview.</p>
+            </div>
+            <fluent-field label-position="after" class="ez-sd__check">
+              <fluent-checkbox id="rollout-mandatory" slot="input" aria-labelledby="rollout-mandatory-lbl"></fluent-checkbox>
+              <label slot="label" id="rollout-mandatory-lbl" for="rollout-mandatory" class="ez-sd__check-text"><strong>Make this update mandatory</strong><span class="ez-sd__check-note">Nudges customers to update sooner (UWP on Windows&nbsp;10/11).</span></label>
+            </fluent-field>
+          </div>
+        </div>
+      </section>
+
       <!-- Slim confirmation of the applied defaults (Easy mode only). -->
       <div class="ez-defaults-card easy-only">
         <div class="ez-defaults-line">
           <iconify-icon icon="fluent:checkmark-circle-20-filled" width="20" height="20" aria-hidden="true"></iconify-icon>
           <p class="ez-defaults-line__text">Defaults set for you: <strong>Free</strong> · <strong>All markets</strong> · <strong>Publishes on approval</strong>. To change pricing, scheduling, audience, or markets, switch to Advanced mode.</p>
         </div>
-      </div>
-
-      <!-- Forward navigation: a clear "next" under the active step so users aren't left hunting
-           for the right tab. Advances to the next section (gated on the package step); hidden on
-           the last step (Reach & price), where Submit in the header is the action. -->
-      <div class="wz-forward" id="wz-forward">
-        <fluent-button id="wz-back-btn" appearance="subtle" size="medium" hidden>
-          <iconify-icon slot="start" icon="fluent:arrow-left-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-          Back
-        </fluent-button>
-        <fluent-button id="wz-continue" appearance="secondary" size="medium">
-          <span id="wz-continue-label">Continue</span>
-          <iconify-icon slot="end" icon="fluent:arrow-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>
-        </fluent-button>
-        <!-- On the last step (Reach & price), the footer also offers Submit for review —
-             disabled until every section is complete (mirrors the header action). -->
-        <fluent-button id="wz-submit-foot" appearance="primary" size="medium" hidden disabled>
-          Review &amp; submit
-        </fluent-button>
       </div>
     </div>
 
@@ -7369,6 +7479,23 @@
   </fluent-dialog-body>
 </fluent-dialog>
 
+<!-- Test credentials (Reviewer access) — repeatable name/value rows; scalable "add another". -->
+<fluent-dialog id="creds-dialog" modal-type="modal" aria-labelledby="creds-dialog-title">
+  <fluent-dialog-body>
+    <span slot="title" id="creds-dialog-title">Test credentials</span>
+    <fluent-button slot="title-action" appearance="subtle" data-creds-close aria-label="Close">
+      <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+    </fluent-button>
+    <p class="creds-dlg__intro">Add any sign-ins reviewers need to access your app. Only the certification team sees these.</p>
+    <div class="creds-dlg__list" id="creds-dlg-list"></div>
+    <button type="button" class="creds-dlg__add" id="creds-dlg-add">
+      <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add another credential
+    </button>
+    <fluent-button slot="action" appearance="secondary" data-creds-close>Cancel</fluent-button>
+    <fluent-button slot="action" appearance="primary" id="creds-dlg-save">Save</fluent-button>
+  </fluent-dialog-body>
+</fluent-dialog>
+
 <!-- Privacy policy editor — opened from the listing's Additional information row. Link or Text. -->
 <fluent-dialog id="privacy-edit-dialog" modal-type="modal" aria-labelledby="privacy-edit-title">
   <fluent-dialog-body>
@@ -7556,13 +7683,6 @@
       <iconify-icon icon="fluent:dismiss-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
     </fluent-button>
 
-    <!-- 2-step submit: (1) review the listing + facts, (2) release settings + confirm. -->
-    <ol class="sd-steps" id="submit-steps" aria-label="Submit progress">
-      <li class="sd-steps__item is-current" data-sd-step="1" aria-current="step"><span class="sd-steps__num">1</span><span class="sd-steps__lbl">Review</span></li>
-      <li class="sd-steps__bar" aria-hidden="true"></li>
-      <li class="sd-steps__item" data-sd-step="2"><span class="sd-steps__num">2</span><span class="sd-steps__lbl">Release</span></li>
-    </ol>
-
     <div class="sd-step" id="submit-step-1">
       <section class="ez-sd__section">
         <h3 class="ez-sd__title" id="submit-summary-title">What you're submitting</h3>
@@ -7580,88 +7700,8 @@
       </section>
     </div>
 
-    <!-- Optional submission settings — disclosures now live on the Disclosures & age rating step. -->
-    <div class="sd-step" id="submit-step-2" hidden>
-    <section class="ez-sd__section">
-      <h3 class="ez-sd__title">Review &amp; release</h3>
-      <!-- Test sign-in & notes for reviewers (optional, all package types) — collapsed by default. -->
-      <fluent-accordion class="ez-sd__subs">
-      <fluent-accordion-item class="ez-sd__sub" id="submit-creds">
-        <span slot="heading" class="ez-sd__sub-head">
-          <span class="ez-sd__sub-title">Test sign-in &amp; notes for reviewers</span>
-          <span class="ez-sd__sub-val" id="creds-summary">None</span>
-        </span>
-        <div class="ez-sd__sub-body">
-          <div class="ez-sd__creds-list" id="submit-creds-list"></div>
-          <button type="button" class="ez-sd__creds-add" id="submit-creds-add">
-            <iconify-icon icon="fluent:add-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon> Add test credential
-          </button>
-          <fluent-textarea id="submit-notes" rows="2" class="ez-sd__cert-notes" placeholder="Notes for reviewers (optional)"></fluent-textarea>
-        </div>
-      </fluent-accordion-item>
-      <!-- Release: go-live (after cert) + when to stop offering. Collapsed; the summary shows the choice. -->
-      <fluent-accordion-item class="ez-sd__sub" id="submit-hold-opts">
-        <span slot="heading" class="ez-sd__sub-head">
-          <span class="ez-sd__sub-title">Release</span>
-          <span class="ez-sd__sub-val" id="hold-summary">Live when approved</span>
-        </span>
-        <div class="ez-sd__sub-body">
-          <div class="ez-sd__field">
-            <span class="ez-sd__field-label">Go live</span>
-            <fluent-radio-group class="ez-sd__radios" data-hold="publish-hold" orientation="vertical">
-              <fluent-field label-position="after"><label slot="label" for="ph-auto">As soon as it’s approved</label><fluent-radio id="ph-auto" slot="input" value="auto"></fluent-radio></fluent-field>
-              <fluent-field label-position="after"><label slot="label" for="ph-manual">I’ll publish it manually</label><fluent-radio id="ph-manual" slot="input" value="manual"></fluent-radio></fluent-field>
-              <fluent-field label-position="after"><label slot="label" for="ph-date">On a date</label><fluent-radio id="ph-date" slot="input" value="date"></fluent-radio></fluent-field>
-            </fluent-radio-group>
-            <fluent-text-input type="date" id="publish-hold-date" class="ez-sd__radio-date" disabled></fluent-text-input>
-          </div>
-          <div class="ez-sd__field" id="submit-release-end-field">
-            <span class="ez-sd__field-label">Stop offering to new customers</span>
-            <fluent-radio-group class="ez-sd__radios" data-hold="release-end" orientation="vertical">
-              <fluent-field label-position="after"><label slot="label" for="re-never">Keep it available</label><fluent-radio id="re-never" slot="input" value="never"></fluent-radio></fluent-field>
-              <fluent-field label-position="after"><label slot="label" for="re-date">On a date</label><fluent-radio id="re-date" slot="input" value="date"></fluent-radio></fluent-field>
-            </fluent-radio-group>
-            <fluent-text-input type="date" id="release-end-date" class="ez-sd__radio-date" disabled></fluent-text-input>
-            <p class="ez-sd__field-note">Existing customers keep access after this date.</p>
-          </div>
-        </div>
-      </fluent-accordion-item>
-      <!-- Gradual rollout — UPDATE flow only (shown via JS). Simplified from Partner Center:
-           a plain-language gradual toggle + preset %, plus an optional "mandatory" flag. -->
-      <fluent-accordion-item class="ez-sd__sub" id="submit-rollout" hidden>
-        <span slot="heading" class="ez-sd__sub-head">
-          <span class="ez-sd__sub-title">Rollout</span>
-          <span class="ez-sd__sub-val" id="rollout-summary">All customers at once</span>
-        </span>
-        <div class="ez-sd__sub-body">
-          <fluent-field label-position="after" class="ez-sd__check">
-            <fluent-checkbox id="rollout-gradual" slot="input" aria-labelledby="rollout-gradual-lbl"></fluent-checkbox>
-            <label slot="label" id="rollout-gradual-lbl" for="rollout-gradual" class="ez-sd__check-text"><strong>Roll out gradually</strong><span class="ez-sd__check-note">Release to a share of your Windows&nbsp;10/11 customers first, then ramp up to everyone — so you can watch for issues before a full release.</span></label>
-          </fluent-field>
-          <div class="ez-rollout-pct" id="rollout-pct-field" hidden>
-            <span class="ez-sd__field-label" id="rollout-pct-label">Start with</span>
-            <fluent-radio-group class="ez-rollout-presets" id="rollout-presets" orientation="horizontal" aria-labelledby="rollout-pct-label">
-              <fluent-field label-position="after"><label slot="label" for="rop-5">5%</label><fluent-radio id="rop-5" slot="input" value="5"></fluent-radio></fluent-field>
-              <fluent-field label-position="after"><label slot="label" for="rop-10">10%</label><fluent-radio id="rop-10" slot="input" value="10"></fluent-radio></fluent-field>
-              <fluent-field label-position="after"><label slot="label" for="rop-25">25%</label><fluent-radio id="rop-25" slot="input" value="25"></fluent-radio></fluent-field>
-              <fluent-field label-position="after"><label slot="label" for="rop-50">50%</label><fluent-radio id="rop-50" slot="input" value="50"></fluent-radio></fluent-field>
-            </fluent-radio-group>
-            <p class="ez-sd__field-note">You can raise this — or pause — anytime from the app overview.</p>
-          </div>
-          <fluent-field label-position="after" class="ez-sd__check">
-            <fluent-checkbox id="rollout-mandatory" slot="input" aria-labelledby="rollout-mandatory-lbl"></fluent-checkbox>
-            <label slot="label" id="rollout-mandatory-lbl" for="rollout-mandatory" class="ez-sd__check-text"><strong>Make this update mandatory</strong><span class="ez-sd__check-note">Nudges customers to update sooner (UWP on Windows&nbsp;10/11).</span></label>
-          </fluent-field>
-        </div>
-      </fluent-accordion-item>
-      </fluent-accordion>
-    </section>
-    </div>
-
     <fluent-button slot="action" appearance="secondary" id="submit-cancel" data-submit-close>Cancel</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="submit-continue">Continue<iconify-icon slot="end" icon="fluent:arrow-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></fluent-button>
-    <fluent-button slot="action" appearance="secondary" id="submit-back" hidden><iconify-icon slot="start" icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</fluent-button>
-    <fluent-button slot="action" appearance="primary" id="submit-confirm-btn" hidden>
+    <fluent-button slot="action" appearance="primary" id="submit-confirm-btn">
       <iconify-icon slot="start" icon="fluent:send-20-regular" width="14" height="14" aria-hidden="true"></iconify-icon>
       Submit for review
     </fluent-button>
@@ -8083,6 +8123,7 @@
   // Easy stepper which also opens on Package.
   let activeSection = 'step-package';
   let reachVisited = false; // session-only; resets on hard refresh
+  let submitVisited = false; // Submission options: valid on defaults, "reviewed" once opened (like reachVisited)
   let ratingVisited = false; // Compliance: disclosures count as reviewed once you've opened the step
   let declFlagged = false;   // true once the developer leaves Compliance with a blank disclosure — gates the amber outline
   // Easy-mode guided stepper state (declared early so updateGate() can call
@@ -8094,6 +8135,7 @@
     if (formatGateActive() && id && id !== 'step-package') { announce('Choose your app type first.'); return; }
     if (id) activeSection = id;
     if (activeSection === 'step-reach') reachVisited = true;
+    if (activeSection === 'step-submit') { submitVisited = true; if (typeof renderSubmitSection === 'function') renderSubmitSection(); }
     if (activeSection === 'step-rating') ratingVisited = true;
     const ed = $('editor');
     if (ed) ed.setAttribute('data-active-section', activeSection); // gates the package-only identity banner
@@ -8112,7 +8154,8 @@
       // Reach & price ships fine on defaults — but it should only read "done" once the
       // user has actually opened it (reachVisited); otherwise it would show complete before
       // it's ever been seen. Submission is still allowed on defaults (the gate is separate).
-      'step-reach': reachVisited && !ckSection('step-reach').some(it => ckRequired(it) && !ckDone(it))
+      'step-reach': reachVisited && !ckSection('step-reach').some(it => ckRequired(it) && !ckDone(it)),
+      'step-submit': submitVisited
     };
     document.querySelectorAll('.ez-rail__item').forEach(it => {
       const id = it.dataset.section;
@@ -8580,7 +8623,8 @@
       if (sec === 'step-package') return JSON.stringify((packages || []).filter(function (p) { return !p._pending; }).map(function (p) { return [p.id, p.version || '', (p.arches || []).join('/'), (p.devices || []).join('/'), !!p.win32]; }));
       if (sec === 'step-listing') return JSON.stringify([state.name || '', state.desc || '', state.category || '', (state.shots || []).length, (userIconDataUrl || pkgIconDataUrl || '').length, adv.listing]);
       if (sec === 'step-rating') return JSON.stringify([state.rating || '', adv.declarations, adv.iarcId || '']);
-      if (sec === 'step-reach') return JSON.stringify([adv.markets, adv.audience, adv.price, adv.trial, adv.schedule, adv.publishHold]);
+      if (sec === 'step-reach') return JSON.stringify([adv.markets, adv.audience, adv.price, adv.trial]);
+      if (sec === 'step-submit') return JSON.stringify([adv.publishHold, adv.schedule, adv.testCredentials || [], (typeof faVal === 'function' && document.getElementById('submit-notes')) ? faVal(document.getElementById('submit-notes')) : '']);
     } catch (e) {}
     return '';
   }
@@ -8631,8 +8675,13 @@
       if (JSON.stringify(P.groups || []) !== (Rc.groups || '[]')) rc.push('Market groups');
       if (JSON.stringify(P.sales || []) !== (Rc.sales || '[]')) rc.push('Sale');
       if (JSON.stringify(P.overrides || {}) !== (Rc.overrides || '{}')) rc.push('Local prices');
-      if (JSON.stringify(adv.schedule) !== Rc.schedule || JSON.stringify(adv.publishHold) !== Rc.hold) rc.push('Release timing');
       return rc.length ? rc.slice(0, 3).join(' \u00b7 ') + (rc.length > 3 ? ' +' + (rc.length - 3) : '') : 'Reach & price updated';
+    }
+    if (sec === 'step-submit') {
+      var Sc = b.reach || {}, sp = [];
+      if (JSON.stringify(adv.publishHold) !== Sc.hold || JSON.stringify(adv.schedule) !== Sc.schedule) sp.push('Release timing');
+      if (Array.isArray(adv.testCredentials) && adv.testCredentials.some(function (c) { return (c.name || '').trim() || (c.value || '').trim(); })) sp.push('Test sign-in');
+      return sp.length ? sp.join(' \u00b7 ') : 'Testing & release updated';
     }
     return 'Updated';
   }
@@ -8689,7 +8738,10 @@
   // One-line summary of the effective reach & price settings (used by the gate
   // and the Easy defaults line). Reads `adv`, so it reflects any overrides.
   function advSummary() {
-    const price = adv.price.mode === 'paid' ? (adv.price.currency + ' ' + adv.price.amount) : 'Free';
+    const price = adv.price.mode === 'freemium' ? 'Freemium'
+      : adv.price.mode === 'subscription' ? 'Subscription'
+      : adv.price.mode === 'paid' ? (adv.price.currency + ' ' + adv.price.amount)
+      : 'Free';
     const markets = adv.markets.mode === 'all'
       ? 'All markets'
       : (adv.markets.selected.length + ' market' + (adv.markets.selected.length === 1 ? '' : 's'));
@@ -8810,9 +8862,9 @@
   // easy-mode steps. A step advances only once the current one is complete;
   // the final step's primary action opens the submit (review) dialog.
   // ===================================================================
-  const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach'];
-  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listings', 'step-rating': 'Ratings & disclosures', 'step-reach': 'Reach & price' };
-  const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled' };
+  const WZ_STEPS = ['step-package', 'step-listing', 'step-rating', 'step-reach', 'step-submit'];
+  const WZ_SECTION_NAMES = { 'step-package': 'Package', 'step-listing': 'Store listings', 'step-rating': 'Ratings & disclosures', 'step-reach': 'Reach & price', 'step-submit': 'Testing & release' };
+  const WZ_SECTION_ICON = { 'step-package': 'fluent:box-20-filled', 'step-listing': 'fluent:slide-text-20-filled', 'step-rating': 'fluent:shield-20-filled', 'step-reach': 'fluent:tag-20-filled', 'step-submit': 'fluent:rocket-20-filled' };
   let wzIndex = 0;
   // In an update, a section the developer hasn't touched is exactly what's already live (it passed
   // certification), so it counts as complete/valid — the update gate is “≥1 change”, not “re-complete
@@ -8829,6 +8881,7 @@
     // step dots all read this, so they stay in agreement.
     if (updUnchanged(id)) return true;
     if (id === 'step-reach' && !reachVisited) return false;
+    if (id === 'step-submit' && !submitVisited) return false;
     return !ckSection(id).some(it => ckRequired(it) && !ckDone(it));
   }
   // Has the section been started (some data entered) but not yet completed?
@@ -8840,6 +8893,7 @@
       (adv.listing.privacyUrl || '').trim() || (adv.listing.privacyText || '').trim() || (adv.listing.keywords && adv.listing.keywords.length));
     if (id === 'step-rating')  return ratingVisited || !!adv.iarcId || (typeof contentAnswers !== 'undefined' && typeof DEFAULT_ANSWERS !== 'undefined' && Object.keys(contentAnswers).some(k => contentAnswers[k] !== DEFAULT_ANSWERS[k]));
     if (id === 'step-reach')   return reachVisited || adv.price.mode !== 'free' || adv.audience.mode !== 'public' || adv.markets.mode !== 'all' || adv.trial.mode !== 'none';
+    if (id === 'step-submit')  return submitVisited || (adv.publishHold && adv.publishHold.mode !== 'auto') || (Array.isArray(adv.testCredentials) && adv.testCredentials.some(c => (c.name || '').trim() || (c.value || '').trim()));
     return false;
   }
   function wzStepStatus(id) {
@@ -8869,6 +8923,7 @@
     if (prevStep === 'step-rating' && cur !== 'step-rating' && typeof disclosuresAnswered === 'function' && !disclosuresAnswered()) declFlagged = true;
     if (typeof syncDeclFlag === 'function') syncDeclFlag();
     if (cur === 'step-reach') reachVisited = true; // Reach & price counts complete only once you've reached it
+    if (cur === 'step-submit') { submitVisited = true; if (typeof renderSubmitSection === 'function') renderSubmitSection(); } // Submission options: valid on defaults, complete once opened
     if (cur === 'step-rating') ratingVisited = true; // Compliance disclosures count as reviewed once you open it
     WZ_STEPS.forEach(id => {
       const s = $(id); if (!s) return;
@@ -8888,7 +8943,7 @@
     if (extrasCard) extrasCard.hidden = (cur !== 'step-listing');
     // Identity-values banner: only on the Package step (above the card).
     const idBanner = $('ez-pkg-identity-banner');
-    if (idBanner) idBanner.classList.toggle('is-wz-show', cur === 'step-package' && effectiveType() === 'msix');
+    if (idBanner) idBanner.classList.toggle('is-wz-show', cur === 'step-package' && (effectiveType() === 'msix' || effectiveType() === 'pwa'));
     // Restricted-capabilities banner: also above the card, Package step only.
     const capsBanner = $('pkg-caps-notice');
     if (capsBanner) capsBanner.classList.toggle('is-wz-show', cur === 'step-package');
@@ -8944,7 +8999,8 @@
       if (badgeMode) {
         if (!badge) { badge = document.createElement('span'); badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge); }
         // Show the remaining-required count on every incomplete step (matches the rail tabs, spine and a11y label) instead of a current-step-only "Not started".
-        const textLabel = leftN + ' left';
+        // Update flow: a changed section that's now incomplete reads "N need review" instead of "N left".
+        const textLabel = (inUpdateFlow && !locked) ? (leftN + (leftN === 1 ? ' needs review' : ' need review')) : (leftN + ' left');
         const content = badgeMode === 'done' ? '<iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon>'
           : badgeMode === 'locked' ? '<iconify-icon icon="fluent:lock-closed-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>'
           : badgeMode === 'review' ? 'Review'
@@ -8953,13 +9009,14 @@
         if (badge.dataset.sig !== badgeMode + content) { badge.dataset.sig = badgeMode + content; badge.innerHTML = content; }
       } else if (badge) { badge.remove(); }
       // The badge + status icon are aria-hidden decoration, so carry the same status in the button's name.
-      const a11yStatus = locked ? 'locked' : leftN > 0 ? (leftN + (leftN === 1 ? ' item left' : ' items left')) : isChanged ? 'updated' : needsReview ? 'review' : status === 'complete' ? 'done' : 'not started';
+      const a11yStatus = locked ? 'locked' : (inUpdateFlow && !locked && leftN > 0) ? (leftN + (leftN === 1 ? ' needs review' : ' need review')) : leftN > 0 ? (leftN + (leftN === 1 ? ' item left' : ' items left')) : isChanged ? 'changed' : (inUpdateFlow && !locked) ? 'no changes' : needsReview ? 'review' : status === 'complete' ? 'done' : 'not started';
       el.setAttribute('aria-label', (WZ_SECTION_NAMES[id] || el.textContent.trim()) + ' \u2014 ' + a11yStatus);
-      // Update flow: any changed section with no outstanding gap shows the "Updated" signal (not a count).
+      // Update flow: a changed + valid section reads "Changed". Unchanged sections stay silent (no
+      // badge at all); a changed-but-incomplete one is covered by the "N need review" badge above.
       let upd = el.querySelector('.wz-stepind__updated');
-      if (isChanged && leftN === 0) {
+      if (inUpdateFlow && !locked && leftN === 0 && updateChangedSet.has(id)) {
         if (!upd) { upd = document.createElement('span'); upd.className = 'wz-stepind__updated'; el.appendChild(upd); }
-        upd.textContent = 'Updated';
+        upd.textContent = 'Changed';
       } else if (upd) { upd.remove(); }
     });
     // The tabs are the navigation; the footer carries overall readiness + the single
@@ -9038,7 +9095,7 @@
       return { text: 'Age rating set. Last step: reach and price.', ready: true };
     }
     if (id === 'step-reach') {
-      if (adv.price.mode === 'paid' && !(parseFloat(adv.price.amount) > 0)) return { text: 'Enter a base price above 0 to continue.', ready: false };
+      if (adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending) && !(parseFloat(adv.price.amount) > 0)) return { text: 'Enter a base price above 0 to continue.', ready: false };
       return { text: 'All set. Submit your app for review when ready.', ready: true };
     }
     return { text: '', ready: false };
@@ -9371,9 +9428,13 @@
           : ((adv.audience.groups && adv.audience.groups.length) ? (adv.audience.groups.length + (adv.audience.groups.length === 1 ? ' group' : ' groups')) : 'Pick at least one group')) },
     { section: 'step-reach', label: 'Price', required: true, focus: '#price-amount',
       done: () => adv.price.mode !== 'paid' || packages.some(p => p.win32 && !p._pending) || parseFloat(adv.price.amount) > 0,
-      value: () => adv.price.mode !== 'paid' ? 'Free'
-        : (packages.some(p => p.win32 && !p._pending) ? 'Paid · your own commerce'
-          : (parseFloat(adv.price.amount) > 0 ? 'Paid · ' + adv.price.currency + ' ' + adv.price.amount : 'Set a base price')) },
+      value: () => {
+        const m = adv.price.mode, w32 = packages.some(p => p.win32 && !p._pending);
+        if (m === 'free') return 'Free';
+        if (m === 'freemium') return 'Freemium';
+        if (m === 'subscription') return w32 ? 'Subscription · your own commerce' : 'Subscription';
+        return w32 ? 'Paid · your own commerce' : (parseFloat(adv.price.amount) > 0 ? 'Paid · ' + adv.price.currency + ' ' + adv.price.amount : 'Set a base price');
+      } },
     // Reach & price — optional settings, surfaced transparently. The advanced pricing tools apply to
     // paid Store apps (they need a base price to act on); Free trial shows for any non-Win32 app.
     { section: 'step-reach', label: 'Per-market prices', applies: () => adv.price.mode === 'paid' && !packages.some(p => p.win32 && !p._pending), required: false, done: () => Object.keys(adv.price.overrides || {}).length > 0,
@@ -9810,8 +9871,8 @@
     const gate = $('gate-hint'), text = $('gate-text'), btn = $('submit');
     // In an update, block Submit until the developer has actually changed a section (nothing to resubmit otherwise).
     const noUpdateChanges = inUpdateFlow && updateChangedSet.size === 0;
-    // Submit needs every required item done AND the developer to have opened Reach & price.
-    btn.disabled = missing.length !== 0 || !reachVisited || noUpdateChanges;
+    // Submit needs every required item done AND the developer to have opened Reach & price + Submission options.
+    btn.disabled = missing.length !== 0 || !reachVisited || !submitVisited || noUpdateChanges;
     // In the wizard, updateWzChrome owns the hint text + ready state (one step at a time);
     // only the non-wizard easy/advanced flow uses this global summary line.
     if (!document.getElementById('flow-wrap').classList.contains('is-wizard')) {
@@ -10503,14 +10564,13 @@
     wrap.innerHTML = types.map(t => {
       const info = APPTYPE_INFO[t], c = info[ctx];
       const badge = c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '';
-      const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
+      const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><span>' + f + '</span></li>').join('');
       return '<button type="button" class="atd-opt pkg-choose__opt" data-pkgchoose-opt="' + t + '">' +
         '<span class="atd-opt__top"><span class="atd-opt__ico"><iconify-icon icon="' + info.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
           '<iconify-icon class="pkg-choose__pick" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
         '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badge + '</span>' +
         '<span class="atd-opt__desc">' + c.desc + '</span>' +
         '<ul class="atd-opt__feats">' + feats + '</ul>' +
-        '<span class="atd-opt__best">' + c.best + '</span>' +
         '</button>';
     }).join('');
   }
@@ -10551,18 +10611,18 @@
   // live preview of what switching changes (reuses typeChangeImpact for the MSIX<->Win32 boundary).
   const APPTYPE_INFO = {
     msix: { label: 'MSIX', icon: 'fluent:box-20-filled',
-      app: { rec: true, desc: 'Publish any app packaged as MSIX.', best: 'Best for publishing new apps',
-        feats: ['Free code signing &amp; binary hosting', 'Commerce options: MS Store, Own, 3p', 'Automatic updates', 'Supports S-Mode, private apps, flighting'] },
-      game: { desc: 'Publish UWP game packaged as MSIX.', best: 'Best for publishing casual games',
-        feats: ['Free code signing &amp; binary hosting', 'Commerce options: MS Store, Own, 3p', 'Automatic updates'] } },
+      app: { rec: true, desc: 'Publish any app packaged as MSIX.',
+        feats: ['Free code signing', 'Free binary hosting', 'Auto app updates to customers', 'Commerce options: Microsoft, a third party, or your own'] },
+      game: { desc: 'Publish UWP game packaged as MSIX.',
+        feats: ['Free code signing', 'Free binary hosting', 'Auto app updates to customers', 'Commerce options: Microsoft, a third party, or your own'] } },
     win32: { label: 'EXE / MSI', icon: 'fluent:desktop-20-filled',
-      app: { desc: 'Publish your existing .msi/.exe installer as-is.', best: 'Best for publishing apps that you distribute yourself today',
-        feats: ['You manage &amp; pay for code signing &amp; binary hosting', 'Commerce options: Own, 3p', 'You manage app updates'] } },
+      app: { desc: 'Publish your existing .msi/.exe installer as-is.',
+        feats: ['Code signing managed by you', 'Binary hosting managed by you', 'App updates managed by you', 'Commerce options: a third party or your own'] } },
     pwa: { label: 'PWA', icon: 'fluent:globe-20-filled',
-      app: { desc: 'Publish your web app.', best: 'Best for publishing web apps',
-        feats: ['Simply provide your web app URL or MSIX package', 'Gets all benefits of MSIX'] },
-      game: { desc: 'Publish your web game.', best: 'Best for publishing web games',
-        feats: ['Simply provide your web game URL or MSIX package', 'Gets all benefits of MSIX'] } }
+      app: { desc: 'Publish your web app.',
+        feats: ['Directly from your URL', 'Same benefits as MSIX'] },
+      game: { desc: 'Publish your web game.',
+        feats: ['Directly from your URL', 'Same benefits as MSIX'] } }
   };
   let _atdPick = null;
   let _atdMode = 'change';   // 'change' = switch an existing type (impact preview) | 'choose' = first-time pick on landing
@@ -10606,7 +10666,7 @@
     wrap.innerHTML = types.map(t => {
       const info = APPTYPE_INFO[t], c = info[ctx], isSel = t === _atdPick;
       const badges = (c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '');
-      const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
+      const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><span>' + f + '</span></li>').join('');
       return '<label class="atd-opt' + (isSel ? ' is-sel' : '') + '" for="atd-r-' + t + '" data-atd-opt="' + t + '">' +
         '<span class="atd-opt__top">' +
           '<span class="atd-opt__ico"><iconify-icon icon="' + info.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
@@ -10615,7 +10675,6 @@
         '<span class="atd-opt__head"><span class="atd-opt__name">' + info.label + '</span>' + badges + '</span>' +
         '<span class="atd-opt__desc">' + c.desc + '</span>' +
         '<ul class="atd-opt__feats">' + feats + '</ul>' +
-        '<span class="atd-opt__best">' + c.best + '</span>' +
         '</label>';
     }).join('');
     // mirror [checked] onto .checked so the dot fills (this build doesn't flip :state(checked) on .checked)
@@ -10862,7 +10921,7 @@
   // The things that work differently across the MSIX↔Win32 boundary — only warn about what's actually set.
   function typeChangeImpact(toWin32) {
     if (toWin32 === effectiveWin32()) return [];
-    const paid = adv.price.mode === 'paid';
+    const paid = adv.price.mode === 'paid' || adv.price.mode === 'subscription';
     const priv = adv.audience.mode === 'private';
     const lines = [];
     // Only the concrete changes to THIS submission — each type's nature/benefits are on the cards above.
@@ -10909,7 +10968,7 @@
     applyV4PkgUI(v4Type);
     const win32 = effectiveWin32();
     const fw = document.getElementById('flow-wrap'); if (fw) fw.classList.toggle('has-win32-pkg', win32);
-    const idBanner = document.getElementById('ez-pkg-identity-banner'); if (idBanner) idBanner.classList.toggle('is-wz-show', effectiveType() === 'msix');
+    const idBanner = document.getElementById('ez-pkg-identity-banner'); if (idBanner) idBanner.classList.toggle('is-wz-show', effectiveType() === 'msix' || effectiveType() === 'pwa');
     if (typeof updateGate === 'function') updateGate();
     if (window.__reachRefresh) { if (window.__reachRefresh.price) window.__reachRefresh.price(); if (win32 && window.__reachRefresh.audience) window.__reachRefresh.audience(); }
     if (typeof ezRenderPreview === 'function') ezRenderPreview();
@@ -11349,7 +11408,7 @@
     const idBannerPkg = $('ez-pkg-identity-banner'), flowWrapPkg = document.getElementById('flow-wrap');
     const hasWin32Pkg = effectiveWin32();   // chooser OR a real .exe/.msi package
     const onPkgStep = !!($('step-package') && $('step-package').classList.contains('is-wz-active'));
-    if (idBannerPkg) idBannerPkg.classList.toggle('is-wz-show', onPkgStep && effectiveType() === 'msix');
+    if (idBannerPkg) idBannerPkg.classList.toggle('is-wz-show', onPkgStep && (effectiveType() === 'msix' || effectiveType() === 'pwa'));
     if (flowWrapPkg) flowWrapPkg.classList.toggle('has-win32-pkg', hasWin32Pkg);
     // Win32 can't target a private audience — re-run the audience rule to reset it if needed.
     if (hasWin32Pkg && window.__reachRefresh && window.__reachRefresh.audience) window.__reachRefresh.audience();
@@ -11647,7 +11706,7 @@
   // every Win32 add (and on row click to edit). Confirm commits + validates in the background; Cancel
   // discards (a fresh add is removed; an edit reverts to its snapshot).
   const pkgDetailsDialog = $('pkg-details-dialog');
-  let pkgdId = null, pkgdIsNew = false, pkgdSnapshot = null, pkgdTouched = false, pkgdArchManual = false;
+  let pkgdId = null, pkgdIsNew = false, pkgdSnapshot = null, pkgdTouched = new Set(), pkgdArchManual = false;
   const pkgdEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
   function pkgdPkg() { return packages.find(p => p.id === pkgdId); }
   // Fluent tag-picker for languages: selected locales render as inline removable tags inside an
@@ -11752,7 +11811,7 @@
       arch: () => win32ArchOf(pkg),
       exceptId: pkg.id,
       getLangs: () => win32LangsOf(pkg),
-      onChange: langs => { pkg.langs = langs.slice(); updatePkgdConfirm(); },
+      onChange: langs => { pkg.langs = langs.slice(); pkgdTouched.add('lang'); updatePkgdConfirm(); },
     });
   }
   function renderPkgdExit() {
@@ -11771,6 +11830,15 @@
     const doc = $('pkgd-exit-doc'); ec.docUrl = doc ? (doc.value || '').trim() : '';
     return ec;
   }
+  // Which required field an event came from — so an error only shows for a field the developer has touched.
+  function pkgdFieldOf(t) {
+    if (!t || !t.closest) return null;
+    if (t.closest('#pkgd-url-field')) return 'url';
+    if (t.closest('#pkgd-arch-wrap')) return 'arch';
+    if (t.closest('#pkgd-params-wrap')) return 'params';
+    if (t.closest('#pkgd-lang-wrap')) return 'lang';
+    return null;
+  }
   function updatePkgdConfirm() {
     const pkg = pkgdPkg(), btn = $('pkgd-confirm'), hint = $('pkgd-hint'); if (!pkg || !btn) return;
     const urlEl = $('pkgd-url');
@@ -11778,15 +11846,17 @@
     const archOk = ARCH_VALUES.includes(win32ArchOf(pkg));
     const paramsOk = !!pkg.silentNoParams || !!(pkg.installParams && pkg.installParams.trim());
     const langOk = win32LangsOf(pkg).length > 0;
-    btn.disabled = !(urlOk && archOk && paramsOk && langOk);
-    const cv = $('pkgd-convert'); if (cv) cv.disabled = !(urlOk && langOk);
+    const allOk = urlOk && archOk && paramsOk && langOk;
+    btn.disabled = !allOk;
+    const cv = $('pkgd-convert'); if (cv) cv.disabled = !allOk;   // Convert to MSIX also needs every required field
+    // Show the blocker for the first failing field, but only once THAT field has been touched — so
+    // selecting one field never surfaces an error for another the developer hasn't reached yet.
     let msg = '';
-    if (!urlOk) msg = 'Paste your installer link to confirm.';
-    else if (!archOk) msg = 'Select the architecture to confirm.';
-    else if (!paramsOk) msg = 'Enter the silent-install parameters, or tick “My app installs silently”.';
-    else if (!langOk) msg = 'Add at least one language to confirm.';
-    // Don't flag errors the instant the dialog opens — only once the developer has interacted.
-    const showHint = pkgdTouched && !!msg;
+    if (!urlOk && pkgdTouched.has('url')) msg = 'Paste your installer link to confirm.';
+    else if (!archOk && pkgdTouched.has('arch')) msg = 'Select the architecture to confirm.';
+    else if (!paramsOk && pkgdTouched.has('params')) msg = 'Enter the silent-install parameters, or tick “My app installs silently”.';
+    else if (!langOk && pkgdTouched.has('lang')) msg = 'Add at least one language to confirm.';
+    const showHint = !!msg;
     if (hint) { hint.hidden = !showHint; if (showHint) hint.innerHTML = '<iconify-icon icon="fluent:error-circle-20-filled" width="16" height="16" aria-hidden="true"></iconify-icon> ' + msg; }
   }
   function renderPkgdFileChip() {
@@ -11868,7 +11938,7 @@
   }
   function openPkgDetailsDialog(pkgId, isNew) {
     const pkg = packages.find(p => p.id === pkgId); if (!pkg || !pkg.win32) return;
-    pkgdId = pkgId; pkgdIsNew = !!isNew; pkgdTouched = false;   // no validation errors until the developer interacts
+    pkgdId = pkgId; pkgdIsNew = !!isNew; pkgdTouched = new Set();   // per-field: no error until that field is touched
     // A pre-set arch that doesn't match the file name is a deliberate choice — don't auto-override it on URL edits.
     pkgdArchManual = !!(pkg.arches && pkg.arches.length && pkg.arches.join() !== detectArches(pkg.filename || basenameOf(pkg.url || '')).join());
     pkgdSnapshot = { arches: (pkg.arches || []).slice(), installParams: pkg.installParams, langs: (pkg.langs || []).slice(), url: pkg.url, exitCodes: pkg.exitCodes ? JSON.parse(JSON.stringify(pkg.exitCodes)) : undefined, validation: pkg.validation ? Object.assign({}, pkg.validation) : undefined };
@@ -11891,7 +11961,7 @@
     // Reveal validation hints only after the first interaction (input/change) inside the dialog.
     if (!pkgDetailsDialog.__touchWired) {
       pkgDetailsDialog.__touchWired = true;
-      ['input', 'change'].forEach(function (ev) { pkgDetailsDialog.addEventListener(ev, function () { if (!pkgdTouched) { pkgdTouched = true; updatePkgdConfirm(); } }); });
+      ['input', 'change'].forEach(function (ev) { pkgDetailsDialog.addEventListener(ev, function (e) { const f = pkgdFieldOf(e.target); if (f) pkgdTouched.add(f); updatePkgdConfirm(); }); });
     }
     if (!pkgDetailsDialog.__urlWired) {
       pkgDetailsDialog.__urlWired = true;
@@ -12069,13 +12139,16 @@
     if (addpkgFileInp) addpkgFileInp.accept = exts;
     const hint = $('addpkg-drop-hint'); if (hint) hint.textContent = exts.replace(/,/g, ', ');
     // MSIX can only be uploaded — hide the URL option. Win32 keeps it, but as installer links only
-    // (no website; pasting one is blocked by the family rule in addPackageByUrl).
+    // (no website; pasting one is blocked by the family rule in addPackageByUrl). In MVP, Win32 can't
+    // be uploaded at all (URL-only, matching applyV4PkgUI), so hide the drop zone entirely.
+    const showUpload = !(isMvp() && (typeof effectiveWin32 === 'function' ? effectiveWin32() : lockType === 'win32'));
     const showUrl = lockType !== 'msix';
-    const orEl = $('addpkg-or'), urlPart = $('addpkg-url-part');
-    if (orEl) orEl.style.display = showUrl ? '' : 'none';
+    const dropEl = $('addpkg-drop'), orEl = $('addpkg-or'), urlPart = $('addpkg-url-part');
+    if (dropEl) dropEl.style.display = showUpload ? '' : 'none';
+    if (orEl) orEl.style.display = (showUpload && showUrl) ? '' : 'none';
     if (urlPart) urlPart.style.display = showUrl ? '' : 'none';
     if (showUrl) {
-      const uh = $('addpkg-url-hint'); if (uh) uh.textContent = 'Have a link instead? Paste your installer’s URL.';
+      const uh = $('addpkg-url-hint'); if (uh) uh.textContent = showUpload ? 'Have a link instead? Paste your installer’s URL.' : 'Paste a link to your installer (.exe or .msi).';
       if (addpkgUrlInput) addpkgUrlInput.placeholder = 'Installer URL';
     }
     try { addMethodDialog.show(); } catch (e) {}
@@ -15115,9 +15188,11 @@
     const langs = [defLoc].concat(locs.filter(c => c !== defLoc));
     const langVal = langs.length <= 1 ? langLabelOf(langs[0]) : (langLabelOf(langs[0]) + ' +' + (langs.length - 1) + ' more');
     // Price — Free, or Paid with the value (Win32 paid sells through the developer's own commerce).
-    const priceVal = adv.price.mode === 'paid'
-      ? (isWin32 ? 'Paid · your own commerce' : ('Paid · ' + adv.price.currency + ' ' + adv.price.amount))
-      : 'Free';
+    const priceVal = (adv.price.mode === 'paid' || adv.price.mode === 'subscription')
+      ? (adv.price.mode === 'subscription'
+          ? (isWin32 ? 'Subscription · your own commerce' : 'Subscription')
+          : (isWin32 ? 'Paid · your own commerce' : ('Paid · ' + adv.price.currency + ' ' + adv.price.amount)))
+      : (adv.price.mode === 'freemium' ? 'Freemium' : 'Free');
     const marketsVal = adv.markets.mode === 'all' ? 'All markets' : (adv.markets.selected.length + ' markets');
     const audienceVal = adv.audience.mode === 'public' ? 'Public'
       : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group');
@@ -15543,6 +15618,7 @@
         ratingAppType: ratingAppType,
         ratingDone: !!state.rating,
         reachVisited: !!reachVisited,
+        submitVisited: !!submitVisited,
         selectedGenres: selectedGenres,
         sysreq: sysreqState,
         shotsCount: (state.shots || []).length
@@ -15606,6 +15682,7 @@
       // Reach & price reads "done" only once opened; a submitted app has necessarily opened it, so
       // treat published/in-review apps as visited too (covers data saved before this was persisted).
       if (d.reachVisited || (app && (app.status === 'published' || app.status === 'in-review'))) reachVisited = true;
+      if (d.submitVisited || (app && (app.status === 'published' || app.status === 'in-review'))) submitVisited = true;
       if (d.sysreq && typeof d.sysreq === 'object') {
         if (d.sysreq.ram != null) sysreqState.ram = d.sysreq.ram;
         if (d.sysreq.vram != null) sysreqState.vram = d.sysreq.vram;
@@ -15978,8 +16055,11 @@
     // except the last is a jump link; the last is the current page.
     function buildCrumbs() {
       var base = '../' + (window.__portalFile || 'store-portal.html');
-      var crumbs = [{ label: 'Overview', href: base + '#overview' }];
-      if (!inSubview()) { crumbs.push({ label: appCrumbName(), href: base + '#apps' }); crumbs.push({ label: 'Publishing', current: true }); return crumbs; }
+      // Root is the Apps list (where the app lives) \u2014 not the Overview dashboard, which is a sibling nav
+      // section. On the app's own hub the trail ends at the app name (you're inside the app); sub-views
+      // add a third crumb and turn the app name into a link back to the hub.
+      var crumbs = [{ label: 'Apps', href: base + '#apps' }];
+      if (!inSubview()) { crumbs.push({ label: appCrumbName(), current: true }); return crumbs; }
       crumbs.push({ label: appCrumbName(), action: 'home' });
       if (window.__reviewMode) {
         if (!reviewFromInReview) crumbs.push({ label: 'View submissions', action: 'exitReview' });
@@ -17180,17 +17260,7 @@
     const _pvToggle = $('submit-preview-toggle');
     if (_pvToggle) _pvToggle.setAttribute('aria-expanded', 'false');
     if (_pv) _pv.hidden = true;
-    try { goSubmitStep(1); } catch (e) {}
-    try { syncRolloutDialog(); } catch (e) {}
-    // Optional extras (release + test sign-in & notes) are shown directly now — no wrapper to toggle.
-    syncPublishHoldUI();
-    // MVP: Win32 submissions don't expose release scheduling — hide the Release section (Vision shows it).
-    const holdOpts = $('submit-hold-opts');
-    if (holdOpts) holdOpts.style.display = (isMvp() && effectiveWin32()) ? 'none' : '';
-    renderTestCreds();
-    // Open the cert-team area only if it already has content (otherwise it stays a tidy one-liner).
-    const credsSub = $('submit-creds');
-    if (credsSub) credsSub.expanded = !!((Array.isArray(adv.testCredentials) && adv.testCredentials.length) || ($('submit-notes') && faVal($('submit-notes')).trim()));
+    const _t = $('submit-step-title'); if (_t) _t.textContent = 'Review your submission';
     try { submitDlg.show(); } catch (e) {}
   }
   $('submit').addEventListener('click', openSubmitFlow);
@@ -17206,13 +17276,6 @@
   }
   function updateHoldSummary() {
     const sum = $('hold-summary'); if (sum) sum.textContent = releaseSummary();
-  }
-  // Test sign-in row shows its current state (like Release shows the go-live choice) — no "optional" tag.
-  function updateCredsSummary() {
-    const sum = $('creds-summary'); if (!sum) return;
-    const n = Array.isArray(adv.testCredentials) ? adv.testCredentials.filter(c => (c.name || '').trim() || (c.value || '').trim()).length : 0;
-    const hasNotes = ($('submit-notes') && faVal($('submit-notes')).trim().length > 0);
-    sum.textContent = n ? (n + ' credential' + (n > 1 ? 's' : '')) : (hasNotes ? 'Notes added' : 'None');
   }
   // Read/write the submit-dialog fluent-radio-groups: .checked is current at change-time; mirror it
   // to a [checked] attr so the dot fills (same pattern as the rest of the flow).
@@ -17234,10 +17297,10 @@
     const ph = adv.publishHold, end = adv.schedule.end;
     setSdRadio('publish-hold', ph.mode);
     const dateEl = $('publish-hold-date');
-    if (dateEl) { dateEl.value = ph.date || ''; dateEl.disabled = ph.mode !== 'date'; }
+    if (dateEl) { dateEl.value = ph.date || ''; dateEl.disabled = ph.mode !== 'date'; dateEl.hidden = ph.mode !== 'date'; }
     setSdRadio('release-end', end.mode);
     const endEl = $('release-end-date');
-    if (endEl) { endEl.value = end.date || ''; endEl.disabled = end.mode !== 'date'; }
+    if (endEl) { endEl.value = end.date || ''; endEl.disabled = end.mode !== 'date'; endEl.hidden = end.mode !== 'date'; }
     const reField = $('submit-release-end-field'); if (reField) reField.hidden = !inUpdateFlow;
     updateHoldSummary();
   }
@@ -17248,7 +17311,7 @@
       if (!adv.publishHold) adv.publishHold = { mode: 'auto', date: '' };
       adv.publishHold.mode = val;
       phGroup.querySelectorAll('fluent-radio').forEach(r => r.toggleAttribute('checked', !!r.checked));
-      const dateEl = $('publish-hold-date'); if (dateEl) dateEl.disabled = val !== 'date';
+      const dateEl = $('publish-hold-date'); if (dateEl) { dateEl.disabled = val !== 'date'; dateEl.hidden = val !== 'date'; }
       updateHoldSummary();
       persistAdvanced();
     });
@@ -17261,76 +17324,96 @@
       if (!adv.schedule.end) adv.schedule.end = { mode: 'never', date: '' };
       adv.schedule.end.mode = val;
       reGroup.querySelectorAll('fluent-radio').forEach(r => r.toggleAttribute('checked', !!r.checked));
-      const endEl = $('release-end-date'); if (endEl) endEl.disabled = val !== 'date';
+      const endEl = $('release-end-date'); if (endEl) { endEl.disabled = val !== 'date'; endEl.hidden = val !== 'date'; }
       updateHoldSummary();
       persistAdvanced();
     });
     const endEl = $('release-end-date');
     if (endEl) endEl.addEventListener('input', () => { if (adv.schedule && adv.schedule.end) adv.schedule.end.date = endEl.value || ''; updateHoldSummary(); persistAdvanced(); });
   })();
-  // Certification test credentials — repeatable name/value pairs for the cert team.
+  // Certification test credentials — managed in a dialog (scalable "add another"); the section shows a
+  // summary (chips) + a button. adv.testCredentials stays the source of truth; _credsDraft is the
+  // working copy while the dialog is open (Cancel discards it).
+  let _credsDraft = null;
+  const credsEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+  function credsFilled() { if (!Array.isArray(adv.testCredentials)) adv.testCredentials = []; return adv.testCredentials.filter(c => (c.name || '').trim() || (c.value || '').trim()); }
   function renderTestCreds() {
-    const list = $('submit-creds-list'); if (!list) return;
-    if (!Array.isArray(adv.testCredentials)) adv.testCredentials = [];
-    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
-    list.innerHTML = adv.testCredentials.map((c, i) =>
-      '<div class="ez-sd__cred-row" data-cred-i="' + i + '">' +
-        '<fluent-text-input class="ez-sd__cred-name" data-cred-field="name" placeholder="Name (e.g. Test account)" value="' + esc(c.name) + '"></fluent-text-input>' +
-        '<fluent-text-input class="ez-sd__cred-val" data-cred-field="value" placeholder="Value (e.g. user@example.com / Pw!23)" value="' + esc(c.value) + '"></fluent-text-input>' +
-        '<button type="button" class="ez-sd__cred-del" data-cred-del="' + i + '" aria-label="Remove credential"><iconify-icon icon="fluent:dismiss-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
+    const wrap = $('submit-creds-summary'), lbl = $('submit-creds-add-label');
+    const items = credsFilled();
+    if (wrap) {
+      wrap.hidden = items.length === 0;
+      wrap.innerHTML = items.map(c => {
+        const nm = (c.name || '').trim() || 'Credential', vl = (c.value || '').trim();
+        return '<span class="subm-cred-chip"><iconify-icon icon="fluent:key-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon><span class="subm-cred-chip__name">' + credsEsc(nm) + '</span>' + (vl ? '<span class="subm-cred-chip__val">' + credsEsc(vl) + '</span>' : '') + '</span>';
+      }).join('');
+    }
+    if (lbl) lbl.textContent = items.length ? 'Manage credentials' : 'Add test credential';
+  }
+  const credsDialog = $('creds-dialog');
+  function renderCredsDialog() {
+    const list = $('creds-dlg-list'); if (!list) return;
+    if (!Array.isArray(_credsDraft)) _credsDraft = [];
+    list.innerHTML = _credsDraft.map((c, i) =>
+      '<div class="creds-dlg__row" data-cred-i="' + i + '">' +
+        '<fluent-text-input class="creds-dlg__name" data-cred-field="name" placeholder="Label (e.g. Test account)" value="' + credsEsc(c.name) + '"></fluent-text-input>' +
+        '<fluent-text-input class="creds-dlg__val" data-cred-field="value" placeholder="Details (e.g. user@example.com / Pw!23)" value="' + credsEsc(c.value) + '"></fluent-text-input>' +
+        '<button type="button" class="creds-dlg__del" data-cred-del="' + i + '" aria-label="Remove credential"><iconify-icon icon="fluent:dismiss-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon></button>' +
       '</div>'
     ).join('');
-    updateCredsSummary();
+  }
+  function openCredsDialog() {
+    const src = Array.isArray(adv.testCredentials) ? adv.testCredentials : [];
+    _credsDraft = src.map(c => ({ name: c.name || '', value: c.value || '' }));
+    if (!_credsDraft.length) _credsDraft.push({ name: '', value: '' });
+    renderCredsDialog();
+    try { credsDialog.show(); } catch (e) {}
+    setTimeout(() => { const f = document.querySelector('#creds-dlg-list .creds-dlg__name'); if (f) { try { f.focus(); } catch (e) {} } }, 60);
+  }
+  function saveCredsDialog() {
+    adv.testCredentials = (_credsDraft || []).map(c => ({ name: (c.name || '').trim(), value: (c.value || '').trim() })).filter(c => c.name || c.value);
+    _credsDraft = null; persistAdvanced(); renderTestCreds();
+    try { credsDialog.hide(); } catch (e) {}
   }
   (function wireTestCreds() {
-    const addBtn = $('submit-creds-add'), list = $('submit-creds-list');
-    if (addBtn) addBtn.addEventListener('click', () => {
-      if (!Array.isArray(adv.testCredentials)) adv.testCredentials = [];
-      adv.testCredentials.push({ name: '', value: '' });
-      persistAdvanced();
-      renderTestCreds();
+    const addBtn = $('submit-creds-add'); if (addBtn) addBtn.addEventListener('click', openCredsDialog);
+    const dlgAdd = $('creds-dlg-add');
+    if (dlgAdd) dlgAdd.addEventListener('click', () => {
+      if (!Array.isArray(_credsDraft)) _credsDraft = [];
+      _credsDraft.push({ name: '', value: '' }); renderCredsDialog();
+      setTimeout(() => { const rows = document.querySelectorAll('#creds-dlg-list .creds-dlg__row'); const last = rows[rows.length - 1], f = last && last.querySelector('.creds-dlg__name'); if (f) { try { f.focus(); } catch (e) {} } }, 40);
     });
+    const list = $('creds-dlg-list');
     if (list) {
       list.addEventListener('click', (e) => {
-        const del = e.target.closest('[data-cred-del]');
-        if (del) { adv.testCredentials.splice(parseInt(del.getAttribute('data-cred-del'), 10), 1); persistAdvanced(); renderTestCreds(); }
+        const del = e.target.closest('[data-cred-del]'); if (!del) return;
+        const i = parseInt(del.getAttribute('data-cred-del'), 10);
+        if (_credsDraft) { _credsDraft.splice(i, 1); if (!_credsDraft.length) _credsDraft.push({ name: '', value: '' }); renderCredsDialog(); }
       });
       list.addEventListener('input', (e) => {
         const inp = e.target.closest('[data-cred-field]'); if (!inp) return;
         const row = inp.closest('[data-cred-i]'); if (!row) return;
         const i = parseInt(row.getAttribute('data-cred-i'), 10);
-        if (adv.testCredentials[i]) { adv.testCredentials[i][inp.getAttribute('data-cred-field')] = inp.value || ''; persistAdvanced(); updateCredsSummary(); }
+        if (_credsDraft && _credsDraft[i]) _credsDraft[i][inp.getAttribute('data-cred-field')] = inp.value || '';
       });
     }
-    const notesEl = $('submit-notes');
-    if (notesEl) notesEl.addEventListener('input', updateCredsSummary);
+    if (credsDialog) credsDialog.querySelectorAll('[data-creds-close]').forEach(b => b.addEventListener('click', () => { _credsDraft = null; try { credsDialog.hide(); } catch (e) {} }));
+    const saveBtn = $('creds-dlg-save'); if (saveBtn) saveBtn.addEventListener('click', saveCredsDialog);
+    const notesEl = $('submit-notes'); if (notesEl) notesEl.addEventListener('input', () => { persistAdvanced(); });
   })();
   if (submitDlg) submitDlg.querySelectorAll('[data-submit-close]').forEach(b => b.addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} const pv = $('submit-preview'); if (pv) pv.innerHTML = ''; }));
   if ($('submit-confirm-btn')) $('submit-confirm-btn').addEventListener('click', doSubmit);
-  // 2-step submit: Review (preview + facts) then Release & submit. Toggles panels + action buttons.
+  // Submit is a single Review step now (Submit / Cancel). Release + test sign-in/notes live on the
+  // Submission options section; renderSubmitSection() keeps those controls in sync with adv.
   let submitStep = 1;
-  function goSubmitStep(n) {
-    submitStep = (n === 2) ? 2 : 1;
-    const _pvOpen = $('submit-preview-toggle') && $('submit-preview-toggle').getAttribute('aria-expanded') === 'true';
-    if (submitDlg) submitDlg.classList.toggle('sd-wide', submitStep === 1 && _pvOpen);   // widen only when the listing preview is expanded
-    const s1 = $('submit-step-1'), s2 = $('submit-step-2');
-    if (s1) s1.hidden = submitStep !== 1;
-    if (s2) s2.hidden = submitStep !== 2;
-    const show = (id, on) => { const e = $(id); if (e) e.hidden = !on; };
-    show('submit-cancel', submitStep === 1);
-    show('submit-continue', submitStep === 1);
-    show('submit-back', submitStep === 2);
-    show('submit-confirm-btn', submitStep === 2);
-    const t = $('submit-step-title'); if (t) t.textContent = submitStep === 1 ? 'Review your submission' : 'Release & submit';
-    document.querySelectorAll('#submit-steps .sd-steps__item').forEach(el => {
-      const sn = +el.getAttribute('data-sd-step');
-      el.classList.toggle('is-current', sn === submitStep);
-      el.classList.toggle('is-done', sn < submitStep);
-      if (sn === submitStep) el.setAttribute('aria-current', 'step'); else el.removeAttribute('aria-current');
-    });
+  function renderSubmitSection() {
+    try { syncPublishHoldUI(); } catch (e) {}
+    try { renderTestCreds(); } catch (e) {}
+    try { syncRolloutDialog(); } catch (e) {}
+    // MVP: Win32 submissions don't expose release scheduling — hide the Release group (Vision shows it).
+    const holdOpts = $('submit-hold-opts');
+    if (holdOpts) holdOpts.hidden = !!(isMvp() && effectiveWin32());
   }
-  if ($('submit-continue')) $('submit-continue').addEventListener('click', () => goSubmitStep(2));
-  if ($('submit-back')) $('submit-back').addEventListener('click', () => goSubmitStep(1));
+  try { renderSubmitSection(); } catch (e) {}
   if ($('submit-edit-listing')) $('submit-edit-listing').addEventListener('click', () => { try { submitDlg.hide(); } catch (e) {} const pv = $('submit-preview'); if (pv) pv.innerHTML = ''; try { if (typeof showWzStep === 'function') showWzStep(WZ_STEPS.indexOf('step-listing')); } catch (e) {} });
   if ($('submit-preview-toggle')) $('submit-preview-toggle').addEventListener('click', function () {
     const expand = this.getAttribute('aria-expanded') !== 'true';
@@ -17468,21 +17551,29 @@
           : 'Customers use a free version with limits, then buy to unlock.');
     }
     function applyPrice() {
-      setSeg('price', adv.price.mode);
-      const paid = adv.price.mode === 'paid';
-      // Win32 paid apps are sold via the developer's own commerce — the Store doesn't
-      // collect base price / trials / per-market pricing, so show a note instead.
+      // Win32 sells through the developer's own commerce, so it offers business-model options
+      // (Free / Freemium / Subscription / Paid). Store-handled apps keep the simple Free / Paid.
       const win32 = !!document.getElementById('flow-wrap')?.classList.contains('has-win32-pkg');
-      const storePaid = paid && !win32;   // paid AND the Store handles the money
-      const note = $('price-win32-note'); if (note) note.hidden = !(paid && win32);
-      const w32trial = $('price-win32-trial');   // Win32 paid: disclosure-only free-trial flag
-      if (w32trial) { w32trial.hidden = !(paid && win32); setSeg('win32trial', adv.price.win32Trial || 'none'); }
+      const fmField = $('pr-freemium-field'), subField = $('pr-subscription-field');
+      if (fmField) fmField.hidden = !win32;
+      if (subField) subField.hidden = !win32;
+      // Non-Win32 can't be freemium/subscription — coerce a stale Win32 choice to the nearest valid mode.
+      if (!win32 && adv.price.mode !== 'free' && adv.price.mode !== 'paid') adv.price.mode = adv.price.mode === 'freemium' ? 'free' : 'paid';
+      setSeg('price', adv.price.mode);
+      const mode = adv.price.mode;
+      // Subscription and Paid both mean "you charge" — same own-commerce disclosure + free-trial block.
+      const charges = mode === 'paid' || mode === 'subscription';
+      const storePaid = mode === 'paid' && !win32;   // paid AND the Store handles the money
+      const note = $('price-win32-note'); if (note) note.hidden = !(charges && win32);
+      const w32trial = $('price-win32-trial');   // Win32 charged apps: disclosure-only free-trial flag
+      if (w32trial) { w32trial.hidden = !(charges && win32); setSeg('win32trial', adv.price.win32Trial || 'none'); }
       $('price-paid-row').hidden = !storePaid;
       // Advanced pricing + free trial live in a fluent-accordion, shown only when the Store
       // handles the money (paid, non-Win32). Expand/collapse is native to the accordion.
       const advAccordion = $('price-adv-accordion');
       if (advAccordion) advAccordion.hidden = !storePaid;
-      $('price-default-hint').hidden = paid;
+      // Free shows the reassuring "installs at no cost" line; Freemium/Subscription/Paid don't.
+      $('price-default-hint').hidden = mode !== 'free';
       const oc = Object.keys(adv.price.overrides || {}).length;
       const pol = $('price-overrides-label');
       if (pol) pol.textContent = oc ? ('Local prices \u00b7 ' + oc + ' customized') : 'See & customize local prices';
