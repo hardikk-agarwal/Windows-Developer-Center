@@ -457,11 +457,9 @@
   .fmthelp-modal { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .fmthelp-modal[hidden] { display: none; }
   .fmthelp-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
-  .fmthelp-modal__card { position: relative; width: min(460px, 100%); max-height: 88vh; overflow: auto; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-16); box-shadow: var(--shadow-16); padding: var(--sp-24); }
-  .fmtw__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-12); margin-bottom: var(--sp-14); }
-  .fmtw__headmain { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .fmthelp-modal__card { position: relative; width: min(480px, 100%); max-height: 88vh; overflow: auto; background: var(--layer); border: 1px solid var(--stroke-2); border-radius: var(--r-16); box-shadow: var(--shadow-16); padding: var(--sp-24); }
+  .fmtw__head { display: flex; align-items: center; gap: var(--sp-8); margin-bottom: var(--sp-16); }
   .fmtw__title { margin: 0; font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--fg-1); }
-  .fmtw__lead { margin: 0; font-size: 13px; color: var(--fg-3); line-height: 1.45; }
   .fmtw__progress { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--fg-1) 12%, transparent); overflow: hidden; }
   .fmtw__progress > span { display: block; height: 100%; background: var(--brand); border-radius: 999px; transition: width var(--dur-3) var(--ease-out); }
   .fmtw__close { flex: none; appearance: none; border: 0; background: transparent; color: var(--fg-3); cursor: pointer; padding: 2px; border-radius: var(--r-6); display: inline-flex; }
@@ -488,8 +486,9 @@
   .fmtw__li-mk--dot::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--fg-3); }
   .fmtw__opt-arrow { flex: none; color: var(--fg-3); }
   .fmtw__foot { display: flex; align-items: center; gap: var(--sp-12); margin-top: var(--sp-16); min-height: 22px; }
-  .fmtw__back { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
-  .fmtw__back:hover { color: var(--fg-1); }
+  .fmtw__back { flex: none; appearance: none; border: 0; background: transparent; color: var(--fg-2); cursor: pointer; display: inline-flex; align-items: center; padding: 4px; margin: -2px 0 -2px -6px; border-radius: var(--r-6); }
+  .fmtw__back:hover { color: var(--fg-1); background: var(--subtle); }
+  .fmtw__back:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
   .fmtw__exit { appearance: none; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 8px; margin-left: -8px; border-radius: var(--r-6); }
   .fmtw__exit:hover { color: var(--fg-1); background: var(--subtle); }
   .fmtw__exit:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
@@ -499,6 +498,7 @@
   .fmtw__result-eyebrow { display: block; margin-top: var(--sp-16); font-size: 12px; font-weight: var(--font-weight-semibold); letter-spacing: .02em; color: var(--fg-3); }
   .fmtw__result { display: flex; align-items: center; gap: 14px; margin-top: var(--sp-12); }
   .fmtw__result-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-12); background: color-mix(in srgb, var(--fg-1) 7%, transparent); color: var(--fg-1); }
+  .fmtw__result-head { display: flex; align-items: center; flex-wrap: wrap; }
   .fmtw__result-name { font-size: 22px; font-weight: 700; color: var(--fg-1); line-height: 1.1; }
   .fmtw__result-rec { display: inline-block; margin-top: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); padding: 2px 7px; border-radius: 999px; }
   .fmtw__result-why { margin: var(--sp-16) 0 0; font-size: 13.5px; line-height: 1.5; color: var(--fg-2); }
@@ -5012,7 +5012,7 @@
           <span class="sysreq__ico"><iconify-icon icon="fluent:developer-board-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></span>
           <span class="sysreq__head">
             <span class="sysreq__title">System requirements</span>
-            <span class="sysreq__sub" id="sysreq-summary">Set the minimum specs to run &mdash; recommended ones are optional. Below-minimum installs won&rsquo;t hurt your score.</span>
+            <span class="sysreq__sub" id="sysreq-summary">Specify any hardware features that are required or recommended in order for your product to run properly</span>
           </span>
           <iconify-icon class="sysreq__chev" icon="fluent:chevron-down-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
         </summary>
@@ -9364,8 +9364,11 @@
     // current value; a Store-paid app must still set a base price (the one that can gate).
     { section: 'step-reach', label: 'Markets', required: true, done: () => true,
       value: () => adv.markets.mode === 'all' ? 'All markets' : ((adv.markets.selected ? adv.markets.selected.length : 0) + ' markets') },
-    { section: 'step-reach', label: 'Audience', required: true, done: () => true,
-      value: () => adv.audience.mode === 'public' ? 'Public' : (adv.audience.mode === 'link' ? 'Direct link' : 'Private group') },
+    { section: 'step-reach', label: 'Audience', required: true, focus: '#groups-pick-btn',
+      done: () => adv.audience.mode !== 'private' || (adv.audience.groups && adv.audience.groups.length > 0),
+      value: () => adv.audience.mode === 'public' ? 'Public'
+        : (adv.audience.mode === 'link' ? 'Direct link'
+          : ((adv.audience.groups && adv.audience.groups.length) ? (adv.audience.groups.length + (adv.audience.groups.length === 1 ? ' group' : ' groups')) : 'Pick at least one group')) },
     { section: 'step-reach', label: 'Price', required: true, focus: '#price-amount',
       done: () => adv.price.mode !== 'paid' || packages.some(p => p.win32 && !p._pending) || parseFloat(adv.price.amount) > 0,
       value: () => adv.price.mode !== 'paid' ? 'Free'
@@ -10574,8 +10577,8 @@
     const lead = document.getElementById('atd-lead'); if (lead) lead.textContent = choose
       ? 'Choose how you want to publish your app.'
       : 'How you package your app decides what the Store can do for it — pick the best fit.';
-    const help = document.getElementById('atd-help'); if (help) help.hidden = !choose;
-    const helpq = document.getElementById('atd-help-q'); if (helpq) helpq.hidden = !choose;
+    const help = document.getElementById('atd-help'); if (help) help.hidden = false;
+    const helpq = document.getElementById('atd-help-q'); if (helpq) helpq.hidden = false;
     const cancel = document.getElementById('atd-cancel'); if (cancel) { cancel.hidden = false; cancel.textContent = choose ? 'Exit' : 'Cancel'; }
     const closeX = document.getElementById('atd-close'); if (closeX) closeX.hidden = choose;   // no dismiss X on the required gate — Exit is the way out
     renderAppTypeOpts(); renderAppTypeImpact();
@@ -10601,9 +10604,8 @@
     const ctx = IS_GAME ? 'game' : 'app';
     const types = ['msix', 'win32', 'pwa'].filter(t => APPTYPE_INFO[t][ctx]);
     wrap.innerHTML = types.map(t => {
-      const info = APPTYPE_INFO[t], c = info[ctx], isCur = t === (_atdLockedPkg || v4Type), isSel = t === _atdPick;
-      const badges = (c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '') +
-        (isCur && _atdMode !== 'choose' ? '<span class="atd-opt__badge atd-opt__badge--cur">Current</span>' : '');
+      const info = APPTYPE_INFO[t], c = info[ctx], isSel = t === _atdPick;
+      const badges = (c.rec ? '<span class="atd-opt__badge atd-opt__badge--rec">Recommended</span>' : '');
       const feats = (c.feats || []).map(f => '<li class="atd-opt__feat"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="16" height="16" aria-hidden="true"></iconify-icon><span>' + f + '</span></li>').join('');
       return '<label class="atd-opt' + (isSel ? ' is-sel' : '') + '" for="atd-r-' + t + '" data-atd-opt="' + t + '">' +
         '<span class="atd-opt__top">' +
@@ -10739,9 +10741,9 @@
       { icon: 'fluent:desktop-20-regular', title: 'A Windows desktop app', desc: 'It runs natively on Windows', chip: 'Desktop app', next: 'appHandling' },
       { icon: 'fluent:globe-20-regular', title: 'A website or web app', desc: 'It runs in the browser today', chip: 'Web app', result: 'pwa' }
     ] },
-    appHandling: { q: 'How do you want to handle delivery and payments?', opts: [
-      { icon: 'fluent:sparkle-20-regular', title: 'Let Microsoft handle it', bullets: ['No certificate to buy', 'Nothing to host', 'Automatic updates', 'Payments via Microsoft, a third party, or your own'], chip: 'Microsoft-managed', rec: true, result: 'msix' },
-      { icon: 'fluent:wrench-20-regular', title: 'I\u2019ll use my own', bullets: ['Bring your own signing certificate', 'Host it yourself', 'Ship your own updates', 'Payments via a third party or your own'], chip: 'Self-managed', result: 'win32' }
+    appHandling: { q: 'Who should manage code signing, hosting, and app payments?', opts: [
+      { icon: 'fluent:sparkle-20-regular', title: 'Let Microsoft handle it', bullets: ['Free code signing by Microsoft', 'Free binary hosting by Microsoft', 'Auto app updates to customers', 'Commerce options: Microsoft, a third party, or your own'], chip: 'Microsoft-managed', rec: true, result: 'msix' },
+      { icon: 'fluent:wrench-20-regular', title: 'I\u2019ll use my own', bullets: ['Code signing managed by you', 'Binary hosting managed by you', 'App updates managed by you', 'Commerce options: a third party or your own'], chip: 'Self-managed', result: 'win32' }
     ] },
     gameKind: { q: 'How is your game built?', opts: [
       { icon: 'fluent:box-20-regular', title: 'A standard PC game', desc: 'Built with a common engine or framework', chip: 'PC game', result: 'msix' },
@@ -10776,19 +10778,18 @@
     for (let i = 0; i < step.opts.length; i++) { const d = fmtwDepth(step.opts[i].next || step.opts[i].result); if (d > m) m = d; }
     return 1 + m;
   }
-  function fmtwBar(pct, lead) {
+  function fmtwBar(pct, backIdx) {
+    const hasBack = typeof backIdx === 'number' && backIdx >= 0;
     return '<div class="fmtw__head">' +
-        '<div class="fmtw__headmain"><h2 class="fmtw__title">Let\u2019s set up your app</h2>' +
-          (lead ? '<p class="fmtw__lead">' + lead + '</p>' : '') + '</div>' +
+        (hasBack ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + backIdx + '" aria-label="Back"><iconify-icon icon="fluent:arrow-left-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></button>' : '') +
+        '<h2 class="fmtw__title">Let\u2019s set up your app</h2>' +
       '</div>' +
       '<div class="fmtw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>';
   }
-  function fmtwCrumbs(backIdx) {
+  function fmtwCrumbs() {
     const p = fmtwState.path || [];
-    const hasBack = typeof backIdx === 'number' && backIdx >= 0;
-    if (!p.length && !hasBack) return '';
-    const back = hasBack ? '<button type="button" class="fmtw__back" data-fmtw-jump="' + backIdx + '"><iconify-icon icon="fluent:arrow-left-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Back</button>' + (p.length ? '<span class="fmtw__crumbs-sep" aria-hidden="true"></span>' : '') : '';
-    return '<div class="fmtw__crumbs">' + back + p.map(function (c, i) {
+    if (!p.length) return '';
+    return '<div class="fmtw__crumbs">' + p.map(function (c, i) {
       return (i ? '<iconify-icon class="fmtw__crumb-arrow" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' : '') +
         '<button type="button" class="fmtw__crumb" data-fmtw-jump="' + i + '" aria-label="Change this answer: ' + c.chip + '">' + c.chip + '</button>';
     }).join('') + '</div>';
@@ -10799,10 +10800,8 @@
       const r = FMTW_RESULT_V6[id];
       body.innerHTML =
         fmtwBar(100) + fmtwCrumbs() +
-        '<span class="fmtw__result-eyebrow">Recommended for you</span>' +
         '<div class="fmtw__result"><span class="fmtw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
-          '<div><div class="fmtw__result-name">' + r.name + '</div>' + (r.rec ? '<span class="fmtw__result-rec">Most popular</span>' : '') + '</div></div>' +
-        '<p class="fmtw__result-why">' + r.why + '</p>' +
+          '<div class="fmtw__result-head"><span class="fmtw__result-name">' + r.name + '</span><span class="fmtw__opt-rec">Recommended</span></div></div>' +
         (id === 'msix' ? '<p class="fmtw__result-convert">Have an <strong>.exe</strong> or <strong>.msi</strong>? <a href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Convert it to MSIX<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>.</p>' : '') +
         '<div class="fmtw__result-actions"><button type="button" class="fmtw__restart" data-fmtw-start>Start over</button>' +
           '<fluent-button appearance="primary" data-fmtw-add="' + id + '">Select ' + r.name + '</fluent-button></div>';
@@ -10818,7 +10817,7 @@
         '<iconify-icon class="fmtw__opt-arrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
     }).join('');
     body.innerHTML =
-      fmtwBar(pct, pathLen === 0 ? 'Answer a couple of quick questions and we\u2019ll recommend the best way to publish it.' : '') + fmtwCrumbs(pathLen ? pathLen - 1 : -1) +
+      fmtwBar(pct, pathLen ? pathLen - 1 : -1) + fmtwCrumbs() +
       '<h3 class="fmtw__q">' + step.q + '</h3>' +
       '<div class="fmtw__opts">' + opts + '</div>' +
       '<div class="fmtw__foot">' +
@@ -15696,7 +15695,7 @@
       var r = sysreqState.rec || {}, hasRec = !!(r.ram || r.vram || r.dx || r.cpu || r.gpu || (r.caps && r.caps.length));
       summary.textContent = bits.length
         ? ('Minimum: ' + bits.join(' \u00b7 ') + (hasRec ? ' \u00b7 + Recommended set' : ''))
-        : 'Set the minimum specs to run \u2014 recommended ones are optional. Below-minimum installs won\u2019t hurt your score.';
+        : 'Specify any hardware features that are required or recommended in order for your product to run properly';
     }
     function changed() { recap(); if (window.__renderSysreq) { try { window.__renderSysreq(); } catch (e) {} } if (window.__scheduleFlowSave) window.__scheduleFlowSave(); }
     // Read-only recap of what the listing auto-derives from the uploaded package (device family,
@@ -18045,6 +18044,7 @@
     adv.audience.groups = [...selectedGroups];
     persistAdvanced();
     try { window.__reachRefresh?.groups?.(); } catch (e) {}
+    try { if (typeof updateGate === 'function') updateGate(); } catch (e) {}   // refresh the rail tick now that groups are set
     announce(`${selectedGroups.size} group${selectedGroups.size === 1 ? '' : 's'} selected.`);
     groupsDialog?.removeAttribute('open');
     try { if (typeof groupsDialog?.hide === 'function') groupsDialog.hide(); } catch (e) {}

@@ -4070,15 +4070,177 @@
     if (h === "add-product") return _apBack;   // re-entered from within the flow — keep the original origin
     return AP_BACK_LABELS[h] ? h : "overview";
   }
+  // Demo variant: 'v2' = the guided/adaptive Add-a-product page (type chosen up front, no in-flow gate).
+  function journeyV2() { try { return localStorage.getItem("tdp.journey") === "v2"; } catch (e) { return false; } }
+  // --- V2 guided "Help me choose" (same copy as the publish flow) + slim package-type field ---
+  var _apPkg = "";          // V2 chosen package (msix | win32 | pwa); "" = nothing selected yet
+  var _apGuideOnOpen = false;  // V2: open the guided questionnaire dialog after the form renders (first app)
+  var _apgCur = null, _apgPath = [], _apgResult = null;
+  // Guided questionnaire (V2). Mirrors the V1 in-flow "help me choose" wizard's copy + structure, with
+  // ONE added first question (app vs game) so a single run also sets the product type. root -> appKind ->
+  // appHandling (desktop apps) / result pwa (web); or root -> gameKind -> (PC) gameXbox / result pwa (web).
+  // Terminal `result` is the recommended package (msix | win32 | pwa | gdk — GDK routes to Partner Center).
+  var AP_FMTW = {
+    root: { q: "What are you publishing?", opts: [
+      { icon: "fluent:apps-20-regular", title: "An app", desc: "A tool, utility, or a productivity or creativity app", chip: "App", kind: "app", next: "appKind" },
+      { icon: "fluent:games-20-regular", title: "A game", desc: "A game for players on Windows", chip: "Game", kind: "game", next: "gameKind" }
+    ] },
+    appKind: { q: "What kind of app is it?", opts: [
+      { icon: "fluent:desktop-20-regular", title: "A Windows desktop app", desc: "It runs natively on Windows", chip: "Desktop app", next: "appHandling" },
+      { icon: "fluent:globe-20-regular", title: "A website or web app", desc: "It runs in the browser today", chip: "Web app", result: "pwa" }
+    ] },
+    appHandling: { q: "Who should manage code signing, hosting, and app payments?", opts: [
+      { icon: "fluent:sparkle-20-regular", title: "Let Microsoft handle it", bullets: ["Free code signing by Microsoft", "Free binary hosting by Microsoft", "Auto app updates to customers", "Commerce options: Microsoft, a third party, or your own"], chip: "Microsoft-managed", rec: true, result: "msix" },
+      { icon: "fluent:wrench-20-regular", title: "I\u2019ll use my own", bullets: ["Code signing managed by you", "Binary hosting managed by you", "App updates managed by you", "Commerce options: a third party or your own"], chip: "Self-managed", result: "win32" }
+    ] },
+    gameKind: { q: "How is your game built?", opts: [
+      { icon: "fluent:box-20-regular", title: "A standard PC game", desc: "Built with a common engine or framework", chip: "PC game", next: "gameXbox" },
+      { icon: "fluent:globe-20-regular", title: "A web-based game", desc: "It runs in the browser", chip: "Web game", result: "pwa" }
+    ] },
+    gameXbox: { q: "Does your game use Xbox services?", opts: [
+      { icon: "fluent:trophy-20-regular", title: "Yes", desc: "Xbox Live, achievements, multiplayer, or Game Pass", chip: "Xbox services", result: "gdk" },
+      { icon: "fluent:dismiss-circle-20-regular", title: "No", desc: "None of these", chip: "No Xbox services", result: "msix" }
+    ] }
+  };
+  var AP_PKG_INFO = {
+    msix: { name: "MSIX", icon: "fluent:box-20-filled", tag: "Microsoft signs, hosts & updates it \u2014 free", why: "The modern Windows app package \u2014 Microsoft signs, hosts, and updates it for you, for free." },
+    win32: { name: "EXE / MSI", icon: "fluent:desktop-20-filled", tag: "You keep your own signing, hosting & updates", why: "Bring your existing installer to the Store as-is \u2014 you keep your own signing, hosting, and updates." },
+    pwa: { name: "PWA", icon: "fluent:globe-20-filled", tag: "Your web app, packaged for the Store", why: "Your website, packaged for the Store \u2014 Microsoft signs, hosts, and updates it for you." },
+    gdk: { name: "GDK", icon: "fluent:games-20-filled", tag: "Games with Xbox services \u2014 publish via Partner Center", why: "Games that use Xbox services are submitted and managed in Partner Center." }
+  };
+  var AP_PKG_BY_TYPE = { app: ["msix", "win32", "pwa"], game: ["msix", "pwa", "gdk"] };
+  function apFirstApp() { return !(state.apps || []).some(function (a) { return a.created || a.store || a.storeStatus; }); }
+  // Remaining depth from a step, for the progress bar (mirrors the V1 wizard).
+  function apgDepth(id) {
+    if (!id || AP_PKG_INFO[id]) return 0;
+    var step = AP_FMTW[id]; if (!step) return 0;
+    var m = 0;
+    for (var i = 0; i < step.opts.length; i++) { var d = apgDepth(step.opts[i].next || step.opts[i].result); if (d > m) m = d; }
+    return 1 + m;
+  }
+  // Question-option buttons — bullets (Microsoft-managed / self) or a one-line desc, like the V1 wizard.
+  function apgOptsHTML(id) {
+    var step = AP_FMTW[id]; if (!step) return "";
+    return step.opts.map(function (o, i) {
+      var body = o.bullets
+        ? '<span class="apg__bul">' + o.bullets.map(function (b) { return '<span class="apg__bi">' + (o.rec ? '<iconify-icon class="apg__bc" icon="fluent:checkmark-16-filled" width="14" height="14" aria-hidden="true"></iconify-icon>' : '<span class="apg__bd" aria-hidden="true"></span>') + '<span>' + b + '</span></span>'; }).join("") + '</span>'
+        : (o.desc ? '<span class="apg__odesc">' + o.desc + '</span>' : "");
+      return '<button type="button" class="apg__opt" data-apg-opt="' + id + ':' + i + '"><span class="apg__oico"><iconify-icon icon="' + o.icon + '" width="22" height="22" aria-hidden="true"></iconify-icon></span><span class="apg__otxt"><span class="apg__otitle">' + o.title + (o.rec ? ' <span class="apg__orec">Recommended</span>' : '') + '</span>' + body + '</span><iconify-icon class="apg__oarrow" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></button>';
+    }).join("");
+  }
+  // Breadcrumb pills of the answers so far (click to change one), like the V1 wizard.
+  function apgCrumbs() {
+    if (!_apgPath.length) return "";
+    return '<div class="apgw__crumbs">' + _apgPath.map(function (c, i) {
+      return (i ? '<iconify-icon class="apgw__crumb-arrow" icon="fluent:chevron-right-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>' : '') +
+        '<button type="button" class="apgw__crumb" data-apg-jump="' + i + '" aria-label="Change this answer: ' + c.chip + '">' + c.chip + '</button>';
+    }).join("") + '</div>';
+  }
+  // The guided questionnaire as a DIALOG (V2). Auto-opens for the first app, and via "Help me decide"
+  // from the form — so it's reachable from anywhere without leaving the page. Answering fills the
+  // product type + package on the underlying form; "I already know what I need" / close just dismisses it.
+  function ensureGuideDialog() {
+    var dlg = document.getElementById("apGuideDialog");
+    if (dlg) return dlg;
+    dlg = document.createElement("fluent-dialog"); dlg.id = "apGuideDialog";
+    dlg.setAttribute("aria-label", "Set up your product");
+    document.body.appendChild(dlg);
+    dlg.addEventListener("click", function (e) {   // one delegated listener; the body re-renders per step
+      if (e.target.closest("[data-apg-close]") || e.target.closest("[data-apg-skip]")) { closeGuideDialog(); return; }
+      if (e.target.closest("[data-apg-restart]")) { _apgResult = null; _apgCur = null; _apgPath = []; renderGuideDialog(); return; }
+      var wj = e.target.closest("[data-apg-jump]");
+      if (wj) {   // Back / a breadcrumb — re-render that step and drop the later answers
+        var ji = +wj.getAttribute("data-apg-jump");
+        _apgResult = null;
+        _apgCur = _apgPath[ji] ? _apgPath[ji].step : "root";
+        _apgPath = _apgPath.slice(0, ji);
+        renderGuideDialog(); return;
+      }
+      if (e.target.closest("[data-apg-apply]")) {     // accept the recommendation -> fill product type + package
+        _apPkg = _apgResult;
+        var nm = document.getElementById("apName"); if (nm && nm.value) _apName = nm.value;
+        closeGuideDialog(); renderAddProduct(); return;
+      }
+      var opt = e.target.closest("[data-apg-opt]");
+      if (!opt) return;
+      var pp = opt.getAttribute("data-apg-opt").split(":"), sid = pp[0], o = AP_FMTW[sid] && AP_FMTW[sid].opts[+pp[1]];
+      if (!o) return;
+      if (o.kind) _apType = o.kind;                    // Q1 sets the product type
+      _apgPath.push({ step: sid, chip: o.chip || o.title });
+      if (o.result) { _apgResult = o.result; renderGuideDialog(); return; }   // -> recommendation step
+      _apgCur = o.next; renderGuideDialog();
+    });
+    return dlg;
+  }
+  function renderGuideDialog() {
+    var dlg = document.getElementById("apGuideDialog"); if (!dlg) return;
+    var backIdx = _apgPath.length ? _apgPath.length - 1 : -1;
+    var head =
+      '<div slot="title" class="apgw__head">' +
+        (backIdx >= 0 ? '<button type="button" class="apgw__back" data-apg-jump="' + backIdx + '" aria-label="Back"><iconify-icon icon="fluent:arrow-left-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></button>' : '') +
+        '<span class="apgw__title">Let\u2019s set up your app</span>' +
+      '</div>' +
+      '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-apg-close><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></fluent-button>';
+    if (_apgResult) {   // recommendation: show what we suggest, then let them Select it
+      var r = AP_PKG_INFO[_apgResult] || AP_PKG_INFO.msix;
+      dlg.innerHTML =
+        '<fluent-dialog-body class="apgw">' + head +
+          '<div class="apgw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span style="width:100%"></span></div>' +
+          apgCrumbs() +
+          '<div class="apgw__result"><span class="apgw__result-ico"><iconify-icon icon="' + r.icon + '" width="26" height="26" aria-hidden="true"></iconify-icon></span>' +
+            '<div class="apgw__result-head"><span class="apgw__result-name">' + r.name + '</span><span class="apg__orec">Recommended</span></div></div>' +
+          '<p class="apgw__result-why">' + r.why + '</p>' +
+          (_apgResult === "msix" ? '<p class="apgw__convert">Have an <strong>.exe</strong> or <strong>.msi</strong>? <a href="https://learn.microsoft.com/windows/msix/packaging-tool/tool-overview" target="_blank" rel="noopener">Convert it to MSIX<iconify-icon icon="fluent:open-16-regular" width="12" height="12" aria-hidden="true"></iconify-icon></a>.</p>' : '') +
+          '<div class="apgw__result-actions"><button type="button" class="apgw__restart" data-apg-restart>Start over</button>' +
+            '<fluent-button appearance="primary" data-apg-apply>Select ' + r.name + '</fluent-button></div>' +
+        '</fluent-dialog-body>';
+      return;
+    }
+    var id = _apgCur || "root";
+    var step = AP_FMTW[id] || AP_FMTW.root;
+    var pathLen = _apgPath.length;
+    var pct = Math.round(pathLen / (pathLen + apgDepth(id)) * 100);
+    dlg.innerHTML =
+      '<fluent-dialog-body class="apgw">' + head +
+        '<div class="apgw__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>' +
+        apgCrumbs() +
+        '<h3 class="apgw__q">' + step.q + '</h3>' +
+        '<div class="apg__opts apgw__opts">' + apgOptsHTML(id) + '</div>' +
+        '<fluent-button slot="action" appearance="outline" data-apg-skip>I already know what I need</fluent-button>' +
+      '</fluent-dialog-body>';
+  }
+  function openGuideDialog() {
+    _apgCur = null; _apgPath = []; _apgResult = null;
+    ensureGuideDialog();
+    renderGuideDialog();
+    var dlg = document.getElementById("apGuideDialog"); try { dlg.show(); } catch (e) {}
+  }
+  function closeGuideDialog() { var dlg = document.getElementById("apGuideDialog"); if (dlg) { try { dlg.hide(); } catch (e) {} } }
+  // Package-type radios (V2 form): three options — pre-selected from the questionnaire, or empty after
+  // Skip / for a returning developer. Win32 (EXE/MSI) is app-only. Includes a "Help me decide" launcher.
+  function apPkgOptsHTML() {
+    var list = AP_PKG_BY_TYPE[_apType] || AP_PKG_BY_TYPE.app;
+    var radios = list.map(function (t) {
+      var info = AP_PKG_INFO[t], sel = _apPkg === t;
+      return '<fluent-field id="pkgfield-' + t + '" label-position="after" class="pkgopt' + (sel ? ' is-sel' : '') + '">' +
+        '<label slot="label" for="pkg-' + t + '"><span class="pkgopt__ico"><iconify-icon icon="' + info.icon + '" width="20" height="20" aria-hidden="true"></iconify-icon></span>' +
+        '<span class="pkgopt__txt"><span class="pkgopt__title">' + info.name + (t === "msix" ? ' <span class="pkgopt__rec">Recommended</span>' : '') + '</span><span class="pkgopt__desc">' + info.tag + '</span></span></label>' +
+        '<fluent-radio id="pkg-' + t + '" slot="input" value="' + t + '"' + (sel ? ' checked' : '') + '></fluent-radio></fluent-field>';
+    }).join("");
+    return '<fluent-radio-group id="apPkg" class="pkgset" orientation="vertical" aria-label="Package type"' + (_apPkg ? ' value="' + _apPkg + '"' : '') + '>' + radios + '</fluent-radio-group>' +
+      '<p class="pkghelp"><iconify-icon icon="fluent:lightbulb-20-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Not sure which one? <button type="button" class="apg-link" data-apg-redo>Help me decide</button></p>';
+  }
   function openPublish(id) {
     var a = appById(id); if (!a) return;
     publishId = id;
     _reserveFmt = a.pkgType || null;
     _apType = a.type || "app";
+    _apPkg = (["msix", "win32", "pwa"].indexOf(a.pkgType) >= 0) ? a.pkgType : "";
     _apName = (a.storeName || a.name).replace(/\.[^.]+$/, "");
     _apLang = a.storeLang || "en-US";
     _apTitle = "Publish to the Store";
     _apBack = apBackView();
+    _apgCur = null; _apgPath = [];   // existing app already has a type
     goView("add-product");
   }
   // "Create new app" — reserve a name for a brand-new app (not a discovered one).
@@ -4087,11 +4249,16 @@
     opts = opts || {};
     publishId = null;
     _reserveFmt = opts.pkgType || null;
-    _apType = opts.type === "game" ? "game" : "app";
+    _apType = opts.type || (journeyV2() ? "" : "app");   // V2: start unselected so the user picks App/Game first
+    _apPkg = (["msix", "win32", "pwa", "gdk"].indexOf(opts.pkgType) >= 0) ? opts.pkgType : "";
     _apName = "";
     _apLang = "en-US";
     _apTitle = "Add a product";
     _apBack = apBackView();
+    // V2: the FIRST app auto-opens the guided questionnaire dialog over the form; returning developers
+    // (and preset CTAs) get the form directly, with a "Help me decide" launcher on package type.
+    _apGuideOnOpen = journeyV2() && !opts.pkgType && apFirstApp();
+    _apgCur = null; _apgPath = [];
     goView("add-product");
   }
   function closePublish() { var m = $("publishModal"); if (m && m.hide) m.hide(); }
@@ -4109,82 +4276,126 @@
     return el;
   }
   var AP_LANGS = [["en-US", "English (United States)"], ["en-GB", "English (United Kingdom)"], ["es-ES", "Spanish (Spain)"], ["fr-FR", "French (France)"], ["de-DE", "German (Germany)"], ["pt-BR", "Portuguese (Brazil)"], ["it-IT", "Italian (Italy)"], ["ja-JP", "Japanese"], ["zh-CN", "Chinese (Simplified)"], ["hi-IN", "Hindi (India)"]];
-  function apField(label, forId, desc, control) {
-    return '<div class="apform__row">' +
+  function apField(label, forId, desc, control, rowAttr) {
+    return '<div class="apform__row"' + (rowAttr ? ' ' + rowAttr : '') + '>' +
       '<div class="apform__label"><label for="' + forId + '">' + label + '</label><span class="apform__req" aria-hidden="true">*</span></div>' +
       '<div class="apform__control"><p class="apform__desc">' + desc + '</p>' + control + '</div>' +
     '</div>';
   }
+  // GDK / Partner Center off-ramp banner — shown below Package type only when GDK is selected.
+  function apGdkBannerHTML() {
+    return '<fluent-message-bar class="pcnote pcnote--gdk" intent="info">' +
+      '<iconify-icon slot="icon" class="pcnote__ico" icon="fluent:info-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+      '<span class="pcnote__msg"><strong>GDK games publish through Partner Center.</strong> Titles that use Xbox services are submitted and managed there \u2014 continue in Partner Center to publish yours.</span>' +
+      '<a slot="actions" class="pcnote__go" href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" aria-label="Continue in Partner Center (opens in a new tab)">Continue in Partner Center<iconify-icon icon="fluent:arrow-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>' +
+    '</fluent-message-bar>';
+  }
+  // V2 reveals fields progressively: Package type appears after Product type, Default language after a
+  // package (except GDK, which shows the Partner Center banner instead), and the footer only once every
+  // value is set. V1 keeps the classic all-at-once form with the inline GDK note.
   function addProductHTML() {
-    var isGame = _apType === "game";
+    var v2 = journeyV2();
     var langOpts = AP_LANGS.map(function (l) { return '<fluent-option value="' + l[0] + '"' + (l[0] === _apLang ? " selected" : "") + '>' + l[1] + '</fluent-option>'; }).join("");
+    var appChecked = v2 ? (_apType === "app") : (_apType !== "game");
+    var gameChecked = (_apType === "game");
+    var typeVal = appChecked ? "app" : (gameChecked ? "game" : "");
+    var isGdk = _apPkg === "gdk";
+    var typeCtrl =
+      '<fluent-radio-group id="apType" class="pubchoice" orientation="horizontal"' + (typeVal ? ' value="' + typeVal + '"' : '') + ' aria-label="Product type">' +
+        '<fluent-field label-position="after"><label slot="label" for="ap-app">App</label><fluent-radio id="ap-app" slot="input" value="app"' + (appChecked ? ' checked' : '') + '></fluent-radio></fluent-field>' +
+        '<fluent-field label-position="after"><label slot="label" for="ap-game">Game</label><fluent-radio id="ap-game" slot="input" value="game"' + (gameChecked ? ' checked' : '') + '></fluent-radio></fluent-field>' +
+      '</fluent-radio-group>' +
+      (v2 ? '' :
+        '<fluent-message-bar class="pcnote pcnote--gdk" id="apGdkNote" intent="info"' + (gameChecked ? '' : ' hidden') + '>' +
+          '<iconify-icon slot="icon" class="pcnote__ico" icon="fluent:info-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+          '<span class="pcnote__msg"><strong>Publishing a GDK game?</strong> GDK games continue to be published through Partner Center.</span>' +
+          '<a slot="actions" class="pcnote__go" href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" aria-label="Continue in Partner Center (opens in a new tab)">Continue in Partner Center<iconify-icon icon="fluent:arrow-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>' +
+        '</fluent-message-bar>');
+    var langCtrl = '<fluent-dropdown id="apLang" appearance="outline" aria-label="Default language"><fluent-listbox>' + langOpts + '</fluent-listbox></fluent-dropdown>';
+    var rows =
+      apField("Product name", "apName", "This name will appear on Microsoft Store, you can change the name later also",
+        '<fluent-text-input id="apName" appearance="outline" aria-label="Product name" placeholder="Your product name"></fluent-text-input><span class="field__hint" id="apNameHint"></span>') +
+      apField("Product type", "apType", "You can\u2019t change this later", typeCtrl);
+    if (v2) {
+      rows += apField("Package type", "apPkg", "How your app is delivered to customers \u2014 you can change this later.",
+        (_apType ? apPkgOptsHTML() : ""), 'id="apPkgRow"' + (_apType ? "" : " hidden"));
+      rows += '<div class="apform__row" id="apGdkRow"' + (isGdk ? "" : " hidden") + '><div class="apform__label"></div><div class="apform__control">' + apGdkBannerHTML() + '</div></div>';
+      rows += apField("Default language", "apLang", "This language will be auto added for your Store listing, you can change it later also",
+        langCtrl, 'id="apLangRow"' + ((_apPkg && !isGdk) ? "" : " hidden"));
+    } else {
+      rows += apField("Default language", "apLang", "This language will be auto added for your Store listing, you can change it later also", langCtrl);
+    }
     return '<div class="addprod">' +
       '<a class="addprod__back" href="#' + _apBack + '" data-ap-cancel><iconify-icon icon="fluent:arrow-left-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' + (AP_BACK_LABELS[_apBack] || "Overview") + '</a>' +
       '<h1 class="addprod__title">' + esc(_apTitle) + '</h1>' +
       '<p class="addprod__sub">Publish an app or game on the Microsoft Store</p>' +
-      '<div class="apform">' +
-        apField("Product name", "apName", "This name will appear on Microsoft Store, you can change the name later also",
-          '<fluent-text-input id="apName" appearance="outline" aria-label="Product name" placeholder="Your product name"></fluent-text-input><span class="field__hint" id="apNameHint"></span>') +
-        apField("Product type", "apType", "You can\u2019t change this later",
-          '<fluent-radio-group id="apType" class="pubchoice" orientation="horizontal"' + (isGame ? ' value="game"' : '') + ' aria-label="Product type">' +
-            '<fluent-field label-position="after"><label slot="label" for="ap-app">App</label><fluent-radio id="ap-app" slot="input" value="app"></fluent-radio></fluent-field>' +
-            '<fluent-field label-position="after"><label slot="label" for="ap-game">Game</label><fluent-radio id="ap-game" slot="input" value="game"' + (isGame ? " checked" : "") + '></fluent-radio></fluent-field>' +
-          '</fluent-radio-group>' +
-          '<fluent-message-bar class="pcnote pcnote--gdk" id="apGdkNote" intent="info"' + (isGame ? '' : ' hidden') + '>' +
-            '<iconify-icon slot="icon" class="pcnote__ico" icon="fluent:info-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
-            '<span class="pcnote__msg"><strong>Publishing a GDK game?</strong> GDK games continue to be published through Partner Center.</span>' +
-            '<a slot="actions" class="pcnote__go" href="https://partner.microsoft.com/dashboard" target="_blank" rel="noopener noreferrer" aria-label="Continue in Partner Center (opens in a new tab)">Continue in Partner Center<iconify-icon icon="fluent:arrow-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon></a>' +
-          '</fluent-message-bar>') +
-        apField("Default language", "apLang", "This language will be auto added for your Store listing, you can change it later also",
-          '<fluent-dropdown id="apLang" appearance="outline" aria-label="Default language"><fluent-listbox>' + langOpts + '</fluent-listbox></fluent-dropdown>') +
-      '</div>' +
-      '<div class="apform__actions">' +
+      '<div class="apform">' + rows + '</div>' +
+      '<div class="apform__actions" id="apFooter"' + (v2 ? " hidden" : "") + '>' +
         '<fluent-button appearance="secondary" data-ap-cancel>Cancel</fluent-button>' +
-        '<fluent-button appearance="primary" id="apCreate" disabled>Add product</fluent-button>' +
+        '<fluent-button appearance="primary" id="apCreate"' + (v2 ? "" : " disabled") + '>Add product</fluent-button>' +
       '</div>' +
     '</div>';
   }
   function renderAddProduct() {
     var el = ensureAddProductBlock();
     el.innerHTML = addProductHTML();
+    var v2 = journeyV2();
     var name = el.querySelector("#apName");
     var create = el.querySelector("#apCreate");
     var hint = el.querySelector("#apNameHint");
     var typeGroup = el.querySelector("#apType");
+    var footer = el.querySelector("#apFooter");
     if (name && _apName) name.value = _apName;
-    function typeSelected() { return !!el.querySelector("#apType fluent-radio[checked]"); }
+    function nameVal() { return ((name && name.value) || "").trim(); }
+    function allSet() { return nameVal().length >= 2 && (!v2 || (!!_apType && !!_apPkg && _apPkg !== "gdk")); }
     function refresh() {
-      var v = (name && name.value || "").trim();
+      var v = nameVal();
       if (hint) {
         if (v.length < 2) { hint.className = "field__hint"; hint.textContent = ""; }
         else { hint.className = "field__hint field__hint--ok"; hint.innerHTML = '<iconify-icon icon="fluent:checkmark-circle-12-filled" width="14" height="14" aria-hidden="true"></iconify-icon>Name available'; }
       }
-      if (create) { if (v.length >= 2 && typeSelected()) create.removeAttribute("disabled"); else create.setAttribute("disabled", ""); }
+      var ok = allSet();
+      if (create) { if (ok) create.removeAttribute("disabled"); else create.setAttribute("disabled", ""); }
+      if (v2 && footer) footer.hidden = !ok;   // footer appears only once every value is set (and not GDK)
     }
-    // fluent-radio doesn't reflect checked to an attribute — mirror it so the picked dot fills.
-    var gdkNote = el.querySelector("#apGdkNote");
-    function syncType() {
-      var rr = el.querySelectorAll("#apType fluent-radio");
-      for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute("checked", !!rr[i].checked);
-      var game = el.querySelector("#ap-game");
-      if (gdkNote) gdkNote.hidden = !(game && game.checked);   // GDK off-ramp shows only for games
-      refresh();
-    }
+    function mirrorType() { var rr = el.querySelectorAll("#apType fluent-radio"); for (var i = 0; i < rr.length; i++) rr[i].toggleAttribute("checked", !!rr[i].checked); }
+    function mirrorPkg() { el.querySelectorAll("#apPkg fluent-radio").forEach(function (r) { r.toggleAttribute("checked", !!r.checked); }); el.querySelectorAll(".pkgopt").forEach(function (f) { var r = f.querySelector("fluent-radio"); f.classList.toggle("is-sel", !!(r && r.checked)); }); }
+    function keepName() { if (name && name.value) _apName = name.value; }   // preserve typed name across a re-render
     function submit() {
       if (create && create.hasAttribute("disabled")) return;
-      reserveAndOpen(name ? name.value : "", readDropdownValue(typeGroup) || "app", readDropdownValue(el.querySelector("#apLang")) || "en-US", _reserveFmt);
+      var fmt = v2 ? _apPkg : _reserveFmt;
+      reserveAndOpen(name ? name.value : "", readDropdownValue(typeGroup) || "app", readDropdownValue(el.querySelector("#apLang")) || "en-US", fmt);
     }
     if (name) {
       name.addEventListener("input", refresh);
       name.addEventListener("keyup", refresh);
-      name.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+      name.addEventListener("keydown", function (e) { if (e.key === "Enter" && allSet()) { e.preventDefault(); submit(); } });
     }
     if (create) create.addEventListener("click", submit);
-    if (typeGroup) typeGroup.addEventListener("change", function () { setTimeout(syncType, 0); });
     el.querySelectorAll("[data-ap-cancel]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); goView(_apBack); }); });
-    setTimeout(syncType, 0);   // after upgrade: mirror the initial state (Game only when arriving from a game flow)
+    if (typeGroup) typeGroup.addEventListener("change", function () {
+      setTimeout(function () {
+        mirrorType();
+        var t = readDropdownValue(typeGroup) || "";
+        if (v2) { keepName(); _apType = t; _apPkg = ""; renderAddProduct(); }   // switching type resets + reveals the type's package options
+        else { _apType = t || "app"; var gn = el.querySelector("#apGdkNote"), gm = el.querySelector("#ap-game"); if (gn) gn.hidden = !(gm && gm.checked); refresh(); }
+      }, 0);
+    });
+    if (v2) {
+      mirrorType(); mirrorPkg();
+      var pkgGroup = el.querySelector("#apPkg");
+      if (pkgGroup) pkgGroup.addEventListener("change", function () {
+        var val = readDropdownValue(pkgGroup) || "";
+        setTimeout(function () { keepName(); _apPkg = val; renderAddProduct(); }, 0);   // reveal language + footer, or the GDK banner
+      });
+      var helpBtn = el.querySelector(".pkghelp [data-apg-redo]");
+      if (helpBtn) helpBtn.addEventListener("click", function () { openGuideDialog(); });
+    } else {
+      mirrorType();
+    }
     refresh();
-    setTimeout(function () { try { name.focus(); } catch (e) {} }, 60);
+    setTimeout(function () { try { if (name && !name.value) name.focus(); } catch (e) {} }, 60);
+    if (_apGuideOnOpen) { _apGuideOnOpen = false; setTimeout(openGuideDialog, 0); }   // first app: launch the questionnaire dialog over the form
   }
   // Reveal the right App-type options for the product (.EXE/.MSI app-only, GDK game-only) and the
   // Partner Center off-ramp when GDK is picked.
@@ -4708,10 +4919,26 @@
       e.preventDefault();
       if (confirm("Clear all certificates, apps, and verification state?")) {
         // Reset ALL demo state: portal (per-account), publishing flows (msstore.apps + tdp.flow.*) and per-app data — keep only display prefs.
-        try { for (var _i = localStorage.length - 1; _i >= 0; _i--) { var _k = localStorage.key(_i); if (_k && (_k.indexOf("tdp.") === 0 || _k.indexOf("msstore.") === 0) && _k !== "msstore.theme") localStorage.removeItem(_k); } } catch (_e) {}
+        try { for (var _i = localStorage.length - 1; _i >= 0; _i--) { var _k = localStorage.key(_i); if (_k && (_k.indexOf("tdp.") === 0 || _k.indexOf("msstore.") === 0) && _k !== "msstore.theme" && _k !== "tdp.journey") localStorage.removeItem(_k); } } catch (_e) {}
         state = load(); save(); renderAll(); showSignin();
       }
     });
+
+    // Journey toggle (Classic V1 / Guided V2) — demo control in the sidebar foot.
+    (function () {
+      var seg = document.getElementById("journeyToggle"); if (!seg) return;
+      function paint() { var v = journeyV2() ? "v2" : "v1"; seg.querySelectorAll("[data-journey]").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-journey") === v); }); }
+      paint();
+      seg.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-journey]"); if (!b) return;
+        var j = b.getAttribute("data-journey");
+        try { localStorage.setItem("tdp.journey", j); } catch (e2) {}
+        paint();
+        // Switching journeys resets the picker; on the add-product page, Guided relaunches the first-app dialog.
+        _apgCur = null; _apgPath = []; _apPkg = ""; closeGuideDialog();
+        if ((location.hash || "") === "#add-product") { _apGuideOnOpen = (j === "v2" && apFirstApp()); renderAddProduct(); }
+      });
+    })();
 
     // Profile flyout: the avatar button toggles the account menu; outside-click / Escape close it.
     var pBtn = $("profileBtn"), pFly = $("profileFlyout");

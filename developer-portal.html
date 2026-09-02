@@ -13,7 +13,7 @@
     } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
   </script>
   <link rel="stylesheet" href="portal.css?v=142" />
-  <link rel="stylesheet" href="store-portal.css?v=185" />
+  <link rel="stylesheet" href="store-portal.css?v=194" />
   <link rel="stylesheet" href="help-support.css?v=6" />
   <!-- Fluent system icons (github.com/microsoft/fluentui-system-icons), via iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -87,6 +87,13 @@
     <aside class="sidebar" aria-label="Developer navigation">
       <nav class="snav" data-wdp-nav data-wdp-mode="spa" data-wdp-active="overview"></nav>
       <div class="snav snav--foot">
+        <div class="journey-tgl" role="group" aria-label="Publishing journey (demo)">
+          <span class="journey-tgl__lbl">Publishing journey</span>
+          <div class="journey-tgl__seg" id="journeyToggle">
+            <button type="button" class="journey-tgl__opt" data-journey="v1" title="V1 — add a product, then choose the package format inside the flow">V1</button>
+            <button type="button" class="journey-tgl__opt" data-journey="v2" title="V2 — guided questionnaire with the product type & package chosen up front">V2</button>
+          </div>
+        </div>
         <a href="#" id="resetState" data-nav-static data-tip="Reset demo state">
           <iconify-icon icon="fluent:arrow-counterclockwise-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>
           Reset demo state
@@ -433,7 +440,7 @@
        Certificates + Analytics experiences, one storage key, all apps in one table. -->
   <script>window.PORTAL_MODE = "unified";</script>
   <script type="module" src="theme-fluent.js?v=64"></script>
-  <script src="portal.js?v=263"></script>
+  <script src="portal.js?v=275"></script>
   <!-- AI Help & Support widget (floating, bottom-right). ai-config.js is local/gitignored; ai-client.js
        falls back to the same-origin /api/ai proxy, and help-support.js falls back to a local responder. -->
   <script src="publishing/ai-config.js"></script>
