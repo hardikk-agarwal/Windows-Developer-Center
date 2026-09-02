@@ -12514,13 +12514,14 @@
   // Browsers can't read another origin's manifest directly (CORS), so we route the
   // page + manifest through a public CORS proxy. Best-effort: any failure resolves
   // to null and the flow continues — logo + AI listing simply fall back.
-  // Public CORS proxies, tried in order — corsproxy.io works in-browser (it sends Origin),
-  // allorigins is the no-header fallback, codetabs the last resort. First usable body wins,
-  // so an intermittent 5xx on one proxy just falls through to the next.
+  // Public CORS proxies, tried in order. On a static host (GitHub Pages) our /api backend isn't
+  // there, so this client-side path is the only way to read a cross-origin manifest. cors.sh is fast
+  // and sends CORS headers in-browser; allorigins + codetabs are fallbacks. First usable body wins,
+  // so a down/blocked proxy just falls through to the next.
   const CORS_PROXIES = [
-    function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); },
+    function (u) { return 'https://proxy.cors.sh/' + u; },
     function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-    function (u) { return 'https://cors.eu.org/' + u; }
+    function (u) { return 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u); }
   ];
   async function proxiedText(url) {
     for (let i = 0; i < CORS_PROXIES.length; i++) {
