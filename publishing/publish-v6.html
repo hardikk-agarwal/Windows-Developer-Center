@@ -2813,6 +2813,7 @@
   /* No inner scroller here — the dialog body is the only thing that scrolls, so a long
      questionnaire never puts a scrollbar inside a scrollbar. */
   #rating-questions-mount { margin: 0 0 var(--sp-8); }
+  .rating-apptype-hint { margin: 0; color: var(--fg-3); font-size: var(--font-size-base-200, 12px); }
   .rating-section { margin: 0 0 var(--sp-16); }
   .rating-section__title { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-3); font-weight: 600; margin: 0 0 var(--sp-6); }
   /* Each section's questions sit in a settings-card: IARC's exact question text on the left, Yes/No
@@ -6248,7 +6249,7 @@
               <span class="apptype__desc">Its main purpose is meeting or talking to people — for example Facebook, X, Skype, or SMS.</span>
             </span>
           </button>
-          <button type="button" class="apptype__opt" data-apptype="other" role="radio" aria-checked="true">
+          <button type="button" class="apptype__opt" data-apptype="other" role="radio" aria-checked="false">
             <span class="apptype__dot" aria-hidden="true"></span>
             <span class="apptype__txt">
               <span class="apptype__name">All other app types</span>
@@ -10035,9 +10036,9 @@
     other:  '',
     social: '',
   };
-  // Question 1 of the questionnaire. Seeded from the App/Game choice made when the name was
-  // reserved, so most developers never have to touch it.
-  let ratingAppType = (app && app.productKind === 'game') ? 'game' : 'other';
+  // Question 1 of the questionnaire. A reserved game is fixed to 'game'; a non-game starts unset so
+  // the developer picks Social vs. All-other before the questions are revealed.
+  let ratingAppType = (app && app.productKind === 'game') ? 'game' : null;
   const iarcAppliesTo = (node, type) => !node.appTypes || node.appTypes.indexOf(type) >= 0;
   // The sections actually asked for a given app type, with their non-applicable items removed.
   function iarcSectionsFor(type) {
@@ -10065,6 +10066,7 @@
   function computeAgeRating(answers) {
     let minAge = 0;
     const descriptors = [];
+    if (!ratingAppType) return { ...RATING_BANDS[0], descriptors };
     // Only questions that apply to the chosen app type count — switching type must not leave a
     // stale answer from a section the developer is no longer being asked about.
     iarcSectionsFor(ratingAppType).forEach(section => {
@@ -14985,6 +14987,7 @@
   function updateRatingPreviewGate() {
     const pb = $('rating-preview-btn');
     if (!pb) return;
+    if (!ratingAppType) { pb.disabled = true; pb.title = 'Choose your app type first.'; return; }
     let unanswered = 0;
     iarcSectionsFor(ratingAppType).forEach(section => {
       section.items.forEach(q => {
@@ -15002,6 +15005,8 @@
 
   function renderRatingQuestions(answers) {
     if (!ratingMount) return;
+    // No app type chosen yet (non-game) — hold the questions back until the developer picks one.
+    if (!ratingAppType) { ratingMount.innerHTML = '<p class="rating-apptype-hint">Choose your app type above to see the rating questions.</p>'; return; }
     const note = RATING_SCOPE_NOTE[ratingAppType];
     const noteHtml = note ? '<p class="rating-scope-note">' + note + '</p>' : '';
     ratingMount.innerHTML = noteHtml + iarcSectionsFor(ratingAppType).map(section => {
@@ -15078,7 +15083,7 @@
   const appTypeAllowed = (type) => IS_GAME ? (type === 'game') : (type !== 'game');
   function renderAppTypeChoice() {
     if (IS_GAME && ratingAppType !== 'game') ratingAppType = 'game';
-    else if (!IS_GAME && ratingAppType === 'game') ratingAppType = 'other';
+    else if (!IS_GAME && ratingAppType === 'game') ratingAppType = null;
     // A reserved game can only be "Game" — a single-option question — so hide the whole App type
     // section for games; non-game apps still pick between Social and All other types.
     var apptypeWrap = document.getElementById('rating-apptype'); if (apptypeWrap) apptypeWrap.hidden = IS_GAME;
