@@ -10,7 +10,7 @@
    Authenticode signer (via the local backend) is attached as a certificate. The
    submitted binary only PROVES the certificate — it is not itself listed as an
    app. Apps are then discovered from this PC: the real installed apps signed by
-   that certificate are auto-populated under it (one cert → all its apps).
+  that certificate are added only after the developer selects them.
    Store flow: developers create apps directly and publish them to the Store;
    the same Certificates tab lets them bring non-Store apps in via a certificate. */
 (function () {
@@ -36,6 +36,9 @@
   var scanning = false; // true while discovering installed apps by certificate
   var scanningCertId = null; // which cert's scan is in flight → spinner on that row + the certs page
   var backendOffline = false; // no /api reachable (static host, e.g. GitHub Pages) → discovery uses demo apps
+  var certDiscoveryActive = false;
+  var expandedCerts = new Set();
+  var discovery = window.CertificateDiscovery;
 
   function load() {
     try {
@@ -50,7 +53,8 @@
       var email = (state.account && state.account.email) || "";
       localStorage.setItem(CUR_KEY, (state.signedIn && email) ? email : "");
       localStorage.setItem(acctKey(email), JSON.stringify(state));
-    } catch (e) {}
+      return true;
+    } catch (e) { return false; }
   }
   // A developer's saved apps/certs (for restoring on sign-in); null if they're brand new.
   function loadAccount(email) {
@@ -143,12 +147,12 @@
      Falls back to a client-side SHA-256 fingerprint when the API is unreachable. */
   async function inspectFile(file) {
     try {
-      var res = await fetch("/api/verify-signature?name=" + encodeURIComponent(file.name), { method: "POST", body: file });
-      if (!res.ok) throw new Error("api");
-      var j = await res.json();
-      if (j && j.error) throw new Error(j.error);
+      var res = await discovery.requestJson("/api/verify-signature?name=" + encodeURIComponent(file.name), { method: "POST", body: file, signal: AbortSignal.timeout(30000) });
+      if (res.offline) return { offline: true, status: "Offline", fileSha256: await sha256(file) };
+      var j = res.data;
+      if (!j || j.error) throw new Error(j && j.error || "Invalid verification response");
       j.offline = false; return j;
-    } catch (e) { return { offline: true, status: "Offline", fileSha256: await sha256(file) }; }
+    } catch (e) { return { offline: false, status: "Unavailable", error: "The verification service is unavailable. Try again when it’s reachable." }; }
   }
 
   /* ---------------- Toast ---------------- */
@@ -188,7 +192,9 @@
       else if (a.discovered || a.certId) signed.push(a);
     });
     var out = errs.concat(warns, reviewing, published, reviews);
-    if (signed.length) out.push({ id: "signed-analytics", type: "info", icon: "fluent:pulse-20-filled", title: "Crash analytics ready", text: "Crash & hang analytics are ready for " + (signed.length === 1 ? nm(signed[0]) : signed.length + " apps you signed") + ".", time: "", href: ana(signed[0], "crashes") });
+    var preparing = signed.filter(analyticsPending), ready = signed.filter(function (a) { return !analyticsPending(a); });
+    if (preparing.length) out.push({ id: "signed-preparing", type: "info", icon: "fluent:clock-20-regular", title: "Preparing crash analytics", text: "Crash and hang reports for " + (preparing.length === 1 ? nm(preparing[0]) : preparing.length + " newly added apps") + " can take up to 24 hours to appear.", time: "", href: ana(preparing[0], "crashes") });
+    if (ready.length) out.push({ id: "signed-analytics", type: "info", icon: "fluent:pulse-20-filled", title: "Crash analytics ready", text: "Crash & hang analytics are ready for " + (ready.length === 1 ? nm(ready[0]) : ready.length + " apps you signed") + ".", time: "", href: ana(ready[0], "crashes") });
     if (!out.length) out.push({ id: "allcaught", type: "info", icon: "fluent:checkmark-circle-20-filled", title: "You\u2019re all caught up", text: "Updates about your apps \u2014 publishing, certification, crashes and reviews \u2014 show up here.", time: "" });
     return out;
   }
@@ -939,6 +945,8 @@
     var q = acqData(a); return { vals: q.inst, labels: q.labels };
   }
   function ovnChartHTML(liveApps) {
+    liveApps = anaReportingApps(ovMetric !== "crashes");
+    if (!liveApps.some(function (a) { return a.id === ovChartApp; })) ovChartApp = "__all__";
     var metricSel = '<fluent-dropdown id="ovnMetricSel" appearance="outline" aria-label="Metric"><fluent-listbox>' +
       OVN_METRICS.map(function (m) { return '<fluent-option value="' + m[0] + '"' + (ovMetric === m[0] ? " selected" : "") + '>' + m[1] + '</fluent-option>'; }).join("") + '</fluent-listbox></fluent-dropdown>';
     var appOpts = '<fluent-option value="__all__"' + (ovChartApp === "__all__" ? " selected" : "") + '>All apps</fluent-option>' +
@@ -950,6 +958,9 @@
       '<div class="apanel__body" id="ovnChartBody">' + ovnChartBodyHTML(liveApps) + '</div></section>';
   }
   function ovnChartBodyHTML(liveApps) {
+    liveApps = anaReportingApps(ovMetric !== "crashes");
+    if (!liveApps.length) return '<p class="ana-pending-note">' + (ovMetric === "crashes" ? 'Crash reports for newly added apps can take up to 24 hours to appear.' : 'This metric is available for published Microsoft Store apps.') + '</p>';
+    if (!liveApps.some(function (a) { return a.id === ovChartApp; })) ovChartApp = "__all__";
     var yopt = ovMetric === "rating" ? { yMin: 0, yMax: 5, fmt: function (v) { return v.toFixed(1); } } : {};
     var o, k;
     if (ovChartApp === "__all__") {
@@ -967,7 +978,12 @@
   function wireOvnChart() {
     var mSel = document.getElementById("ovnMetricSel"), aSel = document.getElementById("ovnAppSel");
     var rerender = function () { var body = document.getElementById("ovnChartBody"); if (!body) return; body.innerHTML = ovnChartBodyHTML(anaLiveApps()); sizeCharts(body); observeCharts(body); };
-    if (mSel) mSel.addEventListener("change", function () { if (mSel.value) { ovMetric = mSel.value; rerender(); } });
+    if (mSel) mSel.addEventListener("change", function () {
+      if (!mSel.value) return;
+      ovMetric = mSel.value;
+      var host = document.getElementById("ovnChart");
+      if (host) { host.outerHTML = ovnChartHTML(anaReportingApps(ovMetric !== "crashes")); wireOvnChart(); sizeCharts(document.getElementById("ovnChart")); observeCharts(document.getElementById("ovnChart")); }
+    });
     if (aSel) aSel.addEventListener("change", function () { if (aSel.value) { ovChartApp = aSel.value; rerender(); } });
   }
   // Left of the 50/50 row: compact Store / Not-in-Store app tables (rows open the app).
@@ -985,7 +1001,7 @@
       if (signed) {
         var cr = anaData(a).crashRate;
         status = '<span class="pill pill--ghost pill--sm">Not in Store</span>';
-        metric = cr != null ? (100 - cr).toFixed(1) + "% crash-free" : "";
+        metric = analyticsPending(a) ? "Preparing crash analytics" : (cr != null ? (100 - cr).toFixed(1) + "% crash-free" : "");
       } else {
         var kk = appStatusKey(a);
         status = ovxStatusPill(kk);
@@ -1101,6 +1117,7 @@
     var nm = function (a) { return a.storeName || a.name || "Your app"; };
     var items = [];
     apps.forEach(function (a) {
+      if (analyticsPending(a)) return;
       if (isSignedOnly(a)) {   // cert-discovered: not a draft. It has crash analytics, so surface only a crash spike.
         var scr = anaData(a).crashRate;
         if (scr >= 5) items.push({ type: "warning", icon: "fluent:arrow-trending-lines-20-filled", title: "Crash rate needs a look", text: nm(a) + " is at " + scr.toFixed(2) + "%.", href: ana(a, "crashes") });
@@ -1161,7 +1178,7 @@
     var nm = a.storeName || a.name, sub, trail;
     if (isSignedOnly(a)) {   // cert-discovered: show its crash-free health + a nudge to publish (NOT a Draft).
       var san = anaData(a);
-      sub = (san && san.crashRate != null ? (100 - san.crashRate).toFixed(1) + "% crash-free" : "Signed app") + " \u00b7 not in the Store";
+      sub = (analyticsPending(a) ? "Preparing crash analytics (up to 24 hours)" : (san && san.crashRate != null ? (100 - san.crashRate).toFixed(1) + "% crash-free" : "Signed app")) + " \u00b7 not in the Store";
       trail = '<span class="ovn-app__publish">Publish to Store</span>';
     } else {
       var k = appStatusKey(a);
@@ -1371,12 +1388,16 @@
       toast("Verification binary downloaded — sign it, then drop it above", true);
     });
     submit.addEventListener("click", async function () {
-      if (!pending.length) return;
+      if (!pending.length || submit.hasAttribute("disabled") || certDiscoveryActive) return;
       if (err) { err.hidden = true; err.innerHTML = ""; }
       setVerifying(true);
-      var newCerts = 0, accepted = 0, lastCert = null, rejected = [];
-      for (var i = 0; i < pending.length; i++) {
-        var file = pending[i], info = await inspectFile(file);
+      var previousCerts = state.certs.map(function (c) { return Object.assign({}, c); }), wasVerified = state.verified;
+      var newCerts = 0, accepted = 0, lastCert = null, rejected = [], acceptedCerts = [];
+      var files = pending.slice(), verifiedFiles = [], owner = discoveryOwner();
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i], info = await inspectFile(file);
+        if (!submit.isConnected || owner !== discoveryOwner()) return;
+        if (info.error) { rejected.push({ name: file.name, reason: info.error }); continue; }
         if (!info.offline && info.kind === "authenticode" && !info.signerThumbprint) {
           rejected.push({ name: file.name, reason: "This file isn’t signed. Sign it with a certificate from a trusted Certificate Authority (CA)." });
           continue;
@@ -1385,30 +1406,41 @@
           rejected.push({ name: file.name, reason: "The certificate is self-signed, not issued by a trusted Certificate Authority (CA). Use a CA-issued code signing certificate." });
           continue;
         }
-        // The submitted binary only PROVES the certificate — it is never itself
-        // listed as an app. The Apps page is populated solely by discoverApps()
-        // below: the real apps installed on this PC that use this certificate.
-        if (info.offline) backendOffline = true;   // no /api reachable → static host (e.g. GitHub Pages)
+        if (!info.offline && (info.kind !== "authenticode" || info.status !== "Valid" || !info.signerThumbprint)) {
+          rejected.push({ name: file.name, reason: "We couldn’t validate this signed binary. Use a file with a valid code-signing signature from a trusted Certificate Authority (CA)." });
+          continue;
+        }
+        verifiedFiles.push({ info: info, file: file });
+      }
+      verifiedFiles.forEach(function (verified) {
+        var info = verified.info, file = verified.file;
+        if (info.offline) backendOffline = true;
         var gc = getOrCreateCert(info, file); if (gc.created) newCerts++; accepted++; lastCert = gc.cert;
         gc.cert.verified = true;                          // a signed binary proves ownership of this certificate
-      }
+        gc.cert.trust = info.status;
+        if (info.notAfter) gc.cert.notAfter = info.notAfter;
+        if (info.issuer) gc.cert.issuer = info.issuer;
+        if (!acceptedCerts.some(function (c) { return c.id === gc.cert.id; })) acceptedCerts.push(gc.cert);
+      });
       setVerifying(false);
-      pending = []; renderList();
 
       if (accepted) {
         if (state.certs.length) state.verified = true;
-        save(); closeModal(); renderAll();
+        if (!save()) {
+          state.certs = previousCerts; state.verified = wasVerified;
+          if (err) { err.textContent = "We couldn’t save the certificate. Free some browser storage and try again. Your selected files are still here."; err.hidden = false; }
+          return;
+        }
+        pending = []; renderList(); closeModal(); renderAll();
         var msg = newCerts
           ? "Added " + newCerts + " certificate" + (newCerts > 1 ? "s" : "") + (lastCert ? " · " + lastCert.label : "")
           : "Certificate already added" + (lastCert ? " · " + lastCert.label : "");
         if (rejected.length) msg += " · " + rejected.length + " rejected";
         toast(msg);
-        // WDP auto-discovers the cert's other apps here. In the Store portal those apps are already
-        // surfaced (locked) by discoverStoreApps(); this upload just verifies ownership to unlock them.
-        // Trigger for offline/hash certs too — on a static host discoverApps seeds demo apps instead.
-        if ((!STORE || UNIFIED) && lastCert) discoverApps(lastCert.thumb, lastCert.id);
+        if (acceptedCerts.length) discoverCertApps(acceptedCerts);
         return;
       }
+      pending = []; renderList();
       // Nothing accepted — surface the reasons in place (don't re-render the flow)
       if (rejected.length && err) {
         var icon = '<iconify-icon slot="icon" class="msgbar__icon" icon="fluent:error-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
@@ -1459,17 +1491,16 @@
       return;
     }
     wrap.innerHTML = '<div class="table-wrap"><table class="table table--certs">' +
-      '<thead><tr><th>Certificate</th><th>Source</th><th>Apps</th><th>Added</th><th>Expires</th><th>Status</th><th></th></tr></thead>' +
+      '<thead><tr><th>Certificate</th><th>Source</th><th>Apps</th><th>Added</th><th>Expires</th><th>Status</th><th aria-label="Certificate actions"></th></tr></thead>' +
       '<tbody>' + state.certs.map(certRowHTML).join("") + '</tbody></table></div>' +
       (scanning ? certScanBannerHTML() : ((STORE && !UNIFIED) ? "" : certFoundBannerHTML()));
   }
   // Shown under the cert table while a discovery scan runs (adding a cert) — so the page clearly
   // signals "we're finding your signed apps" instead of silently populating the count later.
   function certScanBannerHTML() {
-    return '<div class="scan-banner"><span class="spinner"></span>Finding apps signed with this certificate\u2026</div>';
+    return '<div class="scan-banner" role="status"><span class="spinner"></span>Finding apps and processes signed with this certificate\u2026</div>';
   }
-  // Discovery nudge under the cert table: certificates auto-populate the apps signed by them, so
-  // point the developer at the crash analytics + apps that just appeared.
+  // Only confirmed selections contribute to the certificate's app count.
   function certFoundBannerHTML() {
     var apps = state.apps.filter(function (a) { return a.certId; });
     if (!apps.length) return "";
@@ -1478,8 +1509,8 @@
     return '<div class="certfound">' +
       '<span class="certfound__ico"><iconify-icon icon="fluent:checkmark-circle-16-filled" width="22" height="22" aria-hidden="true"></iconify-icon></span>' +
       '<div class="certfound__text">' +
-        '<strong>We found ' + n + ' app' + (plural ? "s" : "") + ' signed with ' + esc(certName) + '</strong>' +
-        '<span class="certfound__sub">Crash &amp; hang analytics are ready for ' + (plural ? "them" : "it") + ' \u2014 no extra setup needed.</span>' +
+        '<strong>' + n + ' app' + (plural ? "s" : "") + ' added from ' + esc(certName) + '</strong>' +
+        '<span class="certfound__sub">' + (apps.some(analyticsPending) ? 'Crash and hang reports for newly added apps can take up to 24 hours to appear.' : 'Open Apps to manage your selected apps or view their crash analytics.') + '</span>' +
       '</div>' +
       '<div class="certfound__actions">' +
         '<fluent-button appearance="primary" data-jump="analytics"><iconify-icon slot="start" icon="fluent:data-trending-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>See crash analytics</fluent-button>' +
@@ -1521,12 +1552,13 @@
     var apps = state.apps.filter(function (a) { return a.certId === c.id; }).length;
     var sub = c.thumbKind === "hash" ? "File fingerprint (backend offline)" : "Authenticode signer";
     var algo = c.thumbKind === "cert" ? "SHA-1" : "SHA-256";
+    var open = expandedCerts.has(c.id), canManage = c.verified && (c.trust === "Valid" || c.thumbKind === "hash");
     // While this cert's discovery scan is in flight, show a spinner where its app count will land.
     var appsCell = (scanning && c.id === scanningCertId)
       ? '<span class="cert-scan"><span class="spinner spinner--xs"></span>Finding\u2026</span>'
-      : apps;
+      : canManage ? '<fluent-button class="cert-apps" appearance="transparent" size="small" data-certreview="' + esc(c.id) + '" aria-label="' + esc("Manage " + apps + " app" + (apps === 1 ? "" : "s") + " for " + c.label) + '" title="Manage app selection"' + (certDiscoveryActive ? ' disabled' : '') + '>' + apps + '</fluent-button>' : apps;
     var detId = "certdet-" + c.id;
-    return '<tr class="cert-row">' +
+    return '<tr class="cert-row' + (open ? ' is-expanded' : '') + '" data-certrow="' + esc(c.id) + '">' +
       '<td><div class="cell-main"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
         '<div><strong>' + esc(c.label) + '</strong><span class="muted">' + sub + '</span></div></div></td>' +
       '<td>' + certSourceCell(c) + '</td>' +
@@ -1534,13 +1566,24 @@
       '<td>' + esc(c.added) + '</td>' +
       '<td>' + certExpiryCell(c) + '</td>' +
       '<td>' + trustPill(c.trust) + '</td>' +
-      '<td class="cert-row__actions">' +
-        '<button class="linkbtn cert-det-btn" data-certdetails="' + c.id + '" aria-expanded="false" aria-controls="' + detId + '">' +
-          '<iconify-icon class="cert-det-chev" icon="fluent:chevron-down-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Details</button>' +
-        '<button class="linkbtn" data-removecert="' + c.id + '">Remove</button>' +
-      '</td>' +
+      '<td class="cert-row__actions"><div class="cert-actions">' +
+        '<fluent-button class="cert-delete" appearance="transparent" icon-only data-removecert="' + esc(c.id) + '" aria-label="' + esc("Delete certificate for " + c.label) + '" title="Delete certificate"><iconify-icon icon="fluent:delete-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-button>' +
+        '<fluent-button class="cert-det-btn" appearance="transparent" icon-only data-certdetails="' + esc(c.id) + '" aria-expanded="' + open + '" aria-controls="' + esc(detId) + '" aria-label="' + esc((open ? "Collapse" : "Expand") + " certificate details for " + c.label) + '" title="' + (open ? "Collapse" : "Expand") + ' details">' +
+          '<iconify-icon class="cert-det-chev" icon="fluent:chevron-right-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-button>' +
+      '</div></td>' +
     '</tr>' +
-    '<tr class="cert-detrow" id="' + detId + '" hidden><td colspan="7">' + certDetailsHTML(c, algo) + '</td></tr>';
+    '<tr class="cert-detrow" id="' + esc(detId) + '"' + (open ? '' : ' hidden') + '><td colspan="7">' + certDetailsHTML(c, algo) + '</td></tr>';
+  }
+  function toggleCertificateDetails(id) {
+    var cert = certById(id), detail = $("certdet-" + id), button = document.querySelector('[data-certdetails="' + id + '"]');
+    if (!cert || !detail || !button) return;
+    var open = !expandedCerts.has(id);
+    if (open) expandedCerts.add(id); else expandedCerts.delete(id);
+    detail.hidden = !open;
+    button.setAttribute("aria-expanded", String(open));
+    button.setAttribute("aria-label", (open ? "Collapse" : "Expand") + " certificate details for " + cert.label);
+    button.title = (open ? "Collapse" : "Expand") + " details";
+    button.closest("tr").classList.toggle("is-expanded", open);
   }
 
   function appSkeletonHTML(n) {
@@ -1572,12 +1615,13 @@
       // TEMP DEMO (revert later): after a signed Win32 app is published we "recognize" its code signing
       // certificate and surface the developer's other signed apps in a separate WDP-style table below.
       var sbanner = scanning
-        ? '<div class="scan-banner"><span class="spinner"></span>Recognized your code signing certificate — finding your other apps signed with it…</div>'
+        ? '<div class="scan-banner" role="status"><span class="spinner"></span>Finding apps and processes signed with your certificate…</div>'
         : "";
       // Split (shared with WDP): apps in the Store pipeline (Draft / In certification / Live) vs apps
       // still only found via the certificate.
       var below = state.apps.filter(function (a) { return !inStorePipeline(a); });
       var above = state.apps.filter(inStorePipeline);
+      if (below.length && !above.length) appsActiveTab = "signed";
       if (!above.length && !below.length && !scanning) {
         wrap.innerHTML = '<div class="empty">' +
           '<img data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
@@ -1589,7 +1633,7 @@
         '</div>';
         return;
       }
-      var storePanel = above.length ? storeTableHTML(above) : "";
+      var storePanel = above.length ? storeTableHTML(above) : '<div class="empty"><strong>No Microsoft Store apps yet</strong><p class="muted">Your selected certificate apps are in Not in the Store.</p><fluent-button appearance="primary" data-newapp>New product</fluent-button></div>';
       var signedPanel = "";
       if (below.length) {
         var dCert = certById(below[0].certId), dVerified = dCert && dCert.verified === true;
@@ -1597,14 +1641,14 @@
         // so the "verify ownership" prompt doesn't apply — always show the verified note here.
         var note = (dVerified || UNIFIED)
           ? '<div class="disc-note"><iconify-icon icon="fluent:certificate-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
-              '<span>Signed with your <strong>code signing certificate</strong> but not in the Store \u2014 <strong>ownership verified</strong>, so crash analytics and SmartScreen reputation are unlocked.</span></div>'
+              '<span>Apps you selected from your <strong>code signing certificate</strong>. ' + (below.some(analyticsPending) ? 'Crash and hang reports for newly added apps can take up to <strong>24 hours</strong> to appear.' : 'Select an app’s crash rate to view its crash analytics.') + '</span></div>'
           : '<div class="disc-note disc-note--verify"><iconify-icon icon="fluent:lock-closed-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
               '<span><strong>Verify you own this certificate.</strong> These apps are signed by the same certificate as the app you just published. Download our verification file, sign it with that certificate, and upload it to unlock crash analytics &amp; SmartScreen reputation.</span>' +
               '<fluent-button appearance="primary" size="small" data-openmodal>Verify ownership</fluent-button></div>';
         signedPanel = '<div class="disc-section">' + note + certGroupsHTML(below) + '</div>';
       }
-      // Both kinds present → Fluent tabs give a clear Store / not-in-Store split; otherwise show the one list.
-      if (above.length && below.length) {
+      // Keep the non-Store destination explicit even before the first Store app exists.
+      if (below.length) {
         wrap.innerHTML = sbanner + appsTabsHTML(above.length, below.length) +
           '<div class="apps-panels" data-tab="' + (appsActiveTab === "signed" ? "signed" : "store") + '">' +
             '<div class="apps-panel" data-appspanel="store">' + storePanel + '</div>' +
@@ -1654,7 +1698,7 @@
       label = esc(cert.label);
       pill = cert.trust === "Valid"
         ? '<span class="pill pill--ok pill--sm"><span class="verified-dot"></span>Active</span>'
-        : '<span class="pill pill--warn pill--sm">Self-signed</span>';
+        : trustPill(cert.trust);
     } else if (g.subject) {
       ico = '<span class="cert-ico cert-ico--alt">?</span>';
       label = esc(cnOf(g.subject));
@@ -1850,7 +1894,7 @@
   function appIcoImg(a) {
     if (a.icon) {
       var src = /^(data:|https?:|\/)/i.test(a.icon) ? a.icon : ('data:image/png;base64,' + a.icon);
-      return '<span class="app-ico app-ico--img"><img src="' + src + '" alt="" /></span>';
+      return '<span class="app-ico app-ico--img"><img src="' + esc(src) + '" alt="" /></span>';
     }
     var t = avatarTint(a.name);
     return '<span class="app-ico" style="background:' + t.bg + ';color:' + t.fg + '">' + esc(initials(a.name)) + '</span>';
@@ -1897,9 +1941,7 @@
     '</tr>';
   }
 
-  // Store-portal cert row: mirrors the top Store-apps table (App · Type · Status · Installs · Crash rate ·
-  // Rating · action) so the two tables read as one. Cert-found apps have only crash health + the Publish
-  // upsell; Store-only metrics (installs, rating) and Store status stay blank. Download sources is dropped.
+  // Store-only metric teasers are independent of crash-data readiness.
   function storeCertRowHTML(a) {
     var iconHTML = appIcoImg(a);
     var locked = storeLocked(a);
@@ -1915,10 +1957,14 @@
     // publish and unlock the real numbers; clicking it opens the publish flow. Crash health needs no
     // Store (the cert is verified), so it shows for real.
     var instCell = na, rateCell = na;
-    if (!locked) {
+    if (!locked && analyticsPending(a)) {
+      crashCell = '<button class="health health--pending" data-analytics="' + a.id + '" title="Crash and hang reports can take up to 24 hours to appear">' + healthCellInner(a) + '</button>';
+    } else if (!locked) {
       var ana = anaData(a), dot = ana.crashRate >= 5 ? "warn" : "ok";
       crashCell = '<span class="metric__row"><span class="health__dot is-' + dot + '"></span>' + ana.crashRate.toFixed(2) + '%</span>';
       crashAttr = ' class="metric-cell" data-analytics="' + a.id + '" data-health="' + a.id + '" title="View crash analytics"';
+    }
+    if (!locked) {
       var TIP = 'Publish to the Store to start tracking installs and ratings';
       instCell = '<span class="metric-teaser" data-store="' + a.id + '" title="' + TIP + '"><span class="metric-teaser__val"><strong>' + fmtCompact(acqData(a).instTotal) + '</strong></span>' +
         '<iconify-icon class="metric-teaser__lock" icon="fluent:lock-closed-12-filled" width="11" height="11" aria-hidden="true"></iconify-icon></span>';
@@ -2001,6 +2047,7 @@
   // Crash health derived from the SAME dummy analytics data the dashboard uses, so the
   // table cell and the Analytics dashboard always agree (crash rate + severity dot).
   function healthCellInner(a) {
+    if (analyticsPending(a)) return '<iconify-icon icon="fluent:clock-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>Preparing data';
     var d = anaData(a);
     return '<span class="health__dot is-' + (d.crashRate >= 5 ? "warn" : "ok") + '"></span>' + d.crashRate.toFixed(2) + '% crash rate';
   }
@@ -2011,7 +2058,7 @@
      per-failure drill-down), tabbed by analytics type. ALL figures here are generated
      DUMMY data, deterministic per app. Charts are inline SVG on Fluent tokens. */
   var analyticsAppId = null, anaTab = "crashes", anaFailure = null, anaPage = 0, anaStackAnchor = "latest";
-  var anaSearch = "", anaType = "all", anaCause = null, anaSort = { key: "hits", dir: "desc" }, anaDemoState = "live";
+  var anaSearch = "", anaType = "all", anaCause = null, anaSort = { key: "hits", dir: "desc" }, anaDemoState = "auto";
   var symSort = { key: "ver", dir: "desc" };
   var anaLogPage = 0, anaLogQuery = "";
   // Crash-analytics view state: date window + symbol uploader (per transcript: 7d/30d/custom, ~24h latency).
@@ -2843,16 +2890,31 @@
       '<h2>No data for this window yet</h2>' +
       '<p class="muted">Crash data lands with about 4 hours of delay, so the most recent hours are still being collected. Check back shortly or pick a range that ends earlier to see results.</p></div></div>';
   }
-  function demoSwitchHTML() {
+  function emptyStoreAnalyticsHTML() {
+    return '<div class="ana-locked"><iconify-icon icon="fluent:store-microsoft-24-regular" width="34" height="34" aria-hidden="true"></iconify-icon><strong>No published Store apps yet</strong>' +
+      '<p class="muted">Acquisition, usage, and ratings reports are available for published Microsoft Store apps. Certificate apps appear in the Crash tab.</p></div>';
+  }
+  function crashZeroActive(app) { return anaDemoState === "newapp" || (anaDemoState === "auto" && analyticsPending(app)); }
+  function demoSwitchHTML(app) {
     var states = [["live", "Live data"], ["newapp", "No data yet"]];
+    var active = crashZeroActive(app) ? "newapp" : "live";
     return '<div class="demoswitch" role="group" aria-label="Demo state"><span class="demoswitch__label"><iconify-icon icon="fluent:beaker-16-regular" width="14" height="14" aria-hidden="true"></iconify-icon>Demo</span>' +
-      states.map(function (s) { return '<button class="demoswitch__b' + (anaDemoState === s[0] ? " is-on" : "") + '" data-demostate="' + s[0] + '">' + s[1] + '</button>'; }).join("") + '</div>';
+      states.map(function (s) { return '<button type="button" class="demoswitch__b' + (active === s[0] ? " is-on" : "") + '" data-demostate="' + s[0] + '" aria-pressed="' + (active === s[0]) + '">' + s[1] + '</button>'; }).join("") + '</div>';
+  }
+  function setCrashDemoState(mode) {
+    if (mode !== "live" && mode !== "newapp") return;
+    anaDemoState = mode; anaFailure = null; anaPage = 0;
+    if (mode === "newapp" && analyticsAppId === "__all__") {
+      var first = anaLiveApps()[0]; if (first) analyticsAppId = first.id;
+      renderAnalytics();
+    } else renderAnalyticsPanel();
+    var button = document.querySelector('#demoSwitchHost [data-demostate="' + mode + '"]'); if (button) button.focus();
   }
   function crashTab(app) {
     if (app.id === "__all__") return crashTabAll();
+    if (crashZeroActive(app)) return zeroStateHTML(app);
     var d = anaData(app);
     if (anaFailure) return failureView(app, d);
-    if (anaDemoState === "newapp") return zeroStateHTML(app);
     if (anaRange === "custom" && anaCustom && anaCustom.tooRecent) return latencyZeroHTML();
     var v = caView(app), sub = anaRange === "7d" ? "Last 7 days" : anaRange === "custom" ? "Custom range" : "Last 30 days", h = healthExtra(app, d);
     var totalSeries = v.series[0].values.map(function (x, i) { return x + v.series[1].values[i] + v.series[2].values[i]; });
@@ -3326,10 +3388,13 @@
   /* ---- "All apps" aggregate: combine per-app analytics across the portfolio (same 28-day
      axis + shared category lists per app, so series sum and rates weight cleanly) ---- */
   function anaLiveApps() { return (state.apps || []).filter(function (a) { return a.store || a.discovered; }); }
+  function anaReportingApps(storeOnly) { return anaLiveApps().filter(function (a) { return !analyticsPending(a) && (!storeOnly || a.store || a.storeStatus === "published"); }); }
+  // Keep the zero state's symbol-upload action app-scoped until there is data to aggregate.
+  function canAggregateAnalytics(apps) { return apps.length > 1 && apps.some(function (a) { return !analyticsPending(a); }); }
   function anaZeros(n) { var a = [], i; for (i = 0; i < n; i++) a.push(0); return a; }
   function anaAddInto(dst, src) { for (var i = 0; i < src.length; i++) dst[i] += (src[i] || 0); return dst; }
   function acqDataAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return acqData(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(true); if (apps.length < 2) return acqData(apps[0] || state.apps[0]);
     var ds = apps.map(acqData), base = ds[0], days = base.labels.length, i;
     function sumS(k) { var out = anaZeros(days); ds.forEach(function (d) { anaAddInto(out, d[k]); }); return out; }
     function sumT(k) { return ds.reduce(function (m, d) { return m + d[k]; }, 0); }
@@ -3355,7 +3420,7 @@
       funnel: funnel, campaigns: campaigns, geo: geo };
   }
   function usageDataAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return usageData(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(true); if (apps.length < 2) return usageData(apps[0] || state.apps[0]);
     var ds = apps.map(usageData), base = ds[0], days = base.labels.length, i, j;
     function sumS(k) { var out = anaZeros(days); ds.forEach(function (d) { anaAddInto(out, d[k]); }); return out; }
     function sumT(k) { return ds.reduce(function (m, d) { return m + d[k]; }, 0); }
@@ -3389,7 +3454,7 @@
       verRows: sumRows("verRows", "ver"), adopt: adopt, coRows: sumRows("coRows", "country") };
   }
   function ratingsDataAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return ratingsData(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(true); if (apps.length < 2) return ratingsData(apps[0] || state.apps[0]);
     var ds = apps.map(ratingsData), base = ds[0], days = base.labels.length, i;
     var total = ds.reduce(function (m, d) { return m + d.total; }, 0);
     var orig = ds.reduce(function (m, d) { return m + d.orig; }, 0), rev = total - orig;
@@ -3426,7 +3491,9 @@
       '<div class="table-wrap"><table class="atable ana-apptable"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div></section>';
   }
   function crashTabAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return crashTab(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(false), waiting = anaLiveApps().filter(analyticsPending).length;
+    if (!apps.length) return emptyAnalyticsHTML();
+    var pendingNote = waiting ? '<p class="ana-pending-note">' + waiting + ' newly added app' + (waiting === 1 ? ' is' : 's are') + ' still preparing crash data and ' + (waiting === 1 ? 'is' : 'are') + ' not included in these charts. Reports can take up to 24 hours to appear.</p>' : '';
     var views = apps.map(function (a) { return { app: a, v: caView(a), rate: anaData(a).crashRate }; });
     var labels = views[0].v.labels, n = labels.length;
     function sumSeries(idx) { var out = anaZeros(n); views.forEach(function (x) { anaAddInto(out, x.v.series[idx].values); }); return out; }
@@ -3446,12 +3513,13 @@
     var insight = worst ? ('<div class="ai-insight"><span class="ai-insight__badge"><iconify-icon icon="fluent:sparkle-16-filled" width="15" height="15" aria-hidden="true"></iconify-icon>AI insight</span>' +
       '<p class="ai-insight__text"><strong>' + esc(worst.app.name) + '</strong> has the highest crash rate across your portfolio at <strong>' + worst.rate.toFixed(2) + '%</strong>' + (worst.rate >= 5 ? ' \u2014 above the 5% healthy bar. Start here.' : ' \u2014 within a healthy range.') + '</p>' +
       '<fluent-button appearance="primary" size="small" class="ai-insight__cta" data-analytics="' + esc(worst.app.id) + '"><iconify-icon slot="start" icon="fluent:arrow-right-16-regular" width="15" height="15" aria-hidden="true"></iconify-icon>Open ' + esc(worst.app.name) + '</fluent-button></div>') : "";
-    return insight + cards +
+    return pendingNote + insight + cards +
       apanel("Failures over time by app", chartLine({ series: series, labels: labels }) + chartLegend(series), "Total failures per app \u2014 compare which apps are trending up") +
       anaAppTable("Crash health by app", "Failure totals and crash rate per app for the selected range. Select an app to open its full crash analytics.", ["Total failures", "Crashes", "Hangs", "Crash rate"], rows);
   }
   function acqTabAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return acquisitionTab(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(true); if (!apps.length) return emptyStoreAnalyticsHTML();
+    if (apps.length < 2) return acquisitionTab(apps[0]);
     var agg = acqDataAll(), L = agg.labels, ds = apps.map(function (a) { return { app: a, d: acqData(a) }; });
     var cards = '<div class="sumrow sumrow--4">' +
       sumCard("Page views", fmtCompact(agg.pvTotal), "Last 28 days", agg.pv, "var(--brand)") +
@@ -3466,7 +3534,8 @@
       anaAppTable("Acquisition by app", "Select an app to open its full acquisition analytics.", ["Page views", "Installs", "Conversion"], rows);
   }
   function usageTabAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return usageTab(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(true); if (!apps.length) return emptyStoreAnalyticsHTML();
+    if (apps.length < 2) return usageTab(apps[0]);
     var agg = usageDataAll(), L = agg.labels, ds = apps.map(function (a) { return { app: a, d: usageData(a) }; });
     var cards = '<div class="sumrow sumrow--4">' +
       sumCard("Monthly active devices (Avg)", fmtCompact(agg.madAvg), "Last 30 days", agg.mad, "var(--brand)") +
@@ -3481,7 +3550,8 @@
       anaAppTable("Usage by app", "Select an app to open its full usage analytics.", ["Active devices (Avg)", "Sessions", "DAD/MAD"], rows);
   }
   function ratingsTabAll() {
-    var apps = anaLiveApps(); if (apps.length < 2) return ratingsTab(apps[0] || state.apps[0]);
+    var apps = anaReportingApps(true); if (!apps.length) return emptyStoreAnalyticsHTML();
+    if (apps.length < 2) return ratingsTab(apps[0]);
     var agg = ratingsDataAll(), L = agg.labels, ds = apps.map(function (a) { return { app: a, d: ratingsData(a) }; });
     var breakdown = '<div class="ratbreak"><div class="ratbreak__sum">' +
       '<span class="muted">Average</span><strong class="ratbreak__avg">' + agg.avg.toFixed(2) + '</strong>' + starRowHTML(agg.avg) +
@@ -3516,11 +3586,12 @@
     sizeCharts(panelEl); observeCharts(panelEl);
     // In the "new app / no data" crash zero state there's nothing to filter, so hide the version/date/Filters
     // toolbar (the app picker stays). The latency state keeps filters so the date range can still be changed.
-    var _fb = $("anaFilterBar"); if (_fb) _fb.hidden = (anaTab === "crashes" && !anaFailure && anaDemoState === "newapp");
+    var preparing = allMode ? !anaReportingApps(false).length : crashZeroActive(app);
+    var _fb = $("anaFilterBar"); if (_fb) _fb.hidden = (anaTab === "crashes" && preparing);
     var dsHost = document.getElementById("demoSwitchHost");
     if (!dsHost) { dsHost = document.createElement("div"); dsHost.id = "demoSwitchHost"; document.body.appendChild(dsHost);
-      dsHost.addEventListener("click", function (e) { var dms = e.target.closest("[data-demostate]"); if (dms) { anaDemoState = dms.getAttribute("data-demostate"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); } }); }
-    dsHost.innerHTML = (anaTab === "crashes" && !anaFailure) ? demoSwitchHTML() : "";
+      dsHost.addEventListener("click", function (e) { var dms = e.target.closest("[data-demostate]"); if (dms) setCrashDemoState(dms.getAttribute("data-demostate")); }); }
+    dsHost.innerHTML = ($("analytics").classList.contains("active") && anaTab === "crashes" && !anaFailure) ? demoSwitchHTML(app) : "";
     var fsel = $("failSearch");
     if (fsel) fsel.addEventListener("input", function () { anaSearch = fsel.value || ""; anaPage = 0; renderFailTableHost(); });
     var tsel = $("anaTypeSel");
@@ -3535,9 +3606,14 @@
     // signed & discovered via a code-signing certificate. Drafts / in-review submissions have neither,
     // so they never appear here (all modes use the same rule).
     var liveApps = state.apps.filter(function (a) { return a.store || a.discovered; });
-    if (!liveApps.length) { if (controls) controls.hidden = true; panelEl.innerHTML = emptyAnalyticsHTML(); return; }
+    if (!liveApps.length) {
+      if (controls) controls.hidden = true;
+      panelEl.innerHTML = emptyAnalyticsHTML();
+      var demoHost = $("demoSwitchHost"); if (demoHost) demoHost.innerHTML = "";
+      return;
+    }
     if (controls) controls.hidden = false;
-    if (analyticsAppId === "__all__") { if (liveApps.length < 2) analyticsAppId = liveApps[0].id; }
+    if (analyticsAppId === "__all__") { if (!canAggregateAnalytics(liveApps)) analyticsAppId = liveApps[0].id; }
     else if (!analyticsAppId || !liveApps.some(function (a) { return a.id === analyticsAppId; })) analyticsAppId = liveApps[0].id;
     renderAppSelect(liveApps);
     renderAnaFilter();
@@ -3570,12 +3646,12 @@
   }
   function renderAppSelect(apps) {
     var el = $("anaAppSel"); if (!el) return;
-    var allSel = analyticsAppId === "__all__" && apps.length > 1;
+    var canAggregate = canAggregateAnalytics(apps), allSel = analyticsAppId === "__all__" && canAggregate;
     var cur = allSel ? null : (appById(analyticsAppId) || apps[0]);
     var allIco = '<iconify-icon class="opt-allico" icon="fluent:apps-list-24-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
-    var allOpt = apps.length > 1 ? '<fluent-option value="__all__"' + (allSel ? " selected" : "") + '>' + allIco + '<span class="opt-name">All apps</span></fluent-option>' : "";
+    var allOpt = canAggregate ? '<fluent-option value="__all__"' + (allSel ? " selected" : "") + '>' + allIco + '<span class="opt-name">All apps</span></fluent-option>' : "";
     el.innerHTML = '<fluent-dropdown id="anaAppDd" appearance="outline" aria-label="Select app" placeholder="Select app"><fluent-listbox>' + allOpt + apps.map(function (a) {
-      return '<fluent-option value="' + a.id + '"' + (!allSel && cur && a.id === cur.id ? " selected" : "") + '>' + appIcoImg(a) + '<span class="opt-name">' + esc(a.name) + '</span></fluent-option>';
+      return '<fluent-option value="' + a.id + '"' + (!allSel && cur && a.id === cur.id ? " selected" : "") + '>' + appIcoImg(a) + '<span class="opt-name">' + esc(a.name) + (analyticsPending(a) ? ' · Preparing data' : '') + '</span></fluent-option>';
     }).join("") + '</fluent-listbox></fluent-dropdown>';
     var dd = $("anaAppDd");
     if (dd) {
@@ -3710,60 +3786,67 @@
     state.certs.push(cert);
     return { cert: cert, created: true };
   }
-  // App discovery is a LOCAL-MACHINE scan (the backend enumerates Start-Menu apps signed by the
-  // cert). A static host (e.g. GitHub Pages) has no backend, so /api/apps-by-cert 404s and nothing
-  // is found. Fall back to representative demo apps so the "apps signed by your certificate"
-  // experience still works in a hosted demo. Stable paths → re-scans dedupe by discoveryKey.
+  // Static-host sample results are explicitly labeled in the picker.
   function demoDiscoveredApps() {
     return [
-      { name: "Contoso PDF Suite", file: "ContosoPdfSuite.exe", version: "3.2.1.0", path: "demo/ContosoPdfSuite.exe" },
-      { name: "Fabrikam Notes", file: "FabrikamNotes.exe", version: "1.8.0.0", path: "demo/FabrikamNotes.exe" },
-      { name: "Tailwind Media Player", file: "TailwindPlayer.exe", version: "2.4.3.0", path: "demo/TailwindPlayer.exe" },
-      { name: "Adventure Works Backup", file: "AdventureWorksBackup.exe", version: "5.1.2.0", path: "demo/AdventureWorksBackup.exe" }
+      { ProductName: "Contoso Designer 2026", file: "Designer.exe", version: "26.0", kind: "app", TotalEngagementDurationMS: 3.8e14 },
+      { ProductName: "Contoso PDF Reader", file: "PdfReader.exe", version: "12.3", kind: "app", TotalEngagementDurationMS: 3.04e13 },
+      { ProductName: "Contoso Media Studio", file: "MediaStudio.exe", version: "5.2", kind: "app", TotalEngagementDurationMS: 5.21e13 },
+      { ProductName: "Contoso Notes", file: "Notes.exe", version: "1.8", kind: "app", TotalEngagementDurationMS: 7.76e12 },
+      { ProductName: "Contoso Designer 2025", file: "Designer.exe", version: "25.4", kind: "app", TotalEngagementDurationMS: 6.29e12 },
+      { ProductName: "Contoso Update Service", file: "ContosoUpdater.exe", kind: "process", role: "Update service", TotalEngagementDurationMS: 6.38e13 },
+      { ProductName: "Contoso Crash Handler", file: "ContosoCrashpad.exe", kind: "process", role: "Crash handler", TotalEngagementDurationMS: 3.56e9 },
+      { ProductName: "Contoso Sync Helper", file: "SyncHelper.exe", kind: "process", role: "Background helper", TotalEngagementDurationMS: 5.95e10 },
+      { ProductName: "CONTOSO-BROWSER-PAGE.EXE", kind: "process", role: "Browser process", TotalEngagementDurationMS: 3.86e6 },
+      { ProductName: "MEDIA-CODEC.DLL", kind: "process", role: "Component", TotalEngagementDurationMS: 164434 },
+      { ProductName: "Contoso Installer", file: "Setup.exe", kind: "process", role: "Installer", TotalEngagementDurationMS: 15064 },
+      { ProductName: "CONTOSO-OVERLAY.EXE", TotalEngagementDurationMS: 3.92722e11 }
     ];
   }
-  // Find apps already running on this PC that are signed by the same certificate,
-  // and add them automatically (one cert → all its apps).
-  async function discoverApps(thumb, certId) {
-    if (!thumb) return;
-    scanning = true; scanningCertId = certId; renderCerts(); renderApps();
-    toast("Finding apps signed with this certificate…", true);
-    var added = 0, refreshed = 0, newApps = [];
-    var list = null, offline = false;
-    try {
-      var res = await fetch("/api/apps-by-cert?thumbprint=" + encodeURIComponent(thumb));
-      if (res.ok) list = await res.json();
-      else if (res.status === 404) offline = true;        // endpoint absent → static host
-    } catch (e) { offline = true; }                       // unreachable / non-JSON SPA fallback
-    if (offline) backendOffline = true;
-    // Hosted/static demo (no backend to scan this PC): seed demo apps so discovery isn't a dead end.
-    if (!Array.isArray(list) && offline) list = demoDiscoveredApps();
-    if (Array.isArray(list)) list.forEach(function (a) {
-      var key = "p:" + (a.path || (a.file + a.sizeKB));
-      var existing = state.apps.filter(function (x) { return x.discoveryKey === key; })[0];
-      if (existing) { // re-scan refreshes the (now high-res) icon in place
-        if (a.icon && a.icon !== existing.icon) { existing.icon = a.icon; refreshed++; }
-        return;
-      }
-      var na = {
-        id: uid(), name: a.name || a.file, file: a.file, size: a.version ? "v" + a.version : (a.sizeKB ? a.sizeKB + " KB" : ""),
-        icon: a.icon || null, signerThumb: thumb, signerSubject: null, trust: "Valid", certId: certId,
-        sources: [], store: false, added: today(), discoveryKey: key, discovered: true
-      };
-      state.apps.push(na); newApps.push(na);
-      added++;
-    });
+  function analyticsPending(a) { return discovery.isAnalyticsPending(a); }
+  function discoveryOwner() { return (state.account && state.account.email) || ""; }
+  function discoverApps(thumb, certId) {
+    var cert = certById(certId);
+    if (cert && cert.thumb === thumb) discoverCertApps([cert]);
+  }
+  async function discoverCertApps(certs, options) {
+    if (certDiscoveryActive || scanning) return;
+    certs = certs.filter(function (c) { return c && c.verified && (c.trust === "Valid" || c.thumbKind === "hash"); });
+    if (!certs.length) { toast("Verify a code-signing certificate first", true); return; }
+    var context = { certs: certs, owner: discoveryOwner(), demo: false, errors: [],
+      managing: !!(options && options.managing) || certs.some(function (c) { return c.appSelectionReviewed || state.apps.some(function (a) { return a.certId === c.id; }); }) };
+    var candidates = [], identities = new Set();
+    certDiscoveryActive = true; scanning = true;
+    for (var i = 0; i < certs.length; i++) {
+      var cert = certs[i], list, demo = cert.thumbKind === "hash", controller = new AbortController();
+      if (context.owner !== discoveryOwner()) break;
+      scanningCertId = cert.id; renderCerts(); renderApps();
+      var timeout = setTimeout(function () { controller.abort(); }, 50000);
+      try {
+        if (!demo) {
+          var res = await discovery.requestJson("/api/apps-by-cert?thumbprint=" + encodeURIComponent(cert.thumb), { signal: controller.signal });
+          demo = res.offline;
+          if (!demo) list = res.data;
+        }
+        if (demo) { backendOffline = true; context.demo = true; list = demoDiscoveredApps(); }
+        if (!Array.isArray(list)) throw new Error("Unexpected discovery response");
+        discovery.normalize(list, cert, state.apps).forEach(function (c) {
+          if (!identities.has(c.key)) { identities.add(c.key); candidates.push(c); }
+        });
+      } catch (e) {
+        context.errors.push(cert.label || "Signing certificate");
+        discovery.normalize([], cert, state.apps).forEach(function (c) {
+          if (!identities.has(c.key)) { identities.add(c.key); candidates.push(c); }
+        });
+      } finally { clearTimeout(timeout); }
+    }
     scanning = false; scanningCertId = null;
-    if (added || refreshed) save();
+    if (context.owner !== discoveryOwner()) { certDiscoveryActive = false; renderAll(); return; }
     renderAll();
-    if (newApps.length) showDiscoveredDialog(newApps);
-    else toast(refreshed ? "Refreshed " + refreshed + " app icon" + (refreshed > 1 ? "s" : "") + " in high resolution"
-                         : "No other installed apps use this certificate", true);
+    showCertAppPicker(candidates, context);
   }
   function rescanApps() {
-    var certs = state.certs.filter(function (c) { return !!c.thumb; });   // incl. offline hash certs (static host)
-    if (!certs.length) { toast("Add a certificate first", true); return; }
-    certs.forEach(function (c) { discoverApps(c.thumb, c.id); });
+    discoverCertApps(state.certs);
   }
   // Removing a cert also drops the apps discovered only through it (and their crash analytics),
   // so confirm first — spelling out exactly what goes away.
@@ -3793,6 +3876,7 @@
   // A removed cert takes its discovered apps with it (they exist only via that cert); keep any that
   // reached the Store pipeline — just unlink those from the cert.
   function doRemoveCert(cid) {
+    expandedCerts.delete(cid);
     state.certs = state.certs.filter(function (c) { return c.id !== cid; });
     var certAppsRemoved = 0;
     state.apps = state.apps.filter(function (a) {
@@ -3826,6 +3910,164 @@
     if (cbtn) cbtn.addEventListener("click", function () { close(); if (typeof opts.onConfirm === "function") opts.onConfirm(); });
     try { dlg.show(); } catch (e) { if (window.confirm(opts.title || "Are you sure?") && typeof opts.onConfirm === "function") opts.onConfirm(); }
   }
+  function showCertAppPicker(candidates, context) {
+    var old = $("certPickModal"); if (old) { old.hide(); old.remove(); }
+    var dlg = document.createElement("fluent-dialog");
+    dlg.id = "certPickModal"; dlg.setAttribute("type", "modal");
+    var title = context.managing ? "Manage tracked apps" : "Choose apps to track";
+    dlg.setAttribute("aria-label", title);
+    dlg.setAttribute("aria-describedby", "cpk-intro");
+    document.body.appendChild(dlg);
+    candidates.forEach(function (c, i) { c.index = i; c.initialSelected = context.managing ? !!c.existingId : c.selected; });
+    var options = { query: "", sort: "name" }, page = 0, pageSize = 20, results = [], visible = [], committed = false, closed = false;
+    var label = context.certs.length === 1 ? context.certs[0].label : context.certs.length + " certificates";
+    dlg.innerHTML = '<fluent-dialog-body class="cpkdialog">' +
+      '<span slot="title">' + title + '</span>' +
+      '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close app selection" data-cpk-close><iconify-icon icon="fluent:dismiss-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-button>' +
+      '<p class="cpk-intro" id="cpk-intro">' + (context.demo ? 'Sample apps and processes.' : 'Apps signed by <strong>' + esc(label) + '</strong>.') + (context.managing ? ' Select the apps you want to track.' : ' Review the preselected recommendations.') + '</p>' +
+      (candidates.some(function (c) { return c.relinkId; }) ? '<p class="cpk-demo">Some apps already use another certificate. Selecting <strong>Change certificate</strong> items links them to this certificate without resetting their analytics.</p>' : '') +
+      (context.demo ? '<p class="cpk-demo">Sample results are shown because live discovery is unavailable. These are not results from your certificate.</p>' : '') +
+      '<div class="cpk-error" role="alert"' + (context.errors.length ? '' : ' hidden') + '>' + (context.errors.length ? 'We couldn’t load results for ' + esc(context.errors.join(", ")) + '. Your certificates are saved. Try again or review them later.' : '') + '</div>' +
+      (context.errors.length ? '<fluent-button class="cpk-retry" appearance="outline" size="small" data-cpk-retry>Try again</fluent-button>' : '') +
+      '<div class="cpk-toolbar"' + (!candidates.length ? ' hidden' : '') + '>' +
+        '<fluent-text-input id="cpk-search" aria-label="Search apps and processes" placeholder="Search by name or file" appearance="outline"><iconify-icon slot="start" icon="fluent:search-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-text-input>' +
+      '</div>' +
+      '<div class="cpk-results" id="cpk-results"></div>' +
+      '<div class="cpk-pagination" id="cpk-pagination"></div>' +
+      (candidates.length ? '<p class="cpk-note">Crash analytics can take up to 24 hours to appear.</p>' : '') +
+      '<span slot="action" class="cpk-total" id="cpk-total" role="status" aria-live="polite" aria-atomic="true"></span>' +
+      '<fluent-button slot="action" appearance="outline" data-cpk-close>' + (candidates.length ? 'Cancel' : 'Close') + '</fluent-button>' +
+      '<fluent-button slot="action" appearance="primary" data-cpk-confirm' + (!candidates.length ? ' hidden' : '') + '>Add apps</fluent-button>' +
+      '</fluent-dialog-body>';
+
+    function selected() { return candidates.filter(function (c) { return c.selected; }); }
+    function changed() { return candidates.some(function (c) { return !c.locked && c.selected !== c.initialSelected; }); }
+    function rowHTML(c) {
+      var meta = [c.file && c.file !== c.name ? c.file : "", context.certs.length > 1 ? c.certName : ""].filter(Boolean).join(" \u00b7 ");
+      var details = [c.path, c.file, c.version, c.certName].filter(Boolean).join(" \u00b7 ");
+      var status = c.locked ? "Store app" : c.relinkId ? "Change certificate" : "";
+      return '<li class="cpk-row" data-cpk-row="' + c.index + '">' +
+        '<fluent-checkbox data-cpk="' + c.index + '" aria-label="' + esc((c.locked ? "Managed in Microsoft Store: " : "Track ") + c.name + (c.relinkId ? ", change certificate to " + c.certName : "")) + '"' + (c.selected ? ' checked' : '') + (c.locked ? ' disabled' : '') + '></fluent-checkbox>' +
+        '<div class="cpk-name">' + appIcoImg(c) + '<span class="cpk-name__text" title="' + esc(details) + '"><strong>' + esc(c.name) + '</strong>' + (meta ? '<span>' + esc(meta) + '</span>' : '') + '</span></div>' +
+        (status ? '<span class="cpk-row__status">' + status + '</span>' : '') + '</li>';
+    }
+    function groupItems(group) { return results.filter(function (c) { return !c.locked && c.recommended === (group === "recommended"); }); }
+    function syncSelection() {
+      var pick = selected(), count = pick.length, total = dlg.querySelector("#cpk-total"), confirm = dlg.querySelector("[data-cpk-confirm]");
+      total.textContent = candidates.length ? count + " selected" : "";
+      total.title = candidates.length > pageSize ? "Selections across all pages" : "";
+      confirm.textContent = context.managing ? "Save changes" : pick.some(function (c) { return c.relinkId; }) ? "Confirm selection" : count ? "Add " + count + " app" + (count === 1 ? "" : "s") : "Add apps";
+      confirm.toggleAttribute("disabled", committed || (context.managing ? !changed() : !count));
+      var removed = candidates.filter(function (c) { return c.existingId && !c.locked && !c.selected; }).length;
+      var note = dlg.querySelector(".cpk-note");
+      if (note) note.textContent = removed ? removed + " app" + (removed === 1 ? " will" : "s will") + " be removed from your non-Store app list and crash analytics." : "New apps can take up to 24 hours to show crash analytics.";
+      dlg.querySelectorAll("[data-cpk-group-all]").forEach(function (button) {
+        var group = button.getAttribute("data-cpk-group-all"), items = groupItems(group);
+        var all = items.length > 0 && items.every(function (c) { return c.selected; });
+        button.textContent = all ? "Clear" : "Select all";
+        button.hidden = !items.length;
+        button.setAttribute("aria-label", (all ? "Clear" : "Select all") + (options.query ? " matching " : " ") + (group === "recommended" ? "recommended apps" : "other apps and processes"));
+        button.title = (all ? "Clear " : "Select ") + items.length + " matching items across all pages";
+      });
+      visible.forEach(function (c) {
+        var cb = dlg.querySelector('[data-cpk="' + c.index + '"]');
+        if (cb) cb.checked = c.selected;
+      });
+    }
+    function renderResults() {
+      results = discovery.view(candidates, options);
+      var pages = Math.max(1, Math.ceil(results.length / pageSize));
+      page = Math.min(page, pages - 1); visible = results.slice(page * pageSize, (page + 1) * pageSize);
+      var lastGroup = null, rows = "";
+      visible.forEach(function (c) {
+        var group = c.recommended ? "recommended" : "other", title = c.recommended ? "Recommended" : "Other apps and processes";
+        if (group !== lastGroup) {
+          if (lastGroup) rows += '</ul></section>';
+          rows += '<section class="cpk-group" aria-labelledby="cpk-' + group + '"><div class="cpk-group__head"><h3 id="cpk-' + group + '">' + title + '</h3>' +
+            '<fluent-button appearance="transparent" size="small" data-cpk-group-all="' + group + '">Select all</fluent-button></div><ul class="cpk-list">';
+          lastGroup = group;
+        }
+        rows += rowHTML(c);
+      });
+      if (lastGroup) rows += '</ul></section>';
+      dlg.querySelector("#cpk-results").innerHTML = rows
+        ? '<div class="cpk-scroll">' + rows + '</div>'
+        : '<div class="cpk-empty" role="status"><strong>' + (candidates.length ? 'No matching items' : context.errors.length ? 'Discovery unavailable' : 'No apps or processes found') + '</strong><p>' + (candidates.length ? 'Try another name. Your selections are kept.' : 'Your certificate is saved. Select its app count to check again later.') + '</p>' + (candidates.length ? '<fluent-button appearance="outline" data-cpk-reset>Clear search</fluent-button>' : '') + '</div>';
+      dlg.querySelector("#cpk-pagination").innerHTML = pagerHTML(page, pages, "data-cpk-page", results.length, "items");
+      syncSelection();
+    }
+    function release() { certDiscoveryActive = false; renderCerts(); }
+    function close() {
+      closed = true; release(); dlg.hide();
+      if (!committed) setTimeout(function () {
+        var trigger = document.querySelector('[data-certreview="' + context.certs[0].id + '"]');
+        if (!certDiscoveryActive && trigger && document.querySelector('.block.active')?.id === 'certificates') trigger.focus();
+      }, 0);
+    }
+    dlg.addEventListener("toggle", function (e) {
+      if (!closed && e.detail && e.detail.newState === "closed") { closed = true; release(); }
+    });
+    dlg.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !e.defaultPrevented && !dlg.querySelector('[aria-expanded="true"]')) {
+        e.preventDefault(); close();
+      }
+    });
+    dlg.querySelector("#cpk-search").addEventListener("input", function (e) { options.query = e.currentTarget.value || ""; page = 0; renderResults(); });
+    dlg.addEventListener("change", function (e) {
+      var cb = e.target.closest("[data-cpk]");
+      if (cb) {
+        var item = candidates[+cb.getAttribute("data-cpk")];
+        if (item && !item.locked) { item.selected = !!cb.checked; syncSelection(); }
+      }
+    });
+    dlg.addEventListener("click", function (e) {
+      if (e.target.closest("[data-cpk-close]")) { close(); return; }
+      var bulk = e.target.closest("[data-cpk-group-all]");
+      if (bulk) {
+        var items = groupItems(bulk.getAttribute("data-cpk-group-all")), turnOn = !items.every(function (c) { return c.selected; });
+        items.forEach(function (c) { c.selected = turnOn; }); syncSelection(); return;
+      }
+      if (e.target.closest("[data-cpk-retry]")) { close(); discoverCertApps(context.certs, { managing: context.managing }); return; }
+      if (e.target.closest("[data-cpk-reset]")) {
+        options.query = ""; page = 0;
+        dlg.querySelector("#cpk-search").value = ""; renderResults(); dlg.querySelector("#cpk-search").focus(); return;
+      }
+      var nav = e.target.closest("[data-cpk-page]");
+      if (nav && !nav.disabled) {
+        page = Math.max(0, +nav.getAttribute("data-cpk-page")); renderResults();
+        var focus = dlg.querySelector('[data-cpk]:not([disabled])') || dlg.querySelector("#cpk-search"); if (focus) focus.focus(); return;
+      }
+      var row = e.target.closest("[data-cpk-row]");
+      if (row && !e.target.closest("fluent-checkbox")) {
+        var c = candidates[+row.getAttribute("data-cpk-row")];
+        if (!c.locked) { c.selected = !c.selected; syncSelection(); }
+      }
+    });
+    dlg.querySelector("[data-cpk-confirm]").addEventListener("click", function () {
+      if (committed || (context.managing ? !changed() : !selected().length)) return;
+      var error = dlg.querySelector(".cpk-error");
+      if (context.owner !== discoveryOwner() || context.certs.some(function (c) { return !certById(c.id); })) {
+        error.textContent = "The account or certificate changed. Close this dialog and review the apps again."; error.hidden = false; return;
+      }
+      var next = discovery.applySelection(candidates, state.certs, state.apps, { createId: uid, addedLabel: today() });
+      var previousApps = state.apps, previousCerts = state.certs;
+      state.apps = next.apps; state.certs = next.certs;
+      if (!save()) {
+        state.apps = previousApps; state.certs = previousCerts;
+        error.textContent = "We couldn’t save your selections. Free some browser storage or select fewer apps and try again."; error.hidden = false; return;
+      }
+      committed = true; syncSelection(); close(); appsActiveTab = "signed"; renderAll();
+      if (!context.managing) goView("apps");
+      else {
+        var trigger = document.querySelector('[data-certreview="' + context.certs[0].id + '"]');
+        if (trigger) trigger.focus();
+      }
+      toast(context.managing || next.relinked ? "App selection saved." : "Added " + next.added + " app" + (next.added === 1 ? "" : "s") + ". Crash analytics can take up to 24 hours.", true);
+    });
+    renderResults();
+    customElements.whenDefined("fluent-dialog").then(function () { dlg.show(); });
+  }
+
   // After a cert scan: a dialog listing the discovered apps. Each row opens that app's crash analytics; footer jumps to Apps.
   function showDiscoveredDialog(apps) {
     if (!apps || !apps.length) return;
@@ -3833,20 +4075,21 @@
     if (!dlg) { dlg = document.createElement("fluent-dialog"); dlg.id = "discModal"; document.body.appendChild(dlg); }
     dlg.setAttribute("aria-label", "Apps signed with this certificate");
     var rows = apps.map(function (a) {
-      var an = anaData(a), cf = (an && an.crashRate != null) ? (100 - an.crashRate).toFixed(1) + "% crash-free" : "Crash analytics ready";
+      var pending = analyticsPending(a), an = anaData(a);
+      var cf = pending ? "Crash analytics within 24 hours" : ((an && an.crashRate != null) ? (100 - an.crashRate).toFixed(1) + "% crash-free" : "Crash analytics ready");
       return '<button type="button" class="disc-app" data-disc-app="' + esc(a.id) + '">' +
         appIcoImg(a) +
         '<span class="disc-app__t"><strong>' + esc(a.storeName || a.name) + '</strong><span>' + esc(cf) + '</span></span>' +
-        '<span class="disc-app__cta">View crashes</span>' +
+        '<span class="disc-app__cta">' + (pending ? "View app" : "View crashes") + '</span>' +
         '<iconify-icon class="disc-app__chev" icon="fluent:chevron-right-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon>' +
       '</button>';
     }).join("");
     var n = apps.length;
     dlg.innerHTML =
       '<fluent-dialog-body class="discdialog">' +
-        '<span slot="title">Found ' + n + ' app' + (n === 1 ? "" : "s") + ' signed with your certificate</span>' +
+        '<span slot="title">Added ' + n + ' app' + (n === 1 ? "" : "s") + ' to your account</span>' +
         '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close" data-disc-close><iconify-icon icon="fluent:dismiss-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></fluent-button>' +
-        '<p class="disc-intro">Crash &amp; hang analytics are ready \u2014 open an app to see its crashes.</p>' +
+        '<p class="disc-intro">They\u2019re now in your Apps list and the crash analytics app menu. New apps show crash &amp; hang data within <strong>24 hours</strong>.</p>' +
         '<div class="disc-list">' + rows + '</div>' +
         '<fluent-button slot="action" appearance="outline" data-disc-close>Done</fluent-button>' +
         '<fluent-button slot="action" appearance="primary" data-disc-apps>View all apps</fluent-button>' +
@@ -4529,8 +4772,10 @@
       if (!res.ok) return;
       var file = new File([await res.blob()], "trusted-sample.exe", { type: "application/octet-stream" });
       var info = await inspectFile(file);
+      if (info.error || (!info.offline && info.status !== "Valid")) return;
       var gc = getOrCreateCert(info, file);
       if (gc.created && info.notAfter) gc.cert.notAfter = info.notAfter;
+      if (info.status === "Valid") gc.cert.verified = true;
       if (state.certs.length) state.verified = true;
       save(); renderAll();
       if (gc.cert && gc.cert.thumbKind === "cert") discoverApps(gc.cert.thumb, gc.cert.id);
@@ -4751,15 +4996,14 @@
       if (an) { analyticsAppId = an.getAttribute("data-analytics"); anaTab = "crashes"; anaFailure = null; anaPage = 0; anaSearch = ""; anaType = "all"; anaCause = null; goView("analytics"); renderAnalytics(); return; }
       var cdt = e.target.closest("[data-certdetails]");
       if (cdt) {
-        var _cid = cdt.getAttribute("data-certdetails");
-        var _drow = document.getElementById("certdet-" + _cid);
-        var _open = cdt.getAttribute("aria-expanded") === "true";
-        cdt.setAttribute("aria-expanded", _open ? "false" : "true");
-        if (_drow) _drow.hidden = _open;
-        return;
+        toggleCertificateDetails(cdt.getAttribute("data-certdetails")); return;
       }
       var rc = e.target.closest("[data-removecert]");
       if (rc) { confirmRemoveCert(rc.getAttribute("data-removecert")); return; }
+      var reviewCert = e.target.closest("[data-certreview]");
+      if (reviewCert) { discoverCertApps([certById(reviewCert.getAttribute("data-certreview"))], { managing: true }); return; }
+      var certRow = e.target.closest("[data-certrow]");
+      if (certRow && !e.target.closest("button,fluent-button,a,input")) { toggleCertificateDetails(certRow.getAttribute("data-certrow")); return; }
       var openapp = e.target.closest("[data-openapp]");
       if (openapp) { openPublishFlow(openapp.getAttribute("data-openapp")); return; }
       var acthref = e.target.closest("[data-acthref]");
@@ -4817,7 +5061,7 @@
       var dvf = e.target.closest("[data-ver-filter]");
       if (dvf) { anaFilters.appver = [dvf.getAttribute("data-ver-filter")]; anaFailure = null; anaPage = 0; renderAnaFilter(); renderAnaChips(); renderAnalyticsPanel(); scrollTopMain(); return; }
       var dms = e.target.closest("[data-demostate]");
-      if (dms) { anaDemoState = dms.getAttribute("data-demostate"); anaFailure = null; anaPage = 0; renderAnalyticsPanel(); return; }
+      if (dms) { setCrashDemoState(dms.getAttribute("data-demostate")); return; }
       var crng = e.target.closest("[data-ca-range]");
       if (crng) { anaRange = crng.getAttribute("data-ca-range"); if (anaRange !== "custom") anaCustom = null; anaPage = 0; renderAnaFilter(); renderAnalyticsPanel(); return; }
       if (e.target.closest("[data-ca-apply]")) { var cf = $("caFrom"), ct = $("caTo"); applyCustomRange(cf && cf.value, ct && ct.value); renderAnaFilter(); renderAnalyticsPanel(); return; }
@@ -5090,7 +5334,9 @@
     // WDP path: arriving from signup with a freshly-added certificate → scan + populate its
     // apps now, showing the portal's own "Finding apps…" skeleton.
     if (!STORE && state.discoverCert && state.discoverCert.thumb) {
-      var dc = state.discoverCert; delete state.discoverCert; save();
+      var dc = state.discoverCert, signupCert = certById(dc.certId);
+      if (signupCert && signupCert.trust === "Valid") signupCert.verified = true;
+      delete state.discoverCert; save();
       discoverApps(dc.thumb, dc.certId);
     }
     // Store path: arriving from signup with a reserved app name → create it + open the

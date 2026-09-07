@@ -118,3 +118,18 @@ function patchNativeDialog(tag) {
 ['fluent-dialog', 'fluent-drawer'].forEach((tag) => {
   if (!patchNativeDialog(tag)) customElements.whenDefined(tag).then(() => patchNativeDialog(tag));
 });
+
+// rc.27's queued tab updates can run after a re-render detaches the tablist.
+customElements.whenDefined('fluent-tablist').then(() => {
+  const proto = customElements.get('fluent-tablist').prototype;
+  if (proto.__detachedTabsPatched) return;
+  proto.__detachedTabsPatched = true;
+  ['setTabs', 'changeTab'].forEach((name) => {
+    const original = proto[name];
+    if (typeof original !== 'function') return;
+    proto[name] = function (...args) {
+      if (!this.isConnected || typeof this.getRootNode().getElementById !== 'function') return;
+      return original.apply(this, args);
+    };
+  });
+});

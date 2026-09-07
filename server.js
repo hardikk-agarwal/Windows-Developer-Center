@@ -47,8 +47,7 @@ function verifyFile(filePath) {
   });
 }
 
-// Scan INSTALLED apps (Start Menu shortcuts) for executables signed by a given
-// cert thumbprint. The shortcut name is the real, user-facing app name.
+// Local discovery covers Start Menu apps and running executables, not the production telemetry catalog.
 // High-res (256px jumbo) icon extraction via the shell image list — so app logos
 // stay crisp in the publishing flow's 64px banner (ExtractAssociatedIcon is only 32px).
 const ICO_CS = `using System;using System.Drawing;using System.Runtime.InteropServices;public class Ico{[StructLayout(LayoutKind.Sequential,CharSet=CharSet.Auto)]struct SHFILEINFO{public IntPtr hIcon;public int iIcon;public uint dwAttributes;[MarshalAs(UnmanagedType.ByValTStr,SizeConst=260)]public string szDisplayName;[MarshalAs(UnmanagedType.ByValTStr,SizeConst=80)]public string szTypeName;}[DllImport("shell32.dll",CharSet=CharSet.Auto)]static extern IntPtr SHGetFileInfo(string p,uint a,ref SHFILEINFO s,uint c,uint f);[DllImport("shell32.dll",EntryPoint="#727")]static extern int SHGetImageList(int i,ref Guid r,out IImageList l);[ComImport,Guid("46EB5926-582E-4017-9FDF-E8998DAA0950"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IImageList{[PreserveSig]int Add(IntPtr a,IntPtr b,ref int c);[PreserveSig]int ReplaceIcon(int a,IntPtr b,ref int c);[PreserveSig]int SetOverlayImage(int a,int b);[PreserveSig]int Replace(int a,IntPtr b,IntPtr c);[PreserveSig]int AddMasked(IntPtr a,int b,ref int c);[PreserveSig]int Draw(ref IntPtr a);[PreserveSig]int Remove(int a);[PreserveSig]int GetIcon(int a,int b,ref IntPtr c);}public static Bitmap Get(string path){SHFILEINFO sh=new SHFILEINFO();SHGetFileInfo(path,(uint)0,ref sh,(uint)Marshal.SizeOf(sh),(uint)0x4000);Guid g=new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");IImageList il;SHGetImageList(4,ref g,out il);IntPtr h=IntPtr.Zero;il.GetIcon(sh.iIcon,1,ref h);return Icon.FromHandle(h).ToBitmap();}}`;
@@ -57,9 +56,9 @@ const PS_APPS = [
   // 1) Collect unique Start Menu .exe targets (fast; COM shortcut resolve, no signature yet).
   "$sh=New-Object -ComObject WScript.Shell",
   "$dirs=@((Join-Path $env:ProgramData 'Microsoft/Windows/Start Menu/Programs'),(Join-Path $env:AppData 'Microsoft/Windows/Start Menu/Programs'))",
-  "$skip='Telemetry|Language Preferences|Recording Manager|Uninstall|Readme|Read Me|Release Notes|Repair|Diagnostic|Compare|Documentation|Activation'",
   "$seen=@{}; $targets=@()",
-  "foreach($d in $dirs){ Get-ChildItem -Path $d -Recurse -Filter *.lnk | ForEach-Object { $t=$sh.CreateShortcut($_.FullName).TargetPath; if($t -and $t.ToLower().EndsWith('.exe') -and ($_.BaseName -notmatch $skip) -and (Test-Path -LiteralPath $t) -and -not $seen[$t.ToLower()]){ $seen[$t.ToLower()]=$true; $targets += [pscustomobject]@{ name=$_.BaseName; path=$t } } } }",
+  "foreach($d in $dirs){ Get-ChildItem -Path $d -Recurse -Filter *.lnk | ForEach-Object { $t=$sh.CreateShortcut($_.FullName).TargetPath; if($t -and $t.ToLower().EndsWith('.exe') -and (Test-Path -LiteralPath $t) -and -not $seen[$t.ToLower()]){ $seen[$t.ToLower()]=$true; $targets += [pscustomobject]@{ name=$_.BaseName; path=$t; hasStartMenuEntry=$true } } } }",
+  "Get-CimInstance Win32_Process | ForEach-Object { $t=$_.ExecutablePath; if($t -and $t.ToLower().EndsWith('.exe') -and (Test-Path -LiteralPath $t) -and -not $seen[$t.ToLower()]){ $seen[$t.ToLower()]=$true; $targets += [pscustomobject]@{ name=$_.Name; path=$t; hasStartMenuEntry=$false } } }",
   // 2) Match by SIGNER cert thumbprint IN PARALLEL. CreateFromSignedFile reads the embedded
   //    signer cert directly (no chain build / no revocation / no network) => ~10ms vs ~200ms+
   //    for Get-AuthenticodeSignature. Discovery only needs \"who signed it\", not full trust validation.
@@ -70,7 +69,7 @@ const PS_APPS = [
   "$cs = '" + ICO_CS + "'",
   "try{ Add-Type -TypeDefinition $cs -ReferencedAssemblies System.Drawing.Common -ErrorAction Stop }catch{}",
   "function IcoB64($p){ $b=$null; try{ $b=[Ico]::Get($p) }catch{ try{ $b=[System.Drawing.Icon]::ExtractAssociatedIcon($p).ToBitmap() }catch{} }; if($null -eq $b){ return '' }; try{ $m=New-Object IO.MemoryStream; $b.Save($m,[System.Drawing.Imaging.ImageFormat]::Png); $b.Dispose(); [Convert]::ToBase64String($m.ToArray()) }catch{ '' } }",
-  "$out=@(); foreach($mm in $matches){ $fi=Get-Item -LiteralPath $mm.path; $vi=$fi.VersionInfo; $out += [pscustomobject]@{ name=$mm.name; file=$fi.Name; version=$vi.ProductVersion; publisher=$vi.CompanyName; sizeKB=[math]::Round($fi.Length/1KB); icon=(IcoB64 $mm.path); path=$mm.path } }",
+  "$out=@(); foreach($mm in $matches){ $fi=Get-Item -LiteralPath $mm.path; $vi=$fi.VersionInfo; $out += [pscustomobject]@{ name=$mm.name; productName=if($mm.hasStartMenuEntry){$mm.name}else{$vi.ProductName}; file=$fi.Name; version=$vi.ProductVersion; publisher=$vi.CompanyName; hasStartMenuEntry=$mm.hasStartMenuEntry; sizeKB=[math]::Round($fi.Length/1KB); icon=(IcoB64 $mm.path); path=$mm.path; totalEngagementDurationMS=$null } }",
   "$out | ConvertTo-Json -Compress"
 ].join("; ");
 
