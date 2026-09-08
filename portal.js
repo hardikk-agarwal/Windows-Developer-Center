@@ -3919,7 +3919,8 @@
     dlg.setAttribute("aria-describedby", "cpk-intro");
     document.body.appendChild(dlg);
     candidates.forEach(function (c, i) { c.index = i; c.initialSelected = context.managing ? !!c.existingId : c.selected; });
-    var options = { query: "", sort: "name" }, page = 0, pageSize = 20, results = [], visible = [], committed = false, closed = false;
+    var options = { query: "", sort: "name" }, pages = { recommended: 0, other: 0 }, pageSize = 20;
+    var otherExpanded = false, searchExpanded = true, results = [], visible = [], committed = false, closed = false;
     var label = context.certs.length === 1 ? context.certs[0].label : context.certs.length + " certificates";
     dlg.innerHTML = '<fluent-dialog-body class="cpkdialog">' +
       '<span slot="title">' + title + '</span>' +
@@ -3933,7 +3934,6 @@
         '<fluent-text-input id="cpk-search" aria-label="Search apps and processes" placeholder="Search by name or file" appearance="outline"><iconify-icon slot="start" icon="fluent:search-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-text-input>' +
       '</div>' +
       '<div class="cpk-results" id="cpk-results"></div>' +
-      '<div class="cpk-pagination" id="cpk-pagination"></div>' +
       (candidates.length ? '<p class="cpk-note">Crash analytics can take up to 24 hours to appear.</p>' : '') +
       '<span slot="action" class="cpk-total" id="cpk-total" role="status" aria-live="polite" aria-atomic="true"></span>' +
       '<fluent-button slot="action" appearance="outline" data-cpk-close>' + (candidates.length ? 'Cancel' : 'Close') + '</fluent-button>' +
@@ -3952,6 +3952,7 @@
         (status ? '<span class="cpk-row__status">' + status + '</span>' : '') + '</li>';
     }
     function groupItems(group) { return results.filter(function (c) { return !c.locked && c.recommended === (group === "recommended"); }); }
+    function groupExpanded(group) { return group === "recommended" || (options.query.trim() ? searchExpanded : otherExpanded); }
     function syncSelection() {
       var pick = selected(), count = pick.length, total = dlg.querySelector("#cpk-total"), confirm = dlg.querySelector("[data-cpk-confirm]");
       total.textContent = candidates.length ? count + " selected" : "";
@@ -3965,7 +3966,7 @@
         var group = button.getAttribute("data-cpk-group-all"), items = groupItems(group);
         var all = items.length > 0 && items.every(function (c) { return c.selected; });
         button.textContent = all ? "Clear" : "Select all";
-        button.hidden = !items.length;
+        button.hidden = !items.length || !groupExpanded(group);
         button.setAttribute("aria-label", (all ? "Clear" : "Select all") + (options.query ? " matching " : " ") + (group === "recommended" ? "recommended apps" : "other apps and processes"));
         button.title = (all ? "Clear " : "Select ") + items.length + " matching items across all pages";
       });
@@ -3976,24 +3977,27 @@
     }
     function renderResults() {
       results = discovery.view(candidates, options);
-      var pages = Math.max(1, Math.ceil(results.length / pageSize));
-      page = Math.min(page, pages - 1); visible = results.slice(page * pageSize, (page + 1) * pageSize);
-      var lastGroup = null, rows = "";
-      visible.forEach(function (c) {
-        var group = c.recommended ? "recommended" : "other", title = c.recommended ? "Recommended" : "Other apps and processes";
-        if (group !== lastGroup) {
-          if (lastGroup) rows += '</ul></section>';
-          rows += '<section class="cpk-group" aria-labelledby="cpk-' + group + '"><div class="cpk-group__head"><h3 id="cpk-' + group + '">' + title + '</h3>' +
-            '<fluent-button appearance="transparent" size="small" data-cpk-group-all="' + group + '">Select all</fluent-button></div><ul class="cpk-list">';
-          lastGroup = group;
-        }
-        rows += rowHTML(c);
-      });
-      if (lastGroup) rows += '</ul></section>';
+      visible = [];
+      var rows = ["recommended", "other"].map(function (group) {
+        var items = results.filter(function (c) { return c.recommended === (group === "recommended"); });
+        if (!items.length) return "";
+        var open = groupExpanded(group), count = Math.max(1, Math.ceil(items.length / pageSize));
+        pages[group] = Math.min(pages[group], count - 1);
+        var shown = open ? items.slice(pages[group] * pageSize, (pages[group] + 1) * pageSize) : [];
+        visible = visible.concat(shown);
+        var title = group === "recommended" ? "Recommended" : "Other apps and processes";
+        var heading = group === "recommended" ? title
+          : '<fluent-button class="cpk-group-toggle" appearance="transparent" size="small" data-cpk-toggle="other" aria-expanded="' + open + '" aria-controls="cpk-other-body">' +
+              '<iconify-icon class="cpk-group-chevron" slot="start" icon="fluent:chevron-right-16-regular" width="16" height="16" aria-hidden="true"></iconify-icon>' + title + ' (' + items.length + ')</fluent-button>';
+        return '<section class="cpk-group" aria-labelledby="cpk-' + group + '"><div class="cpk-group__head"><h3 id="cpk-' + group + '">' + heading + '</h3>' +
+          '<fluent-button appearance="transparent" size="small" data-cpk-group-all="' + group + '"' + (open ? '' : ' hidden') + '>Select all</fluent-button></div>' +
+          '<div class="cpk-group-body" id="cpk-' + group + '-body"' + (open ? '' : ' hidden') + '><ul class="cpk-list">' + shown.map(rowHTML).join('') + '</ul>' +
+            (open && count > 1 ? '<div class="cpk-pagination" data-cpk-pages="' + group + '">' + pagerHTML(pages[group], count, "data-cpk-page", items.length, "items") + '</div>' : '') +
+          '</div></section>';
+      }).join('');
       dlg.querySelector("#cpk-results").innerHTML = rows
         ? '<div class="cpk-scroll">' + rows + '</div>'
         : '<div class="cpk-empty" role="status"><strong>' + (candidates.length ? 'No matching items' : context.errors.length ? 'Discovery unavailable' : 'No apps or processes found') + '</strong><p>' + (candidates.length ? 'Try another name. Your selections are kept.' : 'Your certificate is saved. Select its app count to check again later.') + '</p>' + (candidates.length ? '<fluent-button appearance="outline" data-cpk-reset>Clear search</fluent-button>' : '') + '</div>';
-      dlg.querySelector("#cpk-pagination").innerHTML = pagerHTML(page, pages, "data-cpk-page", results.length, "items");
       syncSelection();
     }
     function release() { certDiscoveryActive = false; renderCerts(); }
@@ -4008,11 +4012,13 @@
       if (!closed && e.detail && e.detail.newState === "closed") { closed = true; release(); }
     });
     dlg.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !e.defaultPrevented && !dlg.querySelector('[aria-expanded="true"]')) {
+      if (e.key === "Escape" && !e.defaultPrevented) {
         e.preventDefault(); close();
       }
     });
-    dlg.querySelector("#cpk-search").addEventListener("input", function (e) { options.query = e.currentTarget.value || ""; page = 0; renderResults(); });
+    dlg.querySelector("#cpk-search").addEventListener("input", function (e) {
+      options.query = e.currentTarget.value || ""; pages = { recommended: 0, other: 0 }; searchExpanded = true; renderResults();
+    });
     dlg.addEventListener("change", function (e) {
       var cb = e.target.closest("[data-cpk]");
       if (cb) {
@@ -4022,6 +4028,15 @@
     });
     dlg.addEventListener("click", function (e) {
       if (e.target.closest("[data-cpk-close]")) { close(); return; }
+      if (e.target.closest("[data-cpk-toggle]")) {
+        var open = !groupExpanded("other");
+        if (options.query.trim()) searchExpanded = open; else otherExpanded = open;
+        var scroll = dlg.querySelector('.cpk-scroll'), top = scroll ? scroll.scrollTop : 0;
+        renderResults();
+        var toggle = dlg.querySelector('[data-cpk-toggle="other"]'); if (toggle) toggle.focus({ preventScroll: true });
+        scroll = dlg.querySelector('.cpk-scroll'); if (scroll) scroll.scrollTop = top;
+        return;
+      }
       var bulk = e.target.closest("[data-cpk-group-all]");
       if (bulk) {
         var items = groupItems(bulk.getAttribute("data-cpk-group-all")), turnOn = !items.every(function (c) { return c.selected; });
@@ -4029,13 +4044,14 @@
       }
       if (e.target.closest("[data-cpk-retry]")) { close(); discoverCertApps(context.certs, { managing: context.managing }); return; }
       if (e.target.closest("[data-cpk-reset]")) {
-        options.query = ""; page = 0;
+        options.query = ""; pages = { recommended: 0, other: 0 }; searchExpanded = true;
         dlg.querySelector("#cpk-search").value = ""; renderResults(); dlg.querySelector("#cpk-search").focus(); return;
       }
       var nav = e.target.closest("[data-cpk-page]");
       if (nav && !nav.disabled) {
-        page = Math.max(0, +nav.getAttribute("data-cpk-page")); renderResults();
-        var focus = dlg.querySelector('[data-cpk]:not([disabled])') || dlg.querySelector("#cpk-search"); if (focus) focus.focus(); return;
+        var group = nav.closest('[data-cpk-pages]').getAttribute('data-cpk-pages');
+        pages[group] = Math.max(0, +nav.getAttribute("data-cpk-page")); renderResults();
+        var focus = dlg.querySelector('#cpk-' + group + '-body [data-cpk]:not([disabled])') || dlg.querySelector("#cpk-search"); if (focus) focus.focus(); return;
       }
       var row = e.target.closest("[data-cpk-row]");
       if (row && !e.target.closest("fluent-checkbox")) {

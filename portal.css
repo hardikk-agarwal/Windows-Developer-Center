@@ -1341,7 +1341,12 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 .cpk-group + .cpk-group { margin-top: var(--spacingVerticalM); }
 .cpk-group__head { display: flex; align-items: center; justify-content: space-between;
   gap: var(--spacingHorizontalS); padding-inline: var(--spacingHorizontalS); }
-.cpk-group__head h3 { font-size: var(--fontSizeBase300); font-weight: var(--fontWeightSemibold); color: var(--text-2); }
+.cpk-group__head h3 { flex: 1; min-width: 0; font-size: var(--fontSizeBase300); font-weight: var(--fontWeightSemibold); color: var(--text-2); }
+.cpk-group-toggle { width: 100%; justify-content: flex-start; padding-inline: 0; font: inherit; color: inherit; }
+.cpk-group-chevron { transition: transform var(--dur-fast) var(--ease-out); }
+.cpk-group-toggle[aria-expanded="true"] .cpk-group-chevron { transform: rotate(90deg); }
+.cpk-group-body[hidden], .cpk-group__head > fluent-button[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .cpk-group-chevron { transition: none; } }
 .cpk-list { list-style: none; margin: 0; padding: 0; }
 .cpk-row { display: flex; align-items: center; gap: var(--spacingHorizontalM); cursor: pointer;
   min-height: calc(var(--spacingVerticalXXL) + var(--spacingVerticalM)); padding: var(--spacingVerticalS) var(--spacingHorizontalS);
