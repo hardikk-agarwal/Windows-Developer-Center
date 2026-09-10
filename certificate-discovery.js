@@ -98,6 +98,22 @@
     return Array.from(seen.values());
   }
 
+  function summarizeDiscovery(candidates, certId, source, now) {
+    var keys = new Set(candidates.filter(function (c) { return c.certId === certId; }).map(function (c) { return key(c.key); }));
+    return { identified: keys.size, source: source === "demo" ? "demo" : "live", checkedAt: now == null ? Date.now() : now };
+  }
+
+  function selectionCounts(cert, apps) {
+    var linked = (apps || []).filter(function (a) { return a.certId === cert.id; });
+    var summary = cert.discoverySummary;
+    if (summary && Number.isInteger(summary.identified) && summary.identified >= 0)
+      return { identified: summary.identified, selected: linked.length, demo: summary.source === "demo" };
+    // Older saved choices include unchecked results, but an app count alone is not a discovery total.
+    var choices = Object.keys(cert.appSelections || {}), known = new Set(choices.map(key));
+    if (choices.length) linked.forEach(function (a) { known.add(key(a.discoveryKey || "saved:" + a.id)); });
+    return { identified: choices.length ? known.size : null, selected: linked.length, demo: cert.thumbKind === "hash" };
+  }
+
   function applySelection(candidates, certs, apps, options) {
     options = options || {};
     var now = options.now == null ? Date.now() : options.now;
@@ -165,6 +181,7 @@
     return Number.isFinite(added) && (now == null ? Date.now() : now) < added + ANALYTICS_DELAY_MS;
   }
 
-  return { normalize: normalize, applySelection: applySelection, requestJson: requestJson, view: view, key: key, formatEngagement: formatEngagement,
+  return { normalize: normalize, summarizeDiscovery: summarizeDiscovery, selectionCounts: selectionCounts,
+    applySelection: applySelection, requestJson: requestJson, view: view, key: key, formatEngagement: formatEngagement,
     isAnalyticsPending: isAnalyticsPending, ANALYTICS_DELAY_MS: ANALYTICS_DELAY_MS };
 });

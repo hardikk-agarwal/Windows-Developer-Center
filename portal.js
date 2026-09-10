@@ -1490,8 +1490,8 @@
           '</div>';
       return;
     }
-    wrap.innerHTML = '<div class="table-wrap"><table class="table table--certs">' +
-      '<thead><tr><th>Certificate</th><th>Source</th><th>Apps</th><th>Added</th><th>Expires</th><th>Status</th><th aria-label="Certificate actions"></th></tr></thead>' +
+    wrap.innerHTML = '<div class="table-wrap certs-table-wrap" role="region" aria-label="Certificates" tabindex="0"><table class="table table--certs">' +
+      '<thead><tr><th>Certificate</th><th>Source</th><th>App selection</th><th>Added</th><th>Expires</th><th>Status</th><th aria-label="Certificate actions"></th></tr></thead>' +
       '<tbody>' + state.certs.map(certRowHTML).join("") + '</tbody></table></div>' +
       (scanning ? certScanBannerHTML() : ((STORE && !UNIFIED) ? "" : certFoundBannerHTML()));
   }
@@ -1548,15 +1548,27 @@
     if (c.issuer) html += row("Issuer", esc(c.issuer));
     return '<div class="certdet">' + html + '</div>';
   }
+  function canEditCertificateApps(cert) { return !!(cert && cert.verified && (cert.trust === "Valid" || cert.thumbKind === "hash")); }
+  function certSelectionStatsHTML(cert) {
+    var counts = discovery.selectionCounts(cert, state.apps), identified;
+    if (scanning && cert.id === scanningCertId) identified = 'Finding apps and processes…';
+    else if (counts.identified == null) identified = 'Total not checked yet';
+    else identified = counts.identified.toLocaleString() + (counts.demo ? (counts.identified === 1 ? ' item in demo list' : ' items in demo list') : (counts.identified === 1 ? ' app or process identified' : ' apps &amp; processes identified'));
+    return '<span class="cert-selection-stats" data-cert-stats="' + esc(cert.id) + '">' +
+      '<span class="cert-selection__identified">' + identified + '</span>' +
+      '<span class="cert-selection__selected"><strong>' + counts.selected.toLocaleString() + '</strong>' + (counts.selected === 1 ? ' selected as an app' : ' selected as apps') + '</span></span>';
+  }
+  function certSelectionActionHTML(cert, appearance) {
+    if (!canEditCertificateApps(cert)) return '';
+    return '<fluent-button class="cert-selection-edit" appearance="' + (appearance || 'transparent') + '" size="small" data-certreview="' + esc(cert.id) +
+      '" aria-label="' + esc('Edit app selection for ' + cert.label) + '" aria-haspopup="dialog"' + (certDiscoveryActive ? ' disabled' : '') +
+      '>Edit app selection</fluent-button>';
+  }
   function certRowHTML(c) {
-    var apps = state.apps.filter(function (a) { return a.certId === c.id; }).length;
     var sub = c.thumbKind === "hash" ? "File fingerprint (backend offline)" : "Authenticode signer";
     var algo = c.thumbKind === "cert" ? "SHA-1" : "SHA-256";
-    var open = expandedCerts.has(c.id), canManage = c.verified && (c.trust === "Valid" || c.thumbKind === "hash");
-    // While this cert's discovery scan is in flight, show a spinner where its app count will land.
-    var appsCell = (scanning && c.id === scanningCertId)
-      ? '<span class="cert-scan"><span class="spinner spinner--xs"></span>Finding\u2026</span>'
-      : canManage ? '<fluent-button class="cert-apps" appearance="transparent" size="small" data-certreview="' + esc(c.id) + '" aria-label="' + esc("Manage " + apps + " app" + (apps === 1 ? "" : "s") + " for " + c.label) + '" title="Manage app selection"' + (certDiscoveryActive ? ' disabled' : '') + '>' + apps + '</fluent-button>' : apps;
+    var open = expandedCerts.has(c.id);
+    var appsCell = '<div class="cert-selection">' + certSelectionStatsHTML(c) + certSelectionActionHTML(c) + '</div>';
     var detId = "certdet-" + c.id;
     return '<tr class="cert-row' + (open ? ' is-expanded' : '') + '" data-certrow="' + esc(c.id) + '">' +
       '<td><div class="cell-main"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
@@ -1621,8 +1633,9 @@
       // still only found via the certificate.
       var below = state.apps.filter(function (a) { return !inStorePipeline(a); });
       var above = state.apps.filter(inStorePipeline);
-      if (below.length && !above.length) appsActiveTab = "signed";
-      if (!above.length && !below.length && !scanning) {
+      var signedGroups = certGroupsHTML(below), hasSignedGroups = !!signedGroups;
+      if (hasSignedGroups && !above.length) appsActiveTab = "signed";
+      if (!above.length && !hasSignedGroups && !scanning) {
         wrap.innerHTML = '<div class="empty">' +
           '<img data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
           '<strong>Add your first app</strong>' +
@@ -1635,8 +1648,8 @@
       }
       var storePanel = above.length ? storeTableHTML(above) : '<div class="empty"><strong>No Microsoft Store apps yet</strong><p class="muted">Your selected certificate apps are in Not in the Store.</p><fluent-button appearance="primary" data-newapp>New product</fluent-button></div>';
       var signedPanel = "";
-      if (below.length) {
-        var dCert = certById(below[0].certId), dVerified = dCert && dCert.verified === true;
+      if (hasSignedGroups) {
+        var dCert = below.length ? certById(below[0].certId) : state.certs.find(canEditCertificateApps), dVerified = dCert && dCert.verified === true;
         // Unified adds certs by proving ownership (uploading a signed binary) and never locks these apps,
         // so the "verify ownership" prompt doesn't apply — always show the verified note here.
         var note = (dVerified || UNIFIED)
@@ -1645,10 +1658,10 @@
           : '<div class="disc-note disc-note--verify"><iconify-icon icon="fluent:lock-closed-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
               '<span><strong>Verify you own this certificate.</strong> These apps are signed by the same certificate as the app you just published. Download our verification file, sign it with that certificate, and upload it to unlock crash analytics &amp; SmartScreen reputation.</span>' +
               '<fluent-button appearance="primary" size="small" data-openmodal>Verify ownership</fluent-button></div>';
-        signedPanel = '<div class="disc-section">' + note + certGroupsHTML(below) + '</div>';
+        signedPanel = '<div class="disc-section">' + (below.length ? note : '') + signedGroups + '</div>';
       }
       // Keep the non-Store destination explicit even before the first Store app exists.
-      if (below.length) {
+      if (hasSignedGroups) {
         wrap.innerHTML = sbanner + appsTabsHTML(above.length, below.length) +
           '<div class="apps-panels" data-tab="' + (appsActiveTab === "signed" ? "signed" : "store") + '">' +
             '<div class="apps-panel" data-appspanel="store">' + storePanel + '</div>' +
@@ -1664,7 +1677,9 @@
       ? '<div class="scan-banner"><span class="spinner"></span>Finding apps signed with your certificate…</div>'
       : "";
     var sk = scanning ? appSkeletonHTML(3) : "";
-    if (!state.apps.length) {
+    var wSigned = state.apps.filter(function (a) { return !inStorePipeline(a); });
+    var wSignedHtml = certGroupsHTML(wSigned);
+    if (!state.apps.length && !wSignedHtml) {
       wrap.innerHTML = scanning ? (banner + sk) : ('<div class="empty">' +
         '<img data-theme-image="rocket" src="assets/rocket.png" alt="" />' +
         '<strong>No apps yet</strong>' +
@@ -1677,7 +1692,6 @@
     // Two tables (shared with the Store portal). The WDP apps page leads with the apps that are IN the
     // Store (Draft / In certification / Live) on top, and shows the signed, not-yet-in-Store apps
     // (grouped by certificate) below.
-    var wSigned = state.apps.filter(function (a) { return !inStorePipeline(a); });
     var wStore = state.apps.filter(inStorePipeline);
     var wHtml = banner;
     if (wStore.length) {
@@ -1685,7 +1699,6 @@
         '<span><strong>In the Microsoft Store.</strong> Installs, crash health and ratings for your apps in the Store — select one to open its analytics.</span></div>';
       wHtml += '<div class="store-block">' + wNote + storeTableHTML(wStore) + '</div>';
     }
-    var wSignedHtml = certGroupsHTML(wSigned);
     if (wSignedHtml) wHtml += (wStore.length ? '<div class="disc-section">' + wSignedHtml + '</div>' : wSignedHtml);
     wrap.innerHTML = wHtml + (scanning ? appSkeletonHTML(2) : "");
   }
@@ -1711,20 +1724,21 @@
     var FP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a2 2 0 0 1 2 2c0 3-.5 5.2-1.3 6.9"/><path d="M12 6a6 6 0 0 1 6 6c0 1.7-.1 3.2-.4 4.7"/><path d="M9 6.8A6 6 0 0 0 6 12c0 3.6-.4 5.6-1.1 7"/><path d="M9 14c0-1.7 1.3-3 3-3"/></svg>';
     var facts = "";
     if (cert) facts += '<span class="certfact" title="Certificate thumbprint">' + FP + '<span class="mono">' + fmtThumb(cert.thumb) + '</span></span>';
-    return '<section class="certgroup">' +
+    return '<section class="certgroup"' + (cert ? ' data-certgroup="' + esc(cert.id) + '"' : '') + '>' +
       '<header class="certcard">' + ico +
         '<div class="certcard__id">' +
           '<span class="certcard__kicker">Signing certificate</span>' +
           '<div class="certcard__name">' + label + '</div>' +
+          (cert ? certSelectionStatsHTML(cert) : '') +
         '</div>' +
-        '<div class="certcard__meta">' + facts + pill + '</div>' +
+        '<div class="certcard__meta">' + facts + pill + (cert ? certSelectionActionHTML(cert, 'outline') : '') + '</div>' +
       '</header>' +
-      '<div class="table-wrap"><table class="table apptable' + (STORE ? ' apptable--store' : '') + '">' +
+      (g.apps.length ? '<div class="table-wrap"><table class="table apptable' + (STORE ? ' apptable--store' : '') + '">' +
         (STORE
           ? '<thead><tr><th>App</th><th>Type</th><th>Status</th><th>Installs</th><th>Crash rate</th><th>Rating</th><th class="col-store"></th></tr></thead>'
           : '<thead><tr><th>App</th><th>Crash analytics</th><th>Download sources</th><th class="col-store">Store</th></tr></thead>') +
         '<tbody>' + g.apps.map(STORE ? storeCertRowHTML : appRowHTML).join("") + '</tbody>' +
-      '</table></div>' +
+      '</table></div>' : '<p class="certgroup__empty">No non-Store apps selected. Use <strong>Edit app selection</strong> to choose the apps to show here.</p>') +
     '</section>';
   }
 
@@ -1736,6 +1750,9 @@
       var key = a.certId || (a.signerSubject ? "subj:" + a.signerSubject : "none");
       if (!byKey[key]) { byKey[key] = { certId: a.certId, subject: a.signerSubject, apps: [] }; groups.push(byKey[key]); }
       byKey[key].apps.push(a);
+    });
+    state.certs.forEach(function (cert) {
+      if (canEditCertificateApps(cert) && !byKey[cert.id]) groups.push({ certId: cert.id, subject: cert.subject, apps: [] });
     });
     return groups.map(certGroupHTML).join("");
   }
@@ -3814,8 +3831,9 @@
     certs = certs.filter(function (c) { return c && c.verified && (c.trust === "Valid" || c.thumbKind === "hash"); });
     if (!certs.length) { toast("Verify a code-signing certificate first", true); return; }
     var context = { certs: certs, owner: discoveryOwner(), demo: false, errors: [],
+      returnView: options && options.returnView || document.querySelector('.block.active')?.id || 'certificates',
       managing: !!(options && options.managing) || certs.some(function (c) { return c.appSelectionReviewed || state.apps.some(function (a) { return a.certId === c.id; }); }) };
-    var candidates = [], identities = new Set();
+    var candidates = [], identities = new Set(), summaries = new Map();
     certDiscoveryActive = true; scanning = true;
     for (var i = 0; i < certs.length; i++) {
       var cert = certs[i], list, demo = cert.thumbKind === "hash", controller = new AbortController();
@@ -3830,7 +3848,9 @@
         }
         if (demo) { backendOffline = true; context.demo = true; list = demoDiscoveredApps(); }
         if (!Array.isArray(list)) throw new Error("Unexpected discovery response");
-        discovery.normalize(list, cert, state.apps).forEach(function (c) {
+        var identified = discovery.normalize(list, cert, state.apps);
+        summaries.set(cert.id, discovery.summarizeDiscovery(identified, cert.id, demo ? 'demo' : 'live'));
+        identified.forEach(function (c) {
           if (!identities.has(c.key)) { identities.add(c.key); candidates.push(c); }
         });
       } catch (e) {
@@ -3842,6 +3862,18 @@
     }
     scanning = false; scanningCertId = null;
     if (context.owner !== discoveryOwner()) { certDiscoveryActive = false; renderAll(); return; }
+    if (summaries.size) {
+      var previousCerts = state.certs;
+      state.certs = state.certs.map(function (cert) {
+        var summary = summaries.get(cert.id);
+        if (!summary || (summary.source === 'demo' && cert.discoverySummary?.source === 'live')) return cert;
+        return Object.assign({}, cert, { discoverySummary: summary });
+      });
+      if (!save()) {
+        state.certs = previousCerts;
+        context.countWarning = 'The discovery total couldn’t be saved. Free some browser storage and try again.';
+      }
+    }
     renderAll();
     showCertAppPicker(candidates, context);
   }
@@ -3928,6 +3960,7 @@
       '<p class="cpk-intro" id="cpk-intro">' + (context.demo ? 'Sample apps and processes.' : 'Apps signed by <strong>' + esc(label) + '</strong>.') + (context.managing ? ' Select the apps you want to track.' : ' Review the preselected recommendations.') + '</p>' +
       (candidates.some(function (c) { return c.relinkId; }) ? '<p class="cpk-demo">Some apps already use another certificate. Selecting <strong>Change certificate</strong> items links them to this certificate without resetting their analytics.</p>' : '') +
       (context.demo ? '<p class="cpk-demo">Sample results are shown because live discovery is unavailable. These are not results from your certificate.</p>' : '') +
+      (context.countWarning ? '<p class="cpk-demo" role="status">' + esc(context.countWarning) + '</p>' : '') +
       '<div class="cpk-error" role="alert"' + (context.errors.length ? '' : ' hidden') + '>' + (context.errors.length ? 'We couldn’t load results for ' + esc(context.errors.join(", ")) + '. Your certificates are saved. Try again or review them later.' : '') + '</div>' +
       (context.errors.length ? '<fluent-button class="cpk-retry" appearance="outline" size="small" data-cpk-retry>Try again</fluent-button>' : '') +
       '<div class="cpk-toolbar"' + (!candidates.length ? ' hidden' : '') + '>' +
@@ -3997,19 +4030,20 @@
       }).join('');
       dlg.querySelector("#cpk-results").innerHTML = rows
         ? '<div class="cpk-scroll">' + rows + '</div>'
-        : '<div class="cpk-empty" role="status"><strong>' + (candidates.length ? 'No matching items' : context.errors.length ? 'Discovery unavailable' : 'No apps or processes found') + '</strong><p>' + (candidates.length ? 'Try another name. Your selections are kept.' : 'Your certificate is saved. Select its app count to check again later.') + '</p>' + (candidates.length ? '<fluent-button appearance="outline" data-cpk-reset>Clear search</fluent-button>' : '') + '</div>';
+        : '<div class="cpk-empty" role="status"><strong>' + (candidates.length ? 'No matching items' : context.errors.length ? 'Discovery unavailable' : 'No apps or processes found') + '</strong><p>' + (candidates.length ? 'Try another name. Your selections are kept.' : 'Your certificate is saved. Use Edit app selection to check again later.') + '</p>' + (candidates.length ? '<fluent-button appearance="outline" data-cpk-reset>Clear search</fluent-button>' : '') + '</div>';
       syncSelection();
     }
-    function release() { certDiscoveryActive = false; renderCerts(); }
+    function release() { certDiscoveryActive = false; renderCerts(); renderApps(); }
+    function restoreTriggerFocus() {
+      var origin = $(context.returnView), trigger = origin && origin.querySelector('[data-certreview="' + context.certs[0].id + '"]');
+      if (!certDiscoveryActive && origin?.classList.contains('active') && trigger) trigger.focus();
+    }
     function close() {
       closed = true; release(); dlg.hide();
-      if (!committed) setTimeout(function () {
-        var trigger = document.querySelector('[data-certreview="' + context.certs[0].id + '"]');
-        if (!certDiscoveryActive && trigger && document.querySelector('.block.active')?.id === 'certificates') trigger.focus();
-      }, 0);
+      if (!committed) setTimeout(restoreTriggerFocus, 0);
     }
     dlg.addEventListener("toggle", function (e) {
-      if (!closed && e.detail && e.detail.newState === "closed") { closed = true; release(); }
+      if (!closed && e.detail && e.detail.newState === "closed") { closed = true; release(); setTimeout(restoreTriggerFocus, 0); }
     });
     dlg.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && !e.defaultPrevented) {
@@ -4042,7 +4076,7 @@
         var items = groupItems(bulk.getAttribute("data-cpk-group-all")), turnOn = !items.every(function (c) { return c.selected; });
         items.forEach(function (c) { c.selected = turnOn; }); syncSelection(); return;
       }
-      if (e.target.closest("[data-cpk-retry]")) { close(); discoverCertApps(context.certs, { managing: context.managing }); return; }
+      if (e.target.closest("[data-cpk-retry]")) { close(); discoverCertApps(context.certs, { managing: context.managing, returnView: context.returnView }); return; }
       if (e.target.closest("[data-cpk-reset]")) {
         options.query = ""; pages = { recommended: 0, other: 0 }; searchExpanded = true;
         dlg.querySelector("#cpk-search").value = ""; renderResults(); dlg.querySelector("#cpk-search").focus(); return;
@@ -4074,10 +4108,7 @@
       }
       committed = true; syncSelection(); close(); appsActiveTab = "signed"; renderAll();
       if (!context.managing) goView("apps");
-      else {
-        var trigger = document.querySelector('[data-certreview="' + context.certs[0].id + '"]');
-        if (trigger) trigger.focus();
-      }
+      else restoreTriggerFocus();
       toast(context.managing || next.relinked ? "App selection saved." : "Added " + next.added + " app" + (next.added === 1 ? "" : "s") + ". Crash analytics can take up to 24 hours.", true);
     });
     renderResults();
