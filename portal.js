@@ -3803,7 +3803,7 @@
     state.certs.push(cert);
     return { cert: cert, created: true };
   }
-  // Static-host sample results are explicitly labeled in the picker.
+  // Static-host fallback uses the same selection workflow.
   function demoDiscoveredApps() {
     return [
       { ProductName: "Contoso Designer 2026", file: "Designer.exe", version: "26.0", kind: "app", TotalEngagementDurationMS: 3.8e14 },
@@ -3942,6 +3942,14 @@
     if (cbtn) cbtn.addEventListener("click", function () { close(); if (typeof opts.onConfirm === "function") opts.onConfirm(); });
     try { dlg.show(); } catch (e) { if (window.confirm(opts.title || "Are you sure?") && typeof opts.onConfirm === "function") opts.onConfirm(); }
   }
+  function certPickerIntro(managing) {
+    return managing ? 'Select the apps you want to track.' : 'Select the apps you want to track. Recommended apps are preselected.';
+  }
+  function certPickerActionsHTML(hasCandidates) {
+    return '<fluent-button slot="action" appearance="transparent" data-cpk-close>' + (hasCandidates ? 'Cancel' : 'Close') + '</fluent-button>' +
+      (hasCandidates ? '<fluent-button slot="action" appearance="outline" data-cpk-confirm="close">Save and close</fluent-button>' +
+        '<fluent-button slot="action" appearance="primary" data-cpk-confirm="apps">Save and view apps</fluent-button>' : '');
+  }
   function showCertAppPicker(candidates, context) {
     var old = $("certPickModal"); if (old) { old.hide(); old.remove(); }
     var dlg = document.createElement("fluent-dialog");
@@ -3953,14 +3961,12 @@
     candidates.forEach(function (c, i) { c.index = i; c.initialSelected = context.managing ? !!c.existingId : c.selected; });
     var options = { query: "", sort: "name" }, pages = { recommended: 0, other: 0 }, pageSize = 20;
     var otherExpanded = false, searchExpanded = true, results = [], visible = [], committed = false, closed = false;
-    var label = context.certs.length === 1 ? context.certs[0].label : context.certs.length + " certificates";
     dlg.innerHTML = '<fluent-dialog-body class="cpkdialog">' +
       '<span slot="title">' + title + '</span>' +
       '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close app selection" data-cpk-close><iconify-icon icon="fluent:dismiss-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-button>' +
-      '<p class="cpk-intro" id="cpk-intro">' + (context.demo ? 'Sample apps and processes.' : 'Apps signed by <strong>' + esc(label) + '</strong>.') + (context.managing ? ' Select the apps you want to track.' : ' Review the preselected recommendations.') + '</p>' +
-      (candidates.some(function (c) { return c.relinkId; }) ? '<p class="cpk-demo">Some apps already use another certificate. Selecting <strong>Change certificate</strong> items links them to this certificate without resetting their analytics.</p>' : '') +
-      (context.demo ? '<p class="cpk-demo">Sample results are shown because live discovery is unavailable. These are not results from your certificate.</p>' : '') +
-      (context.countWarning ? '<p class="cpk-demo" role="status">' + esc(context.countWarning) + '</p>' : '') +
+      '<p class="cpk-intro" id="cpk-intro">' + certPickerIntro(context.managing) + '</p>' +
+      (candidates.some(function (c) { return c.relinkId; }) ? '<p class="cpk-hint">Some apps already use another certificate. Selecting <strong>Change certificate</strong> items links them to this certificate without resetting their analytics.</p>' : '') +
+      (context.countWarning ? '<p class="cpk-hint" role="status">' + esc(context.countWarning) + '</p>' : '') +
       '<div class="cpk-error" role="alert"' + (context.errors.length ? '' : ' hidden') + '>' + (context.errors.length ? 'We couldn’t load results for ' + esc(context.errors.join(", ")) + '. Your certificates are saved. Try again or review them later.' : '') + '</div>' +
       (context.errors.length ? '<fluent-button class="cpk-retry" appearance="outline" size="small" data-cpk-retry>Try again</fluent-button>' : '') +
       '<div class="cpk-toolbar"' + (!candidates.length ? ' hidden' : '') + '>' +
@@ -3969,8 +3975,7 @@
       '<div class="cpk-results" id="cpk-results"></div>' +
       (candidates.length ? '<p class="cpk-note">Crash analytics can take up to 24 hours to appear.</p>' : '') +
       '<span slot="action" class="cpk-total" id="cpk-total" role="status" aria-live="polite" aria-atomic="true"></span>' +
-      '<fluent-button slot="action" appearance="outline" data-cpk-close>' + (candidates.length ? 'Cancel' : 'Close') + '</fluent-button>' +
-      '<fluent-button slot="action" appearance="primary" data-cpk-confirm' + (!candidates.length ? ' hidden' : '') + '>Add apps</fluent-button>' +
+      certPickerActionsHTML(candidates.length > 0) +
       '</fluent-dialog-body>';
 
     function selected() { return candidates.filter(function (c) { return c.selected; }); }
@@ -3987,11 +3992,12 @@
     function groupItems(group) { return results.filter(function (c) { return !c.locked && c.recommended === (group === "recommended"); }); }
     function groupExpanded(group) { return group === "recommended" || (options.query.trim() ? searchExpanded : otherExpanded); }
     function syncSelection() {
-      var pick = selected(), count = pick.length, total = dlg.querySelector("#cpk-total"), confirm = dlg.querySelector("[data-cpk-confirm]");
+      var count = selected().length, total = dlg.querySelector("#cpk-total");
       total.textContent = candidates.length ? count + " selected" : "";
       total.title = candidates.length > pageSize ? "Selections across all pages" : "";
-      confirm.textContent = context.managing ? "Save changes" : pick.some(function (c) { return c.relinkId; }) ? "Confirm selection" : count ? "Add " + count + " app" + (count === 1 ? "" : "s") : "Add apps";
-      confirm.toggleAttribute("disabled", committed || (context.managing ? !changed() : !count));
+      dlg.querySelectorAll("[data-cpk-confirm]").forEach(function (button) {
+        button.toggleAttribute("disabled", committed || (context.managing ? !changed() : !count));
+      });
       var removed = candidates.filter(function (c) { return c.existingId && !c.locked && !c.selected; }).length;
       var note = dlg.querySelector(".cpk-note");
       if (note) note.textContent = removed ? removed + " app" + (removed === 1 ? " will" : "s will") + " be removed from your non-Store app list and crash analytics." : "New apps can take up to 24 hours to show crash analytics.";
@@ -4093,7 +4099,8 @@
         if (!c.locked) { c.selected = !c.selected; syncSelection(); }
       }
     });
-    dlg.querySelector("[data-cpk-confirm]").addEventListener("click", function () {
+    function confirmSelection(destination) {
+      if (destination !== "close" && destination !== "apps") return;
       if (committed || (context.managing ? !changed() : !selected().length)) return;
       var error = dlg.querySelector(".cpk-error");
       if (context.owner !== discoveryOwner() || context.certs.some(function (c) { return !certById(c.id); })) {
@@ -4107,9 +4114,12 @@
         error.textContent = "We couldn’t save your selections. Free some browser storage or select fewer apps and try again."; error.hidden = false; return;
       }
       committed = true; syncSelection(); close(); appsActiveTab = "signed"; renderAll();
-      if (!context.managing) goView("apps");
+      if (destination === "apps") goView("apps");
       else restoreTriggerFocus();
       toast(context.managing || next.relinked ? "App selection saved." : "Added " + next.added + " app" + (next.added === 1 ? "" : "s") + ". Crash analytics can take up to 24 hours.", true);
+    }
+    dlg.querySelectorAll("[data-cpk-confirm]").forEach(function (button) {
+      button.addEventListener("click", function () { confirmSelection(button.getAttribute("data-cpk-confirm")); });
     });
     renderResults();
     customElements.whenDefined("fluent-dialog").then(function () { dlg.show(); });
