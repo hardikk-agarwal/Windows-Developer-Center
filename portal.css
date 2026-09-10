@@ -359,12 +359,24 @@ fluent-message-bar[hidden] { display: none; }
 .cert-row:hover, .cert-row:focus-within { background: var(--colorSubtleBackgroundHover); }
 .cert-row__actions { width: 1%; white-space: nowrap; text-align: right; }
 .cert-actions { display: inline-flex; align-items: center; gap: var(--spacingHorizontalXS); }
-.cert-selection { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacingVerticalXS); }
+.cert-selection { display: flex; align-items: center; gap: var(--spacingHorizontalL); }
 .cert-selection-stats { display: flex; flex-direction: column; gap: var(--spacingVerticalXXS);
   font-size: var(--fontSizeBase200); line-height: var(--lineHeightBase200); }
+.cert-selection-stats--compact { font-size: var(--fontSizeBase300); line-height: var(--lineHeightBase300); white-space: nowrap; }
+.cert-selection .cert-selection-edit { font-size: var(--fontSizeBase300); }
 .cert-selection__identified { color: var(--text-2); }
 .cert-selection__selected { color: var(--text); }
 .cert-selection__selected strong { font-weight: var(--fontWeightSemibold); }
+.cert-selection__pending { color: var(--text); font-weight: var(--fontWeightSemibold); }
+.cert-selection-reminder { margin-bottom: var(--spacingVerticalL); }
+.cert-selection-reminder__body { min-width: 0; color: var(--text-2); font-size: var(--fontSizeBase300); line-height: var(--lineHeightBase300); }
+.cert-selection-reminder__body strong { display: block; color: var(--text); font-weight: var(--fontWeightSemibold); margin-bottom: var(--spacingVerticalXXS); }
+.cert-selection-reminder__body p { margin: 0; }
+.cert-selection-reminder [slot="actions"] { white-space: nowrap; }
+@media (max-width: 620px) {
+  .cert-selection-reminder { grid-template-areas: "icon body dismiss" "actions actions actions"; grid-template-columns: auto minmax(0, 1fr) auto;
+    padding-block-end: var(--spacingVerticalMNudge); }
+}
 .cert-selection-edit { white-space: nowrap; flex: none; }
 .cert-selection-edit[appearance="transparent"] { padding-inline: 0; min-width: 0; color: var(--brand-soft); }
 .cert-selection-edit[appearance="transparent"]:hover { text-decoration: underline; }

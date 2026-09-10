@@ -46,11 +46,16 @@
     return { recommended: false, role: "Needs review", reason: "An executable name alone does not identify an app" };
   }
 
+  function hasReviewedSelection(cert, apps) {
+    return !!(cert.appSelectionReviewed || Object.keys(cert.appSelections || {}).length ||
+      (apps || []).some(function (a) { return a.certId === cert.id; }));
+  }
+
   function normalize(rows, cert, existingApps) {
     if (!Array.isArray(rows)) return [];
     var existing = new Map(), seen = new Map();
     var choices = cert.appSelections || {};
-    var reviewed = cert.appSelectionReviewed || (existingApps || []).some(function (a) { return a.certId === cert.id; });
+    var reviewed = hasReviewedSelection(cert, existingApps);
     (existingApps || []).forEach(function (a) { if (a.discoveryKey) existing.set(key(a.discoveryKey), a); });
     rows.forEach(function (item) {
       if (!item || typeof item !== "object") return;
@@ -181,7 +186,7 @@
     return Number.isFinite(added) && (now == null ? Date.now() : now) < added + ANALYTICS_DELAY_MS;
   }
 
-  return { normalize: normalize, summarizeDiscovery: summarizeDiscovery, selectionCounts: selectionCounts,
+  return { normalize: normalize, hasReviewedSelection: hasReviewedSelection, summarizeDiscovery: summarizeDiscovery, selectionCounts: selectionCounts,
     applySelection: applySelection, requestJson: requestJson, view: view, key: key, formatEngagement: formatEngagement,
     isAnalyticsPending: isAnalyticsPending, ANALYTICS_DELAY_MS: ANALYTICS_DELAY_MS };
 });

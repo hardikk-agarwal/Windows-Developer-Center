@@ -1490,7 +1490,7 @@
           '</div>';
       return;
     }
-    wrap.innerHTML = '<div class="table-wrap certs-table-wrap" role="region" aria-label="Certificates" tabindex="0"><table class="table table--certs">' +
+    wrap.innerHTML = certSelectionReminderHTML() + '<div class="table-wrap certs-table-wrap" role="region" aria-label="Certificates" tabindex="0"><table class="table table--certs">' +
       '<thead><tr><th>Certificate</th><th>Source</th><th>App selection</th><th>Added</th><th>Expires</th><th>Status</th><th aria-label="Certificate actions"></th></tr></thead>' +
       '<tbody>' + state.certs.map(certRowHTML).join("") + '</tbody></table></div>' +
       (scanning ? certScanBannerHTML() : ((STORE && !UNIFIED) ? "" : certFoundBannerHTML()));
@@ -1549,26 +1549,61 @@
     return '<div class="certdet">' + html + '</div>';
   }
   function canEditCertificateApps(cert) { return !!(cert && cert.verified && (cert.trust === "Valid" || cert.thumbKind === "hash")); }
-  function certSelectionStatsHTML(cert) {
+  function certificateSelectionState(cert) {
+    if (!canEditCertificateApps(cert)) return 'unavailable';
+    if (discovery.hasReviewedSelection(cert, state.apps)) return 'reviewed';
+    return discovery.selectionCounts(cert, state.apps).identified === 0 ? 'not-found' : 'pending';
+  }
+  function certsNeedingAppSelection() {
+    return state.certs.filter(function (cert) { return certificateSelectionState(cert) === 'pending'; });
+  }
+  function certSelectionPendingActionHTML(slot) {
+    return '<fluent-button' + (slot ? ' slot="' + slot + '"' : '') + ' appearance="primary" data-certreview-pending aria-haspopup="dialog"' +
+      (certDiscoveryActive ? ' disabled' : '') + '>Select apps</fluent-button>';
+  }
+  function certSelectionReminderHTML() {
+    var certs = certsNeedingAppSelection();
+    if (!certs.length || scanning) return '';
+    return '<fluent-message-bar class="cert-selection-reminder" intent="info" role="group" aria-label="App selection needed">' +
+      '<iconify-icon slot="icon" icon="fluent:apps-list-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
+      '<div class="cert-selection-reminder__body"><strong>Select apps to get crash analytics</strong><p>' +
+        (certs.length === 1 ? 'Your certificate is saved.' : certs.length + ' certificates still need app selection.') +
+        ' Choose which apps to add to your app list.</p></div>' +
+      certSelectionPendingActionHTML('actions') + '</fluent-message-bar>';
+  }
+  function certSelectionStatsHTML(cert, compact) {
     var counts = discovery.selectionCounts(cert, state.apps), identified;
     if (scanning && cert.id === scanningCertId) identified = 'Finding apps and processes…';
     else if (counts.identified == null) identified = 'Total not checked yet';
-    else identified = counts.identified.toLocaleString() + (counts.demo ? (counts.identified === 1 ? ' item in demo list' : ' items in demo list') : (counts.identified === 1 ? ' app or process identified' : ' apps &amp; processes identified'));
+    else identified = counts.identified.toLocaleString() + (counts.demo ? (counts.identified === 1 ? ' item in demo list' : ' items in demo list') : (counts.identified === 1 ? ' app or process identified' : ' apps & processes identified'));
+    if (compact) {
+      var description = counts.selected.toLocaleString() + (counts.selected === 1 ? ' app selected. ' : ' apps selected. ') + identified;
+      var summary = '<strong>' + counts.selected.toLocaleString() + '</strong>' +
+        (counts.identified != null && counts.identified >= counts.selected ? ' <span class="cert-selection__identified">of ' + counts.identified.toLocaleString() + '</span>' : '') + ' selected';
+      if (scanning && cert.id === scanningCertId) summary = 'Finding apps…';
+      else if (counts.identified === 0 && counts.selected === 0) summary = 'No apps found';
+      else if (counts.demo) summary += ' <span class="cert-selection__identified">(demo)</span>';
+      return '<span class="cert-selection-stats cert-selection-stats--compact" data-cert-stats="' + esc(cert.id) + '" role="group" aria-label="' + esc(description) + '" title="' + esc(description) + '">' +
+        '<span class="cert-selection__selected" aria-hidden="true">' + summary + '</span></span>';
+    }
     return '<span class="cert-selection-stats" data-cert-stats="' + esc(cert.id) + '">' +
-      '<span class="cert-selection__identified">' + identified + '</span>' +
-      '<span class="cert-selection__selected"><strong>' + counts.selected.toLocaleString() + '</strong>' + (counts.selected === 1 ? ' selected as an app' : ' selected as apps') + '</span></span>';
+      '<span class="cert-selection__identified">' + esc(identified) + '</span>' +
+      '<span class="cert-selection__selected"><strong>' + counts.selected.toLocaleString() + '</strong>' + (counts.selected === 1 ? ' selected as an app' : ' selected as apps') + '</span>' +
+      (certificateSelectionState(cert) === 'pending' && !scanning ? '<span class="cert-selection__pending">Selection needed</span>' : '') + '</span>';
   }
-  function certSelectionActionHTML(cert, appearance) {
+  function certSelectionActionHTML(cert, appearance, compact) {
     if (!canEditCertificateApps(cert)) return '';
+    var status = certificateSelectionState(cert);
+    var label = status === 'pending' ? 'Select apps' : status === 'not-found' ? 'Check for apps' : 'Edit app selection';
     return '<fluent-button class="cert-selection-edit" appearance="' + (appearance || 'transparent') + '" size="small" data-certreview="' + esc(cert.id) +
-      '" aria-label="' + esc('Edit app selection for ' + cert.label) + '" aria-haspopup="dialog"' + (certDiscoveryActive ? ' disabled' : '') +
-      '>Edit app selection</fluent-button>';
+      '" aria-label="' + esc(label + ' for ' + cert.label) + '" aria-haspopup="dialog"' + (certDiscoveryActive ? ' disabled' : '') +
+      '>' + (compact && status === 'reviewed' ? 'Edit' : label) + '</fluent-button>';
   }
   function certRowHTML(c) {
     var sub = c.thumbKind === "hash" ? "File fingerprint (backend offline)" : "Authenticode signer";
     var algo = c.thumbKind === "cert" ? "SHA-1" : "SHA-256";
     var open = expandedCerts.has(c.id);
-    var appsCell = '<div class="cert-selection">' + certSelectionStatsHTML(c) + certSelectionActionHTML(c) + '</div>';
+    var appsCell = '<div class="cert-selection">' + certSelectionStatsHTML(c, true) + certSelectionActionHTML(c, 'transparent', true) + '</div>';
     var detId = "certdet-" + c.id;
     return '<tr class="cert-row' + (open ? ' is-expanded' : '') + '" data-certrow="' + esc(c.id) + '">' +
       '<td><div class="cell-main"><span class="cert-ico' + (c.signed ? "" : " cert-ico--alt") + '">' + (c.signed ? "CS" : "#") + '</span>' +
@@ -1662,7 +1697,7 @@
       }
       // Keep the non-Store destination explicit even before the first Store app exists.
       if (hasSignedGroups) {
-        wrap.innerHTML = sbanner + appsTabsHTML(above.length, below.length) +
+        wrap.innerHTML = certSelectionReminderHTML() + sbanner + appsTabsHTML(above.length, below.length) +
           '<div class="apps-panels" data-tab="' + (appsActiveTab === "signed" ? "signed" : "store") + '">' +
             '<div class="apps-panel" data-appspanel="store">' + storePanel + '</div>' +
             '<div class="apps-panel" data-appspanel="signed">' + signedPanel + '</div>' +
@@ -1693,7 +1728,7 @@
     // Store (Draft / In certification / Live) on top, and shows the signed, not-yet-in-Store apps
     // (grouped by certificate) below.
     var wStore = state.apps.filter(inStorePipeline);
-    var wHtml = banner;
+    var wHtml = certSelectionReminderHTML() + banner;
     if (wStore.length) {
       var wNote = '<div class="disc-note"><iconify-icon icon="fluent:store-microsoft-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>' +
         '<span><strong>In the Microsoft Store.</strong> Installs, crash health and ratings for your apps in the Store — select one to open its analytics.</span></div>';
@@ -1724,6 +1759,10 @@
     var FP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a2 2 0 0 1 2 2c0 3-.5 5.2-1.3 6.9"/><path d="M12 6a6 6 0 0 1 6 6c0 1.7-.1 3.2-.4 4.7"/><path d="M9 6.8A6 6 0 0 0 6 12c0 3.6-.4 5.6-1.1 7"/><path d="M9 14c0-1.7 1.3-3 3-3"/></svg>';
     var facts = "";
     if (cert) facts += '<span class="certfact" title="Certificate thumbprint">' + FP + '<span class="mono">' + fmtThumb(cert.thumb) + '</span></span>';
+    var selectionState = certificateSelectionState(cert);
+    var emptyCopy = selectionState === 'pending' ? 'Select apps to add them here and get crash analytics. You can do this anytime.'
+      : selectionState === 'not-found' ? 'No apps or processes found. Check for apps again later.'
+      : 'No non-Store apps selected. Use <strong>Edit app selection</strong> to choose the apps to show here.';
     return '<section class="certgroup"' + (cert ? ' data-certgroup="' + esc(cert.id) + '"' : '') + '>' +
       '<header class="certcard">' + ico +
         '<div class="certcard__id">' +
@@ -1738,7 +1777,7 @@
           ? '<thead><tr><th>App</th><th>Type</th><th>Status</th><th>Installs</th><th>Crash rate</th><th>Rating</th><th class="col-store"></th></tr></thead>'
           : '<thead><tr><th>App</th><th>Crash analytics</th><th>Download sources</th><th class="col-store">Store</th></tr></thead>') +
         '<tbody>' + g.apps.map(STORE ? storeCertRowHTML : appRowHTML).join("") + '</tbody>' +
-      '</table></div>' : '<p class="certgroup__empty">No non-Store apps selected. Use <strong>Edit app selection</strong> to choose the apps to show here.</p>') +
+      '</table></div>' : '<p class="certgroup__empty">' + emptyCopy + '</p>') +
     '</section>';
   }
 
@@ -2114,6 +2153,18 @@
   }
 
   function emptyAnalyticsHTML() {
+    var pendingCerts = certsNeedingAppSelection(), eligibleCerts = state.certs.filter(canEditCertificateApps);
+    if (eligibleCerts.length) {
+      var noneFound = eligibleCerts.every(function (cert) { return certificateSelectionState(cert) === 'not-found'; });
+      var title = pendingCerts.length ? 'Select apps to get crash analytics' : noneFound ? 'No apps found yet' : 'No apps selected for crash analytics';
+      var copy = noneFound ? 'Your certificate' + (eligibleCerts.length === 1 ? ' is' : 's are') + ' saved. Check for apps again later.'
+        : 'Choose apps from your saved certificate' + (eligibleCerts.length === 1 ? '' : 's') + ' to track crashes and hangs. Data can take up to 24 hours to appear after you save.';
+      var action = pendingCerts.length ? certSelectionPendingActionHTML()
+        : eligibleCerts.length === 1 ? certSelectionActionHTML(eligibleCerts[0], 'primary')
+        : '<fluent-button appearance="primary" data-jump="apps">Manage app selection</fluent-button>';
+      return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
+        '<strong>' + title + '</strong><p class="muted">' + copy + '</p><div class="empty__cta">' + action + '</div></div>';
+    }
     if (STORE && !UNIFIED) {
       return '<div class="empty"><img data-theme-image="data-trending" src="assets/data-trending.png" alt="" />' +
         '<strong>No analytics yet</strong>' +
@@ -3830,9 +3881,9 @@
     if (certDiscoveryActive || scanning) return;
     certs = certs.filter(function (c) { return c && c.verified && (c.trust === "Valid" || c.thumbKind === "hash"); });
     if (!certs.length) { toast("Verify a code-signing certificate first", true); return; }
-    var context = { certs: certs, owner: discoveryOwner(), demo: false, errors: [],
+    var context = { certs: certs, owner: discoveryOwner(), demo: false, errors: [], returnPending: !!(options && options.returnPending),
       returnView: options && options.returnView || document.querySelector('.block.active')?.id || 'certificates',
-      managing: !!(options && options.managing) || certs.some(function (c) { return c.appSelectionReviewed || state.apps.some(function (a) { return a.certId === c.id; }); }) };
+      managing: !!(options && options.managing) || certs.some(function (c) { return discovery.hasReviewedSelection(c, state.apps); }) };
     var candidates = [], identities = new Set(), summaries = new Map();
     certDiscoveryActive = true; scanning = true;
     for (var i = 0; i < certs.length; i++) {
@@ -3945,8 +3996,8 @@
   function certPickerIntro(managing) {
     return managing ? 'Select the apps you want to track.' : 'Select the apps you want to track. Recommended apps are preselected.';
   }
-  function certPickerActionsHTML(hasCandidates) {
-    return '<fluent-button slot="action" appearance="transparent" data-cpk-close>' + (hasCandidates ? 'Cancel' : 'Close') + '</fluent-button>' +
+  function certPickerActionsHTML(hasCandidates, managing) {
+    return '<fluent-button slot="action" appearance="transparent" data-cpk-close>' + (hasCandidates ? (managing ? 'Cancel' : 'Select later') : 'Close') + '</fluent-button>' +
       (hasCandidates ? '<fluent-button slot="action" appearance="outline" data-cpk-confirm="close">Save and close</fluent-button>' +
         '<fluent-button slot="action" appearance="primary" data-cpk-confirm="apps">Save and view apps</fluent-button>' : '');
   }
@@ -3965,6 +4016,7 @@
       '<span slot="title">' + title + '</span>' +
       '<fluent-button slot="title-action" appearance="transparent" icon-only aria-label="Close app selection" data-cpk-close><iconify-icon icon="fluent:dismiss-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon></fluent-button>' +
       '<p class="cpk-intro" id="cpk-intro">' + certPickerIntro(context.managing) + '</p>' +
+      (!context.managing && candidates.length ? '<p class="cpk-hint">Your certificate' + (context.certs.length === 1 ? ' is' : 's are') + ' saved. You can select apps later from Certificates or Apps.</p>' : '') +
       (candidates.some(function (c) { return c.relinkId; }) ? '<p class="cpk-hint">Some apps already use another certificate. Selecting <strong>Change certificate</strong> items links them to this certificate without resetting their analytics.</p>' : '') +
       (context.countWarning ? '<p class="cpk-hint" role="status">' + esc(context.countWarning) + '</p>' : '') +
       '<div class="cpk-error" role="alert"' + (context.errors.length ? '' : ' hidden') + '>' + (context.errors.length ? 'We couldn’t load results for ' + esc(context.errors.join(", ")) + '. Your certificates are saved. Try again or review them later.' : '') + '</div>' +
@@ -3975,7 +4027,7 @@
       '<div class="cpk-results" id="cpk-results"></div>' +
       (candidates.length ? '<p class="cpk-note">Crash analytics can take up to 24 hours to appear.</p>' : '') +
       '<span slot="action" class="cpk-total" id="cpk-total" role="status" aria-live="polite" aria-atomic="true"></span>' +
-      certPickerActionsHTML(candidates.length > 0) +
+      certPickerActionsHTML(candidates.length > 0, context.managing) +
       '</fluent-dialog-body>';
 
     function selected() { return candidates.filter(function (c) { return c.selected; }); }
@@ -4000,7 +4052,7 @@
       });
       var removed = candidates.filter(function (c) { return c.existingId && !c.locked && !c.selected; }).length;
       var note = dlg.querySelector(".cpk-note");
-      if (note) note.textContent = removed ? removed + " app" + (removed === 1 ? " will" : "s will") + " be removed from your non-Store app list and crash analytics." : "New apps can take up to 24 hours to show crash analytics.";
+      if (note) note.textContent = removed ? removed + " app" + (removed === 1 ? " will" : "s will") + " be removed from your non-Store app list and crash analytics." : "After you save, new apps can take up to 24 hours to show crash analytics.";
       dlg.querySelectorAll("[data-cpk-group-all]").forEach(function (button) {
         var group = button.getAttribute("data-cpk-group-all"), items = groupItems(group);
         var all = items.length > 0 && items.every(function (c) { return c.selected; });
@@ -4036,15 +4088,21 @@
       }).join('');
       dlg.querySelector("#cpk-results").innerHTML = rows
         ? '<div class="cpk-scroll">' + rows + '</div>'
-        : '<div class="cpk-empty" role="status"><strong>' + (candidates.length ? 'No matching items' : context.errors.length ? 'Discovery unavailable' : 'No apps or processes found') + '</strong><p>' + (candidates.length ? 'Try another name. Your selections are kept.' : 'Your certificate is saved. Use Edit app selection to check again later.') + '</p>' + (candidates.length ? '<fluent-button appearance="outline" data-cpk-reset>Clear search</fluent-button>' : '') + '</div>';
+        : '<div class="cpk-empty" role="status"><strong>' + (candidates.length ? 'No matching items' : context.errors.length ? 'We couldn’t load apps' : 'No apps or processes found') + '</strong><p>' + (candidates.length ? 'Try another name. Your selections are kept.' : 'Your certificate is saved. You can check for apps again from Certificates or Apps.') + '</p>' + (candidates.length ? '<fluent-button appearance="outline" data-cpk-reset>Clear search</fluent-button>' : '') + '</div>';
       syncSelection();
     }
-    function release() { certDiscoveryActive = false; renderCerts(); renderApps(); }
+    function release() { certDiscoveryActive = false; renderAll(); }
     function restoreTriggerFocus() {
-      var origin = $(context.returnView), trigger = origin && origin.querySelector('[data-certreview="' + context.certs[0].id + '"]');
-      if (!certDiscoveryActive && origin?.classList.contains('active') && trigger) trigger.focus();
+      var origin = $(context.returnView);
+      if (certDiscoveryActive || context.owner !== discoveryOwner() || !origin?.classList.contains('active')) return;
+      var pendingTrigger = origin.querySelector('[data-certreview-pending]');
+      var trigger = context.returnPending && pendingTrigger;
+      if (!trigger) trigger = Array.from(origin.querySelectorAll('[data-certreview="' + context.certs[0].id + '"]')).find(function (el) { return el.getClientRects().length; }) || pendingTrigger;
+      if (!trigger) { trigger = origin.querySelector('h2'); if (trigger) trigger.tabIndex = -1; }
+      if (trigger) trigger.focus({ preventScroll: true });
     }
     function close() {
+      if (closed) return;
       closed = true; release(); dlg.hide();
       if (!committed) setTimeout(restoreTriggerFocus, 0);
     }
@@ -4082,7 +4140,7 @@
         var items = groupItems(bulk.getAttribute("data-cpk-group-all")), turnOn = !items.every(function (c) { return c.selected; });
         items.forEach(function (c) { c.selected = turnOn; }); syncSelection(); return;
       }
-      if (e.target.closest("[data-cpk-retry]")) { close(); discoverCertApps(context.certs, { managing: context.managing, returnView: context.returnView }); return; }
+      if (e.target.closest("[data-cpk-retry]")) { close(); discoverCertApps(context.certs, { managing: context.managing, returnView: context.returnView, returnPending: context.returnPending }); return; }
       if (e.target.closest("[data-cpk-reset]")) {
         options.query = ""; pages = { recommended: 0, other: 0 }; searchExpanded = true;
         dlg.querySelector("#cpk-search").value = ""; renderResults(); dlg.querySelector("#cpk-search").focus(); return;
@@ -5057,8 +5115,9 @@
       }
       var rc = e.target.closest("[data-removecert]");
       if (rc) { confirmRemoveCert(rc.getAttribute("data-removecert")); return; }
+      if (e.target.closest("[data-certreview-pending]")) { discoverCertApps(certsNeedingAppSelection(), { returnPending: true }); return; }
       var reviewCert = e.target.closest("[data-certreview]");
-      if (reviewCert) { discoverCertApps([certById(reviewCert.getAttribute("data-certreview"))], { managing: true }); return; }
+      if (reviewCert) { discoverCertApps([certById(reviewCert.getAttribute("data-certreview"))]); return; }
       var certRow = e.target.closest("[data-certrow]");
       if (certRow && !e.target.closest("button,fluent-button,a,input")) { toggleCertificateDetails(certRow.getAttribute("data-certrow")); return; }
       var openapp = e.target.closest("[data-openapp]");

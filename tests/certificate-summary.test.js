@@ -86,7 +86,7 @@ test("both surfaces expose one explicitly labeled action for the same certificat
 });
 
 test("clearing a certificate's app selection keeps its edit action on Apps", () => {
-  const ctx = renderer({ ...cert, discoverySummary: { identified: 3, source: "live" } }, []);
+  const ctx = renderer({ ...cert, appSelectionReviewed: true, discoverySummary: { identified: 3, source: "live" } }, []);
   const html = ctx.certGroupsHTML([]);
   assert.match(html, /No non-Store apps selected/);
   assert.match(html, /<strong>0<\/strong> selected as apps/);
@@ -96,6 +96,64 @@ test("clearing a certificate's app selection keeps its edit action on Apps", () 
 test("demo counts are never labeled as real identified software", () => {
   const ctx = renderer({ ...cert, discoverySummary: { identified: 12, source: "demo" } }, []);
   const html = ctx.certSelectionStatsHTML(ctx.state.certs[0]);
+  assert.match(html, /12 items in demo list/);
+  assert.doesNotMatch(html, /apps &amp; processes identified/);
+});
+
+test("compact certificate counts combine selected and identified with a full accessible description", () => {
+  const ctx = renderer({ ...cert, discoverySummary: { identified: 6, source: "live" } },
+    Array.from({ length: 6 }, (_, i) => ({ id: "app-" + i, certId: cert.id })));
+  const html = ctx.certSelectionStatsHTML(ctx.state.certs[0], true);
+  assert.match(html, /<strong>6<\/strong> <span class="cert-selection__identified">of 6<\/span> selected/);
+  assert.match(html, /aria-label="6 apps selected\. 6 apps &amp; processes identified"/);
+  assert.match(html, /role="group"/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /selected as apps|cert-selection__pending/);
+  const action = ctx.certSelectionActionHTML(ctx.state.certs[0], "transparent", true);
+  assert.match(action, /aria-label="Edit app selection for Example Publisher"/);
+  assert.match(action, /data-certreview="summary-cert"/);
+  assert.match(action, />Edit<\/fluent-button>/);
+});
+
+test("compact unfinished selection keeps Select apps without a redundant status line", () => {
+  const ctx = renderer({ ...cert, discoverySummary: { identified: 6, source: "live" } }, []);
+  assert.match(ctx.certSelectionStatsHTML(ctx.state.certs[0], true), /<strong>0<\/strong>.*of 6/);
+  assert.doesNotMatch(ctx.certSelectionStatsHTML(ctx.state.certs[0], true), /Selection needed/);
+  assert.match(ctx.certSelectionActionHTML(ctx.state.certs[0], "transparent", true), />Select apps<\/fluent-button>/);
+});
+
+test("compact counts never invent a denominator for unknown or stale totals", () => {
+  const apps = [{ id: "app", certId: cert.id }];
+  for (const saved of [cert, { ...cert, discoverySummary: { identified: 0, source: "live" } }]) {
+    const ctx = renderer(saved, apps), html = ctx.certSelectionStatsHTML(saved, true);
+    assert.match(html, /<strong>1<\/strong> selected/);
+    assert.doesNotMatch(html, />of \d/);
+  }
+});
+
+test("compact empty scans stay distinct from intentionally cleared selections", () => {
+  const none = { ...cert, discoverySummary: { identified: 0, source: "live" } };
+  const empty = renderer(none, []);
+  assert.match(empty.certSelectionStatsHTML(none, true), />No apps found<\/span>/);
+  assert.match(empty.certSelectionActionHTML(none, "transparent", true), />Check for apps<\/fluent-button>/);
+  const cleared = { ...cert, appSelectionReviewed: true, discoverySummary: { identified: 6, source: "live" } };
+  const ctx = renderer(cleared, []);
+  assert.match(ctx.certSelectionStatsHTML(cleared, true), /<strong>0<\/strong>.*of 6/);
+  assert.match(ctx.certSelectionActionHTML(cleared, "transparent", true), />Edit<\/fluent-button>/);
+});
+
+test("compact discovery progress keeps the action disabled", () => {
+  const ctx = renderer(cert, []);
+  ctx.scanning = true; ctx.scanningCertId = cert.id; ctx.certDiscoveryActive = true;
+  assert.match(ctx.certSelectionStatsHTML(cert, true), />Finding apps…<\/span>/);
+  assert.match(ctx.certSelectionActionHTML(cert, "transparent", true), /aria-haspopup="dialog" disabled/);
+});
+
+test("compact demo counts keep the source explicit", () => {
+  const saved = { ...cert, discoverySummary: { identified: 12, source: "demo" } };
+  const ctx = renderer(saved, []), html = ctx.certSelectionStatsHTML(saved, true);
+  assert.match(html, /of 12<\/span> selected/);
+  assert.match(html, /\(demo\)/);
   assert.match(html, /12 items in demo list/);
   assert.doesNotMatch(html, /apps &amp; processes identified/);
 });

@@ -23,12 +23,19 @@ test("picker copy describes the task without backend or demo disclaimers", () =>
   assert.doesNotMatch(helpers.certPickerIntro(true), /preselected/);
 });
 
-test("footer offers two distinct save outcomes and a non-saving cancel", () => {
-  const html = helpers.certPickerActionsHTML(true);
+test("editing offers two distinct save outcomes and a non-saving cancel", () => {
+  const html = helpers.certPickerActionsHTML(true, true);
   assert.match(html, /data-cpk-close>Cancel/);
   assert.match(html, /appearance="outline" data-cpk-confirm="close">Save and close/);
   assert.match(html, /appearance="primary" data-cpk-confirm="apps">Save and view apps/);
   assert.equal((html.match(/appearance="primary"/g) || []).length, 1);
+  assert.equal((html.match(/data-cpk-confirm=/g) || []).length, 2);
+});
+
+test("first-time selection has an explicit Select later exit without saving", () => {
+  const html = helpers.certPickerActionsHTML(true, false);
+  assert.match(html, /appearance="transparent" data-cpk-close>Select later/);
+  assert.doesNotMatch(html, />Cancel/);
   assert.equal((html.match(/data-cpk-confirm=/g) || []).length, 2);
 });
 
