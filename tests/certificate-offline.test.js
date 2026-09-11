@@ -51,7 +51,7 @@ test("a malformed JSON response from a working backend remains an error", async 
 
 test("offline verification uses a file fingerprint and never claims a valid signature", async () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "portal.js"), "utf8");
-  const start = source.indexOf("  async function inspectFile(file) {"), end = source.indexOf("  /* ---------------- Toast", start);
+  const start = source.indexOf("  async function inspectFile("), end = source.indexOf("  /* ---------------- Toast", start);
   assert.ok(start >= 0 && end > start);
   const context = vm.createContext({
     discovery: { requestJson: async () => ({ offline: true }) }, AbortSignal,

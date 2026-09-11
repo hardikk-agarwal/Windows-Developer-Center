@@ -1506,6 +1506,48 @@ fluent-option .app-ico img { width: 100%; height: 100%; object-fit: cover; displ
 /* Fluent's dialog action slot defaults to a full-width vertical stack — use a right-aligned row footer (all dialogs). */
 fluent-dialog-body::part(actions) { flex-direction: row; justify-content: flex-end; }
 
+/* Validation stays in the certificate dialog; only the report body scrolls. */
+#certModal::part(dialog) { max-height: calc(100dvh - var(--spacingVerticalXXL)); overflow: hidden; }
+.certdialog { max-height: calc(100dvh - var(--spacingVerticalXXL)); grid-template-rows: auto minmax(0, 1fr) auto; }
+.certdialog::part(content) { min-width: 0; min-height: 0; overflow: auto; }
+.cert-upload[hidden], .certval[hidden], .certval-actions[hidden] { display: none; }
+.certval { display: flex; flex-direction: column; gap: var(--spacingVerticalXL); min-width: 0; }
+.certval-summary { display: flex; align-items: flex-start; gap: var(--spacingHorizontalL); }
+.certval-summary > :first-child { flex: none; }
+.certval-summary > div { min-width: 0; }
+.certval-title { margin: 0; color: var(--text); font-size: var(--fontSizeBase500); line-height: var(--lineHeightBase500); font-weight: var(--fontWeightSemibold); }
+.certval-title:focus-visible { outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2); outline-offset: var(--spacingHorizontalXXS); }
+.certval-summary p { margin: var(--spacingVerticalS) 0 0; color: var(--text-2); font-size: var(--fontSizeBase300); line-height: var(--lineHeightBase300); }
+.certval-file + .certval-file { margin-top: var(--spacingVerticalL); padding-top: var(--spacingVerticalL); border-top: var(--strokeWidthThin) solid var(--border); }
+.certval-file__head { display: flex; align-items: center; gap: var(--spacingHorizontalS); color: var(--text-2); margin-bottom: var(--spacingVerticalS); }
+.certval-file__head iconify-icon { flex: none; }
+.certval-file__head strong { overflow-wrap: anywhere; font-size: var(--fontSizeBase300); line-height: var(--lineHeightBase300); font-weight: var(--fontWeightSemibold); }
+.certval-checks { list-style: none; padding: 0; margin: 0; }
+.certval-check { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--spacingHorizontalM); align-items: start; padding-block: var(--spacingVerticalM); }
+.certval-check + .certval-check { border-top: var(--strokeWidthThin) solid var(--border); }
+.certval-check__text { min-width: 0; color: var(--text); font-size: var(--fontSizeBase300); line-height: var(--lineHeightBase300); overflow-wrap: anywhere; }
+.certval-check__text > span { font-weight: var(--fontWeightSemibold); }
+.certval-check__text p { margin: var(--spacingVerticalXXS) 0 0; color: var(--text-2); font-size: var(--fontSizeBase200); line-height: var(--lineHeightBase300); }
+.certval-check__status { color: var(--text-2); font-size: var(--fontSizeBase200); line-height: var(--lineHeightBase300); white-space: nowrap; }
+.certval-icon { color: var(--text-2); }
+.certval-icon--passed, .certval-icon--success { color: var(--colorStatusSuccessForeground1); }
+.certval-icon--failed, .certval-icon--error { color: var(--colorStatusDangerForeground1); }
+.certval-icon--warning { color: var(--colorStatusWarningForeground1); }
+.certval-progress { display: inline-grid; place-items: center; width: var(--spacingHorizontalXL); height: var(--spacingVerticalXL); color: var(--colorBrandForeground1); }
+.certval-summary > .certval-progress { width: calc(var(--spacingHorizontalXXL) + var(--spacingHorizontalL)); height: calc(var(--spacingVerticalXXL) + var(--spacingVerticalL)); }
+.certval-static { display: none; }
+.certval-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--spacingHorizontalS); width: 100%; }
+.certval-actions:not([slot]) { margin-top: var(--spacingVerticalXL); }
+.certval-actions fluent-button { white-space: nowrap; }
+@media (max-width: 620px) {
+  #certModal::part(dialog) { width: calc(100vw - var(--spacingHorizontalM)); max-height: calc(100dvh - var(--spacingVerticalM)); }
+  .certdialog { max-height: calc(100dvh - var(--spacingVerticalM)); }
+  .certval-check { column-gap: var(--spacingHorizontalS); }
+  .certval-check__status { grid-column: 2; }
+  .certval-actions fluent-button[appearance="primary"] { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .certval-spinner { display: none; } .certval-static { display: block; } }
+
 /* labelled form fields (publish dialog) */
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field[hidden], .pcnote[hidden] { display: none; } /* class display:flex beats UA [hidden] — restore it */

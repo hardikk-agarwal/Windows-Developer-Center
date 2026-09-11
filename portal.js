@@ -32,13 +32,13 @@
   var DEMO_MSA_NEW = { name: "Jordan Lee", email: "jordan.lee@outlook.com", initials: "JL" };
 
   var state = load();
-  var pending = []; // files staged in the modal
   var scanning = false; // true while discovering installed apps by certificate
   var scanningCertId = null; // which cert's scan is in flight → spinner on that row + the certs page
   var backendOffline = false; // no /api reachable (static host, e.g. GitHub Pages) → discovery uses demo apps
   var certDiscoveryActive = false;
   var expandedCerts = new Set();
   var discovery = window.CertificateDiscovery;
+  var certificateValidation = window.CertificateValidation;
 
   function load() {
     try {
@@ -121,13 +121,6 @@
     if (t === "NotSigned") return '<span class="pill pill--warn pill--sm">Unsigned</span>';
     return '<span class="pill pill--warn pill--sm">Unknown</span>';
   }
-  // A certificate whose issuer equals its subject is self-signed → not acceptable for TDP.
-  function isSelfSigned(info) {
-    if (!info || !info.signerThumbprint) return false;
-    var s = (info.signerSubject || "").trim().toLowerCase();
-    var iss = (info.issuer || "").trim().toLowerCase();
-    return !!s && s === iss;
-  }
   var SHIELD = "M12 2 4 5v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3Zm-1.2 13.4L7 11.6 8.4 10l2.4 2.4L15.6 7 17 8.4l-6.2 7Z";
   var FILEICO = "M6 2h8l4 4v16H6V2Zm8 1.5V7h3.5L14 3.5Z";
   function srcSummary(a) {
@@ -145,14 +138,19 @@
 
   /* Ask the local backend to read the real Authenticode signature.
      Falls back to a client-side SHA-256 fingerprint when the API is unreachable. */
-  async function inspectFile(file) {
+  async function inspectFile(file, signal) {
     try {
-      var res = await discovery.requestJson("/api/verify-signature?name=" + encodeURIComponent(file.name), { method: "POST", body: file, signal: AbortSignal.timeout(30000) });
+      var timeout = AbortSignal.timeout(30000);
+      var res = await discovery.requestJson("/api/verify-signature?name=" + encodeURIComponent(file.name), { method: "POST", body: file, signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
+      if (signal && signal.aborted) return { cancelled: true };
       if (res.offline) return { offline: true, status: "Offline", fileSha256: await sha256(file) };
       var j = res.data;
       if (!j || j.error) throw new Error(j && j.error || "Invalid verification response");
       j.offline = false; return j;
-    } catch (e) { return { offline: false, status: "Unavailable", error: "The verification service is unavailable. Try again when it’s reachable." }; }
+    } catch (e) {
+      if (signal && signal.aborted) return { cancelled: true };
+      return { offline: false, status: "Unavailable", error: "The verification service is unavailable. Try again when it’s reachable." };
+    }
   }
 
   /* ---------------- Toast ---------------- */
@@ -1309,10 +1307,8 @@
         '<div class="dropzone__bar js-bar" hidden></div></div>';
     var list = '<ul class="filelist js-filelist"></ul>';
 
-    var err = '<fluent-message-bar class="js-error" intent="error" layout="multiline" role="alert" hidden></fluent-message-bar>';
-
     if (inline) {
-      return '<div class="hsteps">' +
+      return '<div class="cert-upload"><div class="hsteps">' +
         '<div class="hstep">' +
           '<div class="hstep__num">1</div>' +
           '<h3>Download the binary</h3>' +
@@ -1329,57 +1325,174 @@
         '<div class="hstep__num">3</div>' +
         '<h3>Submit the signed file</h3>' +
         '<p class="muted">Drop it below to add it to your account.</p>' +
-        dz + list + err +
+        dz + list +
         '<div class="submit-row"><fluent-button appearance="primary" class="js-submit" disabled>Submit &amp; verify</fluent-button></div>' +
-      '</div>';
+      '</div></div>';
     }
 
-    return '<div class="mflow">' +
+    return '<div class="cert-upload"><div class="mflow">' +
       '<div class="mflow__row"><div class="flow__num">1</div><div>' +
         '<h3>Download the binary</h3><p class="muted">A unique binary tied to your account — download this exact file to sign.</p>' +
         '<fluent-button appearance="outline" class="js-download" style="margin-top:10px">' + DL + 'Download binary</fluent-button></div></div>' +
       '<div class="mflow__row"><div class="flow__num">2</div><div>' +
         '<h3>Sign it with your certificate</h3><p class="muted">Must be from a trusted authority — not self-signed.</p></div></div>' +
       '<div class="mflow__row"><div class="flow__num">3</div><div class="mflow__grow">' +
-        '<h3>Submit the signed file</h3><p class="muted">Drop it below to add it to your account.</p>' + dz + list + err +
+        '<h3>Submit the signed file</h3><p class="muted">Drop it below to add it to your account.</p>' + dz + list +
         '<div class="submit-row"><fluent-button appearance="primary" class="js-submit" disabled>Submit &amp; verify</fluent-button></div>' +
-      '</div></div></div>';
+      '</div></div></div></div>';
+  }
+
+  function certValidationIconHTML(status, large) {
+    if (status === 'running') return '<span class="certval-progress" aria-hidden="true"><fluent-spinner class="certval-spinner" size="' + (large ? 'medium' : 'tiny') + '"></fluent-spinner>' +
+      '<iconify-icon class="certval-static" icon="fluent:clock-20-regular" width="' + (large ? 40 : 20) + '" height="' + (large ? 40 : 20) + '"></iconify-icon></span>';
+    var icon = status === 'passed' || status === 'success' ? 'checkmark-circle' : status === 'failed' || status === 'error' ? 'error-circle' : status === 'warning' ? 'warning' : status === 'waiting' ? 'circle' : 'subtract-circle';
+    var size = large ? 40 : 20;
+    return '<iconify-icon class="certval-icon certval-icon--' + status + '" icon="fluent:' + icon + '-20-' + (status === 'passed' || status === 'success' ? 'filled' : 'regular') + '" width="' + size + '" height="' + size + '" aria-hidden="true"></iconify-icon>';
+  }
+  function certValidationStatusHTML(run) {
+    var summary = certificateValidation.summary(run);
+    return certValidationIconHTML(summary.tone, true) + '<div><h3 class="certval-title" tabindex="-1">' + esc(summary.title) + '</h3><p>' + esc(summary.detail) + '</p></div>';
+  }
+  function certValidationResultsHTML(run) {
+    var labels = { passed: 'Passed', failed: 'Failed', running: 'Checking', waiting: 'Waiting', 'not-checked': 'Not checked', skipped: 'Skipped' };
+    return run.items.map(function (item, index) {
+      var checks = item.result ? item.result.checks : certificateValidation.waiting(index === run.activeIndex);
+      return '<section class="certval-file" aria-label="' + esc('Validation results for ' + item.file.name) + '">' +
+        '<div class="certval-file__head"><iconify-icon icon="fluent:document-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon><strong>' + esc(item.file.name) + '</strong></div>' +
+        '<ul class="certval-checks">' + checks.map(function (check) {
+          return '<li class="certval-check" data-validation-check="' + check.id + '" data-validation-status="' + check.status + '">' + certValidationIconHTML(check.status) +
+            '<div class="certval-check__text"><span>' + esc(check.label) + '</span><p>' + esc(check.detail) + '</p></div>' +
+            '<span class="certval-check__status">' + labels[check.status] + '</span></li>';
+        }).join('') + '</ul></section>';
+    }).join('');
+  }
+  function certValidationActionsHTML(run) {
+    function button(action, label, appearance) { return '<fluent-button appearance="' + appearance + '" data-certvalidation="' + action + '">' + label + '</fluent-button>'; }
+    if (run.phase === 'checking') return button('close', 'Cancel validation', 'outline');
+    if (run.saveError) return button('files', 'Back to files', 'outline') + button('save', 'Try saving again', 'primary');
+    if (!run.savedCerts.length) return button('files', 'Change files', 'outline') + button('retry', 'Try again', 'primary');
+    var rejected = run.items.some(function (item) { return !item.result.accepted; });
+    var offline = run.items.some(function (item) { return item.result.outcome === 'offline'; });
+    return button('close', 'Close', 'transparent') + (rejected ? button('files', 'Change files', 'outline') : offline ? button('retry', 'Try again', 'outline') : '') + button('apps', 'Select apps', 'primary');
   }
 
   function wireFlow(root) {
     var input = root.querySelector(".js-fileinput"), zone = root.querySelector(".js-dropzone"),
         list = root.querySelector(".js-filelist"), submit = root.querySelector(".js-submit"),
-        bar = root.querySelector(".js-bar"), download = root.querySelector(".js-download"),
-        err = root.querySelector(".js-error");
-    pending = [];
-    var submitLabel = (submit.textContent || "Submit").trim();
-    function setDisabled(v) { submit.toggleAttribute("disabled", !!v); }
+        download = root.querySelector(".js-download"), form = root.querySelector('.cert-upload');
+    var pending = [], busy = false, run = null, modal = root.closest('#certModal');
+    var owner = discoveryOwner(), returnView = document.querySelector('.block.active')?.id || 'certificates', launchTrigger = document.activeElement;
+    var report = document.createElement('section'); report.className = 'certval'; report.hidden = true;
+    report.setAttribute('aria-label', 'Certificate validation');
+    report.innerHTML = '<div class="certval-summary" role="status" aria-live="polite" aria-atomic="true"></div><div class="certval-results"></div>';
+    root.appendChild(report);
+    var actions = document.createElement('div'); actions.className = 'certval-actions'; actions.hidden = true;
+    if (modal) { actions.setAttribute('slot', 'action'); root.parentElement.appendChild(actions); }
+    else root.appendChild(actions);
+    function setBusy(value) {
+      busy = value; input.disabled = value; download.toggleAttribute('disabled', value);
+      zone.setAttribute('aria-disabled', String(value)); submit.toggleAttribute('disabled', value || !pending.length);
+    }
+    function current(value) {
+      var nativeDialog = modal && (modal.dialog || modal.shadowRoot?.querySelector('dialog'));
+      return run === value && !value.cancelled && !value.controller.signal.aborted && root.isConnected &&
+        (!modal || nativeDialog?.open) && state.signedIn && value.account === state.account && value.owner === discoveryOwner();
+    }
+    root.cancelCertificateValidation = function () {
+      if (run) { run.cancelled = true; run.controller.abort(); run = null; }
+      setBusy(false); actions.remove(); root.classList.remove('is-validating');
+    };
+    root.restoreCertificateFocus = function () {
+      var origin = $(returnView);
+      if (owner !== discoveryOwner() || certDiscoveryActive || !origin?.classList.contains('active')) return;
+      var target = launchTrigger?.isConnected && launchTrigger.getClientRects().length ? launchTrigger
+        : origin.querySelector('[data-certreview-pending], [data-certmodal], [data-openmodal]') || origin.querySelector('h2');
+      if (target) { if (target.tagName === 'H2') target.tabIndex = -1; target.focus({ preventScroll: true }); }
+    };
+    function renderReport(focus) {
+      if (!run) return;
+      var activeAction = document.activeElement?.getAttribute('data-certvalidation');
+      var titleFocused = document.activeElement?.classList.contains('certval-title');
+      report.querySelector('.certval-summary').innerHTML = certValidationStatusHTML(run);
+      var results = report.querySelector('.certval-results');
+      results.setAttribute('aria-busy', String(run.phase === 'checking'));
+      results.innerHTML = certValidationResultsHTML(run);
+      actions.innerHTML = certValidationActionsHTML(run);
+      if (focus || titleFocused) report.querySelector('.certval-title').focus({ preventScroll: true });
+      else if (activeAction) (actions.querySelector('[data-certvalidation="' + activeAction + '"]') || report.querySelector('.certval-title')).focus({ preventScroll: true });
+    }
+    function showFiles() {
+      if (run) { run.cancelled = true; run.controller.abort(); run = null; }
+      setBusy(false); form.hidden = false; report.hidden = true; actions.hidden = true; root.classList.remove('is-validating');
+      renderList(); zone.focus();
+    }
+    function refreshViews() {
+      if (modal) renderAll();
+      else { renderStatus(); renderCerts(); renderApps(); renderAnalytics(); renderNotifs(); }
+    }
+    function saveResults(value) {
+      if (!current(value) || value.savedCerts.length) return;
+      var accepted = value.items.filter(function (item) { return item.result?.accepted; });
+      if (!accepted.length) return;
+      var previousCerts = state.certs.map(function (cert) { return Object.assign({}, cert); }), wasVerified = state.verified, certs = [];
+      accepted.forEach(function (item) {
+        var info = item.info, gc = getOrCreateCert(info, item.file);
+        if (info.offline) backendOffline = true;
+        gc.cert.verified = true; // Existing fingerprint-only prototype records retain Offline trust.
+        gc.cert.trust = info.status;
+        if (info.notAfter) gc.cert.notAfter = info.notAfter;
+        if (info.issuer) gc.cert.issuer = info.issuer;
+        if (!certs.some(function (cert) { return cert.id === gc.cert.id; })) certs.push(gc.cert);
+      });
+      state.verified = state.certs.length > 0;
+      if (!save()) { state.certs = previousCerts; state.verified = wasVerified; value.saveError = true; return; }
+      value.saveError = false; value.savedCerts = certs;
+      pending = value.items.filter(function (item) { return !item.result.accepted; }).map(function (item) { return item.file; });
+      refreshViews();
+    }
+    async function startValidation() {
+      if (busy || !pending.length || certDiscoveryActive || !root.isConnected) return;
+      if (run) { run.cancelled = true; run.controller.abort(); }
+      var value = { phase: 'checking', items: pending.map(function (file) { return { file: file }; }), activeIndex: 0,
+        controller: new AbortController(), account: state.account, owner: discoveryOwner(), savedCerts: [], cancelled: false, saveError: false };
+      run = value; setBusy(true); form.hidden = true; report.hidden = false; actions.hidden = false; root.classList.add('is-validating');
+      renderReport(true);
+      try {
+        for (var i = 0; i < value.items.length; i++) {
+          value.activeIndex = i; if (i) renderReport();
+          var item = value.items[i];
+          try { item.info = await inspectFile(item.file, value.controller.signal); }
+          catch (_) { item.info = { error: true }; }
+          if (!current(value)) return;
+          item.result = certificateValidation.evaluate(item.info);
+        }
+        value.phase = 'done'; saveResults(value); setBusy(false); renderReport(true);
+      } finally {
+        if (run === value) setBusy(false);
+      }
+    }
     function renderList() {
       list.innerHTML = pending.map(function (f, i) {
         return '<li class="fileitem"><span class="fileitem__ico"><iconify-icon icon="fluent:document-20-regular" width="18" height="18" aria-hidden="true"></iconify-icon></span>' +
           '<span class="fileitem__meta"><strong>' + esc(f.name) + '</strong><span class="muted">' + fmtSize(f.size) + '</span></span>' +
           '<button type="button" class="dropzone__clear" data-rm="' + i + '" aria-label="Remove">✕</button></li>';
       }).join("");
-      setDisabled(!pending.length);
+      setBusy(busy);
     }
     function addFiles(fl) {
+      if (busy) return;
       Array.prototype.forEach.call(fl, function (f) { if (!pending.some(function (p) { return p.name === f.name && p.size === f.size; })) pending.push(f); });
       renderList();
     }
-    function setVerifying(on) {
-      // Keep the upload area visually stable; show progress only on the button.
-      if (on) { setDisabled(true); submit.innerHTML = '<span class="spinner"></span>Verifying…'; }
-      else { submit.textContent = submitLabel; setDisabled(!pending.length); }
-    }
-    zone.addEventListener("click", function (e) { if (e.target.closest("[data-rm]")) return; input.click(); });
-    zone.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+    zone.addEventListener("click", function (e) { if (busy || e.target.closest("[data-rm]")) return; input.click(); });
+    zone.addEventListener("keydown", function (e) { if (!busy && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); input.click(); } });
     input.addEventListener("change", function () { addFiles(input.files); input.value = ""; });
     ["dragover", "dragenter"].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add("is-over"); }); });
     ["dragleave", "drop"].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.remove("is-over"); }); });
     zone.addEventListener("drop", function (e) { if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
-    list.addEventListener("click", function (e) { var rm = e.target.closest("[data-rm]"); if (rm) { pending.splice(+rm.getAttribute("data-rm"), 1); renderList(); } });
-    if (err) err.addEventListener("click", function (e) { if (e.target.closest(".js-error-dismiss")) { err.hidden = true; err.innerHTML = ""; } });
+    list.addEventListener("click", function (e) { var rm = e.target.closest("[data-rm]"); if (!busy && rm) { pending.splice(+rm.getAttribute("data-rm"), 1); renderList(); } });
     download.addEventListener("click", function () {
+      if (busy) return;
       var nonce = Math.abs(hashStr((state.account ? state.account.email : "x") + Date.now())).toString(16);
       var blob = new Blob(["TDP-VERIFICATION-BINARY\naccount: " + (state.account ? state.account.email : "") + "\nnonce: " + nonce + "\n"], { type: "application/octet-stream" });
       var url = URL.createObjectURL(blob), a = document.createElement("a");
@@ -1387,72 +1500,22 @@
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
       toast("Verification binary downloaded — sign it, then drop it above", true);
     });
-    submit.addEventListener("click", async function () {
-      if (!pending.length || submit.hasAttribute("disabled") || certDiscoveryActive) return;
-      if (err) { err.hidden = true; err.innerHTML = ""; }
-      setVerifying(true);
-      var previousCerts = state.certs.map(function (c) { return Object.assign({}, c); }), wasVerified = state.verified;
-      var newCerts = 0, accepted = 0, lastCert = null, rejected = [], acceptedCerts = [];
-      var files = pending.slice(), verifiedFiles = [], owner = discoveryOwner();
-      for (var i = 0; i < files.length; i++) {
-        var file = files[i], info = await inspectFile(file);
-        if (!submit.isConnected || owner !== discoveryOwner()) return;
-        if (info.error) { rejected.push({ name: file.name, reason: info.error }); continue; }
-        if (!info.offline && info.kind === "authenticode" && !info.signerThumbprint) {
-          rejected.push({ name: file.name, reason: "This file isn’t signed. Sign it with a certificate from a trusted Certificate Authority (CA)." });
-          continue;
-        }
-        if (!info.offline && isSelfSigned(info)) {
-          rejected.push({ name: file.name, reason: "The certificate is self-signed, not issued by a trusted Certificate Authority (CA). Use a CA-issued code signing certificate." });
-          continue;
-        }
-        if (!info.offline && (info.kind !== "authenticode" || info.status !== "Valid" || !info.signerThumbprint)) {
-          rejected.push({ name: file.name, reason: "We couldn’t validate this signed binary. Use a file with a valid code-signing signature from a trusted Certificate Authority (CA)." });
-          continue;
-        }
-        verifiedFiles.push({ info: info, file: file });
+    submit.addEventListener('click', startValidation);
+    actions.addEventListener('click', function (e) {
+      var button = e.target.closest('[data-certvalidation]'); if (!button) return;
+      var action = button.getAttribute('data-certvalidation'), value = run;
+      if (action === 'close') { if (modal) closeModal(); else { showFiles(); renderAll(); } return; }
+      if (!value || !current(value) || busy) return;
+      if (action === 'files') { showFiles(); return; }
+      if (action === 'retry') {
+        pending = value.items.filter(function (item) { return !item.result.verified; }).map(function (item) { return item.file; });
+        startValidation(); return;
       }
-      verifiedFiles.forEach(function (verified) {
-        var info = verified.info, file = verified.file;
-        if (info.offline) backendOffline = true;
-        var gc = getOrCreateCert(info, file); if (gc.created) newCerts++; accepted++; lastCert = gc.cert;
-        gc.cert.verified = true;                          // a signed binary proves ownership of this certificate
-        gc.cert.trust = info.status;
-        if (info.notAfter) gc.cert.notAfter = info.notAfter;
-        if (info.issuer) gc.cert.issuer = info.issuer;
-        if (!acceptedCerts.some(function (c) { return c.id === gc.cert.id; })) acceptedCerts.push(gc.cert);
-      });
-      setVerifying(false);
-
-      if (accepted) {
-        if (state.certs.length) state.verified = true;
-        if (!save()) {
-          state.certs = previousCerts; state.verified = wasVerified;
-          if (err) { err.textContent = "We couldn’t save the certificate. Free some browser storage and try again. Your selected files are still here."; err.hidden = false; }
-          return;
-        }
-        pending = []; renderList(); closeModal(); renderAll();
-        var msg = newCerts
-          ? "Added " + newCerts + " certificate" + (newCerts > 1 ? "s" : "") + (lastCert ? " · " + lastCert.label : "")
-          : "Certificate already added" + (lastCert ? " · " + lastCert.label : "");
-        if (rejected.length) msg += " · " + rejected.length + " rejected";
-        toast(msg);
-        if (acceptedCerts.length) discoverCertApps(acceptedCerts);
-        return;
-      }
-      pending = []; renderList();
-      // Nothing accepted — surface the reasons in place (don't re-render the flow)
-      if (rejected.length && err) {
-        var icon = '<iconify-icon slot="icon" class="msgbar__icon" icon="fluent:error-circle-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon>';
-        var body = rejected.length === 1
-          ? '<strong>We couldn’t verify ' + esc(rejected[0].name) + '</strong><p>' + esc(rejected[0].reason) + '</p>'
-          : '<strong>We couldn’t verify ' + rejected.length + ' files</strong><ul>' +
-            rejected.map(function (r) { return '<li><strong>' + esc(r.name) + '</strong> — ' + esc(r.reason) + '</li>'; }).join("") + '</ul>';
-        err.innerHTML = icon + '<div class="msgbar__content">' + body + '</div>' +
-          '<button type="button" slot="dismiss" class="msgbar__dismiss js-error-dismiss" aria-label="Dismiss">✕</button>';
-        err.hidden = false;
-      } else {
-        toast("Nothing added", true);
+      if (action === 'save') { saveResults(value); renderReport(true); return; }
+      if (action === 'apps' && value.savedCerts.length) {
+        var certs = value.savedCerts.map(function (cert) { return certById(cert.id); }).filter(Boolean);
+        if (modal) closeModal(); else { root.cancelCertificateValidation(); renderAll(); }
+        discoverCertApps(certs, { returnView: returnView });
       }
     });
     renderList();
@@ -4345,10 +4408,13 @@
 
   /* ---------------- Add-certificate modal (reuses the same flow) ---------------- */
   function openModal() {
-    var body = $("modalFlowBody"); body.innerHTML = flowHTML(false); wireFlow(body);
+    var body = $("modalFlowBody");
+    if (body.cancelCertificateValidation) body.cancelCertificateValidation();
+    body.innerHTML = flowHTML(false); wireFlow(body);
     var m = $("certModal"); if (m && m.show) m.show();
   }
   function closeModal() {
+    var body = $("modalFlowBody"); if (body?.cancelCertificateValidation) body.cancelCertificateValidation();
     var m = $("certModal"); if (m && m.hide) m.hide();
   }
 
@@ -4998,7 +5064,22 @@
     var certM = $("certModal");
     if (certM) {
       certM.addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
-      certM.addEventListener("toggle", function (e) { if (e.detail && e.detail.newState === "closed") { var b = $("modalFlowBody"); if (b) b.innerHTML = ""; pending = []; } });
+      certM.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && $('modalFlowBody')?.classList.contains('is-validating')) {
+          e.preventDefault(); e.stopPropagation(); closeModal();
+        }
+      }, true);
+      certM.addEventListener("toggle", function (e) {
+        if (e.detail && e.detail.newState === "closed" && !(certM.dialog || certM.shadowRoot?.querySelector('dialog'))?.open) {
+          var body = $("modalFlowBody");
+          if (body) {
+            var restore = body.restoreCertificateFocus;
+            if (body.cancelCertificateValidation) body.cancelCertificateValidation();
+            body.innerHTML = '';
+            if (restore) setTimeout(restore, 0);
+          }
+        }
+      });
     }
     wireSources();
     wirePublish();
