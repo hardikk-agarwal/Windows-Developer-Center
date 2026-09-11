@@ -1351,12 +1351,16 @@
   }
   function certValidationStatusHTML(run) {
     var summary = certificateValidation.summary(run);
-    return certValidationIconHTML(summary.tone, true) + '<div><h3 class="certval-title" tabindex="-1">' + esc(summary.title) + '</h3><p>' + esc(summary.detail) + '</p></div>';
+    var simulated = run.items.some(function (item) { return item.preview?.simulated || item.result?.simulated; });
+    return certValidationIconHTML(summary.tone, true) + '<div><div class="certval-heading"><h3 class="certval-title" tabindex="-1">' + esc(summary.title) + '</h3>' +
+      (simulated ? '<span class="certval-demo" aria-label="Demo: some validation checks are simulated" title="Success preview. Simulated checks do not change certificate trust.">Demo</span>' : '') +
+      '</div><p>' + esc(summary.detail) + '</p></div>';
   }
   function certValidationResultsHTML(run) {
     var labels = { passed: 'Passed', failed: 'Failed', running: 'Checking', waiting: 'Waiting', 'not-checked': 'Not checked', skipped: 'Skipped' };
     return run.items.map(function (item, index) {
-      var checks = item.result ? item.result.checks : certificateValidation.waiting(index === run.activeIndex);
+      var checks = item.preview ? certificateValidation.previewChecks(item.preview, item.completedChecks) : item.result ? item.result.checks
+        : certificateValidation.previewChecks({ checks: certificateValidation.waiting(false) }, index === run.activeIndex ? 0 : -1);
       return '<section class="certval-file" aria-label="' + esc('Validation results for ' + item.file.name) + '">' +
         '<div class="certval-file__head"><iconify-icon icon="fluent:document-20-regular" width="20" height="20" aria-hidden="true"></iconify-icon><strong>' + esc(item.file.name) + '</strong></div>' +
         '<ul class="certval-checks">' + checks.map(function (check) {
@@ -1450,6 +1454,17 @@
       pending = value.items.filter(function (item) { return !item.result.accepted; }).map(function (item) { return item.file; });
       refreshViews();
     }
+    function waitPreviewStep(value) {
+      return new Promise(function (resolve) {
+        if (!current(value)) { resolve(false); return; }
+        var signal = value.controller.signal, timer;
+        function finish() { signal.removeEventListener('abort', cancel); resolve(current(value)); }
+        function cancel() { clearTimeout(timer); signal.removeEventListener('abort', cancel); resolve(false); }
+        signal.addEventListener('abort', cancel, { once: true });
+        var reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        timer = setTimeout(finish, reduced ? 0 : 300);
+      });
+    }
     async function startValidation() {
       if (busy || !pending.length || certDiscoveryActive || !root.isConnected) return;
       if (run) { run.cancelled = true; run.controller.abort(); }
@@ -1464,7 +1479,15 @@
           try { item.info = await inspectFile(item.file, value.controller.signal); }
           catch (_) { item.info = { error: true }; }
           if (!current(value)) return;
-          item.result = certificateValidation.evaluate(item.info);
+          var result = certificateValidation.demoSuccess(item.info);
+          if (result.simulated) {
+            item.preview = result;
+            for (var step = 0; step < result.checks.length; step++) {
+              item.completedChecks = step; renderReport();
+              if (!await waitPreviewStep(value)) return;
+            }
+          }
+          item.result = result; delete item.preview; delete item.completedChecks;
         }
         value.phase = 'done'; saveResults(value); setBusy(false); renderReport(true);
       } finally {

@@ -1515,6 +1515,9 @@ fluent-dialog-body::part(actions) { flex-direction: row; justify-content: flex-e
 .certval-summary { display: flex; align-items: flex-start; gap: var(--spacingHorizontalL); }
 .certval-summary > :first-child { flex: none; }
 .certval-summary > div { min-width: 0; }
+.certval-heading { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacingHorizontalS); }
+.certval-demo { color: var(--text-2); background: var(--surface-2); border-radius: var(--r-sm);
+  padding: var(--spacingVerticalXXS) var(--spacingHorizontalS); font-size: var(--fontSizeBase200); line-height: var(--lineHeightBase200); }
 .certval-title { margin: 0; color: var(--text); font-size: var(--fontSizeBase500); line-height: var(--lineHeightBase500); font-weight: var(--fontWeightSemibold); }
 .certval-title:focus-visible { outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2); outline-offset: var(--spacingHorizontalXXS); }
 .certval-summary p { margin: var(--spacingVerticalS) 0 0; color: var(--text-2); font-size: var(--fontSizeBase300); line-height: var(--lineHeightBase300); }

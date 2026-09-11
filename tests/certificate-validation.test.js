@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
+const { setImmediate: nextTurn } = require("node:timers/promises");
 const validation = require("../certificate-validation.js");
 
 const valid = { kind: "authenticode", status: "Valid", signerThumbprint: "A".repeat(40),
@@ -77,7 +78,7 @@ test("unknown issuer is not a passed check and a valid timestamp is not mistaken
   assert.doesNotMatch(JSON.stringify(result.checks), /unexpired|expiration passed|expiry passed/i);
 });
 
-test("offline fingerprints never display successful signature validation", () => {
+test("raw offline evidence remains unverified outside the explicit success preview", () => {
   const info = { offline: true, status: "Offline", fileSha256: "fingerprint" };
   const result = validation.evaluate(info);
   assert.equal(result.accepted, true);
@@ -88,6 +89,62 @@ test("offline fingerprints never display successful signature validation", () =>
   assert.equal(summary.tone, "warning");
   assert.doesNotMatch(summary.title, /successful|verified/i);
   assert.match(summary.detail, /fingerprints only/);
+});
+
+test("offline success preview completes all four checks without changing verification evidence", () => {
+  const info = { offline: true, status: "Offline", fileSha256: "fingerprint" }, original = { ...info };
+  const result = validation.demoSuccess(info);
+  assert.equal(result.accepted, true);
+  assert.equal(result.simulated, true);
+  assert.equal(result.verified, false);
+  assert.equal(result.complete, false);
+  assert.equal(result.outcome, "simulated");
+  assert.deepEqual(result.checks.map(c => c.status), ["passed", "passed", "passed", "passed"]);
+  assert.deepEqual(info, original);
+  assert.ok(validation.evaluate(info).checks.every(c => c.status === "not-checked"));
+  const run = { phase: "done", items: [{ result }], savedCerts: [{ id: "cert" }] };
+  assert.equal(validation.summary(run).title, "Validation successful");
+  assert.equal(validation.summary(run).tone, "success");
+  assert.doesNotMatch(validation.summary(run).detail, /unavailable|fingerprint|retry|unverified/i);
+});
+
+test("a valid signature's unsupported comparison can be previewed without inventing a backend match", () => {
+  const result = validation.demoSuccess(valid);
+  assert.equal(result.simulated, true);
+  assert.equal(result.verified, true);
+  assert.equal(result.complete, false);
+  assert.ok(result.checks.every(c => c.status === "passed"));
+  assert.equal(valid.binaryMatch, undefined);
+  const allReal = validation.demoSuccess({ ...valid, binaryMatch: true });
+  assert.equal(allReal.complete, true);
+  assert.equal(allReal.simulated, undefined);
+});
+
+test("success preview cannot turn real rejection, cancellation or missing evidence into a pass", () => {
+  for (const info of [
+    { ...valid, binaryMatch: false }, { ...valid, issuer: valid.signerSubject },
+    { ...valid, status: "HashMismatch" }, { ...valid, status: "NotTrusted" },
+    { kind: "authenticode", status: "NotSigned" }, { error: "403" }, { offline: true },
+    { offline: true, fileSha256: "fingerprint", cancelled: true },
+    { offline: true, fileSha256: "fingerprint", error: "403" },
+    { offline: true, fileSha256: "fingerprint", binaryMatch: false }
+  ]) {
+    const result = validation.demoSuccess(info);
+    assert.equal(result.accepted, false);
+    assert.equal(result.simulated, undefined);
+  }
+});
+
+test("preview checks progress in order and retain their final successful descriptions", () => {
+  const result = validation.demoSuccess({ offline: true, fileSha256: "fingerprint" });
+  for (let step = 0; step < 4; step++) {
+    const checks = validation.previewChecks(result, step);
+    assert.equal(checks.filter(c => c.status === "passed").length, step);
+    assert.equal(checks[step].status, "running");
+    assert.ok(checks.slice(step + 1).every(c => c.status === "waiting"));
+    assert.doesNotMatch(JSON.stringify(checks), /Not checked|does not compare|unavailable/);
+  }
+  assert.deepEqual(validation.previewChecks(result, 4), result.checks);
 });
 
 test("unavailable verification, missing fingerprints, and cancellation cannot be accepted", () => {
@@ -142,6 +199,19 @@ test("report actions gate app selection on saved certificates and keep a non-for
   assert.match(helpers.certValidationActionsHTML(reportRun([valid], { saveError: true, savedCerts: [] })), /data-certvalidation="save">Try saving again/);
 });
 
+test("successful demo report has green checks and Close or Select apps without a retry warning", () => {
+  const run = reportRun([{ offline: true, status: "Offline", fileSha256: "fingerprint" }]);
+  run.items[0].result = validation.demoSuccess(run.items[0].info);
+  const actions = helpers.certValidationActionsHTML(run), summary = helpers.certValidationStatusHTML(run);
+  assert.match(summary, /Validation successful/);
+  assert.match(summary, /Demo: some validation checks are simulated/);
+  assert.doesNotMatch(summary, /unavailable|unverified|fingerprints only/i);
+  assert.match(actions, /data-certvalidation="close">Close/);
+  assert.match(actions, /data-certvalidation="apps">Select apps/);
+  assert.doesNotMatch(actions, /retry|Try again/);
+  assert.equal((helpers.certValidationResultsHTML(run).match(/certval-icon--passed/g) || []).length, 4);
+});
+
 test("progress includes a static Fluent alternative for reduced motion", () => {
   const html = helpers.certValidationIconHTML("running", true);
   assert.match(html, /<fluent-spinner class="certval-spinner"/);
@@ -174,7 +244,9 @@ function harness(options = {}) {
   const account = { email: "owner@example.test" };
   scope = vm.createContext({
     state: { signedIn: true, account, verified: false, certs: [], apps: [] }, certificateValidation: validation,
-    certDiscoveryActive: false, backendOffline: false, AbortController, setTimeout, clearTimeout,
+    certDiscoveryActive: false, backendOffline: false, AbortController,
+    setTimeout: options.setTimeout || (callback => setTimeout(callback, 0)), clearTimeout: options.clearTimeout || clearTimeout,
+    window: options.window,
     document: { activeElement: element("BUTTON"), querySelector: () => ({ id: "certificates" }), createElement(tag) {
       const el = element(tag.toUpperCase());
       if (tag === "section") {
@@ -223,7 +295,7 @@ test("Submit shows a busy validation report, then saved success without auto-ope
   assert.equal(h.scope.state.certs.length, 1);
   assert.equal(h.scope.state.apps.length, 0);
   assert.equal(h.saved.length, 1);
-  assert.match(h.report.querySelector(".certval-summary").innerHTML, /Certificate verified/);
+  assert.match(h.report.querySelector(".certval-summary").innerHTML, /Validation successful/);
   assert.ok(!h.events.some(event => typeof event === "object" && event.discover));
   h.action("apps"); h.action("apps");
   assert.equal(h.events.filter(event => typeof event === "object" && event.discover).length, 1);
@@ -236,6 +308,55 @@ test("closing saved validation keeps the certificate but never adds apps or conf
   assert.equal(h.scope.state.certs[0].appSelectionReviewed, undefined);
   assert.equal(h.scope.state.apps.length, 0);
   assert.ok(!h.events.some(event => typeof event === "object"));
+});
+
+test("offline preview saves fingerprint identity only after all four checks have completed", async () => {
+  const timers = new Map(); let nextTimer = 0;
+  const h = harness({ inspect: () => Promise.resolve({ offline: true, status: "Offline", fileSha256: "fingerprint" }),
+    setTimeout: callback => { timers.set(++nextTimer, callback); return nextTimer; }, clearTimeout: id => timers.delete(id) });
+  h.stage(); const submitted = h.start(); await nextTurn();
+  for (let step = 0; step < 4; step++) {
+    const html = h.report.querySelector(".certval-results").innerHTML;
+    assert.equal((html.match(/data-validation-status="passed"/g) || []).length, step);
+    assert.equal((html.match(/data-validation-status="running"/g) || []).length, 1);
+    assert.equal(h.saved.length, 0);
+    assert.equal(timers.size, 1);
+    const [id, callback] = timers.entries().next().value; timers.delete(id); callback(); await nextTurn();
+  }
+  await submitted;
+  assert.equal(timers.size, 0);
+  assert.equal(h.saved.length, 1);
+  assert.equal(h.scope.state.certs[0].trust, "Offline");
+  assert.equal(h.scope.state.certs[0].thumbKind, "hash");
+  assert.equal(h.scope.state.certs[0].thumb, "fingerprint");
+  assert.equal(h.scope.state.apps.length, 0);
+  assert.match(h.report.querySelector(".certval-summary").innerHTML, /Validation successful/);
+  assert.doesNotMatch(h.actions.innerHTML, /Try again/);
+});
+
+test("cancelling a partially completed success preview clears its timer and never saves", async () => {
+  const timers = new Map(); let nextTimer = 0;
+  const h = harness({ inspect: () => Promise.resolve({ offline: true, status: "Offline", fileSha256: "fingerprint" }),
+    setTimeout: callback => { timers.set(++nextTimer, callback); return nextTimer; }, clearTimeout: id => timers.delete(id) });
+  h.stage(); const submitted = h.start(); await nextTurn();
+  assert.equal(timers.size, 1);
+  const [id, callback] = timers.entries().next().value; timers.delete(id); callback(); await nextTurn();
+  assert.equal((h.report.querySelector(".certval-results").innerHTML.match(/data-validation-status="passed"/g) || []).length, 1);
+  h.action("close"); await submitted;
+  assert.equal(timers.size, 0);
+  assert.equal(h.requests[0].signal.aborted, true);
+  assert.equal(h.saved.length, 0);
+  assert.equal(h.scope.state.certs.length, 0);
+});
+
+test("reduced motion skips the staged preview delay while preserving all four results", async () => {
+  const delays = [];
+  const h = harness({ inspect: () => Promise.resolve({ offline: true, status: "Offline", fileSha256: "fingerprint" }),
+    window: { matchMedia: () => ({ matches: true }) },
+    setTimeout: (callback, delay) => { delays.push(delay); return setTimeout(callback, 0); } });
+  h.stage(); await h.start();
+  assert.deepEqual(delays, [0, 0, 0, 0]);
+  assert.equal((h.report.querySelector(".certval-results").innerHTML.match(/data-validation-status="passed"/g) || []).length, 4);
 });
 
 test("cancel aborts the in-flight request and a late valid result cannot save or navigate", async () => {
