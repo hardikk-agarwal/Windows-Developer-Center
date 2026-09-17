@@ -51,7 +51,7 @@ test("an unreviewed saved certificate has a persistent, directly actionable next
   assert.equal(ctx.certsNeedingAppSelection().length, 1);
   assert.match(ctx.certSelectionReminderHTML(), /Your certificate is saved/);
   assert.match(ctx.certSelectionReminderHTML(), /Select apps to get crash analytics/);
-  assert.match(ctx.certSelectionReminderHTML(), /data-certreview-pending aria-haspopup="dialog"/);
+  assert.match(ctx.certSelectionReminderHTML(), /data-certreview-pending/);
   assert.match(ctx.certSelectionActionHTML(saved), /aria-label="Select apps for Example Publisher"/);
   assert.match(ctx.certSelectionStatsHTML(saved), /<strong>0<\/strong> selected as apps/);
   assert.match(ctx.certSelectionStatsHTML(saved), /Selection needed/);
@@ -101,7 +101,7 @@ test("batch resume includes only certificates still needing selection", () => {
   assert.deepEqual(Array.from(ctx.certsNeedingAppSelection(), c => c.id), [cert.id, second.id]);
   assert.match(ctx.certSelectionReminderHTML(), /2 certificates still need app selection/);
   ctx.certDiscoveryActive = true;
-  assert.match(ctx.certSelectionReminderHTML(), /aria-haspopup="dialog" disabled/);
+  assert.match(ctx.certSelectionReminderHTML(), /data-certreview-pending disabled/);
   ctx.scanning = true;
   assert.equal(ctx.certSelectionReminderHTML(), "");
 });
@@ -145,10 +145,7 @@ test("saving clears the reminder and starts analytics preparation at selection t
 });
 
 const scanStart = source.indexOf("  async function discoverCertApps("), scanEnd = source.indexOf("  function rescanApps(", scanStart);
-const pickerStart = source.indexOf("  function showCertAppPicker(");
-const releaseStart = source.indexOf("    function release()", pickerStart), focusStart = source.indexOf("    function restoreTriggerFocus()", releaseStart);
-const closeStart = source.indexOf("    function close()", focusStart), closeEnd = source.indexOf('    dlg.addEventListener("toggle"', closeStart);
-assert.ok(scanStart >= 0 && scanEnd > scanStart && releaseStart > pickerStart && closeEnd > closeStart);
+assert.ok(scanStart >= 0 && scanEnd > scanStart);
 
 test("closing before confirmation keeps the certificate, discards checkbox edits, and resumes first-time selection", async () => {
   const events = [], snapshots = [], shown = [];
@@ -161,12 +158,11 @@ test("closing before confirmation keeps the certificate, discards checkbox edits
     committed: false, closed: false, dlg: { hide: () => events.push("hide") }, restoreTriggerFocus() {}, toast() {}
   });
   ctx.save = () => { snapshots.push(JSON.stringify(ctx.state)); return true; };
-  vm.runInContext(source.slice(scanStart, scanEnd) + source.slice(releaseStart, focusStart) + source.slice(closeStart, closeEnd), ctx);
+  vm.runInContext(source.slice(scanStart, scanEnd), ctx);
   await ctx.discoverCertApps(ctx.state.certs);
   assert.equal(shown[0].context.managing, false);
   shown[0].items.forEach(c => { c.selected = false; });
-  ctx.close(); ctx.close();
-  assert.equal(events.filter(e => e === "hide").length, 1);
+  ctx.certDiscoveryActive = false;
   assert.equal(snapshots.length, 1);
   assert.equal(ctx.state.certs.length, 1);
   assert.equal(ctx.state.certs[0].discoverySummary.identified, 3);

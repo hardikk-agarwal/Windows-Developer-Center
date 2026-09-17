@@ -64,8 +64,11 @@ function definition(name, next) {
 function renderer(certificate, apps) {
   const context = vm.createContext({ discovery, state: { certs: [certificate], apps }, scanning: false, scanningCertId: null,
     certDiscoveryActive: false, STORE: true, esc: value => String(value).replace(/[&<>\"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])),
+    storeLocked: () => false, analyticsPending: discovery.isAnalyticsPending,
+    canSubmitWin32Package: () => false,
     trustPill: () => "Valid", fmtThumb: () => "AAAA", storeCertRowHTML: () => "<tr></tr>", appRowHTML: () => "<tr></tr>" });
   context.certById = id => context.state.certs.find(c => c.id === id);
+  vm.runInContext(source.slice(source.indexOf("  var ANA_TABS = ["), source.indexOf("  function lockedAnalyticsHTML(")), context);
   vm.runInContext(definition("canEditCertificateApps", "certRowHTML") + definition("certGroupHTML", "appsTabsHTML"), context);
   return context;
 }
@@ -79,7 +82,7 @@ test("both surfaces expose one explicitly labeled action for the same certificat
   const group = ctx.certGroupsHTML(ctx.state.apps);
   for (const html of [tableAction, group]) {
     assert.match(html, /data-certreview="summary-cert"/);
-    assert.match(html, /aria-haspopup="dialog"/);
+    assert.doesNotMatch(html, /aria-haspopup="dialog"/);
     assert.match(html, />Edit app selection<\/fluent-button>/);
     assert.equal((html.match(/data-certreview=/g) || []).length, 1);
   }
@@ -89,8 +92,27 @@ test("clearing a certificate's app selection keeps its edit action on Apps", () 
   const ctx = renderer({ ...cert, appSelectionReviewed: true, discoverySummary: { identified: 3, source: "live" } }, []);
   const html = ctx.certGroupsHTML([]);
   assert.match(html, /No non-Store apps selected/);
-  assert.match(html, /<strong>0<\/strong> selected as apps/);
+  assert.match(html, /class="signed-cert-count"><strong>0<\/strong> apps/);
   assert.match(html, /data-certreview="summary-cert"/);
+});
+
+test("the non-Store certificate header shows identity and count with the fingerprint on demand", () => {
+  const ctx = renderer({ ...cert, trackingSelections: {}, discoverySummary: { identified: 1, source: 'live' } }, [{ id: 'app', certId: cert.id }]);
+  const html = ctx.certGroupsHTML(ctx.state.apps);
+  assert.match(html, /class="certcard signed-cert-header"/);
+  assert.match(html, /aria-label="Signing certificate: Example Publisher"/);
+  assert.match(html, /class="signed-cert-count"><strong>1<\/strong> app/);
+  assert.match(html, /title="Certificate thumbprint: A{40}"/);
+  assert.match(html, /aria-description="Certificate thumbprint: A{40}"/);
+  assert.match(html, /class="signed-cert-identity">[\s\S]*signed-cert-count/);
+  assert.doesNotMatch(html, /class="cert-ico|class="certfact|0 analytics only|signed-cert-fingerprint|>Active<|signed-cert-context/);
+  assert.match(html, /data-certreview="summary-cert"/);
+});
+
+test("simplified certificate headers still display trust warnings", () => {
+  const ctx = renderer({ ...cert, trust: 'Expired' }, [{ id: 'app', certId: cert.id }]);
+  ctx.trustPill = trust => '<span class="pill pill--warn">' + trust + '</span>';
+  assert.match(ctx.certGroupsHTML(ctx.state.apps), /class="signed-cert-context"><span class="pill pill--warn">Expired<\/span>/);
 });
 
 test("demo counts are never labeled as real identified software", () => {
@@ -146,7 +168,7 @@ test("compact discovery progress keeps the action disabled", () => {
   const ctx = renderer(cert, []);
   ctx.scanning = true; ctx.scanningCertId = cert.id; ctx.certDiscoveryActive = true;
   assert.match(ctx.certSelectionStatsHTML(cert, true), />Finding apps…<\/span>/);
-  assert.match(ctx.certSelectionActionHTML(cert, "transparent", true), /aria-haspopup="dialog" disabled/);
+  assert.match(ctx.certSelectionActionHTML(cert, "transparent", true), /aria-label="Select apps for Example Publisher" disabled/);
 });
 
 test("compact demo counts keep the source explicit", () => {
@@ -156,4 +178,15 @@ test("compact demo counts keep the source explicit", () => {
   assert.match(html, /\(demo\)/);
   assert.match(html, /12 items in demo list/);
   assert.doesNotMatch(html, /apps &amp; processes identified/);
+});
+
+test("analytics-only tracking has accurate totals and a direct link from its empty Apps group", () => {
+  const items = discovery.normalize([{ name: "Sync Service", file: "Sync.exe", kind: "helper" }], cert, []);
+  const saved = discovery.applyTrackingSelection(items, [cert], [], { createId: () => "sync-target" });
+  const ctx = renderer(saved.certs[0], saved.apps);
+  const stats = ctx.certSelectionStatsHTML(saved.certs[0], true), group = ctx.certGroupsHTML(saved.apps);
+  assert.match(stats, /<strong>0<\/strong> apps \/ <strong>1<\/strong> analytics only/);
+  assert.match(group, /1 background executable is tracked/);
+  assert.match(group, /data-background-cert="summary-cert"/);
+  assert.doesNotMatch(group, /<tr>/);
 });

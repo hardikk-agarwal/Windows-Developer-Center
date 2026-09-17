@@ -159,3 +159,135 @@ test("saving unchanged selections cannot duplicate an app or reset its analytics
   assert.equal(next.added, 0);
   assert.equal(next.removed, 0);
 });
+
+test("main executables default to Apps while useful helpers default to analytics only", () => {
+  const items = discovery.normalize([{ name: "Studio", file: "Studio.exe", kind: "app" },
+    { name: "Studio Sync Service", file: "Sync.exe", kind: "process" },
+    { name: "Studio Installer", file: "Setup.exe", kind: "process" }, { name: "UNKNOWN.EXE" }], cert, []);
+  assert.deepEqual(items.map(item => item.mode), ["app", "analytics", "none", "none"]);
+  assert.deepEqual(items.map(item => item.suggestedRole), ["app", "helper", "helper", "review"]);
+  let id = 0;
+  const next = discovery.applyTrackingSelection(items, [cert], [], { createId: () => "target-" + ++id, now: 1000 });
+  assert.deepEqual(next.apps.map(app => app.name), ["Studio"]);
+  assert.equal(discovery.executableTargets(next.certs, next.apps).length, 2);
+  assert.equal(discovery.trackingCounts(next.certs[0], next.apps).analyticsOnly, 1);
+});
+
+test("an analytics-only setup can be saved and promoted or demoted without resetting history", () => {
+  const rows = [{ name: "Sync Service", file: "Sync.exe", kind: "process" }];
+  let id = 0;
+  const options = { createId: () => "target-" + ++id, now: 1000 };
+  let next = discovery.applyTrackingSelection(discovery.normalize(rows, cert, []), [cert], [], options);
+  assert.equal(next.apps.length, 0);
+  assert.equal(next.certs[0].appSelectionReviewed, true);
+  const original = next.certs[0].executables[0];
+  let candidates = discovery.normalize(rows, next.certs[0], next.apps);
+  candidates[0].mode = "app";
+  next = discovery.applyTrackingSelection(candidates, next.certs, next.apps, { ...options, now: 9000 });
+  assert.equal(next.apps[0].id, original.id);
+  assert.equal(next.apps[0].discoveredAt, 1000);
+  candidates = discovery.normalize(rows, next.certs[0], next.apps);
+  candidates[0].mode = "analytics";
+  next = discovery.applyTrackingSelection(candidates, next.certs, next.apps, { ...options, now: 10000 });
+  assert.equal(next.apps.length, 0);
+  assert.equal(next.certs[0].executables[0].id, original.id);
+  assert.equal(next.certs[0].executables[0].discoveredAt, 1000);
+});
+
+test("excluding and re-enabling an executable preserves its identity and explicit override", () => {
+  const rows = [{ name: "Sync Service", file: "Sync.exe", kind: "process" }];
+  const options = { createId: () => "sync-target", now: 1000 };
+  let next = discovery.applyTrackingSelection(discovery.normalize(rows, cert, []), [cert], [], options);
+  let items = discovery.normalize(rows, next.certs[0], next.apps);
+  items[0].mode = "none";
+  next = discovery.applyTrackingSelection(items, next.certs, next.apps, options);
+  assert.equal(discovery.executableTargets(next.certs, next.apps).length, 0);
+  items = discovery.normalize([{ ...rows[0], recommendedAnalytics: true }], next.certs[0], next.apps);
+  assert.equal(items[0].mode, "none");
+  items[0].mode = "analytics";
+  next = discovery.applyTrackingSelection(items, next.certs, next.apps, { ...options, now: 5000 });
+  assert.equal(next.certs[0].executables[0].id, "sync-target");
+  assert.equal(next.certs[0].executables[0].discoveredAt, 1000);
+});
+
+test("legacy apps and Store-protected entries survive migration and unrelated certificates are untouched", () => {
+  const otherCert = { ...cert, id: "other", thumb: "B".repeat(40) };
+  const apps = [{ id: "legacy", certId: cert.id, name: "Editor", file: "Editor.exe", discoveredAt: 123 },
+    { id: "store", certId: cert.id, name: "Published", file: "Published.exe", store: true }, { id: "other", certId: otherCert.id }];
+  const items = discovery.normalize([], cert, apps);
+  items.forEach(item => { item.mode = "analytics"; });
+  const next = discovery.applyTrackingSelection(items, [cert, otherCert], apps, { createId: () => { throw new Error("Unexpected identity change"); } });
+  assert.deepEqual(next.apps.map(app => app.id), ["store", "other"]);
+  assert.equal(next.certs[1], otherCert);
+  assert.equal(next.certs[0].executables.find(item => item.id === "legacy").discoveredAt, 123);
+});
+
+test("retained helpers missing from a scan stay editable and recommendations never overwrite saved choices", () => {
+  const rows = [{ name: "Sync Service", file: "Sync.exe", kind: "process" }];
+  const next = discovery.applyTrackingSelection(discovery.normalize(rows, cert, []), [cert], [], { createId: () => "sync" });
+  const missing = discovery.normalize([], next.certs[0], next.apps);
+  assert.equal(missing.length, 1);
+  assert.equal(missing[0].mode, "analytics");
+  assert.equal(missing[0].missingFromScan, true);
+  assert.equal(discovery.normalize([{ ...rows[0], kind: "app" }], next.certs[0], next.apps)[0].mode, "analytics");
+});
+
+test("a reliable application identity groups versions into one app but retains executable analytics", () => {
+  const rows = [{ name: "Editor x64", productName: "Editor", file: "Editor.exe", path: "c:/editor/x64/editor.exe", kind: "app", applicationId: "editor" },
+    { name: "Editor ARM64", productName: "Editor", file: "Editor.exe", path: "c:/editor/arm64/editor.exe", kind: "app", applicationId: "editor" },
+    { name: "Editor", file: "DifferentEditor.exe", path: "c:/other/editor.exe", kind: "app" }];
+  let id = 0;
+  const options = { createId: () => "target-" + ++id, now: 123 };
+  let items = discovery.normalize(rows, cert, []);
+  assert.equal(discovery.reviewCounts(items).apps, 2);
+  let next = discovery.applyTrackingSelection(items, [cert], [], options);
+  assert.equal(next.apps.length, 2);
+  assert.equal(next.certs[0].executables.length, 3);
+  const grouped = next.apps.find(app => app.applicationKey === "editor");
+  assert.ok(!next.certs[0].executables.some(target => target.id === grouped.id));
+  assert.equal(next.certs[0].executables.filter(target => target.appId === grouped.id).length, 2);
+  items = discovery.normalize(rows, next.certs[0], next.apps);
+  items[0].mode = "analytics";
+  next = discovery.applyTrackingSelection(items, next.certs, next.apps, options);
+  assert.equal(next.apps.length, 2);
+  assert.ok(next.apps.some(app => app.id === grouped.id));
+  assert.equal(next.certs[0].executables[0].discoveredAt, 123);
+  const withoutMetadata = discovery.normalize(rows.map(row => ({ ...row, applicationId: undefined })), next.certs[0], next.apps);
+  assert.equal(discovery.reviewCounts(withoutMetadata).apps, 2);
+});
+
+test("moving a tracked helper to a rotated certificate preserves history without an app entry", () => {
+  const other = { ...cert, id: "rotated", thumb: "B".repeat(40) };
+  const rows = [{ name: "Sync Service", file: "Sync.exe", path: "c:/sync.exe", kind: "process" }];
+  const previous = discovery.applyTrackingSelection(discovery.normalize(rows, cert, []), [cert, other], [], { createId: () => "sync-target", now: 123 });
+  const items = discovery.normalize(rows, other, [], previous.certs);
+  assert.equal(items[0].mode, "none");
+  assert.equal(items[0].relinkTargetId, "sync-target");
+  items[0].mode = "analytics";
+  const next = discovery.applyTrackingSelection(items, previous.certs, previous.apps, { createId: () => { throw new Error("Must preserve identity"); }, now: 999 });
+  assert.equal(next.apps.length, 0);
+  assert.equal(next.certs[0].executables.length, 0);
+  assert.equal(next.certs[1].executables[0].id, "sync-target");
+  assert.equal(next.certs[1].executables[0].discoveredAt, 123);
+});
+
+test("analytics-only changes cannot demote or reassign another certificate's Store entry", () => {
+  const other = { ...cert, id: "other-cert", thumb: "B".repeat(40) };
+  const app = { id: "store-app", name: "Published", certId: cert.id, discoveryKey: "p:c:/published.exe", store: true };
+  const items = discovery.normalize([{ name: "Published", file: "Published.exe", path: "c:/published.exe", kind: "app" }], other, [app], [cert, other]);
+  assert.equal(items[0].storeManaged, true);
+  items[0].mode = "analytics";
+  const next = discovery.applyTrackingSelection(items, [cert, other], [app], { createId: () => "unused" });
+  assert.equal(next.apps[0], app);
+  assert.equal(next.apps[0].certId, cert.id);
+  assert.equal(discovery.executableTargets(next.certs, next.apps).filter(target => target.certId === other.id).length, 0);
+});
+
+test("a friendly product name without a user-facing entry point does not create an app automatically", () => {
+  const [item] = discovery.normalize([{ productName: "Windows Operating System", file: "BackgroundHost.exe", hasStartMenuEntry: false }], cert, []);
+  assert.equal(item.suggestedRole, "review");
+  assert.equal(item.mode, "none");
+  item.mode = "app";
+  const saved = discovery.applyTrackingSelection([item], [cert], [], { createId: () => "override" });
+  assert.equal(saved.apps.length, 1);
+});
